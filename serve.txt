@@ -1,0 +1,1 @@
+bokeh serve heatmap_server/ --allow-websocket-origin=localhost:5006
