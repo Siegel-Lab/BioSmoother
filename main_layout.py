@@ -9,6 +9,10 @@ from bokeh.document import without_document_lock
 from bokeh.models import Panel, Tabs
 
 SETTINGS_WIDTH = 200
+DEFAULT_SIZE = 50
+ANNOTATION_PLOT_NAME = "Annotation"
+RATIO_PLOT_NAME = "Ratio"
+RAW_PLOT_NAME = "Raw"
 
 class FigureMaker:
     _show_hide = {}
@@ -42,11 +46,11 @@ class FigureMaker:
         return ret
 
     def w(self, w):
-        self.args["frame_width"] = w
+        self.args["width"] = w
         return self
 
     def h(self, h):
-        self.args["frame_height"] = h
+        self.args["height"] = h
         return self
 
     def link_y(self, other):
@@ -82,10 +86,10 @@ class FigureMaker:
         self.args["frame_height"] = 1
         if other.sizing_mode in ["stretch_both", "stretch_width"]:
             self.args["sizing_mode"] = "stretch_width"
+            self.w(10)
         else:
-            self.w(other.frame_width)
+            self.w(other.width)
             self.args["sizing_mode"] = "fixed"
-        self.args["width"] = 10
         self.args["align"] = "start"
         self.x_axis_label_orientation = math.pi/4
         self.x_axis_label = label
@@ -99,10 +103,10 @@ class FigureMaker:
         self.args["frame_width"] = 1
         if other.sizing_mode in ["stretch_both", "stretch_height"]:
             self.args["sizing_mode"] = "stretch_height"
+            self.h(10)
         else:
-            self.h(other.frame_height)
+            self.h(other.height)
             self.args["sizing_mode"] = "fixed"
-        self.args["height"] = 10
         self.args["align"] = "end"
         self.y_axis_label = label
         return self
@@ -203,28 +207,28 @@ class MainLayout:
         self.heaptmap_x_axis = FigureMaker().x_axis_of(self.heaptmap, "DNA").combine_tools(tollbars).get()
         self.heaptmap_y_axis = FigureMaker().y_axis_of(self.heaptmap, "RNA").combine_tools(tollbars).get()
 
-        self.ratio_x = FigureMaker().w(100).link_y(self.heaptmap).hide_on("ratio").combine_tools(tollbars).get()
+        self.ratio_x = FigureMaker().w(DEFAULT_SIZE).link_y(self.heaptmap).hide_on("ratio").combine_tools(tollbars).get()
         self.ratio_x_axis = FigureMaker().x_axis_of(self.ratio_x).combine_tools(tollbars).get()
 
-        self.ratio_y = FigureMaker().h(100).link_x(self.heaptmap).hide_on("ratio").combine_tools(tollbars).get()
+        self.ratio_y = FigureMaker().h(DEFAULT_SIZE).link_x(self.heaptmap).hide_on("ratio").combine_tools(tollbars).get()
         self.ratio_y_axis = FigureMaker().y_axis_of(self.ratio_y).combine_tools(tollbars).get()
 
-        self.raw_x = FigureMaker().w(100).link_y(self.heaptmap).hide_on("raw").combine_tools(tollbars).get()
+        self.raw_x = FigureMaker().w(DEFAULT_SIZE).link_y(self.heaptmap).hide_on("raw").combine_tools(tollbars).get()
         self.raw_x_axis = FigureMaker().x_axis_of(self.raw_x).combine_tools(tollbars).get()
 
-        self.raw_y = FigureMaker().h(100).link_x(self.heaptmap).hide_on("raw").combine_tools(tollbars).get()
+        self.raw_y = FigureMaker().h(DEFAULT_SIZE).link_x(self.heaptmap).hide_on("raw").combine_tools(tollbars).get()
         self.raw_y_axis = FigureMaker().y_axis_of(self.raw_y).combine_tools(tollbars).get()
 
-        self.anno_x = FigureMaker().w(100).link_y(self.heaptmap).hide_on("annotation").combine_tools(tollbars).get()
+        self.anno_x = FigureMaker().w(DEFAULT_SIZE).link_y(self.heaptmap).hide_on("annotation").combine_tools(tollbars).get()
         self.anno_x_axis = FigureMaker().x_axis_of(self.anno_x).combine_tools(tollbars).get()
 
-        self.anno_y = FigureMaker().h(100).link_x(self.heaptmap).hide_on("annotation").combine_tools(tollbars).get()
+        self.anno_y = FigureMaker().h(DEFAULT_SIZE).link_x(self.heaptmap).hide_on("annotation").combine_tools(tollbars).get()
         self.anno_y_axis = FigureMaker().y_axis_of(self.anno_y).combine_tools(tollbars).get()
 
         tool_bar = FigureMaker.get_tools(tollbars)
         SETTINGS_WIDTH = tool_bar.width
-        show_hide = FigureMaker.show_hide_dropdown(("Axes", "axis"), ("Ratio", "ratio"), ("Raw", "raw"),
-                                                   ("Annotations", "annotation"), ("Tools", "tools"))
+        show_hide = FigureMaker.show_hide_dropdown(("Axes", "axis"), (RATIO_PLOT_NAME, "ratio"), (RAW_PLOT_NAME, "raw"),
+                                                   (ANNOTATION_PLOT_NAME, "annotation"), ("Tools", "tools"))
 
         replicates = dropdown_select("Replicates", lambda _: None,
                         ("Show Minimium", "min"), ("Show Sum", "sum"))
@@ -254,13 +258,47 @@ class MainLayout:
                                   title="Redraw if [%] of shown area changed")
         self.redraw_slider.sizing_mode = "fixed"
 
+        self.anno_size_slider = Slider(width=SETTINGS_WIDTH, start=10, end=500, value=DEFAULT_SIZE, step=1,
+                                  title=ANNOTATION_PLOT_NAME + " Plot Size")
+        self.anno_size_slider.sizing_mode = "fixed"
+        def anno_size_slider_event(attr, old, new):
+            self.anno_x.width = self.anno_size_slider.value
+            self.anno_x_axis.width = self.anno_size_slider.value
+            self.anno_y.height = self.anno_size_slider.value
+            self.anno_y_axis.height = self.anno_size_slider.value
+        self.anno_size_slider.on_change("value_throttled",anno_size_slider_event)
+        
+        self.ratio_size_slider = Slider(width=SETTINGS_WIDTH, start=10, end=500, value=DEFAULT_SIZE, step=1,
+                                  title=RATIO_PLOT_NAME + " Plot Size")
+        self.ratio_size_slider.sizing_mode = "fixed"
+        def ratio_size_slider_event(attr, old, new):
+            self.ratio_x.width = self.ratio_size_slider.value
+            self.ratio_x_axis.width = self.ratio_size_slider.value
+            self.ratio_y.height = self.ratio_size_slider.value
+            self.ratio_y_axis.height = self.ratio_size_slider.value
+        self.ratio_size_slider.on_change("value_throttled",ratio_size_slider_event)
+        
+        self.raw_size_slider = Slider(width=SETTINGS_WIDTH, start=10, end=500, value=DEFAULT_SIZE, step=1,
+                                  title=RAW_PLOT_NAME + " Plot Size")
+        self.raw_size_slider.sizing_mode = "fixed"
+        def raw_size_slider_event(attr, old, new):
+            self.raw_x.width = self.raw_size_slider.value
+            self.raw_x_axis.width = self.raw_size_slider.value
+            self.raw_y.height = self.raw_size_slider.value
+            self.raw_y_axis.height = self.raw_size_slider.value
+        self.raw_size_slider.on_change("value_throttled",raw_size_slider_event)
+
         #FigureMaker.toggle_hide("axis")
     
         _settings = Tabs(
             tabs=[
-                Panel(child=column([tool_bar, show_hide, replicates, symmetrie]), title="General"),
-                Panel(child=column([normalization, mapq_slider, interactions_bounds_slider, interactions_slider]), title="Normalization"),
-                Panel(child=column([self.update_frequency_slider, self.redraw_slider]), title="Advanced"),
+                Panel(child=column([tool_bar, show_hide, replicates, symmetrie]), 
+                        title="General"),
+                Panel(child=column([normalization, mapq_slider, interactions_bounds_slider, interactions_slider]),
+                        title="Normalization"),
+                Panel(child=column([self.update_frequency_slider, self.redraw_slider,
+                                    self.anno_size_slider, self.raw_size_slider, self.ratio_size_slider]),
+                        title="Advanced"),
             ],
             sizing_mode="stretch_height"
         )
@@ -306,7 +344,7 @@ class MainLayout:
                                 self.heaptmap.x_range.end, self.heaptmap.y_range.end)
                 overlap = MainLayout.area_overlap(self.last_drawing_area, curr_area)
                 min_change = self.redraw_slider.value/100
-                print(overlap)
+                #print(overlap)
                 if 1-overlap >= min_change:
                     print("render!", datetime.now().strftime("%H:%M:%S"))
                     w = curr_area[2] - curr_area[0]
