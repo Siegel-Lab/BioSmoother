@@ -1,0 +1,135 @@
+from bokeh.models import FuncTickFormatter
+from bokeh.core.properties import Float, List
+from bokeh.util.compiler import TypeScript
+from bokeh.models import BasicTicker
+
+CONTIG_BORDER_SETTINGS = {
+    "color": "black",
+}
+
+TS_CODE = """
+import * as p from "core/properties"
+import {TickSpec} from "models/tickers/ticker"
+import {BasicTicker } from "models/tickers/basic_ticker"
+
+export namespace ExtraTicksTicker {
+  export type Attrs = p.AttrsOf<Props>
+  export type Props = BasicTicker.Props & {
+    extra_ticks: p.Property<Array<number>>
+  }
+}
+
+export interface ExtraTicksTicker extends ExtraTicksTicker.Attrs {}
+
+export class ExtraTicksTicker extends BasicTicker {
+  properties: ExtraTicksTicker.Props
+
+  constructor(attrs?: Partial<ExtraTicksTicker.Attrs>) {
+    super(attrs)
+  }
+
+  static init_ExtraTicksTicker(): void {
+    this.define<ExtraTicksTicker.Props>(({Number, Array}) => ({
+      extra_ticks: [ Array(Number), [] ],
+    }))
+  }
+
+  get_ticks_no_defaults(data_low: number, data_high: number, cross_loc: any, desired_n_ticks: number): TickSpec<number> {
+    return {
+        major: this.extra_ticks,
+        minor: super.get_ticks_no_defaults(data_low, data_high, cross_loc, desired_n_ticks).major,
+    }
+  }
+
+}
+"""
+
+class ExtraTicksTicker(BasicTicker):
+    __implementation__ = TypeScript(TS_CODE)
+    extra_ticks = List(Float)
+
+
+class ChrSizes:
+    def longest_common_suffix(self, l):
+        s = ""
+        min_l = min(len(x) for x in l)
+        while len(s) < min_l:
+            sn = l[0][-(len(s)+1)] + s
+            for x in l:
+                if x[-len(sn)] != sn[0]:
+                    return s
+            s = sn
+        return s
+
+    def __init__(self, file_name):
+        # load the exact chr lenghts from file
+        self.chr_order = []
+        self.chr_sizes = {}
+        with open(file_name, "r") as len_file:
+            for line in len_file:
+                chr_name, chr_len = line.split("\t")
+                self.chr_order.append(chr_name)
+                self.chr_sizes[chr_name] = int(chr_len)
+
+        self.lcs = self.longest_common_suffix(self.chr_order)
+
+        # compute offset of the chromosomes
+        self.chr_start_pos = {}
+        last_offset = 0
+        for chr_x in self.chr_order:
+            self.chr_start_pos[chr_x] = last_offset
+            # round up to the next full bin
+            last_offset += self.chr_sizes[chr_x]
+        self.chr_start_pos["end"] = last_offset
+
+    def setup(self, main_layout):
+        main_layout.heaptmap.x_range.start = 0
+        main_layout.heaptmap.x_range.end = self.chr_start_pos["end"]
+        main_layout.heaptmap.y_range.start = 0
+        main_layout.heaptmap.y_range.end = self.chr_start_pos["end"]
+        main_layout.heaptmap.x_range.reset_start = 0
+        main_layout.heaptmap.x_range.reset_end = self.chr_start_pos["end"]
+        main_layout.heaptmap.y_range.reset_start = 0
+        main_layout.heaptmap.y_range.reset_end = self.chr_start_pos["end"]
+
+        formater = FuncTickFormatter(
+                    args={"contig_starts": [self.chr_start_pos[chr_x] for chr_x in self.chr_order],
+                            "genome_end": self.chr_start_pos["end"],
+                            "contig_names": [x[:-len(self.lcs)] for x in self.chr_order]},
+                    code="""
+                            if(tick < 0 || tick >= genome_end)
+                                return "n/a";
+                            var idx = 0;
+                            while(contig_starts[idx + 1] <= tick)
+                                idx += 1;
+                            return contig_names[idx] + ": " + (tick - contig_starts[idx]);
+                        """)
+        main_layout.heaptmap_y_axis.yaxis[0].formatter = formater
+        main_layout.heaptmap_x_axis.xaxis[0].formatter = formater
+
+        ticker_border = ExtraTicksTicker(
+            extra_ticks=[self.chr_start_pos[chr_x] for chr_x in self.chr_order] + [self.chr_start_pos["end"]]
+        )
+        #ticker_center = ExtraTicksTicker(
+        #    extra_ticks=[self.chr_start_pos[chr_x] + self.chr_sizes[chr_x]/2 for chr_x in self.chr_order])
+
+        for plot in [main_layout.heaptmap, main_layout.ratio_y, main_layout.raw_y, main_layout.anno_y,
+                     main_layout.heaptmap_x_axis]:
+            plot.xgrid.minor_grid_line_alpha = plot.ygrid.grid_line_alpha
+            plot.xgrid.minor_grid_line_color = plot.xgrid.grid_line_color
+            plot.xgrid.grid_line_color = "darkgrey"
+            plot.xgrid.ticker = ticker_border
+            plot.xgrid.bounds = (0, self.chr_start_pos["end"])
+            plot.xaxis.bounds = (0, self.chr_start_pos["end"])
+            plot.xaxis.major_label_text_align = "left"
+            #plot.xaxis.ticker = ticker_border
+        for plot in [main_layout.heaptmap, main_layout.ratio_x, main_layout.raw_x, main_layout.anno_x,
+                     main_layout.heaptmap_y_axis]:
+            plot.ygrid.minor_grid_line_alpha = plot.ygrid.grid_line_alpha
+            plot.ygrid.minor_grid_line_color = plot.ygrid.grid_line_color
+            plot.ygrid.grid_line_color = "darkgrey"
+            plot.ygrid.ticker = ticker_border
+            plot.ygrid.bounds = (0, self.chr_start_pos["end"])
+            plot.yaxis.bounds = (0, self.chr_start_pos["end"])
+            plot.yaxis.major_label_text_align = "right"
+            #plot.yaxis.ticker = ticker_border

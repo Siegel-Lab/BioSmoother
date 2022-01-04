@@ -1,12 +1,15 @@
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import Dropdown, Button, RangeSlider, Slider
+from bokeh.models import Dropdown, Button, RangeSlider, Slider, FileInput, TextInput
 import math
 from datetime import datetime
 from tornado import gen
 from bokeh.document import without_document_lock
 from bokeh.models import Panel, Tabs
+from bokeh.models import Range1d
+from meta_data import *
+import os
 
 SETTINGS_WIDTH = 200
 DEFAULT_SIZE = 50
@@ -28,6 +31,9 @@ class FigureMaker:
         self.x_axis_label_orientation = None
         self.y_axis_label = ""
         self.x_axis_label = ""
+        self._range1d = False
+        self.no_border_h = False
+        self.no_border_v = False
 
     def get(self):
         ret = figure(**self.args)
@@ -43,7 +49,20 @@ class FigureMaker:
             FigureMaker._hidable_plots.append( (ret, self._hide_on) )
         if not self.x_axis_label_orientation is None:
             ret.xaxis.major_label_orientation = self.x_axis_label_orientation
+        if self._range1d:
+            ret.x_range = Range1d()
+            ret.y_range = Range1d()
+        ret.min_border_left = 0
+        ret.min_border_bottom = 0
+        if self.no_border_h:
+            ret.min_border_right = 0
+        if self.no_border_v:
+            ret.min_border_top = 0
         return ret
+
+    def range1d(self):
+        self._range1d = True
+        return self
 
     def w(self, w):
         self.args["width"] = w
@@ -57,18 +76,22 @@ class FigureMaker:
         self.args["y_range"] = other.y_range
         self.args["sizing_mode"] = "stretch_height"
         self.args["height"] = 10
+        self.no_border_v = True
         return self
 
     def link_x(self, other):
         self.args["x_range"] = other.x_range
         self.args["sizing_mode"] = "stretch_width"
         self.args["width"] = 10
+        self.no_border_h = True
         return self
 
     def stretch(self):
         self.args["sizing_mode"] = "stretch_both"
         self.args["height"] = 10
         self.args["width"] = 10
+        self.no_border_h = True
+        self.no_border_v = True
         return self
 
     def _axis_of(self, other):
@@ -93,6 +116,7 @@ class FigureMaker:
         self.args["align"] = "start"
         self.x_axis_label_orientation = math.pi/4
         self.x_axis_label = label
+        self.no_border_v = True
         return self
 
     def y_axis_of(self, other, label=""):
@@ -109,6 +133,7 @@ class FigureMaker:
             self.args["sizing_mode"] = "fixed"
         self.args["align"] = "end"
         self.y_axis_label = label
+        self.no_border_h = True
         return self
 
     def hide_on(self, key):
@@ -197,13 +222,14 @@ def dropdown_select(title, event, *options):
 
 class MainLayout:
     def __init__(self):
+        self.meta = None
         self.do_render = False
         self.curdoc = curdoc()
         self.last_drawing_area = (0,0,0,0)
 
         global SETTINGS_WIDTH
         tollbars = []
-        self.heaptmap = FigureMaker().stretch().combine_tools(tollbars).get()
+        self.heaptmap = FigureMaker().range1d().stretch().combine_tools(tollbars).get()
         self.heaptmap_x_axis = FigureMaker().x_axis_of(self.heaptmap, "DNA").combine_tools(tollbars).get()
         self.heaptmap_y_axis = FigureMaker().y_axis_of(self.heaptmap, "RNA").combine_tools(tollbars).get()
 
@@ -288,11 +314,13 @@ class MainLayout:
             self.raw_y_axis.height = self.raw_size_slider.value
         self.raw_size_slider.on_change("value_throttled",raw_size_slider_event)
 
-        #FigureMaker.toggle_hide("axis")
+        self.meta_file = TextInput(value="heatmap_server/out/")
+        self.meta_file.on_change("value", lambda x,y,z: self.setup())
+
     
         _settings = Tabs(
             tabs=[
-                Panel(child=column([tool_bar, show_hide, replicates, symmetrie]), 
+                Panel(child=column([tool_bar, self.meta_file, show_hide, replicates, symmetrie]), 
                         title="General"),
                 Panel(child=column([normalization, mapq_slider, interactions_bounds_slider, interactions_slider]),
                         title="Normalization"),
@@ -336,6 +364,13 @@ class MainLayout:
 
     def render(self, area):
         pass
+
+    def setup(self):
+        if os.path.exists(self.meta_file.value + ".meta"):
+            self.meta = MetaData.load(self.meta_file.value + ".meta")
+            self.meta.setup(self)
+        if os.path.exists(self.meta_file.value + ".db"):
+            pass
 
     def render_callback(self):
         if self.do_render:
