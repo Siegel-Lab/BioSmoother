@@ -65,32 +65,36 @@ class ChrSizes:
         # load the exact chr lenghts from file
         self.chr_order = []
         self.chr_sizes = {}
+        self.chr_sizes_l = []
         with open(file_name, "r") as len_file:
             for line in len_file:
                 chr_name, chr_len = line.split("\t")
                 self.chr_order.append(chr_name)
                 self.chr_sizes[chr_name] = int(chr_len)
+                self.chr_sizes_l.append(int(chr_len))
 
         self.lcs = self.longest_common_suffix(self.chr_order)
 
         # compute offset of the chromosomes
         self.chr_start_pos = {}
+        self.chr_starts = []
         last_offset = 0
         for chr_x in self.chr_order:
             self.chr_start_pos[chr_x] = last_offset
+            self.chr_starts.append(last_offset)
             # round up to the next full bin
             last_offset += self.chr_sizes[chr_x]
         self.chr_start_pos["end"] = last_offset
 
     def setup(self, main_layout):
-        main_layout.heaptmap.x_range.start = 0
-        main_layout.heaptmap.x_range.end = self.chr_start_pos["end"]
-        main_layout.heaptmap.y_range.start = 0
-        main_layout.heaptmap.y_range.end = self.chr_start_pos["end"]
-        main_layout.heaptmap.x_range.reset_start = 0
-        main_layout.heaptmap.x_range.reset_end = self.chr_start_pos["end"]
-        main_layout.heaptmap.y_range.reset_start = 0
-        main_layout.heaptmap.y_range.reset_end = self.chr_start_pos["end"]
+        main_layout.heatmap.x_range.start = 0
+        main_layout.heatmap.x_range.end = self.chr_start_pos["end"]
+        main_layout.heatmap.y_range.start = 0
+        main_layout.heatmap.y_range.end = self.chr_start_pos["end"]
+        main_layout.heatmap.x_range.reset_start = 0
+        main_layout.heatmap.x_range.reset_end = self.chr_start_pos["end"]
+        main_layout.heatmap.y_range.reset_start = 0
+        main_layout.heatmap.y_range.reset_end = self.chr_start_pos["end"]
 
         formater = FuncTickFormatter(
                     args={"contig_starts": [self.chr_start_pos[chr_x] for chr_x in self.chr_order],
@@ -104,8 +108,8 @@ class ChrSizes:
                                 idx += 1;
                             return contig_names[idx] + ": " + (tick - contig_starts[idx]);
                         """)
-        main_layout.heaptmap_y_axis.yaxis[0].formatter = formater
-        main_layout.heaptmap_x_axis.xaxis[0].formatter = formater
+        main_layout.heatmap_y_axis.yaxis[0].formatter = formater
+        main_layout.heatmap_x_axis.xaxis[0].formatter = formater
 
         ticker_border = ExtraTicksTicker(
             extra_ticks=[self.chr_start_pos[chr_x] for chr_x in self.chr_order] + [self.chr_start_pos["end"]]
@@ -113,8 +117,8 @@ class ChrSizes:
         #ticker_center = ExtraTicksTicker(
         #    extra_ticks=[self.chr_start_pos[chr_x] + self.chr_sizes[chr_x]/2 for chr_x in self.chr_order])
 
-        for plot in [main_layout.heaptmap, main_layout.ratio_y, main_layout.raw_y, main_layout.anno_y,
-                     main_layout.heaptmap_x_axis]:
+        for plot in [main_layout.heatmap, main_layout.ratio_y, main_layout.raw_y, main_layout.anno_y,
+                     main_layout.heatmap_x_axis]:
             plot.xgrid.minor_grid_line_alpha = plot.ygrid.grid_line_alpha
             plot.xgrid.minor_grid_line_color = plot.xgrid.grid_line_color
             plot.xgrid.grid_line_color = "darkgrey"
@@ -123,8 +127,8 @@ class ChrSizes:
             plot.xaxis.bounds = (0, self.chr_start_pos["end"])
             plot.xaxis.major_label_text_align = "left"
             #plot.xaxis.ticker = ticker_border
-        for plot in [main_layout.heaptmap, main_layout.ratio_x, main_layout.raw_x, main_layout.anno_x,
-                     main_layout.heaptmap_y_axis]:
+        for plot in [main_layout.heatmap, main_layout.ratio_x, main_layout.raw_x, main_layout.anno_x,
+                     main_layout.heatmap_y_axis]:
             plot.ygrid.minor_grid_line_alpha = plot.ygrid.grid_line_alpha
             plot.ygrid.minor_grid_line_color = plot.ygrid.grid_line_color
             plot.ygrid.grid_line_color = "darkgrey"
