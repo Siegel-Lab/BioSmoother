@@ -273,7 +273,8 @@ class MainLayout:
         def in_group_event(e):
             self.in_group_d = e
             self.trigger_render()
-        self.in_group = self.dropdown_select("In Group", in_group_event, ("Sum", "sum"), ("Minimium", "min"))
+        self.in_group = self.dropdown_select("In Group", in_group_event, ("Sum", "sum"), ("Minimium", "min"), 
+                                                                         ("Difference", "dif"))
 
         self.betw_group_d = "sum"
         def betw_group_event(e):
@@ -281,8 +282,13 @@ class MainLayout:
             self.trigger_render()
         self.betw_group = self.dropdown_select("Between Group", betw_group_event,
                         ("Sum", "sum"), ("Show First Group", "1st"), ("Show Second Group", "2nd"), ("Substract", "sub"),
-                        ("Minimum", "min"))
-        self.symmetrie = self.dropdown_select("Symmetry", lambda _: self.trigger_render(),
+                        ("Difference", "dif"),("Minimum", "min"))
+
+        self.symmetrie_d = "all"
+        def symmetrie_event(e):
+            self.symmetrie_d = e
+            self.trigger_render()
+        self.symmetrie = self.dropdown_select("Symmetry", symmetrie_event,
                         ("Show All", "all"), ("Only Show Symmetric", "sym"), ("Only Show Asymmetric", "asym"))
 
         self.normalization_d = "max_bin_visible"
@@ -290,7 +296,7 @@ class MainLayout:
             self.normalization_d = e
             self.trigger_render()
         self.normalization = self.dropdown_select("Normalize by", normalization_event,
-                        ("Largest Visible Bin", "max_bin_visible"),
+                        ("Largest Rendered Bin", "max_bin_visible"),
                         ("Number of Reads", "num_reads"), ("Column", "column"), ("Coverage", "tracks"))
 
         self.mapq_slider = RangeSlider(width=SETTINGS_WIDTH, start=0, end=255, value=(0,255), step=1,
@@ -448,6 +454,21 @@ class MainLayout:
     def col_norm(self, cols):
         return self.flatten_bins(self.make_bins([(x, 0, w, self.meta.chr_sizes.chr_start_pos["end"]) for x, w in cols]))
 
+    def read_norm(self, idx):
+        n = []
+        for dataset in self.meta.datasets:
+            if dataset[2] == (idx == 0):
+                n.append(dataset[3])
+        if self.in_group_d == "min":
+            n = min(n)
+        elif self.in_group_d == "sum":
+            n = sum(n)
+        elif self.in_group_d == "dif":
+            n = sum(abs(x-y) for x in n for y in n)
+        else:
+            raise RuntimeError("Unknown in group value")
+        return n
+
     def norm_bins(self, bins_l, bin_coords, cols, rows):
         ret = []
         for idx, bins in enumerate(bins_l):
@@ -455,23 +476,13 @@ class MainLayout:
                 n = max(bins + [1])
                 ret.append([x/n for x in bins])
             elif self.normalization_d == "num_reads":
-                n = []
-                for dataset in self.meta.datasets:
-                    if dataset[2] == (idx == 0):
-                        n.append(dataset[3])
-                if self.in_group_d == "min":
-                    n = min(n)
-                elif self.in_group_d == "sum":
-                    n = sum(n)
-                else:
-                    raise RuntimeError("Unknown in group value")
+                n = self.read_norm(idx)
                 ret.append([x/n for x in bins])
             elif self.normalization_d == "column":
                 ns = self.col_norm(cols)
                 ret.append([x/max(ns[idx][idx_2//len(rows)],1) for idx_2, x in enumerate(bins)])
             elif self.normalization_d == "tracks":
-                n = max(bins + [1])
-                ret.append([x/n for x in bins])
+                raise RuntimeError("unimplemented normalization value")
             else:
                 raise RuntimeError("Unknown normalization value")
         return ret
@@ -492,6 +503,9 @@ class MainLayout:
             elif self.in_group_d == "sum":
                 aa = sum(a)
                 bb = sum(b)
+            elif self.in_group_d == "dif":
+                aa = sum(abs(x-y) for x in a for y in a)
+                bb = sum(abs(x-y) for x in b for y in b)
             else:
                 raise RuntimeError("Unknown in group value")
             ret[0].append(aa)
@@ -509,6 +523,8 @@ class MainLayout:
                 ret.append(Viridis256[int( ((x-y)/2+0.5) * 255)])
             elif self.betw_group_d == "min":
                 ret.append(Viridis256[int(min(x,y)*255)])
+            elif self.betw_group_d == "dif":
+                ret.append(Viridis256[int(abs(x-y)*255)])
             elif self.betw_group_d == "sum":
                 ret.append(Viridis256[min(int((x+y)*255/2), 255)])
             else:
@@ -523,6 +539,20 @@ class MainLayout:
                 ret1.append(x)
                 ret2.append(y)
         return ret1, ret2
+
+    def bin_symmentry(self, bins, bin_coords, bin_cols, bin_rows):
+        if self.symmetrie_d == "all":
+            return bins
+        elif self.symmetrie_d == "sym" or self.symmetrie_d == "asym":
+            bins_2 = self.make_bins([(y, x, h, w) for x, y, w, h in bin_coords])
+            flat = self.flatten_bins(bins_2)
+            norms = self.norm_bins(flat, bin_coords, bin_rows, bin_cols)
+            if self.symmetrie_d == "sym":
+                return [[min(a, b) for a,b in zip(bin, norm)] for bin, norm in zip(bins, norms)]
+            else:
+                return [[max(a-b, 0) for a,b in zip(bin, norm)] for bin, norm in zip(bins, norms)]
+        else:
+            raise RuntimeError("Unknown symmetry value")
 
     def render(self, area):
         if self.meta is None or self.idx is None:
@@ -540,7 +570,8 @@ class MainLayout:
         bins = self.make_bins(bin_coords)
         flat = self.flatten_bins(bins)
         norm = self.norm_bins(flat, bin_coords, bin_cols, bin_rows)
-        c = self.color_bins(norm)
+        sym = self.bin_symmentry(norm, bin_coords, bin_cols, bin_rows)
+        c = self.color_bins(sym)
         self.heatmap.background_fill_color = Viridis256[255//2] if self.betw_group_d == "sub" else Viridis256[0]
         purged, purged_coords = self.purge(c, bin_coords, self.heatmap.background_fill_color)
 
