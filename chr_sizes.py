@@ -114,6 +114,7 @@ class ChrSizes:
         ticker_border = ExtraTicksTicker(
             extra_ticks=[self.chr_start_pos[chr_x] for chr_x in self.chr_order] + [self.chr_start_pos["end"]]
         )
+        ticker_border.min_interval = 1
         #ticker_center = ExtraTicksTicker(
         #    extra_ticks=[self.chr_start_pos[chr_x] + self.chr_sizes[chr_x]/2 for chr_x in self.chr_order])
 
@@ -126,7 +127,7 @@ class ChrSizes:
             plot.xgrid.bounds = (0, self.chr_start_pos["end"])
             plot.xaxis.bounds = (0, self.chr_start_pos["end"])
             plot.xaxis.major_label_text_align = "left"
-            #plot.xaxis.ticker = ticker_border
+            plot.xaxis.ticker.min_interval = 1
         for plot in [main_layout.heatmap, main_layout.ratio_x, main_layout.raw_x, main_layout.anno_x,
                      main_layout.heatmap_y_axis]:
             plot.ygrid.minor_grid_line_alpha = plot.ygrid.grid_line_alpha
@@ -136,4 +137,4 @@ class ChrSizes:
             plot.ygrid.bounds = (0, self.chr_start_pos["end"])
             plot.yaxis.bounds = (0, self.chr_start_pos["end"])
             plot.yaxis.major_label_text_align = "right"
-            #plot.yaxis.ticker = ticker_border
+            plot.yaxis.ticker.min_interval = 1

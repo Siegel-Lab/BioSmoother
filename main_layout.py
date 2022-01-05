@@ -309,8 +309,8 @@ class MainLayout:
         self.interactions_bounds_slider.sizing_mode = "fixed"
         self.interactions_bounds_slider.on_change("value_throttled", lambda x,y,z: self.trigger_render())
 
-        self.interactions_slider = Slider(width=SETTINGS_WIDTH, start=1, end=1.1, value=1.06, step=0.001,
-                                  title="Color Scale Log Base", format="0[.]000")
+        self.interactions_slider = Slider(width=SETTINGS_WIDTH, start=0, end=50, value=10, step=0.1,
+                                  title="Color Scale Log Base")#, format="0[.]000")
         self.interactions_slider.sizing_mode = "fixed"
         self.interactions_slider.on_change("value_throttled", lambda x,y,z: self.trigger_render())
 
@@ -321,6 +321,11 @@ class MainLayout:
         self.redraw_slider = Slider(width=SETTINGS_WIDTH, start=0, end=100, value=50, step=1,
                                   title="Redraw if [%] of shown area changed")
         self.redraw_slider.sizing_mode = "fixed"
+
+        self.diag_dist_slider = Slider(width=SETTINGS_WIDTH, start=0, end=1000, value=0, step=1,
+                                  title="Minimum Distance from Diagonal")
+        self.diag_dist_slider.sizing_mode = "fixed"
+        self.diag_dist_slider.on_change("value_throttled", lambda x,y,z: self.trigger_render())
 
         self.anno_size_slider = Slider(width=SETTINGS_WIDTH, start=10, end=500, value=DEFAULT_SIZE, step=1,
                                   title=ANNOTATION_PLOT_NAME + " Plot Size")
@@ -356,6 +361,7 @@ class MainLayout:
         self.num_bins = Slider(width=SETTINGS_WIDTH, start=1000, end=100000, value=20000, step=1000,
                                   title="Number of Bins")
         self.num_bins.sizing_mode = "fixed"
+        self.num_bins.on_change("value_throttled", lambda x,y,z: self.trigger_render())
 
         self.meta_file = TextInput(value="heatmap_server/out/")
         self.meta_file.on_change("value", lambda x,y,z: self.setup())
@@ -367,7 +373,7 @@ class MainLayout:
 
         _settings = Tabs(
             tabs=[
-                Panel(child=column([tool_bar, self.meta_file, show_hide, self.symmetrie]), 
+                Panel(child=column([tool_bar, self.meta_file, show_hide, self.symmetrie, self.diag_dist_slider]), 
                         title="General"),
                 Panel(child=column([self.normalization, self.mapq_slider, self.interactions_bounds_slider,
                                     self.interactions_slider]),
@@ -448,7 +454,10 @@ class MainLayout:
         for idx, _ in enumerate(self.meta.datasets):
             bins.append([])
             for x, y, w, h in bin_coords:
-                bins[-1].append(self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value))
+                if abs(x - y) >= self.diag_dist_slider.value:
+                    bins[-1].append(self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value))
+                else:
+                    bins[-1].append(0)
         return bins
 
     def col_norm(self, cols):
@@ -512,23 +521,35 @@ class MainLayout:
             ret[1].append(bb)
         return ret
 
+    def log_scale(self, c):
+        a = 2**max(self.interactions_slider.value, 0.1)
+        c = math.log(a*(c*(1-(1/a))+(1/a))) / math.log(a)
+        return c
+
     def color_bins(self, bins):
         ret = []
         for x, y in zip(*bins):
+            c = 0
             if self.betw_group_d == "1st":
-                ret.append(Viridis256[int(x*255)])
+                c = x
             elif self.betw_group_d == "2nd":
-                ret.append(Viridis256[int(y*255)])
+                c = y
             elif self.betw_group_d == "sub":
-                ret.append(Viridis256[int( ((x-y)/2+0.5) * 255)])
+                c = (x - y)
             elif self.betw_group_d == "min":
-                ret.append(Viridis256[int(min(x,y)*255)])
+                c = min(x, y)
             elif self.betw_group_d == "dif":
-                ret.append(Viridis256[int(abs(x-y)*255)])
+                c = abs(x - y)
             elif self.betw_group_d == "sum":
-                ret.append(Viridis256[min(int((x+y)*255/2), 255)])
+                c = (x + y) / 2
             else:
                 raise RuntimeError("Unknown between group value")
+            if self.betw_group_d == "sub":
+                c = self.log_scale(abs(c)) * (1 if c >= 0 else -1) / 2 + 0.5
+                c = max(0, min(255, int(255*c)))
+                ret.append(Viridis256[c])
+            else:
+                ret.append(Viridis256[max(0, min(255, int(255*self.log_scale(c))))])
         return ret
 
     def purge(self, bins, bin_coords, background):
