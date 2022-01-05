@@ -304,12 +304,12 @@ class MainLayout:
         self.mapq_slider.sizing_mode = "fixed"
         self.mapq_slider.on_change("value_throttled", lambda x,y,z: self.trigger_render())
 
-        self.interactions_bounds_slider = Slider(width=SETTINGS_WIDTH, start=1, end=1000, value=1, step=1,
+        self.interactions_bounds_slider = Slider(width=SETTINGS_WIDTH, start=0, end=100, value=0, step=1,
                                   title="Color Scale Begin")
         self.interactions_bounds_slider.sizing_mode = "fixed"
         self.interactions_bounds_slider.on_change("value_throttled", lambda x,y,z: self.trigger_render())
 
-        self.interactions_slider = Slider(width=SETTINGS_WIDTH, start=0, end=50, value=10, step=0.1,
+        self.interactions_slider = Slider(width=SETTINGS_WIDTH, start=-50, end=50, value=10, step=0.1,
                                   title="Color Scale Log Base")#, format="0[.]000")
         self.interactions_slider.sizing_mode = "fixed"
         self.interactions_slider.on_change("value_throttled", lambda x,y,z: self.trigger_render())
@@ -451,11 +451,13 @@ class MainLayout:
 
     def make_bins(self, bin_coords):
         bins = []
+        min_ = self.interactions_bounds_slider.value
         for idx, _ in enumerate(self.meta.datasets):
             bins.append([])
             for x, y, w, h in bin_coords:
                 if abs(x - y) >= self.diag_dist_slider.value:
-                    bins[-1].append(self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value))
+                    bins[-1].append(
+                        max(self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value)-min_, 0))
                 else:
                     bins[-1].append(0)
         return bins
@@ -521,8 +523,13 @@ class MainLayout:
             ret[1].append(bb)
         return ret
 
+    #used function:
+    # copy paste into https://www.desmos.com/calculator/auubsajefh
+    # y=\frac{\log\left(2^{a}\cdot\left(x\cdot\left(1-\frac{1}{2^{a}}\right)+\frac{1}{2^{a}}\right)\right)}{\log\left(2^{a}\right)}
     def log_scale(self, c):
-        a = 2**max(self.interactions_slider.value, 0.1)
+        if self.interactions_slider.value == 0:
+            return c
+        a = 2**self.interactions_slider.value
         c = math.log(a*(c*(1-(1/a))+(1/a))) / math.log(a)
         return c
 
