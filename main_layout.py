@@ -60,6 +60,10 @@ class FigureMaker:
             ret.min_border_right = 0
         if self.no_border_v:
             ret.min_border_top = 0
+        ret.xaxis.axis_label_text_font_size = "10px"
+        ret.yaxis.axis_label_text_font_size = "10px"
+        ret.xaxis.axis_label_standoff = 0
+        ret.yaxis.axis_label_standoff = 0
         return ret
 
     def range1d(self):
@@ -116,7 +120,7 @@ class FigureMaker:
             self.w(other.width)
             self.args["sizing_mode"] = "fixed"
         self.args["align"] = "start"
-        self.x_axis_label_orientation = math.pi/4
+        self.x_axis_label_orientation = math.pi/2
         self.x_axis_label = label
         self.no_border_v = True
         return self
@@ -248,21 +252,49 @@ class MainLayout:
 
         self.ratio_x = FigureMaker().w(DEFAULT_SIZE).link_y(self.heatmap).hide_on("ratio").combine_tools(tollbars).get()
         self.ratio_x_axis = FigureMaker().x_axis_of(self.ratio_x).combine_tools(tollbars).get()
+        self.ratio_x_axis.xaxis.axis_label = "Ratio"
 
         self.ratio_y = FigureMaker().h(DEFAULT_SIZE).link_x(self.heatmap).hide_on("ratio").combine_tools(tollbars).get()
         self.ratio_y_axis = FigureMaker().y_axis_of(self.ratio_y).combine_tools(tollbars).get()
+        self.ratio_y_axis.yaxis.axis_label = "Ratio"
 
         self.raw_x = FigureMaker().w(DEFAULT_SIZE).link_y(self.heatmap).hide_on("raw").combine_tools(tollbars).get()
         self.raw_x_axis = FigureMaker().x_axis_of(self.raw_x).combine_tools(tollbars).get()
+        self.raw_x_axis.xaxis.axis_label = "Cov"
+
 
         self.raw_y = FigureMaker().h(DEFAULT_SIZE).link_x(self.heatmap).hide_on("raw").combine_tools(tollbars).get()
         self.raw_y_axis = FigureMaker().y_axis_of(self.raw_y).combine_tools(tollbars).get()
+        self.raw_y_axis.yaxis.axis_label = "Cov"
+        
+        d_x = {
+            "pos": [],
+            "norm": [],
+            "heat": [],
+            "ratio": [],
+        }
+        d_y = {
+            "pos": [],
+            "norm": [],
+            "heat": [],
+            "ratio": [],
+        }
+        self.raw_data_x=ColumnDataSource(data=d_x)
+        self.raw_data_y=ColumnDataSource(data=d_y)
+        self.raw_x.line(x="norm", y="pos", source=self.raw_data_x, line_color="blue") # , level="image"
+        self.raw_y.line(x="pos", y="norm", source=self.raw_data_y, line_color="orange") # , level="image"
+        self.raw_x.line(x="heat", y="pos", source=self.raw_data_x, line_color="black") # , level="image"
+        self.raw_y.line(x="pos", y="heat", source=self.raw_data_y, line_color="black") # , level="image"
+        self.ratio_x.line(x="ratio", y="pos", source=self.raw_data_x, line_color="black") # , level="image"
+        self.ratio_y.line(x="pos", y="ratio", source=self.raw_data_y, line_color="black") # , level="image"
 
         self.anno_x = FigureMaker().w(DEFAULT_SIZE).link_y(self.heatmap).hide_on("annotation").combine_tools(tollbars).get()
         self.anno_x_axis = FigureMaker().x_axis_of(self.anno_x).combine_tools(tollbars).get()
+        self.anno_x_axis.xaxis.axis_label = "Anno"
 
         self.anno_y = FigureMaker().h(DEFAULT_SIZE).link_x(self.heatmap).hide_on("annotation").combine_tools(tollbars).get()
         self.anno_y_axis = FigureMaker().y_axis_of(self.anno_y).combine_tools(tollbars).get()
+        self.anno_y_axis.yaxis.axis_label = "Anno"
 
         tool_bar = FigureMaker.get_tools(tollbars)
         SETTINGS_WIDTH = tool_bar.width
@@ -297,7 +329,9 @@ class MainLayout:
             self.trigger_render()
         self.normalization = self.dropdown_select("Normalize by", normalization_event,
                         ("Largest Rendered Bin", "max_bin_visible"),
-                        ("Number of Reads", "num_reads"), ("Column", "column"), ("Coverage", "tracks"))
+                        ("Number of Reads", "num_reads"), ("Column", "column"), 
+                        ("Coverage of Normalization Reads (Absolute)", "tracks_abs"),
+                        ("Coverage of Normalization Reads (Scaled to Rendered Area)", "tracks_rel"))
 
         self.mapq_slider = RangeSlider(width=SETTINGS_WIDTH, start=0, end=255, value=(0,255), step=1,
                                   title="Mapping Quality Bounds")
@@ -369,6 +403,9 @@ class MainLayout:
         self.group_a = MultiChoice(value=[], options=[],
                                     placeholder="Group A")
         self.group_a.on_change("value", lambda x,y,z: self.trigger_render())
+        self.group_b = MultiChoice(value=[], options=[],
+                                    placeholder="Group B")
+        self.group_b.on_change("value", lambda x,y,z: self.trigger_render())
 
 
         _settings = Tabs(
@@ -378,7 +415,7 @@ class MainLayout:
                 Panel(child=column([self.normalization, self.mapq_slider, self.interactions_bounds_slider,
                                     self.interactions_slider]),
                         title="Normalization"),
-                Panel(child=column([self.in_group, self.betw_group, self.group_a]),
+                Panel(child=column([self.in_group, self.betw_group, self.group_a, self.group_b]),
                         title="Replicates"),
                 Panel(child=column([self.num_bins, self.update_frequency_slider, self.redraw_slider,
                                     self.anno_size_slider, self.raw_size_slider, self.ratio_size_slider]),
@@ -418,25 +455,29 @@ class MainLayout:
 
         return i_a / max(b_a, a_a)
 
-    def bin_cols_or_rows(self, area, h_bin, base_idx=0):
+    def bin_cols_or_rows(self, area, h_bin, base_idx=0, none_for_chr_border=False):
         h_bin = max(1, h_bin)
         ret = []
         x_chrs = [idx for idx, (start, size) in enumerate(zip(self.meta.chr_sizes.chr_starts,
                                                               self.meta.chr_sizes.chr_sizes_l))
                         if start <= area[base_idx+2] and start + size >= area[base_idx] and size >= h_bin]
+        if none_for_chr_border:
+            ret.append(None)
         for x_chr in x_chrs:
             x = max(int(area[base_idx]), self.meta.chr_sizes.chr_starts[x_chr])
             x_end = self.meta.chr_sizes.chr_starts[x_chr] + self.meta.chr_sizes.chr_sizes_l[x_chr]
             while x <= min(area[base_idx+2], x_end):
                 ret.append((x, min(h_bin, x_end - x)))
                 x += h_bin
+            if none_for_chr_border:
+                ret.append(None)
         return ret
 
-    def bin_cols(self, area, h_bin):
-        return self.bin_cols_or_rows(area, h_bin, 0)
+    def bin_cols(self, area, h_bin, none_for_chr_border=False):
+        return self.bin_cols_or_rows(area, h_bin, 0, none_for_chr_border)
 
-    def bin_rows(self, area, h_bin):
-        return self.bin_cols_or_rows(area, h_bin, 1)
+    def bin_rows(self, area, h_bin, none_for_chr_border=False):
+        return self.bin_cols_or_rows(area, h_bin, 1, none_for_chr_border)
 
     def bin_coords(self, area, h_bin):
         h_bin = max(1, h_bin)
@@ -463,7 +504,12 @@ class MainLayout:
         return bins
 
     def col_norm(self, cols):
-        return self.flatten_bins(self.make_bins([(x, 0, w, self.meta.chr_sizes.chr_start_pos["end"]) for x, w in cols]))
+        return self.flatten_bins(self.make_bins([(c[0], 0, c[1], self.meta.chr_sizes.chr_start_pos["end"]) \
+                            if not c is None else (-2,-2,1,1) for c in cols]))
+
+    def row_norm(self, rows):
+        return self.flatten_bins(self.make_bins([(0, c[0], self.meta.chr_sizes.chr_start_pos["end"], c[1]) \
+                            if not c is None else (-2,-2,1,1) for c in rows]))
 
     def read_norm(self, idx):
         n = []
@@ -480,8 +526,11 @@ class MainLayout:
             raise RuntimeError("Unknown in group value")
         return n
 
-    def norm_bins(self, bins_l, bin_coords, cols, rows):
+    def norm_bins(self, bins_l, cols, rows):
         ret = []
+        if self.normalization_d in ["tracks_abs", "tracks_rel"]:
+            raw_x_norm = self.linear_bins_norm(rows, self.meta.rna_coverage)
+            raw_y_norm = self.linear_bins_norm(cols, self.meta.dna_coverage)
         for idx, bins in enumerate(bins_l):
             if self.normalization_d == "max_bin_visible":
                 n = max(bins + [1])
@@ -491,9 +540,22 @@ class MainLayout:
                 ret.append([x/n for x in bins])
             elif self.normalization_d == "column":
                 ns = self.col_norm(cols)
-                ret.append([x/max(ns[idx][idx_2//len(rows)],1) for idx_2, x in enumerate(bins)])
-            elif self.normalization_d == "tracks":
-                raise RuntimeError("unimplemented normalization value")
+                ret.append([x/max(ns[idx][idx_2 // len(rows)],1) for idx_2, x in enumerate(bins)])
+            elif self.normalization_d in ["tracks_abs", "tracks_rel"]:
+                n = self.read_norm(idx)
+                def get_norm(i):
+                    d = (raw_y_norm[i // len(rows)] * raw_x_norm[i % len(rows)] * n)
+                    if d == 0:
+                        return 0
+                    return (self.meta.rna_coverage.num_reads * self.meta.dna_coverage.num_reads) / d
+                ret.append([x*get_norm(idx_2) for idx_2, x in enumerate(bins)])
+                if self.normalization_d == "tracks_rel":
+                    _max = max(ret[-1])
+                    for i in range(len(ret[-1])):
+                        ret[-1][i] = ret[-1][i] / _max
+                else:
+                    for i in range(len(ret[-1])):
+                        ret[-1][i] = min(ret[-1][i], 1)
             else:
                 raise RuntimeError("Unknown normalization value")
         return ret
@@ -506,7 +568,7 @@ class MainLayout:
             for idx_2 in range(len(bins)):
                 if str(idx_2) in self.group_a.value:
                     a.append(bins[idx_2][idx])
-                else:
+                if str(idx_2) in self.group_b.value:
                     b.append(bins[idx_2][idx])
             if self.in_group_d == "min":
                 aa = min(a + [0])
@@ -533,7 +595,7 @@ class MainLayout:
         c = math.log(a*(c*(1-(1/a))+(1/a))) / math.log(a)
         return c
 
-    def color_bins(self, bins):
+    def color_bins_a(self, bins):
         ret = []
         for x, y in zip(*bins):
             c = 0
@@ -551,6 +613,11 @@ class MainLayout:
                 c = (x + y) / 2
             else:
                 raise RuntimeError("Unknown between group value")
+            ret.append(c)
+        return ret
+    def color_bins_b(self, bins):
+        ret = []
+        for c in bins:
             if self.betw_group_d == "sub":
                 c = self.log_scale(abs(c)) * (1 if c >= 0 else -1) / 2 + 0.5
                 c = max(0, min(255, int(255*c)))
@@ -558,6 +625,9 @@ class MainLayout:
             else:
                 ret.append(Viridis256[max(0, min(255, int(255*self.log_scale(c))))])
         return ret
+
+    def color_bins(self, bins):
+        return self.color_bins_b(self.color_bins_a(bins))
 
     def purge(self, bins, bin_coords, background):
         ret1 = []
@@ -574,13 +644,18 @@ class MainLayout:
         elif self.symmetrie_d == "sym" or self.symmetrie_d == "asym":
             bins_2 = self.make_bins([(y, x, h, w) for x, y, w, h in bin_coords])
             flat = self.flatten_bins(bins_2)
-            norms = self.norm_bins(flat, bin_coords, bin_rows, bin_cols)
+            raw_x_norm = self.linear_bins_norm(bin_cols, self.meta.rna_coverage)
+            raw_y_norm = self.linear_bins_norm(bin_rows, self.meta.dna_coverage)
+            norms = self.norm_bins(flat, bin_coords, bin_rows, bin_cols, raw_x_norm, raw_y_norm)
             if self.symmetrie_d == "sym":
                 return [[min(a, b) for a,b in zip(bin, norm)] for bin, norm in zip(bins, norms)]
             else:
                 return [[max(a-b, 0) for a,b in zip(bin, norm)] for bin, norm in zip(bins, norms)]
         else:
             raise RuntimeError("Unknown symmetry value")
+
+    def linear_bins_norm(self, bins, coverage_obj):
+        return [coverage_obj.count(x[0], x[0] + x[1]) if not x is None else float('NaN') for x in bins]
 
     def render(self, area):
         if self.meta is None or self.idx is None:
@@ -597,20 +672,62 @@ class MainLayout:
         bin_coords, bin_cols, bin_rows = self.bin_coords(area, h_bin)
         bins = self.make_bins(bin_coords)
         flat = self.flatten_bins(bins)
-        norm = self.norm_bins(flat, bin_coords, bin_cols, bin_rows)
+        norm = self.norm_bins(flat, bin_cols, bin_rows)
         sym = self.bin_symmentry(norm, bin_coords, bin_cols, bin_rows)
         c = self.color_bins(sym)
-        self.heatmap.background_fill_color = Viridis256[255//2] if self.betw_group_d == "sub" else Viridis256[0]
-        purged, purged_coords = self.purge(c, bin_coords, self.heatmap.background_fill_color)
+        b_col = Viridis256[255//2] if self.betw_group_d == "sub" else Viridis256[0]
+        purged, purged_coords = self.purge(c, bin_coords, b_col)
 
-        d = {
+
+        d_heatmap = {
              "b": [x[1] for x in purged_coords],
              "l": [x[0] for x in purged_coords],
              "t": [x[1] + x[3] for x in purged_coords],
              "r": [x[0] + x[2] for x in purged_coords],
              "c": purged
             }
-        self.heatmap_data.data = d
+
+
+        raw_bin_rows = self.bin_rows(area, h_bin, True)
+        raw_bin_cols = self.bin_cols(area, h_bin, True)
+
+        raw_x_norm = self.linear_bins_norm(raw_bin_rows, self.meta.rna_coverage)
+        raw_y_norm = self.linear_bins_norm(raw_bin_cols, self.meta.dna_coverage)
+        raw_x_heat = self.color_bins_a(self.row_norm(raw_bin_rows))
+        raw_y_heat = self.color_bins_a(self.col_norm(raw_bin_cols))
+        raw_x_ratio = [a/b if not b == 0 else 0 for a, b in zip(raw_x_heat, raw_x_norm)]
+        raw_y_ratio = [a/b if not b == 0 else 0 for a, b in zip(raw_y_heat, raw_y_norm)]
+
+        raw_data_x = {
+            "pos": [x[0] + x[1]/2 if not x is None else float('NaN') for x in raw_bin_rows],
+            "norm": raw_x_norm,
+            "heat": raw_x_heat,
+            "ratio": raw_x_ratio,
+        }
+        raw_data_y = {
+            "pos": [x[0] + x[1]/2 if not x is None else float('NaN') for x in raw_bin_cols],
+            "norm": raw_y_norm,
+            "heat": raw_y_heat,
+            "ratio": raw_y_ratio,
+        }
+
+        def mmax(*args):
+            m = 0
+            for x in args:
+                if not x is None and x > m:
+                    m = x
+            return m
+
+
+        self.raw_x_axis.xaxis.bounds = (0, mmax(*raw_x_heat, *raw_x_norm))
+        self.ratio_x_axis.xaxis.bounds = (0, mmax(*raw_x_ratio))
+        self.raw_y_axis.yaxis.bounds = (0, mmax(*raw_y_heat, *raw_y_norm))
+        self.ratio_y_axis.yaxis.bounds = (0, mmax(*raw_y_ratio))
+
+        self.heatmap.background_fill_color = b_col
+        self.heatmap_data.data = d_heatmap
+        self.raw_data_x.data = raw_data_x
+        self.raw_data_y.data = raw_data_y
 
 
     def setup(self):

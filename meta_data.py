@@ -1,11 +1,14 @@
 from os import stat
 from chr_sizes import *
+from linear_data_as_integral import *
 import pickle
 
 class MetaData:
     def __init__(self):
         self.chr_sizes = None
         self.datasets = []
+        self.dna_coverage = Coverage()
+        self.rna_coverage = Coverage()
 
     def set_chr_sizes(self, chr_sizes):
         self.chr_sizes = chr_sizes
@@ -25,6 +28,9 @@ class MetaData:
     def setup(self, main_layout):
         self.chr_sizes.setup(main_layout)
 
-        main_layout.group_a.options = [ (str(idx), data[0]) for idx, data in enumerate(self.datasets)]
+        opt = [ (str(idx), data[0]) for idx, data in enumerate(self.datasets)]
+        main_layout.group_a.options = opt
+        main_layout.group_b.options = opt
         main_layout.group_a.value = [ str(idx) for idx, data in enumerate(self.datasets) if data[2] ]
+        main_layout.group_b.value = [ str(idx) for idx, data in enumerate(self.datasets) if not data[2] ]
 
