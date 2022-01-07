@@ -9,12 +9,26 @@ class MetaData:
         self.datasets = []
         self.dna_coverage = Coverage()
         self.rna_coverage = Coverage()
+        self.annotations = {}
 
     def set_chr_sizes(self, chr_sizes):
         self.chr_sizes = chr_sizes
 
     def add_dataset(self, name, desc, group_a, num_reads):
         self.datasets.append([name, desc, group_a, num_reads])
+
+    def add_annotations(self, annotation_list):
+        starts = {}
+        ends = {}
+        for name, start, end in annotation_list:
+            if name not in starts:
+                starts[name] = []
+                ends[name] = []
+            starts[name].append(start)
+            ends[name].append(end)
+        for name, start_l in starts.items():
+            self.annotations[name] = Coverage().set(start_l, ends[name])
+
 
     def save(self, file_name):
         with open(file_name, "wb") as out_file:
@@ -33,4 +47,7 @@ class MetaData:
         main_layout.group_b.options = opt
         main_layout.group_a.value = [ str(idx) for idx, data in enumerate(self.datasets) if data[2] ]
         main_layout.group_b.value = [ str(idx) for idx, data in enumerate(self.datasets) if not data[2] ]
+
+        main_layout.displayed_annos.options = list(self.annotations.keys())
+        main_layout.displayed_annos.value = list(self.annotations.keys())
 

@@ -33,6 +33,10 @@ def preprocess(name, chr_len_file_name):
     meta.dna_coverage.set(*reads())
     meta.rna_coverage.set(*reads())
 
+    meta.add_annotations([("a", 5, 15), ("a", 20, 30), ("b", 20, 30), ("b", 40, 43)])
+    print(meta.annotations["a"].xs)
+    print(meta.annotations["a"].yys)
+
     meta.save(DEFAULT_OUT + name + ".meta")
 
     os.remove(DEFAULT_OUT + name + ".db.dat")

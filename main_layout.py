@@ -11,7 +11,7 @@ from bokeh.models import Range1d
 from meta_data import *
 import os
 from heatmap_as_r_tree import *
-from bokeh.palettes import Viridis256
+from bokeh.palettes import Viridis256, Category10
 
 SETTINGS_WIDTH = 200
 DEFAULT_SIZE = 50
@@ -140,6 +140,14 @@ class FigureMaker:
         self.args["align"] = "end"
         self.y_axis_label = label
         self.no_border_h = True
+        return self
+
+    def categorical_x(self):
+        self.args["x_range"] = []
+        return self
+
+    def categorical_y(self):
+        self.args["y_range"] = []
         return self
 
     def hide_on(self, key):
@@ -288,13 +296,21 @@ class MainLayout:
         self.ratio_x.line(x="ratio", y="pos", source=self.raw_data_x, line_color="black") # , level="image"
         self.ratio_y.line(x="pos", y="ratio", source=self.raw_data_y, line_color="black") # , level="image"
 
-        self.anno_x = FigureMaker().w(DEFAULT_SIZE).link_y(self.heatmap).hide_on("annotation").combine_tools(tollbars).get()
+        self.anno_x = FigureMaker().w(DEFAULT_SIZE).link_y(self.heatmap).hide_on("annotation").combine_tools(tollbars).categorical_x().get()
         self.anno_x_axis = FigureMaker().x_axis_of(self.anno_x).combine_tools(tollbars).get()
         self.anno_x_axis.xaxis.axis_label = "Anno"
 
-        self.anno_y = FigureMaker().h(DEFAULT_SIZE).link_x(self.heatmap).hide_on("annotation").combine_tools(tollbars).get()
+        self.anno_y = FigureMaker().h(DEFAULT_SIZE).link_x(self.heatmap).hide_on("annotation").combine_tools(tollbars).categorical_y().get()
         self.anno_y_axis = FigureMaker().y_axis_of(self.anno_y).combine_tools(tollbars).get()
         self.anno_y_axis.yaxis.axis_label = "Anno"
+        
+        d = {"x": [], "s": [], "e": [], "c": []}
+        self.anno_x_data=ColumnDataSource(data=d)
+        self.anno_x.vbar(x="x", top="e", bottom="s", width=0.9, fill_color="c", line_color=None,
+              source=self.anno_x_data)
+        self.anno_y_data=ColumnDataSource(data=d)
+        self.anno_y.hbar(y="x", right="e", left="s", height=0.9, fill_color="c", line_color=None,
+              source=self.anno_y_data)
 
         tool_bar = FigureMaker.get_tools(tollbars)
         SETTINGS_WIDTH = tool_bar.width
@@ -407,10 +423,15 @@ class MainLayout:
                                     placeholder="Group B")
         self.group_b.on_change("value", lambda x,y,z: self.trigger_render())
 
+        self.displayed_annos = MultiChoice(value=[], options=[],
+                                    placeholder="Displayed Annotations")
+        self.displayed_annos.on_change("value", lambda x,y,z: self.trigger_render())
+
 
         _settings = Tabs(
             tabs=[
-                Panel(child=column([tool_bar, self.meta_file, show_hide, self.symmetrie, self.diag_dist_slider]), 
+                Panel(child=column([tool_bar, self.meta_file, show_hide, self.symmetrie, self.diag_dist_slider,
+                                    self.displayed_annos]), 
                         title="General"),
                 Panel(child=column([self.normalization, self.mapq_slider, self.interactions_bounds_slider,
                                     self.interactions_slider]),
@@ -711,6 +732,33 @@ class MainLayout:
             "ratio": raw_y_ratio,
         }
 
+        d_anno_x = {
+            "x": [],
+            "s": [],
+            "e": [],
+            "c": []
+        }
+        for idx, anno in enumerate(self.displayed_annos.value):
+            for (s, e), x in zip(bin_rows, self.linear_bins_norm(bin_rows, self.meta.annotations[anno])):
+                if x > 0:
+                    d_anno_x["x"].append(anno)
+                    d_anno_x["s"].append(s)
+                    d_anno_x["e"].append(s + e)
+                    d_anno_x["c"].append(Category10[10][idx % 10])
+        d_anno_y = {
+            "x": [],
+            "s": [],
+            "e": [],
+            "c": []
+        }
+        for idx, anno in enumerate(self.displayed_annos.value):
+            for (s, e), x in zip(bin_cols, self.linear_bins_norm(bin_cols, self.meta.annotations[anno])):
+                if x > 0:
+                    d_anno_y["x"].append(anno)
+                    d_anno_y["s"].append(s)
+                    d_anno_y["e"].append(s + e)
+                    d_anno_y["c"].append(Category10[10][idx % 10])
+
         def mmax(*args):
             m = 0
             for x in args:
@@ -718,6 +766,8 @@ class MainLayout:
                     m = x
             return m
 
+        self.anno_x.x_range.factors = self.displayed_annos.value
+        self.anno_y.y_range.factors = self.displayed_annos.value
 
         self.raw_x_axis.xaxis.bounds = (0, mmax(*raw_x_heat, *raw_x_norm))
         self.ratio_x_axis.xaxis.bounds = (0, mmax(*raw_x_ratio))
@@ -728,7 +778,9 @@ class MainLayout:
         self.heatmap_data.data = d_heatmap
         self.raw_data_x.data = raw_data_x
         self.raw_data_y.data = raw_data_y
-
+        
+        self.anno_x_data.data = d_anno_x
+        self.anno_y_data.data = d_anno_y
 
     def setup(self):
         if os.path.exists(self.meta_file.value + ".meta"):

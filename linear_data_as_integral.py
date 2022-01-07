@@ -18,6 +18,7 @@ class Coverage:
         c = 0
         # compute coverage
         while i1 < len(starts):
+            ys.append(c)
             if starts[i1] < ends[i2]:
                 c += 1
                 xs.append(starts[i1])
@@ -26,16 +27,15 @@ class Coverage:
                 c -= 1
                 xs.append(ends[i2])
                 i2 += 1
-            ys.append(c)
         while i2 < len(ends):
+            ys.append(c)
             c -= 1
             xs.append(ends[i2])
             i2 += 1
-            ys.append(c)
 
         # collapse regions where multiple reads started/ended
-        ys_2 = []
-        self.xs = []
+        ys_2 = [0]
+        self.xs = [0]
         for x, y in zip(xs, ys):
             if len(self.xs) == 0 or x != self.xs[-1]:
                 self.xs.append(x)
@@ -49,7 +49,9 @@ class Coverage:
         for y in ys_2:
             c += y
             self.yys.append(c)
+        return self
 
     def count(self, f, t):
-        return self.yys[min(bisect.bisect_left(self.xs, t), len(self.yys)-1)] - \
-               self.yys[min(bisect.bisect_left(self.xs, f), len(self.yys)-1)]
+        # @todo @fixme +-1 error
+        return self.yys[min(bisect.bisect_right(self.xs, t+1), len(self.yys)-1)] - \
+               self.yys[min(bisect.bisect_right(self.xs, f+1)-1, len(self.yys)-1)]
