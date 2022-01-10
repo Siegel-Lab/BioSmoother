@@ -4,22 +4,20 @@ import os
 import random
 from heatmap_as_r_tree import *
 import subprocess
-
-DEFAULT_OUT = "out/"
+import argparse
 
 ## parses file & sets up axis and matrix to have the appropriate size
-def parse_heatmap(in_filenames):
-    for in_filename in in_filenames.split(","):
-        with open(in_filename, "r") as in_file_1:
-            for line in in_file_1:
-                # parse file columns
-                read_name, strnd_1, chr_1, pos_1, _, strnd_2, chr_2, pos_2, _2, mapq_1, mapq_2 = line.split()
-                # convert number values to ints
-                pos_1, pos_2, mapq_1, mapq_2 = (int(x) for x in (pos_1, pos_2, mapq_1, mapq_2))
-                pos_1 -= 1
-                pos_2 -= 1
+def parse_heatmap(in_filename):
+    with open(in_filename, "r") as in_file_1:
+        for line in in_file_1:
+            # parse file columns
+            read_name, strnd_1, chr_1, pos_1, _, strnd_2, chr_2, pos_2, _2, mapq_1, mapq_2 = line.split()
+            # convert number values to ints
+            pos_1, pos_2, mapq_1, mapq_2 = (int(x) for x in (pos_1, pos_2, mapq_1, mapq_2))
+            pos_1 -= 1
+            pos_2 -= 1
 
-                yield in_filename, read_name, strnd_1, chr_1, pos_1, strnd_2, chr_2, pos_2, mapq_1, mapq_2
+            yield read_name, strnd_1, chr_1, pos_1, strnd_2, chr_2, pos_2, mapq_1, mapq_2
 
 def execute(cmd):
     popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
@@ -42,70 +40,80 @@ def parse_norm_file(filename):
         read_name, flag, chrom, start_pos, map_q, *other = split
         yield read_name, chrom, start_pos, map_q
 
-def insert_heatmap_files(meta, tree, in_filenames):
-    for in_filename, read_name, strnd_1, chr_1, pos_1, strnd_2, chr_2, pos_2, mapq_1, mapq_2 in parse_heatmap(in_filenames):
-        x = meta.chr_sizes.coordinate(pos_1, chr_1) # RNA
-        y = meta.chr_sizes.coordinate(pos_2, chr_2) # DNA
-        tree.insert(read_name, meta.data_id_by_path[in_filename], x, y, min(mapq_1, mapq_2))
+def parse_annotations(annotation_file, axis_start_pos_offset):
+    annos = []
 
-def preprocess(name, chr_len_file_name):
-    if not os.path.exists(DEFAULT_OUT):
-        os.makedirs(DEFAULT_OUT)
+    annotation_types = set()
+    with open(annotation_file, "r") as in_file_1:
+        for line in in_file_1:
+            if line[0] == "#":
+                continue
+            # parse file colum
+            chrom, db_name, annotation_type, from_pos, to_pos, _, strand, _, extras, *opt = line.split()
+            annotation_types.add(annotation_type)
+            annos.append((annotation_type, axis_start_pos_offset[chrom] + int(from_pos),
+                                 int(to_pos) + axis_start_pos_offset[chrom]))
+    return annos
+
+
+def preprocess(out_prefix, chr_len_file_name, annotation_filename, interaction_filenames, normalization_filenames):
+    if not os.path.exists(out_prefix):
+        os.makedirs(out_prefix)
     meta = MetaData()
+    print("processing chromosome sizes...")
     meta.set_chr_sizes(ChrSizes(chr_len_file_name))
 
-    NUM_READS = 1000
-    meta.add_dataset("b1r1", "n/a", True, NUM_READS)
-    meta.add_dataset("b1r2", "n/a", True, NUM_READS)
-    meta.add_dataset("b1r3", "n/a", True, NUM_READS)
-    meta.add_dataset("b2r1", "n/a", False, NUM_READS)
-    meta.add_dataset("b2r2", "n/a", False, NUM_READS)
-    meta.add_dataset("b2r3", "n/a", False, NUM_READS)
+    if not annotation_filename is None:
+        print("processing annotations...")
+        meta.add_annotations(parse_annotations(annotation_filename, meta.chr_sizes.chr_start_pos))
 
-    meta.add_normalization("norm_rna", "n/a", False, NUM_READS)
-    meta.add_normalization("norm_dna", "n/a", True, NUM_READS)
+    if os.path.isfile(out_prefix + ".heat.db.dat"):
+        os.remove(out_prefix + ".heat.db.dat")
+    if os.path.isfile(out_prefix + ".heat.db.idx"):
+        os.remove(out_prefix + ".heat.db.idx")
+    tree = Tree_4(out_prefix + ".heat.db")
+    print("processing rna dna interactions...")
+    for path, name, group_a in interaction_filenames:
+        cnt = 0
+        for read_name, _, chr_1, pos_1, _, chr_2, pos_2, mapq_1, mapq_2 in parse_heatmap(path):
+            x = meta.chr_sizes.coordinate(pos_1, chr_1) # RNA
+            y = meta.chr_sizes.coordinate(pos_2, chr_2) # DNA
+            tree.insert(read_name, len(meta.datasets), x, y, min(mapq_1, mapq_2))
+            cnt += 1
+        meta.add_dataset(name, path, group_a, cnt)
 
-    l = 100
+    if os.path.isfile(out_prefix + ".norm.db.dat"):
+        os.remove(out_prefix + ".norm.db.dat")
+    if os.path.isfile(out_prefix + ".norm.db.idx"):
+        os.remove(out_prefix + ".norm.db.idx")
+    t_n = Tree_3(out_prefix + ".norm.db")
+    print("processing normalizations...")
+    for path, name, for_row in normalization_filenames:
+        cnt = 0
+        for read_name, chrom, start_pos, map_q in parse_norm_file(path):
+            x = meta.chr_sizes.coordinate(start_pos, chrom)
+            tree.insert(read_name, len(meta.normalizations), x, map_q)
+            cnt += 1
+        meta.add_normalization(name, path, for_row, cnt)
 
-    def reads():
-        s = []
-        e = []
-        for _ in range(100):
-            x = random.choice(range(l-25))
-            s.append(x)
-            e.append(x+25)
-        return s, e
+    meta.save(out_prefix + ".meta")
+    print("done")
 
-    if os.path.isfile(DEFAULT_OUT + name + ".norm.db.dat"):
-        os.remove(DEFAULT_OUT + name + ".norm.db.dat")
-    if os.path.isfile(DEFAULT_OUT + name + ".norm.db.idx"):
-        os.remove(DEFAULT_OUT + name + ".norm.db.idx")
-    t_n = Tree_3(DEFAULT_OUT + name + ".norm.db")
-    for i in range(2):
-        for _ in range(NUM_READS):
-            x = random.choice(range(l))
-            z = random.choice(range(255))
-            t_n.insert("", i, x, z)
+def parse():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-l', '--chr_len', metavar="PATH", required=True)
+    parser.add_argument('-o', '--out_prefix', metavar="PATH", required=True)
+    parser.add_argument('-i', '--interaction', action='append', nargs=3, metavar=("PATH", "NAME", "GROUP_A"), 
+                    required=True)
+    parser.add_argument('-n', '--normalization', action='append', nargs=3, metavar=("PATH", "NAME", "FOR_ROW"), 
+                    required=True)
+    parser.add_argument('-a', '--annotations', metavar="PATH", default=None)
+    #parser.add_argument('-h', '--help', help="Display help and exit", default=False)
 
-    meta.add_annotations([("a", 5, 15), ("a", 20, 30), ("b", 20, 30), ("b", 40, 43)])
-    print(meta.annotations["a"].xs)
-    print(meta.annotations["a"].yys)
+    args = parser.parse_args()
 
-    meta.save(DEFAULT_OUT + name + ".meta")
-
-    if os.path.isfile(DEFAULT_OUT + name + ".heat.db.dat"):
-        os.remove(DEFAULT_OUT + name + ".heat.db.dat")
-    if os.path.isfile(DEFAULT_OUT + name + ".heat.db.idx"):
-        os.remove(DEFAULT_OUT + name + ".heat.db.idx")
-    t = Tree_4(DEFAULT_OUT + name + ".heat.db")
-    y_r = [*range(l)] + [50]*500
-    for i in range(6):
-        for _ in range(NUM_READS):
-            x = random.choice(range(l))
-            y = random.choice(y_r)
-            z = random.choice(range(255))
-            t.insert("", i, x, y, z)
+    preprocess(args.o, args.l, args.a, args.i, args.n)
 
 
 if __name__ == "__main__":
-    preprocess("test", "Lister427.sizes")
+    parse()

@@ -19,6 +19,8 @@ ANNOTATION_PLOT_NAME = "Annotation"
 RATIO_PLOT_NAME = "Ratio"
 RAW_PLOT_NAME = "Raw"
 
+DIV_MARGIN = (5, 5, 0, 5)
+
 class FigureMaker:
     _show_hide = {}
     _hidable_plots = []
@@ -430,8 +432,9 @@ class MainLayout:
                                     placeholder="Group B")
         self.group_b.on_change("value", lambda x,y,z: self.trigger_render())
 
-        self.displayed_annos = MultiChoice(value=[], options=[],
-                                    placeholder="Displayed Annotations")
+        div_displayed_annos = Div(text="Displayed Annotations:")
+        div_displayed_annos.margin = DIV_MARGIN
+        self.displayed_annos = MultiChoice(value=[], options=[])
         self.displayed_annos.on_change("value", lambda x,y,z: self.trigger_render())
 
         power_tick = FuncTickFormatter(code="return \"10^\"+Math.floor(tick)")#Math.pow(10, tick)
@@ -441,10 +444,14 @@ class MainLayout:
 
         self.curr_bin_size = Div(text="Current Bin Size: n/a")
         div_group_a = Div(text="Group A:")
+        div_group_a.margin = DIV_MARGIN
         div_group_b = Div(text="Group B:")
+        div_group_b.margin = DIV_MARGIN
 
         div_norm_x = Div(text="Normalization Rows:")
+        div_norm_x.margin = DIV_MARGIN
         div_norm_y = Div(text="Normalization Columns:")
+        div_norm_y.margin = DIV_MARGIN
         self.norm_x = MultiChoice(value=[], options=[])
         self.norm_x.on_change("value", lambda x,y,z: self.trigger_render())
         self.norm_y = MultiChoice(value=[], options=[])
@@ -454,7 +461,8 @@ class MainLayout:
         _settings = Tabs(
             tabs=[
                 Panel(child=column([tool_bar, self.meta_file, show_hide, self.symmetrie, self.diag_dist_slider,
-                                    self.displayed_annos, self.min_max_bin_size, self.curr_bin_size]), 
+                                    div_displayed_annos, self.displayed_annos, self.min_max_bin_size,
+                                    self.curr_bin_size]), 
                         title="General"),
                 Panel(child=column([self.normalization, self.mapq_slider, self.interactions_bounds_slider,
                                     self.interactions_slider, div_norm_x, self.norm_x, div_norm_y, self.norm_y]),
@@ -578,6 +586,11 @@ class MainLayout:
             raise RuntimeError("Unknown in group value")
         return n
 
+    def norm_num_reads(self, rows):
+        return self.flatten_norm([
+            [self.idx_norm.count(int(idx), 0, self.meta.chr_sizes.chr_start_pos["end"], *self.mapq_slider.value)
+                for idx in (self.norm_x.value if rows else self.norm_y.value)]] )[0]
+
     def norm_bins(self, bins_l, cols, rows):
         ret = []
         if self.normalization_d in ["tracks_abs", "tracks_rel"]:
@@ -599,7 +612,7 @@ class MainLayout:
                     d = (raw_y_norm[i // len(rows)] * raw_x_norm[i % len(rows)] * n)
                     if d == 0:
                         return 0
-                    return (self.meta.rna_coverage.num_reads * self.meta.dna_coverage.num_reads) / d
+                    return (self.norm_num_reads(True) * self.norm_num_reads(False)) / d
                 ret.append([x*get_norm(idx_2) for idx_2, x in enumerate(bins)])
                 if self.normalization_d == "tracks_rel":
                     _max = max(*ret[-1], 0.001)
