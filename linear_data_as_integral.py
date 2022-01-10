@@ -53,5 +53,5 @@ class Coverage:
 
     def count(self, f, t):
         # @todo @fixme +-1 error
-        return self.yys[min(bisect.bisect_right(self.xs, t+1), len(self.yys)-1)] - \
-               self.yys[min(bisect.bisect_right(self.xs, f+1)-1, len(self.yys)-1)]
+        return self.yys[min(bisect.bisect_right(self.xs, t-1), len(self.yys)-1)] - \
+               self.yys[min(bisect.bisect_right(self.xs, f)-1, len(self.yys)-1)]

@@ -1,7 +1,7 @@
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, FileInput, TextInput, MultiChoice
+from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, FileInput, TextInput, MultiChoice, FuncTickFormatter, Div
 import math
 from datetime import datetime
 from tornado import gen
@@ -243,6 +243,7 @@ class MainLayout:
         self.force_render = True
         self.curdoc = curdoc()
         self.last_drawing_area = (0,0,0,0)
+        self.curr_area_size = 1
         self.idx = None
 
         global SETTINGS_WIDTH
@@ -368,9 +369,14 @@ class MainLayout:
                                   title="Update Frequency [seconds]", format="0[.]000")
         self.update_frequency_slider.sizing_mode = "fixed"
 
-        self.redraw_slider = Slider(width=SETTINGS_WIDTH, start=0, end=100, value=50, step=1,
-                                  title="Redraw if [%] of shown area changed")
+        self.redraw_slider = Slider(width=SETTINGS_WIDTH, start=0, end=100, value=90, step=1,
+                                  title="Redraw if zoomed in [%]")
         self.redraw_slider.sizing_mode = "fixed"
+
+        self.add_area_slider = Slider(width=SETTINGS_WIDTH, start=0, end=500, value=200, step=10,
+                                  title="[%] Additional Draw Area")
+        self.add_area_slider.sizing_mode = "fixed"
+        self.add_area_slider.on_change("value_throttled", lambda x,y,z: self.trigger_render())
 
         self.diag_dist_slider = Slider(width=SETTINGS_WIDTH, start=0, end=1000, value=0, step=1,
                                   title="Minimum Distance from Diagonal")
@@ -427,18 +433,26 @@ class MainLayout:
                                     placeholder="Displayed Annotations")
         self.displayed_annos.on_change("value", lambda x,y,z: self.trigger_render())
 
+        power_tick = FuncTickFormatter(code="return \"10^\"+Math.floor(tick)")#Math.pow(10, tick)
+        self.min_max_bin_size = RangeSlider(start=0, end=15, value=(0,6), step=1, title="Bin Size min and Max",
+                                            format=power_tick)
+        self.min_max_bin_size.on_change("value_throttled", lambda x,y,z: self.trigger_render())
+
+        self.curr_bin_size = Div(text="Current Bin Size: n/a")
+
 
         _settings = Tabs(
             tabs=[
                 Panel(child=column([tool_bar, self.meta_file, show_hide, self.symmetrie, self.diag_dist_slider,
-                                    self.displayed_annos]), 
+                                    self.displayed_annos, self.min_max_bin_size, self.curr_bin_size]), 
                         title="General"),
                 Panel(child=column([self.normalization, self.mapq_slider, self.interactions_bounds_slider,
                                     self.interactions_slider]),
                         title="Normalization"),
                 Panel(child=column([self.in_group, self.betw_group, self.group_a, self.group_b]),
                         title="Replicates"),
-                Panel(child=column([self.num_bins, self.update_frequency_slider, self.redraw_slider,
+                Panel(child=column([self.num_bins, self.update_frequency_slider, self.redraw_slider, 
+                                    self.add_area_slider,
                                     self.anno_size_slider, self.raw_size_slider, self.ratio_size_slider]),
                         title="GUI"),
             ],
@@ -475,6 +489,13 @@ class MainLayout:
         i_a = (i_xe - i_xs) * (i_ye - i_ys)
 
         return i_a / max(b_a, a_a)
+
+    @staticmethod
+    def area_outside(last, curr):
+        a_xs, a_ys, a_xe, a_ye = last
+        b_xs, b_ys, b_xe, b_ye = curr
+
+        return b_xs < a_xs or b_ys < a_ys or b_xe > a_xe or b_ye > a_ye
 
     def bin_cols_or_rows(self, area, h_bin, base_idx=0, none_for_chr_border=False):
         h_bin = max(1, h_bin)
@@ -571,7 +592,7 @@ class MainLayout:
                     return (self.meta.rna_coverage.num_reads * self.meta.dna_coverage.num_reads) / d
                 ret.append([x*get_norm(idx_2) for idx_2, x in enumerate(bins)])
                 if self.normalization_d == "tracks_rel":
-                    _max = max(ret[-1])
+                    _max = max(*ret[-1], 0.001)
                     for i in range(len(ret[-1])):
                         ret[-1][i] = ret[-1][i] / _max
                 else:
@@ -690,6 +711,7 @@ class MainLayout:
                         return i*10**n
                 n += 1
         h_bin = power_of_ten(math.sqrt(area_bin))
+        h_bin = min(max(h_bin, 10**self.min_max_bin_size.value[0]), 10**self.min_max_bin_size.value[1])
         bin_coords, bin_cols, bin_rows = self.bin_coords(area, h_bin)
         bins = self.make_bins(bin_coords)
         flat = self.flatten_bins(bins)
@@ -769,6 +791,8 @@ class MainLayout:
         self.anno_x.x_range.factors = self.displayed_annos.value
         self.anno_y.y_range.factors = self.displayed_annos.value
 
+        self.curr_bin_size.text="Current Bin Size:" + str(h_bin)
+
         self.raw_x_axis.xaxis.bounds = (0, mmax(*raw_x_heat, *raw_x_norm))
         self.ratio_x_axis.xaxis.bounds = (0, mmax(*raw_x_ratio))
         self.raw_y_axis.yaxis.bounds = (0, mmax(*raw_y_heat, *raw_y_norm))
@@ -795,20 +819,35 @@ class MainLayout:
 
     def render_callback(self):
         if self.do_render:
-            if not None in (self.heatmap.x_range.start, self.heatmap.x_range.end, self.heatmap.y_range.start, self.heatmap.y_range.end):
+            if not None in (self.heatmap.x_range.start, self.heatmap.x_range.end, self.heatmap.y_range.start, 
+                            self.heatmap.y_range.end):
                 curr_area = (self.heatmap.x_range.start, self.heatmap.y_range.start, 
                                 self.heatmap.x_range.end, self.heatmap.y_range.end)
-                overlap = MainLayout.area_overlap(self.last_drawing_area, curr_area)
-                min_change = self.redraw_slider.value/100
+                w = curr_area[2] - curr_area[0]
+                h = curr_area[3] - curr_area[1]
+                curr_area_size = w*h
+                min_change = 1-self.redraw_slider.value/100
                 #print(overlap)
-                if 1-overlap >= min_change or self.force_render:
+                if curr_area_size / self.curr_area_size < min_change or self.force_render or \
+                            MainLayout.area_outside(self.last_drawing_area, curr_area):
+                    if curr_area_size / self.curr_area_size < min_change:
+                        print("rendering due to zoom in", curr_area_size / self.curr_area_size)
+                    if self.force_render:
+                        print("rendering forced")
+                    if MainLayout.area_outside(self.last_drawing_area, curr_area):
+                        print("rendering due to pan", self.last_drawing_area, curr_area)
                     self.force_render = False
-                    w = curr_area[2] - curr_area[0]
-                    h = curr_area[3] - curr_area[1]
-                    new_area = (curr_area[0] - w*min_change, curr_area[1] - h*min_change,
-                                curr_area[2] + w*min_change, curr_area[3] + h*min_change)
-                    self.render(new_area)
-                    self.last_drawing_area = curr_area
+                    self.curr_area_size = curr_area_size
+                    x = self.add_area_slider.value/100
+                    new_area = (curr_area[0] - w*x, curr_area[1] - h*x,
+                                curr_area[2] + w*x, curr_area[3] + h*x)
+                    self.last_drawing_area = new_area
+                    self.curr_bin_size.text="Rendering..."
+                    def callback():
+                        self.render(new_area)
+                        self.curdoc.add_timeout_callback(lambda: self.render_callback(), self.update_frequency_slider.value*1000)
+                    self.curdoc.add_next_tick_callback(callback)
+                    return
 
             self.curdoc.add_timeout_callback(lambda: self.render_callback(), self.update_frequency_slider.value*1000)
 
