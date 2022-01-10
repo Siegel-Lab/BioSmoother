@@ -7,15 +7,21 @@ class MetaData:
     def __init__(self):
         self.chr_sizes = None
         self.datasets = []
-        self.dna_coverage = Coverage()
-        self.rna_coverage = Coverage()
+        self.data_id_by_path = {}
+        self.normalizations = []
+        self.norm_id_by_path = {}
         self.annotations = {}
 
     def set_chr_sizes(self, chr_sizes):
         self.chr_sizes = chr_sizes
 
-    def add_dataset(self, name, desc, group_a, num_reads):
-        self.datasets.append([name, desc, group_a, num_reads])
+    def add_dataset(self, name, path, group_a, num_reads):
+        self.datasets.append([name, path, group_a, num_reads])
+        self.data_id_by_path[path] = len(self.datasets)-1
+
+    def add_normalization(self, name, path, x_axis, num_reads):
+        self.normalizations.append([name, path, x_axis, num_reads])
+        self.norm_id_by_path[path] = len(self.normalizations)-1
 
     def add_annotations(self, annotation_list):
         starts = {}
@@ -47,6 +53,11 @@ class MetaData:
         main_layout.group_b.options = opt
         main_layout.group_a.value = [ str(idx) for idx, data in enumerate(self.datasets) if data[2] ]
         main_layout.group_b.value = [ str(idx) for idx, data in enumerate(self.datasets) if not data[2] ]
+        opt = [ (str(idx), data[0]) for idx, data in enumerate(self.normalizations)]
+        main_layout.norm_x.options = opt
+        main_layout.norm_y.options = opt
+        main_layout.norm_x.value = [ str(idx) for idx, data in enumerate(self.normalizations) if not data[2] ]
+        main_layout.norm_y.value = [ str(idx) for idx, data in enumerate(self.normalizations) if data[2] ]
 
         main_layout.displayed_annos.options = list(self.annotations.keys())
         main_layout.displayed_annos.value = list(self.annotations.keys())

@@ -86,6 +86,9 @@ class ChrSizes:
             last_offset += self.chr_sizes[chr_x]
         self.chr_start_pos["end"] = last_offset
 
+    def coordinate(self, x, chr):
+        return self.chr_start_pos[chr] + x
+
     def setup(self, main_layout):
         main_layout.heatmap.x_range.start = 0
         main_layout.heatmap.x_range.end = self.chr_start_pos["end"]

@@ -245,6 +245,7 @@ class MainLayout:
         self.last_drawing_area = (0,0,0,0)
         self.curr_area_size = 1
         self.idx = None
+        self.idx_norm = None
 
         global SETTINGS_WIDTH
         tollbars = []
@@ -370,11 +371,11 @@ class MainLayout:
         self.update_frequency_slider.sizing_mode = "fixed"
 
         self.redraw_slider = Slider(width=SETTINGS_WIDTH, start=0, end=100, value=90, step=1,
-                                  title="Redraw if zoomed in [%]")
+                                  title="Redraw if zoomed in by [%]")
         self.redraw_slider.sizing_mode = "fixed"
 
-        self.add_area_slider = Slider(width=SETTINGS_WIDTH, start=0, end=500, value=200, step=10,
-                                  title="[%] Additional Draw Area")
+        self.add_area_slider = Slider(width=SETTINGS_WIDTH, start=0, end=500, value=100, step=10,
+                                  title="Additional Draw Area [%]")
         self.add_area_slider.sizing_mode = "fixed"
         self.add_area_slider.on_change("value_throttled", lambda x,y,z: self.trigger_render())
 
@@ -414,7 +415,7 @@ class MainLayout:
         self.raw_size_slider.on_change("value_throttled",raw_size_slider_event)
 
 
-        self.num_bins = Slider(width=SETTINGS_WIDTH, start=1000, end=100000, value=20000, step=1000,
+        self.num_bins = Slider(width=SETTINGS_WIDTH, start=1000, end=100000, value=30000, step=1000,
                                   title="Number of Bins")
         self.num_bins.sizing_mode = "fixed"
         self.num_bins.on_change("value_throttled", lambda x,y,z: self.trigger_render())
@@ -434,11 +435,20 @@ class MainLayout:
         self.displayed_annos.on_change("value", lambda x,y,z: self.trigger_render())
 
         power_tick = FuncTickFormatter(code="return \"10^\"+Math.floor(tick)")#Math.pow(10, tick)
-        self.min_max_bin_size = RangeSlider(start=0, end=15, value=(0,6), step=1, title="Bin Size min and Max",
+        self.min_max_bin_size = RangeSlider(start=0, end=15, value=(0,6), step=1, title="Bin Size Bounds [nt]",
                                             format=power_tick)
         self.min_max_bin_size.on_change("value_throttled", lambda x,y,z: self.trigger_render())
 
         self.curr_bin_size = Div(text="Current Bin Size: n/a")
+        div_group_a = Div(text="Group A:")
+        div_group_b = Div(text="Group B:")
+
+        div_norm_x = Div(text="Normalization Rows:")
+        div_norm_y = Div(text="Normalization Columns:")
+        self.norm_x = MultiChoice(value=[], options=[])
+        self.norm_x.on_change("value", lambda x,y,z: self.trigger_render())
+        self.norm_y = MultiChoice(value=[], options=[])
+        self.norm_y.on_change("value", lambda x,y,z: self.trigger_render())
 
 
         _settings = Tabs(
@@ -447,9 +457,9 @@ class MainLayout:
                                     self.displayed_annos, self.min_max_bin_size, self.curr_bin_size]), 
                         title="General"),
                 Panel(child=column([self.normalization, self.mapq_slider, self.interactions_bounds_slider,
-                                    self.interactions_slider]),
+                                    self.interactions_slider, div_norm_x, self.norm_x, div_norm_y, self.norm_y]),
                         title="Normalization"),
-                Panel(child=column([self.in_group, self.betw_group, self.group_a, self.group_b]),
+                Panel(child=column([self.in_group, self.betw_group, div_group_a, self.group_a, div_group_b, self.group_b]),
                         title="Replicates"),
                 Panel(child=column([self.num_bins, self.update_frequency_slider, self.redraw_slider, 
                                     self.add_area_slider,
@@ -571,8 +581,8 @@ class MainLayout:
     def norm_bins(self, bins_l, cols, rows):
         ret = []
         if self.normalization_d in ["tracks_abs", "tracks_rel"]:
-            raw_x_norm = self.linear_bins_norm(rows, self.meta.rna_coverage)
-            raw_y_norm = self.linear_bins_norm(cols, self.meta.dna_coverage)
+            raw_x_norm = self.linear_bins_norm(rows, True)
+            raw_y_norm = self.linear_bins_norm(cols, False)
         for idx, bins in enumerate(bins_l):
             if self.normalization_d == "max_bin_visible":
                 n = max(bins + [1])
@@ -625,6 +635,19 @@ class MainLayout:
                 raise RuntimeError("Unknown in group value")
             ret[0].append(aa)
             ret[1].append(bb)
+        return ret
+
+    def flatten_norm(self, bins):
+        ret = []
+        for x in bins:
+            if x is None:
+                ret.append(x)
+            elif self.in_group_d == "min":
+                ret.append(min(x))
+            elif self.in_group_d == "sum":
+                ret.append(sum(x))
+            elif self.in_group_d == "dif":
+                ret.append(sum(abs(a-b) for a in x for b in x))
         return ret
 
     #used function:
@@ -686,8 +709,8 @@ class MainLayout:
         elif self.symmetrie_d == "sym" or self.symmetrie_d == "asym":
             bins_2 = self.make_bins([(y, x, h, w) for x, y, w, h in bin_coords])
             flat = self.flatten_bins(bins_2)
-            raw_x_norm = self.linear_bins_norm(bin_cols, self.meta.rna_coverage)
-            raw_y_norm = self.linear_bins_norm(bin_rows, self.meta.dna_coverage)
+            raw_x_norm = self.linear_bins_norm(bin_cols, True)
+            raw_y_norm = self.linear_bins_norm(bin_rows, False)
             norms = self.norm_bins(flat, bin_coords, bin_rows, bin_cols, raw_x_norm, raw_y_norm)
             if self.symmetrie_d == "sym":
                 return [[min(a, b) for a,b in zip(bin, norm)] for bin, norm in zip(bins, norms)]
@@ -696,8 +719,14 @@ class MainLayout:
         else:
             raise RuntimeError("Unknown symmetry value")
 
-    def linear_bins_norm(self, bins, coverage_obj):
+    def annotation_bins(self, bins, coverage_obj):
         return [coverage_obj.count(x[0], x[0] + x[1]) if not x is None else float('NaN') for x in bins]
+
+    def linear_bins_norm(self, bins, rows):
+        return self.flatten_norm([
+            [self.idx_norm.count(int(idx), x[0], x[0] + x[1], *self.mapq_slider.value)
+                for idx in (self.norm_x.value if rows else self.norm_y.value)]
+                    if not x is None else [float('NaN')] for x in bins] )
 
     def render(self, area):
         if self.meta is None or self.idx is None:
@@ -734,8 +763,8 @@ class MainLayout:
         raw_bin_rows = self.bin_rows(area, h_bin, True)
         raw_bin_cols = self.bin_cols(area, h_bin, True)
 
-        raw_x_norm = self.linear_bins_norm(raw_bin_rows, self.meta.rna_coverage)
-        raw_y_norm = self.linear_bins_norm(raw_bin_cols, self.meta.dna_coverage)
+        raw_x_norm = self.linear_bins_norm(raw_bin_rows, True)
+        raw_y_norm = self.linear_bins_norm(raw_bin_cols, False)
         raw_x_heat = self.color_bins_a(self.row_norm(raw_bin_rows))
         raw_y_heat = self.color_bins_a(self.col_norm(raw_bin_cols))
         raw_x_ratio = [a/b if not b == 0 else 0 for a, b in zip(raw_x_heat, raw_x_norm)]
@@ -761,7 +790,7 @@ class MainLayout:
             "c": []
         }
         for idx, anno in enumerate(self.displayed_annos.value):
-            for (s, e), x in zip(bin_rows, self.linear_bins_norm(bin_rows, self.meta.annotations[anno])):
+            for (s, e), x in zip(bin_rows, self.annotation_bins(bin_rows, self.meta.annotations[anno])):
                 if x > 0:
                     d_anno_x["x"].append(anno)
                     d_anno_x["s"].append(s)
@@ -774,7 +803,7 @@ class MainLayout:
             "c": []
         }
         for idx, anno in enumerate(self.displayed_annos.value):
-            for (s, e), x in zip(bin_cols, self.linear_bins_norm(bin_cols, self.meta.annotations[anno])):
+            for (s, e), x in zip(bin_cols, self.annotation_bins(bin_cols, self.meta.annotations[anno])):
                 if x > 0:
                     d_anno_y["x"].append(anno)
                     d_anno_y["s"].append(s)
@@ -810,9 +839,13 @@ class MainLayout:
         if os.path.exists(self.meta_file.value + ".meta"):
             self.meta = MetaData.load(self.meta_file.value + ".meta")
             self.meta.setup(self)
-            if os.path.exists(self.meta_file.value + ".db.idx") and os.path.exists(self.meta_file.value + ".db.dat"):
-                self.idx = Tree(self.meta_file.value + ".db")
-                self.trigger_render()
+            if os.path.exists(self.meta_file.value + ".heat.db.idx") and \
+                        os.path.exists(self.meta_file.value + ".heat.db.dat"):
+                self.idx = Tree_4(self.meta_file.value + ".heat.db")
+                if os.path.exists(self.meta_file.value + ".norm.db.idx") and \
+                            os.path.exists(self.meta_file.value + ".norm.db.dat"):
+                    self.idx_norm = Tree_3(self.meta_file.value + ".norm.db")
+                    self.trigger_render()
 
     def trigger_render(self):
         self.force_render = True
