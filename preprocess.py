@@ -6,6 +6,8 @@ from heatmap_as_r_tree import *
 import subprocess
 import argparse
 
+PRINT_MODULO = 1000
+
 ## parses file & sets up axis and matrix to have the appropriate size
 def parse_heatmap(in_filename):
     with open(in_filename, "r") as in_file_1:
@@ -18,6 +20,7 @@ def parse_heatmap(in_filename):
             pos_2 -= 1
 
             yield read_name, strnd_1, chr_1, pos_1, strnd_2, chr_2, pos_2, mapq_1, mapq_2
+
 
 def execute(cmd):
     popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
@@ -38,7 +41,7 @@ def parse_norm_file(filename):
             continue
 
         read_name, flag, chrom, start_pos, map_q, *other = split
-        yield read_name, chrom, start_pos, map_q
+        yield read_name, chrom, int(start_pos), int(map_q)
 
 def parse_annotations(annotation_file, axis_start_pos_offset):
     annos = []
@@ -57,14 +60,16 @@ def parse_annotations(annotation_file, axis_start_pos_offset):
 
 
 def preprocess(out_prefix, chr_len_file_name, annotation_filename, interaction_filenames, normalization_filenames):
-    if not os.path.exists(out_prefix):
-        os.makedirs(out_prefix)
+    if "/" in  out_prefix:
+        out_folder = out_prefix[:out_prefix.rfind("/")]
+        if not os.path.exists(out_folder):
+            os.makedirs(out_folder)
     meta = MetaData()
-    print("processing chromosome sizes...")
+    print("processing chromosome sizes (1/4)...")
     meta.set_chr_sizes(ChrSizes(chr_len_file_name))
 
     if not annotation_filename is None:
-        print("processing annotations...")
+        print("processing annotations (2/4)...")
         meta.add_annotations(parse_annotations(annotation_filename, meta.chr_sizes.chr_start_pos))
 
     if os.path.isfile(out_prefix + ".heat.db.dat"):
@@ -72,10 +77,12 @@ def preprocess(out_prefix, chr_len_file_name, annotation_filename, interaction_f
     if os.path.isfile(out_prefix + ".heat.db.idx"):
         os.remove(out_prefix + ".heat.db.idx")
     tree = Tree_4(out_prefix + ".heat.db")
-    print("processing rna dna interactions...")
-    for path, name, group_a in interaction_filenames:
+    print("processing interactions (3/4)...")
+    for idx, (path, name, group_a) in enumerate(interaction_filenames):
         cnt = 0
-        for read_name, _, chr_1, pos_1, _, chr_2, pos_2, mapq_1, mapq_2 in parse_heatmap(path):
+        for idx_2, (read_name, _, chr_1, pos_1, _, chr_2, pos_2, mapq_1, mapq_2) in enumerate(parse_heatmap(path)):
+            if idx_2 % PRINT_MODULO == 0:
+                print("file", idx+1, "of", len(interaction_filenames), "line", idx_2+1, end="\r")
             x = meta.chr_sizes.coordinate(pos_1, chr_1) # RNA
             y = meta.chr_sizes.coordinate(pos_2, chr_2) # DNA
             tree.insert(read_name, len(meta.datasets), x, y, min(mapq_1, mapq_2))
@@ -87,19 +94,22 @@ def preprocess(out_prefix, chr_len_file_name, annotation_filename, interaction_f
     if os.path.isfile(out_prefix + ".norm.db.idx"):
         os.remove(out_prefix + ".norm.db.idx")
     t_n = Tree_3(out_prefix + ".norm.db")
-    print("processing normalizations...")
-    for path, name, for_row in normalization_filenames:
+    print("processing normalizations (4/4)...")
+    for idx, (path, name, for_row) in enumerate(normalization_filenames):
         cnt = 0
-        for read_name, chrom, start_pos, map_q in parse_norm_file(path):
+        for idx_2, (read_name, chrom, start_pos, map_q) in enumerate(parse_norm_file(path)):
+            if idx_2 % PRINT_MODULO == 0:
+                print("file", idx+1, "of", len(interaction_filenames), "line", idx_2+1, end="\r")
             x = meta.chr_sizes.coordinate(start_pos, chrom)
-            tree.insert(read_name, len(meta.normalizations), x, map_q)
+            t_n.insert(read_name, len(meta.normalizations), x, map_q)
             cnt += 1
         meta.add_normalization(name, path, for_row, cnt)
 
     meta.save(out_prefix + ".meta")
     print("done")
 
-def parse():
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-l', '--chr_len', metavar="PATH", required=True)
     parser.add_argument('-o', '--out_prefix', metavar="PATH", required=True)
@@ -108,12 +118,7 @@ def parse():
     parser.add_argument('-n', '--normalization', action='append', nargs=3, metavar=("PATH", "NAME", "FOR_ROW"), 
                     required=True)
     parser.add_argument('-a', '--annotations', metavar="PATH", default=None)
-    #parser.add_argument('-h', '--help', help="Display help and exit", default=False)
 
     args = parser.parse_args()
 
-    preprocess(args.o, args.l, args.a, args.i, args.n)
-
-
-if __name__ == "__main__":
-    parse()
+    preprocess(args.out_prefix, args.chr_len, args.annotations, args.interaction, args.normalization)

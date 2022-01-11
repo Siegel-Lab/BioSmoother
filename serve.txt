@@ -1,5 +1,13 @@
 ssh -L 5006:localhost:5006 mschmidt@MBIOHW30.bio.med.uni-muenchen.de
 
+srun --pty python3 preprocess.py -l Lister427.sizes \
+                           -o out/test \
+                           -a ../heatmap_static/HGAP3_Tb427v10_merged_2021_06_21.gff3 \
+                           -i /work/project/ladsie_012/ABS.2.2/2021-10-26_NS502-NS521_ABS_CR_RADICL_inputMicroC/bed_files/NS502_P10_Total_1.RNA.sorted.bed_K1K2.bed_K4.bed_R_D.bed_R_D_K7K8.bed l1r1 True \
+                           -n /work/project/ladsie_012/ABS.2.2/20210608_Inputs/WT1_gDNA_inputATAC.R1.sorted.bam dna_norm False \
+                           -n /work/project/ladsie_012/ABS.2.2/20210608_Inputs/WT1_RNAseq_NS320.R1.sorted.bam rna_nrom True
+
 bokeh serve heatmap_server/ --allow-websocket-origin=localhost:5006
 
 heatmap_server/out/test
+
