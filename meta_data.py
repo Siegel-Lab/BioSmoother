@@ -4,13 +4,14 @@ from linear_data_as_integral import *
 import pickle
 
 class MetaData:
-    def __init__(self):
+    def __init__(self, info):
         self.chr_sizes = None
         self.datasets = []
         self.data_id_by_path = {}
         self.normalizations = []
         self.norm_id_by_path = {}
         self.annotations = {}
+        self.info = info
 
     def set_chr_sizes(self, chr_sizes):
         self.chr_sizes = chr_sizes
@@ -26,14 +27,17 @@ class MetaData:
     def add_annotations(self, annotation_list):
         starts = {}
         ends = {}
-        for name, start, end in annotation_list:
+        sorted_list = {}
+        for name, start, end, info in annotation_list:
             if name not in starts:
                 starts[name] = []
                 ends[name] = []
+                sorted_list[name] = []
             starts[name].append(start)
             ends[name].append(end)
+            sorted_list[name].append((start, end, info))
         for name, start_l in starts.items():
-            self.annotations[name] = Coverage().set(start_l, ends[name])
+            self.annotations[name] = Coverage().set(start_l, ends[name], sorted_list[name])
 
 
     def save(self, file_name):
@@ -47,7 +51,9 @@ class MetaData:
 
     def setup(self, main_layout):
         self.chr_sizes.setup(main_layout)
-
+        
+        if hasattr(self, "info"):
+            main_layout.info_div.text = self.info
         opt = [ (str(idx), data[0]) for idx, data in enumerate(self.datasets)]
         main_layout.group_a.options = opt
         main_layout.group_b.options = opt

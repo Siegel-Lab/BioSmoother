@@ -15,9 +15,13 @@ class Tree_4:
     def count(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=255):
         return self.idx.count((id, map_q_min, rna_from, dna_from, id+H, map_q_max-H, rna_to-H, dna_to-H))
 
-    def get(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=255):
-        return [n.object for n in self.idx.intersection((id, map_q_min, rna_from, dna_from, id+H, map_q_max-H,
+    def info(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=255):
+        l = [n.object for n in self.idx.intersection((id, map_q_min, rna_from, dna_from, id+H, map_q_max-H,
                                                          rna_to-H, dna_to-H), objects=True)]
+        s = ""
+        for x in l:
+            s += x + ", "
+        return s
 
 class Tree_3:
     def __init__(self, file_name):
@@ -33,6 +37,10 @@ class Tree_3:
     def count(self, id, pos_from, pos_to, map_q_min=0, map_q_max=255):
         return self.idx.count((id, map_q_min, pos_from, id+H, map_q_max-H, pos_to-H))
 
-    def get(self, id, pos_from, pos_to, map_q_min=0, map_q_max=255):
-        return [n.object for n in self.idx.intersection((id, map_q_min, pos_from, id+H, map_q_max-H,
+    def info(self, id, pos_from, pos_to, map_q_min=0, map_q_max=255):
+        l = [n.object for n in self.idx.intersection((id, map_q_min, pos_from, id+H, map_q_max-H,
                                                          pos_to-H), objects=True)]
+        s = ""
+        for x in l:
+            s += x + ", "
+        return s

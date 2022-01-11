@@ -1,7 +1,7 @@
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, FileInput, TextInput, MultiChoice, FuncTickFormatter, Div
+from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, FileInput, TextInput, MultiChoice, FuncTickFormatter, Div, HoverTool
 import math
 from datetime import datetime
 from tornado import gen
@@ -17,7 +17,7 @@ SETTINGS_WIDTH = 200
 DEFAULT_SIZE = 50
 ANNOTATION_PLOT_NAME = "Annotation"
 RATIO_PLOT_NAME = "Ratio"
-RAW_PLOT_NAME = "Raw"
+RAW_PLOT_NAME = "Cov"
 
 DIV_MARGIN = (5, 5, 0, 5)
 
@@ -196,7 +196,6 @@ class FigureMaker:
                 menu.append((("☑ " if FigureMaker._show_hide[key] or key == "tools" else "☐ ") + name, key))
             return menu
         ret = Dropdown(label="Show/Hide", menu=make_menu(), width=SETTINGS_WIDTH)
-        ret.sizing_mode = "fixed"
         def event(e):
             FigureMaker.toggle_hide(e.item)
             ret.menu = make_menu()
@@ -228,7 +227,6 @@ class MainLayout:
                 menu.append((("☑ " if d[key] else "☐ ") + name, key))
             return menu
         ret = Dropdown(label=title, menu=make_menu(), width=SETTINGS_WIDTH)
-        ret.sizing_mode = "fixed"
         def _event(e):
             for _, key in options:
                 d[key] = False
@@ -253,39 +251,77 @@ class MainLayout:
         tollbars = []
         self.heatmap = FigureMaker().range1d().stretch().combine_tools(tollbars).get()
 
-        d = {"b": [], "l": [], "t": [], "r": [], "c": []}
+        d = {"b": [], "l": [], "t": [], "r": [], "c": [], "chr_x": [], "chr_y": [], "x1": [], "x2": [], 
+             "y1": [], "y2": [], "s": [], "d_a": [], "d_b": [], 'info': []}
         self.heatmap_data=ColumnDataSource(data=d)
         self.heatmap.quad(left="l", bottom="b", right="r", top="t", fill_color="c", line_color=None,
               source=self.heatmap_data, level="image")
 
+        self.heatmap.add_tools(HoverTool(
+            tooltips=[
+                    ('(x, y)', "(@chr_x @x1 - @x2, @chr_y @y1 - @y2)"),
+                    ('score', "@s"),
+                    ('reads by group', "A: @d_a, B: @d_b"),
+                    ('info', '@info')
+            ]
+        ))
 
         self.heatmap_x_axis = FigureMaker().x_axis_of(self.heatmap, "DNA").combine_tools(tollbars).get()
         self.heatmap_y_axis = FigureMaker().y_axis_of(self.heatmap, "RNA").combine_tools(tollbars).get()
 
+        line_hover_x = HoverTool(
+            tooltips=[
+                ('pos', "@chr @pos1 - @pos2"),
+                ( 'row sum', '@heat' ),
+                ( 'normalization', '@norm' ),
+                ( 'ratio', '@ratio' ),
+            ],
+            mode='hline'
+        )
+        line_hover_y = HoverTool(
+            tooltips=[
+                ('pos', "@chr @pos1 - @pos2"),
+                ( 'col sum', '@heat' ),
+                ( 'normalization', '@norm' ),
+                ( 'ratio', '@ratio' ),
+            ],
+            mode='vline'
+        )
+
         self.ratio_x = FigureMaker().w(DEFAULT_SIZE).link_y(self.heatmap).hide_on("ratio").combine_tools(tollbars).get()
+        self.ratio_x.add_tools(line_hover_x)
         self.ratio_x_axis = FigureMaker().x_axis_of(self.ratio_x).combine_tools(tollbars).get()
         self.ratio_x_axis.xaxis.axis_label = "Ratio"
 
         self.ratio_y = FigureMaker().h(DEFAULT_SIZE).link_x(self.heatmap).hide_on("ratio").combine_tools(tollbars).get()
+        self.ratio_y.add_tools(line_hover_y)
         self.ratio_y_axis = FigureMaker().y_axis_of(self.ratio_y).combine_tools(tollbars).get()
         self.ratio_y_axis.yaxis.axis_label = "Ratio"
 
         self.raw_x = FigureMaker().w(DEFAULT_SIZE).link_y(self.heatmap).hide_on("raw").combine_tools(tollbars).get()
+        self.raw_x.add_tools(line_hover_x)
         self.raw_x_axis = FigureMaker().x_axis_of(self.raw_x).combine_tools(tollbars).get()
         self.raw_x_axis.xaxis.axis_label = "Cov"
 
 
         self.raw_y = FigureMaker().h(DEFAULT_SIZE).link_x(self.heatmap).hide_on("raw").combine_tools(tollbars).get()
+        self.raw_y.add_tools(line_hover_y)
         self.raw_y_axis = FigureMaker().y_axis_of(self.raw_y).combine_tools(tollbars).get()
         self.raw_y_axis.yaxis.axis_label = "Cov"
         
         d_x = {
+            "chr": [],
+            "pos1": [],
+            "pos2": [],
             "pos": [],
             "norm": [],
             "heat": [],
             "ratio": [],
         }
         d_y = {
+            "chr": [],
+            "pos1": [],
+            "pos2": [],
             "pos": [],
             "norm": [],
             "heat": [],
@@ -308,13 +344,23 @@ class MainLayout:
         self.anno_y_axis = FigureMaker().y_axis_of(self.anno_y).combine_tools(tollbars).get()
         self.anno_y_axis.yaxis.axis_label = "Anno"
         
-        d = {"x": [], "s": [], "e": [], "c": []}
+        d = {"x": [], "s": [], "e": [], "c": [], "chr": [], "pos1": [], "pos2": [], "info":[], "n": []}
         self.anno_x_data=ColumnDataSource(data=d)
         self.anno_x.vbar(x="x", top="e", bottom="s", width=0.9, fill_color="c", line_color=None,
               source=self.anno_x_data)
         self.anno_y_data=ColumnDataSource(data=d)
         self.anno_y.hbar(y="x", right="e", left="s", height=0.9, fill_color="c", line_color=None,
               source=self.anno_y_data)
+
+        anno_hover = HoverTool(
+            tooltips=[
+                    ('bin pos', "(@chr @pos1 - @pos2"),
+                    ('num_annotations', "@n"),
+                    ('info', "@info"),
+            ]
+        )
+        self.anno_x.add_tools(anno_hover)
+        self.anno_y.add_tools(anno_hover)
 
         tool_bar = FigureMaker.get_tools(tollbars)
         SETTINGS_WIDTH = tool_bar.width
@@ -355,40 +401,32 @@ class MainLayout:
 
         self.mapq_slider = RangeSlider(width=SETTINGS_WIDTH, start=0, end=255, value=(0,255), step=1,
                                   title="Mapping Quality Bounds")
-        self.mapq_slider.sizing_mode = "fixed"
         self.mapq_slider.on_change("value_throttled", lambda x,y,z: self.trigger_render())
 
         self.interactions_bounds_slider = Slider(width=SETTINGS_WIDTH, start=0, end=100, value=0, step=1,
                                   title="Color Scale Begin")
-        self.interactions_bounds_slider.sizing_mode = "fixed"
         self.interactions_bounds_slider.on_change("value_throttled", lambda x,y,z: self.trigger_render())
 
         self.interactions_slider = Slider(width=SETTINGS_WIDTH, start=-50, end=50, value=10, step=0.1,
                                   title="Color Scale Log Base")#, format="0[.]000")
-        self.interactions_slider.sizing_mode = "fixed"
         self.interactions_slider.on_change("value_throttled", lambda x,y,z: self.trigger_render())
 
         self.update_frequency_slider = Slider(width=SETTINGS_WIDTH, start=0.1, end=3, value=0.5, step=0.1,
                                   title="Update Frequency [seconds]", format="0[.]000")
-        self.update_frequency_slider.sizing_mode = "fixed"
 
         self.redraw_slider = Slider(width=SETTINGS_WIDTH, start=0, end=100, value=90, step=1,
                                   title="Redraw if zoomed in by [%]")
-        self.redraw_slider.sizing_mode = "fixed"
 
         self.add_area_slider = Slider(width=SETTINGS_WIDTH, start=0, end=500, value=100, step=10,
                                   title="Additional Draw Area [%]")
-        self.add_area_slider.sizing_mode = "fixed"
         self.add_area_slider.on_change("value_throttled", lambda x,y,z: self.trigger_render())
 
         self.diag_dist_slider = Slider(width=SETTINGS_WIDTH, start=0, end=1000, value=0, step=1,
                                   title="Minimum Distance from Diagonal")
-        self.diag_dist_slider.sizing_mode = "fixed"
         self.diag_dist_slider.on_change("value_throttled", lambda x,y,z: self.trigger_render())
 
         self.anno_size_slider = Slider(width=SETTINGS_WIDTH, start=10, end=500, value=DEFAULT_SIZE, step=1,
                                   title=ANNOTATION_PLOT_NAME + " Plot Size")
-        self.anno_size_slider.sizing_mode = "fixed"
         def anno_size_slider_event(attr, old, new):
             self.anno_x.width = self.anno_size_slider.value
             self.anno_x_axis.width = self.anno_size_slider.value
@@ -398,7 +436,6 @@ class MainLayout:
         
         self.ratio_size_slider = Slider(width=SETTINGS_WIDTH, start=10, end=500, value=DEFAULT_SIZE, step=1,
                                   title=RATIO_PLOT_NAME + " Plot Size")
-        self.ratio_size_slider.sizing_mode = "fixed"
         def ratio_size_slider_event(attr, old, new):
             self.ratio_x.width = self.ratio_size_slider.value
             self.ratio_x_axis.width = self.ratio_size_slider.value
@@ -408,7 +445,6 @@ class MainLayout:
         
         self.raw_size_slider = Slider(width=SETTINGS_WIDTH, start=10, end=500, value=DEFAULT_SIZE, step=1,
                                   title=RAW_PLOT_NAME + " Plot Size")
-        self.raw_size_slider.sizing_mode = "fixed"
         def raw_size_slider_event(attr, old, new):
             self.raw_x.width = self.raw_size_slider.value
             self.raw_x_axis.width = self.raw_size_slider.value
@@ -419,7 +455,6 @@ class MainLayout:
 
         self.num_bins = Slider(width=SETTINGS_WIDTH, start=1000, end=100000, value=30000, step=1000,
                                   title="Number of Bins")
-        self.num_bins.sizing_mode = "fixed"
         self.num_bins.on_change("value_throttled", lambda x,y,z: self.trigger_render())
 
         self.meta_file = TextInput(value="heatmap_server/out/")
@@ -457,6 +492,9 @@ class MainLayout:
         self.norm_y = MultiChoice(value=[], options=[])
         self.norm_y.on_change("value", lambda x,y,z: self.trigger_render())
 
+        
+        self.info_div = Div(text="n/a")
+
 
         _settings = Tabs(
             tabs=[
@@ -473,6 +511,8 @@ class MainLayout:
                                     self.add_area_slider,
                                     self.anno_size_slider, self.raw_size_slider, self.ratio_size_slider]),
                         title="GUI"),
+                Panel(child=column([self.info_div]),
+                        title="Info"),
             ],
             sizing_mode="stretch_height"
         )
@@ -518,20 +558,25 @@ class MainLayout:
     def bin_cols_or_rows(self, area, h_bin, base_idx=0, none_for_chr_border=False):
         h_bin = max(1, h_bin)
         ret = []
+        ret_2 = []
         x_chrs = [idx for idx, (start, size) in enumerate(zip(self.meta.chr_sizes.chr_starts,
                                                               self.meta.chr_sizes.chr_sizes_l))
                         if start <= area[base_idx+2] and start + size >= area[base_idx] and size >= h_bin]
         if none_for_chr_border:
             ret.append(None)
+            ret_2.append(None)
         for x_chr in x_chrs:
-            x = max(int(area[base_idx]), self.meta.chr_sizes.chr_starts[x_chr])
+            x_start = self.meta.chr_sizes.chr_starts[x_chr]
+            x = max(int(area[base_idx]), x_start)
             x_end = self.meta.chr_sizes.chr_starts[x_chr] + self.meta.chr_sizes.chr_sizes_l[x_chr]
             while x <= min(area[base_idx+2], x_end):
                 ret.append((x, min(h_bin, x_end - x)))
+                ret_2.append((self.meta.chr_sizes.chr_order[x_chr], x + x_start))
                 x += h_bin
             if none_for_chr_border:
                 ret.append(None)
-        return ret
+                ret_2.append(None)
+        return ret, ret_2
 
     def bin_cols(self, area, h_bin, none_for_chr_border=False):
         return self.bin_cols_or_rows(area, h_bin, 0, none_for_chr_border)
@@ -542,34 +587,40 @@ class MainLayout:
     def bin_coords(self, area, h_bin):
         h_bin = max(1, h_bin)
         ret = []
-        a = self.bin_cols(area, h_bin)
-        b = self.bin_rows(area, h_bin)
-        for x, w in a:
-            for y, h in b:
+        ret_2 = []
+        a, a_2 = self.bin_cols(area, h_bin)
+        b, b_2 = self.bin_rows(area, h_bin)
+        for (x, w), (x_chr, x_2) in zip(a, a_2):
+            for (y, h), (y_chr, y_2) in zip(b, b_2):
                 ret.append((x, y, w, h))
-        return ret, a, b
+                ret_2.append((x_chr, x_2, y_chr, y_2))
+        return ret, a, b, ret_2, a_2, b_2
 
 
     def make_bins(self, bin_coords):
         bins = []
+        info = [""]*len(bin_coords)
         min_ = self.interactions_bounds_slider.value
         for idx, _ in enumerate(self.meta.datasets):
             bins.append([])
-            for x, y, w, h in bin_coords:
+            for idx_2, (x, y, w, h) in enumerate(bin_coords):
                 if abs(x - y) >= self.diag_dist_slider.value:
+                    n = self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value)
                     bins[-1].append(
-                        max(self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value)-min_, 0))
+                        max(n-min_, 0))
+                    if n <= 10:
+                        info[idx_2] += self.idx.info(idx, y, y+h, x, x+w, *self.mapq_slider.value)
                 else:
                     bins[-1].append(0)
-        return bins
+        return bins, info
 
     def col_norm(self, cols):
         return self.flatten_bins(self.make_bins([(c[0], 0, c[1], self.meta.chr_sizes.chr_start_pos["end"]) \
-                            if not c is None else (-2,-2,1,1) for c in cols]))
+                            if not c is None else (-2,-2,1,1) for c in cols])[0])
 
     def row_norm(self, rows):
         return self.flatten_bins(self.make_bins([(0, c[0], self.meta.chr_sizes.chr_start_pos["end"], c[1]) \
-                            if not c is None else (-2,-2,1,1) for c in rows]))
+                            if not c is None else (-2,-2,1,1) for c in rows])[0])
 
     def read_norm(self, idx):
         n = []
@@ -707,20 +758,19 @@ class MainLayout:
     def color_bins(self, bins):
         return self.color_bins_b(self.color_bins_a(bins))
 
-    def purge(self, bins, bin_coords, background):
-        ret1 = []
-        ret2 = []
-        for x, y in zip(bins, bin_coords):
-            if x != background:
-                ret1.append(x)
-                ret2.append(y)
-        return ret1, ret2
+    def purge(self, background, *bins):
+        ret = ([] for _ in bins)
+        for xs in zip(*bins):
+            if xs[0] != background:
+                for idx, x in enumerate(xs):
+                    ret[idx].append(x)
+        return ret
 
     def bin_symmentry(self, bins, bin_coords, bin_cols, bin_rows):
         if self.symmetrie_d == "all":
             return bins
         elif self.symmetrie_d == "sym" or self.symmetrie_d == "asym":
-            bins_2 = self.make_bins([(y, x, h, w) for x, y, w, h in bin_coords])
+            bins_2, _ = self.make_bins([(y, x, h, w) for x, y, w, h in bin_coords])
             flat = self.flatten_bins(bins_2)
             raw_x_norm = self.linear_bins_norm(bin_cols, True)
             raw_y_norm = self.linear_bins_norm(bin_rows, False)
@@ -743,6 +793,7 @@ class MainLayout:
 
     def render(self, area):
         if self.meta is None or self.idx is None:
+            self.curr_bin_size.text = "Waiting for Fileinput."
             return
         area_bin = (area[2] - area[0]) * (area[3] - area[1]) / self.num_bins.value
         def power_of_ten(x):
@@ -754,14 +805,14 @@ class MainLayout:
                 n += 1
         h_bin = power_of_ten(math.sqrt(area_bin))
         h_bin = min(max(h_bin, 10**self.min_max_bin_size.value[0]), 10**self.min_max_bin_size.value[1])
-        bin_coords, bin_cols, bin_rows = self.bin_coords(area, h_bin)
-        bins = self.make_bins(bin_coords)
+        bin_coords, bin_cols, bin_rows, bin_coords_2, bin_cols_2, bin_rows_2 = self.bin_coords(area, h_bin)
+        bins, info = self.make_bins(bin_coords)
         flat = self.flatten_bins(bins)
         norm = self.norm_bins(flat, bin_cols, bin_rows)
         sym = self.bin_symmentry(norm, bin_coords, bin_cols, bin_rows)
         c = self.color_bins(sym)
         b_col = Viridis256[255//2] if self.betw_group_d == "sub" else Viridis256[0]
-        purged, purged_coords = self.purge(c, bin_coords, b_col)
+        purged, purged_coords, purged_coords_2, purged_sym, purged_flat, purged_info = self.purge(b_col, c, bin_coords, bin_coords_2, sym, flat, info)
 
 
         d_heatmap = {
@@ -769,12 +820,22 @@ class MainLayout:
              "l": [x[0] for x in purged_coords],
              "t": [x[1] + x[3] for x in purged_coords],
              "r": [x[0] + x[2] for x in purged_coords],
-             "c": purged
+             "c": purged,
+             "chr_x": [x[0] for x in purged_coords_2], 
+             "chr_y": [x[2] for x in purged_coords_2], 
+             "x1": [x[1] for x in purged_coords_2], 
+             "x2": [x[1] + y[2] for x, y in zip(purged_coords_2, purged_coords)], 
+             "y1": [x[3] for x in purged_coords_2], 
+             "y2": [x[3] + y[3] for x, y in zip(purged_coords_2, purged_coords)], 
+             "s": [x for x in purged_sym], 
+             "d_a": [x[0] for x in purged_flat], 
+             "d_b": [x[1] for x in purged_flat],
+             "info": [x for x in purged_info],
             }
 
 
-        raw_bin_rows = self.bin_rows(area, h_bin, True)
-        raw_bin_cols = self.bin_cols(area, h_bin, True)
+        raw_bin_rows, raw_bin_rows_2 = self.bin_rows(area, h_bin, False)
+        raw_bin_cols, raw_bin_cols_2 = self.bin_cols(area, h_bin, False)
 
         raw_x_norm = self.linear_bins_norm(raw_bin_rows, True)
         raw_y_norm = self.linear_bins_norm(raw_bin_cols, False)
@@ -784,44 +845,79 @@ class MainLayout:
         raw_y_ratio = [a/b if not b == 0 else 0 for a, b in zip(raw_y_heat, raw_y_norm)]
 
         raw_data_x = {
-            "pos": [x[0] + x[1]/2 if not x is None else float('NaN') for x in raw_bin_rows],
-            "norm": raw_x_norm,
-            "heat": raw_x_heat,
-            "ratio": raw_x_ratio,
+            "pos": [p for x in raw_bin_rows for p in [x[0], x[0] + x[1]]],
+            "chr": [x[0] for x in raw_bin_rows_2 for _ in [0, 1]],
+            "pos1": [x[1] for x in raw_bin_rows_2 for _ in [0, 1]],
+            "pos2": [x[1] + y[1] for x,y in zip(raw_bin_rows_2, raw_bin_rows) for _ in [0, 1]],
+            "norm": [x for x in raw_x_norm for _ in [0, 1]],
+            "heat": [x for x in raw_x_heat for _ in [0, 1]],
+            "ratio": [x for x in raw_x_ratio for _ in [0, 1]],
         }
         raw_data_y = {
-            "pos": [x[0] + x[1]/2 if not x is None else float('NaN') for x in raw_bin_cols],
-            "norm": raw_y_norm,
-            "heat": raw_y_heat,
-            "ratio": raw_y_ratio,
+            "pos": [p for x in raw_bin_cols for p in [x[0], x[0] + x[1]]],
+            "chr": [x[0] for x in raw_bin_cols_2 for _ in [0, 1]],
+            "pos1": [x[1] for x in raw_bin_cols_2 for _ in [0, 1]],
+            "pos2": [x[1] + y[1] for x,y in zip(raw_bin_cols_2, raw_bin_cols) for _ in [0, 1]],
+            "norm": [x for x in raw_y_norm for _ in [0, 1]],
+            "heat": [x for x in raw_y_heat for _ in [0, 1]],
+            "ratio": [x for x in raw_y_ratio for _ in [0, 1]],
         }
 
         d_anno_x = {
+            "chr": [],
+            "pos1": [],
+            "pos2": [],
             "x": [],
             "s": [],
             "e": [],
-            "c": []
+            "c": [],
+            "n": [],
+            "info": [],
         }
         for idx, anno in enumerate(self.displayed_annos.value):
-            for (s, e), x in zip(bin_rows, self.annotation_bins(bin_rows, self.meta.annotations[anno])):
+            for rb_2, (s, e), x in zip(bin_rows_2, bin_rows, 
+                                            self.annotation_bins(bin_rows, self.meta.annotations[anno])):
                 if x > 0:
+                    d_anno_x["chr"].append(rb_2[0])
+                    d_anno_x["pos1"].append(rb_2[1])
+                    d_anno_x["pos2"].append(rb_2[1] + e-s)
+                    d_anno_x["n"].append(x)
                     d_anno_x["x"].append(anno)
                     d_anno_x["s"].append(s)
                     d_anno_x["e"].append(s + e)
                     d_anno_x["c"].append(Category10[10][idx % 10])
+                    if x > 1:
+                        d_anno_x["info"].append("n/a")
+                    else:
+                        d_anno_x["info"].append(self.meta.annotations[anno].info(s, e))
+
         d_anno_y = {
+            "chr": [],
+            "pos1": [],
+            "pos2": [],
             "x": [],
             "s": [],
             "e": [],
-            "c": []
+            "c": [],
+            "n": [],
+            "info": [],
         }
         for idx, anno in enumerate(self.displayed_annos.value):
-            for (s, e), x in zip(bin_cols, self.annotation_bins(bin_cols, self.meta.annotations[anno])):
+            for rb_2, (s, e), x in zip(bin_cols_2, bin_cols,
+                                           self.annotation_bins(bin_cols, self.meta.annotations[anno])):
                 if x > 0:
+                    d_anno_y["chr"].append(rb_2[0])
+                    d_anno_y["pos1"].append(rb_2[1])
+                    d_anno_y["pos2"].append(rb_2[1] + e-s)
+                    d_anno_y["n"].append(x)
                     d_anno_y["x"].append(anno)
                     d_anno_y["s"].append(s)
                     d_anno_y["e"].append(s + e)
                     d_anno_y["c"].append(Category10[10][idx % 10])
+                    if x > 1:
+                        d_anno_y["info"].append("n/a")
+                    else:
+                        d_anno_y["info"].append(self.meta.annotations[anno].info(s, e))
 
         def mmax(*args):
             m = 0
@@ -833,7 +929,7 @@ class MainLayout:
         self.anno_x.x_range.factors = self.displayed_annos.value
         self.anno_y.y_range.factors = self.displayed_annos.value
 
-        self.curr_bin_size.text="Current Bin Size:" + str(h_bin)
+        self.curr_bin_size.text="Redering Done; Current Bin Size:" + str(h_bin)
 
         self.raw_x_axis.xaxis.bounds = (0, mmax(*raw_x_heat, *raw_x_norm))
         self.ratio_x_axis.xaxis.bounds = (0, mmax(*raw_x_ratio))
@@ -876,19 +972,19 @@ class MainLayout:
                 #print(overlap)
                 if curr_area_size / self.curr_area_size < min_change or self.force_render or \
                             MainLayout.area_outside(self.last_drawing_area, curr_area):
+                    self.curr_bin_size.text="Rendering..."
                     if curr_area_size / self.curr_area_size < min_change:
-                        print("rendering due to zoom in", curr_area_size / self.curr_area_size)
+                        self.curr_bin_size.text = "rendering due to zoom"
                     if self.force_render:
-                        print("rendering forced")
+                        self.curr_bin_size.text = "rendering due to setting change"
                     if MainLayout.area_outside(self.last_drawing_area, curr_area):
-                        print("rendering due to pan", self.last_drawing_area, curr_area)
+                        self.curr_bin_size.text = "rendering due to pan"
                     self.force_render = False
                     self.curr_area_size = curr_area_size
                     x = self.add_area_slider.value/100
                     new_area = (curr_area[0] - w*x, curr_area[1] - h*x,
                                 curr_area[2] + w*x, curr_area[3] + h*x)
                     self.last_drawing_area = new_area
-                    self.curr_bin_size.text="Rendering..."
                     def callback():
                         self.render(new_area)
                         self.curdoc.add_timeout_callback(lambda: self.render_callback(), self.update_frequency_slider.value*1000)

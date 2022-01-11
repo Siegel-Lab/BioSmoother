@@ -4,10 +4,12 @@ class Coverage:
     def __init__(self):
         self.yys = []
         self.num_reads = 0
+        self.sorted = []
 
-    def set(self, starts, ends):
+    def set(self, starts, ends, sorted):
         starts.sort()
         ends.sort()
+        self.sorted = sorted(sorted)
         self.num_reads = len(starts)
         assert self.num_reads == len(ends)
 
@@ -52,6 +54,9 @@ class Coverage:
         return self
 
     def count(self, f, t):
-        # @todo @fixme +-1 error
         return self.yys[min(bisect.bisect_right(self.xs, t-1), len(self.yys)-1)] - \
                self.yys[min(bisect.bisect_right(self.xs, f)-1, len(self.yys)-1)]
+    def info(self, f, t):
+        if not hasattr(self, "sorted"):
+            return "n/a"
+        return self.sorted[bisect.bisect_left(self.sorted, f, key=lambda x: x[0])][2]
