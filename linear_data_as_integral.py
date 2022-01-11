@@ -6,10 +6,10 @@ class Coverage:
         self.num_reads = 0
         self.sorted = []
 
-    def set(self, starts, ends, sorted):
+    def set(self, starts, ends, s):
         starts.sort()
         ends.sort()
-        self.sorted = sorted(sorted)
+        self.sorted = sorted(s)
         self.num_reads = len(starts)
         assert self.num_reads == len(ends)
 

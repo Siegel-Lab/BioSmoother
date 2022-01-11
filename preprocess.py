@@ -55,7 +55,7 @@ def parse_annotations(annotation_file, axis_start_pos_offset):
             chrom, db_name, annotation_type, from_pos, to_pos, _, strand, _, extras, *opt = line.split()
             annotation_types.add(annotation_type)
             annos.append((annotation_type, axis_start_pos_offset[chrom] + int(from_pos),
-                                 int(to_pos) + axis_start_pos_offset[chrom]), extras.replace(";", "\n"))
+                                 int(to_pos) + axis_start_pos_offset[chrom], extras.replace(";", "\n")))
     return annos
 
 
