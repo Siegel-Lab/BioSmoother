@@ -44,6 +44,7 @@ export class ExtraTicksTicker extends BasicTicker {
 }
 """
 
+
 class ExtraTicksTicker(BasicTicker):
     __implementation__ = TypeScript(TS_CODE)
     extra_ticks = List(Float)
@@ -100,10 +101,10 @@ class ChrSizes:
         main_layout.heatmap.y_range.reset_end = self.chr_start_pos["end"]
 
         formater = FuncTickFormatter(
-                    args={"contig_starts": [self.chr_start_pos[chr_x] for chr_x in self.chr_order],
-                            "genome_end": self.chr_start_pos["end"],
-                            "contig_names": [x[:-len(self.lcs)] for x in self.chr_order]},
-                    code="""
+            args={"contig_starts": [self.chr_start_pos[chr_x] for chr_x in self.chr_order],
+                  "genome_end": self.chr_start_pos["end"],
+                  "contig_names": [x[:-len(self.lcs)] for x in self.chr_order]},
+            code="""
                             if(tick < 0 || tick >= genome_end)
                                 return "n/a";
                             var idx = 0;
@@ -115,10 +116,11 @@ class ChrSizes:
         main_layout.heatmap_x_axis.xaxis[0].formatter = formater
 
         ticker_border = ExtraTicksTicker(
-            extra_ticks=[self.chr_start_pos[chr_x] for chr_x in self.chr_order] + [self.chr_start_pos["end"]]
+            extra_ticks=[self.chr_start_pos[chr_x]
+                         for chr_x in self.chr_order] + [self.chr_start_pos["end"]]
         )
         ticker_border.min_interval = 1
-        #ticker_center = ExtraTicksTicker(
+        # ticker_center = ExtraTicksTicker(
         #    extra_ticks=[self.chr_start_pos[chr_x] + self.chr_sizes[chr_x]/2 for chr_x in self.chr_order])
 
         for plot in [main_layout.heatmap, main_layout.ratio_y, main_layout.raw_y, main_layout.anno_y,
@@ -141,3 +143,27 @@ class ChrSizes:
             plot.yaxis.bounds = (0, self.chr_start_pos["end"])
             plot.yaxis.major_label_text_align = "right"
             plot.yaxis.ticker.min_interval = 1
+
+    def bin_cols_or_rows(self, h_bin, start=0, end=None, none_for_chr_border=False):
+        if end is None:
+            end = self.chr_start_pos["end"]
+        h_bin = max(1, h_bin)
+        ret = []
+        ret_2 = []
+        x_chrs = [idx for idx, (c_start, c_size) in enumerate(zip(self.chr_starts, self.chr_sizes_l))
+                  if c_start <= end and c_start + c_size >= start and c_size >= h_bin]
+        if none_for_chr_border:
+            ret.append(None)
+            ret_2.append(None)
+        for x_chr in x_chrs:
+            x_start = self.chr_starts[x_chr]
+            x = max(int(start), x_start)
+            x_end = self.chr_starts[x_chr] + self.chr_sizes_l[x_chr]
+            while x <= min(end, x_end):
+                ret.append((x, min(h_bin, x_end - x)))
+                ret_2.append((self.chr_order[x_chr], x + x_start))
+                x += h_bin
+            if none_for_chr_border:
+                ret.append(None)
+                ret_2.append(None)
+        return ret, ret_2

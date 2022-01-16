@@ -66,11 +66,11 @@ def preprocess(arguments, out_prefix, chr_len_file_name, annotation_filename, in
         if not os.path.exists(out_folder):
             os.makedirs(out_folder)
     meta = MetaData(arguments)
-    print("(step 1 of 4) processing chromosome sizes...\t\t\t\t\t")
+    print("(step 1 of 6) processing chromosome sizes...\t\t\t\t\t")
     meta.set_chr_sizes(ChrSizes(chr_len_file_name))
 
     if not annotation_filename is None:
-        print("(step 2 of 4) processing annotations...\t\t\t\t\t")
+        print("(step 2 of 6) processing annotations...\t\t\t\t\t")
         meta.add_annotations(parse_annotations(annotation_filename, meta.chr_sizes.chr_start_pos))
 
     if os.path.isfile(out_prefix + ".heat.db.dat"):
@@ -78,7 +78,7 @@ def preprocess(arguments, out_prefix, chr_len_file_name, annotation_filename, in
     if os.path.isfile(out_prefix + ".heat.db.idx"):
         os.remove(out_prefix + ".heat.db.idx")
     tree = Tree_4(out_prefix + ".heat.db")
-    print("(step 3 of 4) processing interactions...\t\t\t\t\t")
+    print("(step 3 of 6) processing interactions...\t\t\t\t\t")
     for idx, (path, name, group_a) in enumerate(interaction_filenames):
         cnt = 0
         for idx_2, (read_name, _, chr_1, pos_1, _, chr_2, pos_2, mapq_1, mapq_2) in enumerate(parse_heatmap(path)):
@@ -89,13 +89,23 @@ def preprocess(arguments, out_prefix, chr_len_file_name, annotation_filename, in
             tree.insert(read_name, len(meta.datasets), x, y, min(mapq_1, mapq_2))
             cnt += 1
         meta.add_dataset(name, path, group_a == "True", cnt)
+    if os.path.isfile(out_prefix + ".heat.cache.db.dat"):
+        os.remove(out_prefix + ".heat.cache.db.dat")
+    if os.path.isfile(out_prefix + ".heat.cache.db.idx"):
+        os.remove(out_prefix + ".heat.cache.db.idx")
+    print("(step 4 of 6) creating interaction cache...\t\t\t\t\t")
+    bins, _ = meta.chr_sizes.bin_cols_or_rows(CACHE_CHUNK_SIZE)
+    def callback(idx):
+        if idx % PRINT_MODULO == 0:
+            print(idx+1, "of", len(bins)*len(bins)*255*len(meta.datasets), end="\t\t\t\t\t\r")
+    tree.make_cache(bins, len(meta.datasets), callback)
 
     if os.path.isfile(out_prefix + ".norm.db.dat"):
         os.remove(out_prefix + ".norm.db.dat")
     if os.path.isfile(out_prefix + ".norm.db.idx"):
         os.remove(out_prefix + ".norm.db.idx")
     t_n = Tree_3(out_prefix + ".norm.db")
-    print("(step 4 of 4) processing normalizations...\t\t\t\t\t")
+    print("(step 5 of6 6) processing normalizations...\t\t\t\t\t")
     for idx, (path, name, for_row) in enumerate(normalization_filenames):
         cnt = 0
         for idx_2, (read_name, chrom, start_pos, map_q) in enumerate(parse_norm_file(path)):
@@ -105,6 +115,11 @@ def preprocess(arguments, out_prefix, chr_len_file_name, annotation_filename, in
             t_n.insert(read_name, len(meta.normalizations), x, map_q)
             cnt += 1
         meta.add_normalization(name, path, for_row == "True", cnt)
+    def callback_2(idx):
+        if idx % PRINT_MODULO == 0:
+            print(idx+1, "of", len(bins)*255*len(meta.datasets), end="\t\t\t\t\t\r")
+    print("(step 6 of 6) creating normalizations cache...\t\t\t\t\t")
+    t_n.make_cache(bins, len(meta.datasets), callback_2)
 
     meta.save(out_prefix + ".meta")
     print("done\t\t\t\t\t")
