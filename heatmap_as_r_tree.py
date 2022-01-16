@@ -1,8 +1,9 @@
 from rtree import index
 import bisect
+import os
 
 H = 0.5
-CACHE_CHUNK_SIZE = 200000
+CACHE_CHUNK_SIZE = 100000
 
 
 class Tree_4:
@@ -15,6 +16,7 @@ class Tree_4:
         self.cache = []
         self.cache_bins = []
         self.num_ids = 0
+        self.load_cache()
 
     def insert(self, info, id, rna_pos, dna_pos, map_q=254):
         self.idx.insert(self.next_id, (id, map_q, rna_pos, dna_pos,
@@ -50,15 +52,16 @@ class Tree_4:
     def load_cache(self):
         self.cache = []
         self.cache_bins = []
-        with open(self.cache_file_name, "r") as in_file:
-            for l in in_file.readlines():
-                if len(l) > 0:
-                    if l[:len("#bin=")] == "#bin=":
-                        self.cache_bins.append(int(l[len("#bin="):]))
-                    elif l[:len("#num_ids=")] == "#num_ids=":
-                        self.num_ids = int(l[len("#num_ids="):])
-                    else:
-                        self.cache.append(int(l))
+        if os.path.exists(self.cache_file_name):
+            with open(self.cache_file_name, "r") as in_file:
+                for l in in_file.readlines():
+                    if len(l) > 0:
+                        if l[:len("#bin=")] == "#bin=":
+                            self.cache_bins.append(int(l[len("#bin="):]))
+                        elif l[:len("#num_ids=")] == "#num_ids=":
+                            self.num_ids = int(l[len("#num_ids="):])
+                        else:
+                            self.cache.append(int(l))
 
     def make_cache(self, bins, num_ids, callback=lambda x: x):
         self.num_ids = num_ids
@@ -93,6 +96,7 @@ class Tree_3:
         self.cache = []
         self.cache_bins = []
         self.num_ids = 0
+        self.load_cache()
 
     def insert(self, info, id, pos, map_q=254):
         self.idx.insert(self.next_id, (id, map_q, pos,
@@ -116,15 +120,16 @@ class Tree_3:
     def load_cache(self):
         self.cache = []
         self.cache_bins = []
-        with open(self.cache_file_name, "r") as in_file:
-            for l in in_file.readlines():
-                if len(l) > 0:
-                    if l[:len("#bin=")] == "#bin=":
-                        self.cache_bins.append(int(l[len("#bin="):]))
-                    elif l[:len("#num_ids=")] == "#num_ids=":
-                        self.num_ids = int(l[len("#num_ids="):])
-                    else:
-                        self.cache.append(int(l))
+        if os.path.exists(self.cache_file_name):
+            with open(self.cache_file_name, "r") as in_file:
+                for l in in_file.readlines():
+                    if len(l) > 0:
+                        if l[:len("#bin=")] == "#bin=":
+                            self.cache_bins.append(int(l[len("#bin="):]))
+                        elif l[:len("#num_ids=")] == "#num_ids=":
+                            self.num_ids = int(l[len("#num_ids="):])
+                        else:
+                            self.cache.append(int(l))
 
     def make_cache(self, bins, num_ids, callback=lambda x: x):
         self.num_ids = num_ids
