@@ -444,7 +444,7 @@ class MainLayout:
                                                    "tracks_abs"),
                                                   ("Coverage of Normalization Reads (Scaled to Rendered Area)", "tracks_rel"))
 
-        self.mapq_slider = RangeSlider(width=SETTINGS_WIDTH, start=0, end=255, value=(0, 255), step=1,
+        self.mapq_slider = RangeSlider(width=SETTINGS_WIDTH, start=0, end=MAP_Q_MAX, value=(0, MAP_Q_MAX), step=1,
                                        title="Mapping Quality Bounds")
         self.mapq_slider.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
@@ -657,7 +657,7 @@ class MainLayout:
                                        from_cache=h_bin >= CACHE_CHUNK_SIZE)
                     bins[-1].append(
                         max(n-min_, 0))
-                    if n <= 10:
+                    if n <= 10 and h_bin < CACHE_CHUNK_SIZE:
                         info[idx_2] += self.idx.info(idx, y,
                                                      y+h, x, x+w, *self.mapq_slider.value)
                 else:
@@ -805,11 +805,11 @@ class MainLayout:
         for c in bins:
             if self.betw_group_d == "sub":
                 c = self.log_scale(abs(c)) * (1 if c >= 0 else -1) / 2 + 0.5
-                c = max(0, min(255, int(255*c)))
+                c = max(0, min(MAP_Q_MAX-1, int((MAP_Q_MAX-1)*c)))
                 ret.append(Viridis256[c])
             else:
                 ret.append(
-                    Viridis256[max(0, min(255, int(255*self.log_scale(c))))])
+                    Viridis256[max(0, min(MAP_Q_MAX-1, int((MAP_Q_MAX-1)*self.log_scale(c))))])
         return ret
 
     def color_bins(self, bins):
@@ -921,12 +921,13 @@ class MainLayout:
             h_bin, 10**self.min_max_bin_size.value[0]), 10**self.min_max_bin_size.value[1])
         bin_coords, bin_cols, bin_rows, bin_coords_2, bin_cols_2, bin_rows_2 = self.bin_coords(
             area, h_bin)
+        print("bin_size", h_bin)
         bins, info = self.make_bins(h_bin, bin_coords)
         flat = self.flatten_bins(bins)
         norm = self.norm_bins(h_bin, flat, bin_cols, bin_rows)
         sym = self.bin_symmentry(h_bin, norm, bin_coords, bin_cols, bin_rows)
         c = self.color_bins(sym)
-        b_col = Viridis256[255 //
+        b_col = Viridis256[(MAP_Q_MAX-1) //
                            2] if self.betw_group_d == "sub" else Viridis256[0]
         purged, purged_coords, purged_coords_2, purged_sym, purged_flat_a, purged_flat_b, purged_info = \
             self.purge(b_col, c, bin_coords, bin_coords_2,
@@ -1089,6 +1090,7 @@ class MainLayout:
         self.curdoc.add_next_tick_callback(callback)
 
     def setup(self):
+        print("loading...")
         if os.path.exists(self.meta_file.value + ".meta"):
             self.meta = MetaData.load(self.meta_file.value + ".meta")
             self.meta.setup(self)

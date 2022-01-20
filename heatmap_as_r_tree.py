@@ -1,10 +1,11 @@
 from rtree import index
 import bisect
 import os
+from datetime import datetime
 
 H = 0.5
 CACHE_CHUNK_SIZE = 100000
-
+MAP_Q_MAX = 256
 
 class Tree_4:
     def __init__(self, file_name):
@@ -18,13 +19,14 @@ class Tree_4:
         self.num_ids = 0
         self.load_cache()
 
-    def insert(self, info, id, rna_pos, dna_pos, map_q=254):
+    def insert(self, info, id, rna_pos, dna_pos, map_q=MAP_Q_MAX):
         self.idx.insert(self.next_id, (id, map_q, rna_pos, dna_pos,
                         id+H, map_q+H, rna_pos+H, dna_pos+H), obj=info)
         self.next_id += 1
 
-    def count(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=255, from_cache=False):
+    def count(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX, from_cache=False):
         if from_cache:
+            #t = datetime.now()
             c = 0
             x_s = bisect.bisect_left(self.cache_bins, rna_from)
             x_e = bisect.bisect_left(self.cache_bins, rna_to)
@@ -32,13 +34,14 @@ class Tree_4:
             y_e = bisect.bisect_left(self.cache_bins, dna_to)
             for i in range(x_s, x_e):
                 for j in range(y_s, y_e):
-                    c += self.cache(self.cache_idx(i, j, id, map_q_max))
-                    c -= self.cache(self.cache_idx(i, j, id, map_q_min))
+                    c += self.cache[self.cache_idx(i, j, id, map_q_max)]
+                    c -= self.cache[self.cache_idx(i, j, id, map_q_min)]
+            #print(datetime.now() - t)
             return c
         else:
             return self.idx.count((id, map_q_min, rna_from, dna_from, id+H, map_q_max-H, rna_to-H, dna_to-H))
 
-    def info(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=255):
+    def info(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX):
         l = [n.object for n in self.idx.intersection((id, map_q_min, rna_from, dna_from, id+H, map_q_max-H,
                                                       rna_to-H, dna_to-H), objects=True)]
         s = ""
@@ -47,7 +50,7 @@ class Tree_4:
         return s
 
     def cache_idx(self, i, j, k, m):
-        return m + 255*(k + self.num_ids * (j + len(self.cache_bins) * i))
+        return m + MAP_Q_MAX*(k + self.num_ids * (j + len(self.cache_bins) * i))
 
     def load_cache(self):
         self.cache = []
@@ -66,21 +69,22 @@ class Tree_4:
     def make_cache(self, bins, num_ids, callback=lambda x: x):
         self.num_ids = num_ids
         self.cache_bins = bins
-        self.cache = [0]*255*self.num_ids * \
+        self.cache = [0]*MAP_Q_MAX*self.num_ids * \
             len(self.cache_bins)*len(self.cache_bins)
         idx = 0
         for i, (x, w) in enumerate(bins):
             for j, (y, h) in enumerate(bins):
                 for id in range(self.num_ids):
-                    for m in range(225):
-                        c = self.count(id, x, x+w, y, y+h, 0, m+1)
+                    c = 0
+                    for m in range(MAP_Q_MAX):
+                        c += self.count(id, x, x+w, y, y+h, m, m+1)
                         self.cache[self.cache_idx(i, j, id, m)] = c
                         callback(idx)
                         idx += 1
         with open(self.cache_file_name, "w") as out_file:
-            for x, w in self.bins:
-                out_file.write("#bin=" + str(x))
-            out_file.write("#num_ids=" + str(self.num_ids))
+            for x, w in bins:
+                out_file.write("#bin=" + str(x) + "\n")
+            out_file.write("#num_ids=" + str(self.num_ids) + "\n")
             for c in self.cache:
                 out_file.write(str(c))
                 out_file.write("\n")
@@ -103,19 +107,19 @@ class Tree_3:
                         id+H, map_q+H, pos), obj=info)
         self.next_id += 1
 
-    def count(self, id, pos_from, pos_to, map_q_min=0, map_q_max=255, from_cache=False):
+    def count(self, id, pos_from, pos_to, map_q_min=0, map_q_max=MAP_Q_MAX, from_cache=False):
         if from_cache:
             c = 0
             x_s = bisect.bisect_left(self.cache_bins, pos_from)
             x_e = bisect.bisect_left(self.cache_bins, pos_to)
             for i in range(x_s, x_e):
-                c += self.cache(self.cache_idx(i, id, map_q_max))
-                c -= self.cache(self.cache_idx(i, id, map_q_min))
+                c += self.cache[self.cache_idx(i, id, map_q_max)]
+                c -= self.cache[self.cache_idx(i, id, map_q_min)]
             return c
         return self.idx.count((id, map_q_min, pos_from, id+H, map_q_max-H, pos_to-H))
 
     def cache_idx(self, j, k, m):
-        return m + 255*(k + self.num_ids * j)
+        return m + MAP_Q_MAX*(k + self.num_ids * j)
 
     def load_cache(self):
         self.cache = []
@@ -134,25 +138,26 @@ class Tree_3:
     def make_cache(self, bins, num_ids, callback=lambda x: x):
         self.num_ids = num_ids
         self.cache_bins = bins
-        self.cache = [0]*255*self.num_ids * \
+        self.cache = [0]*MAP_Q_MAX*self.num_ids * \
             len(self.cache_bins)*len(self.cache_bins)
         idx = 0
         for i, (x, w) in enumerate(bins):
             for id in range(self.num_ids):
-                for m in range(225):
-                    c = self.count(id, x, x+w, 0, m+1)
+                c = 0
+                for m in range(MAP_Q_MAX):
+                    c += self.count(id, x, x+w, m, m+1)
                     self.cache[self.cache_idx(i, id, m)] = c
                     callback(idx)
                     idx += 1
         with open(self.cache_file_name, "w") as out_file:
-            for x, w in self.bins:
-                out_file.write("#bin=" + str(x))
-            out_file.write("#num_ids=" + str(self.num_ids))
+            for x, w in bins:
+                out_file.write("#bin=" + str(x) + "\n")
+            out_file.write("#num_ids=" + str(self.num_ids) + "\n")
             for c in self.cache:
                 out_file.write(str(c))
                 out_file.write("\n")
 
-    def info(self, id, pos_from, pos_to, map_q_min=0, map_q_max=255):
+    def info(self, id, pos_from, pos_to, map_q_min=0, map_q_max=MAP_Q_MAX):
         l = [n.object for n in self.idx.intersection((id, map_q_min, pos_from, id+H, map_q_max-H,
                                                       pos_to-H), objects=True)]
         s = ""

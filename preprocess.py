@@ -102,7 +102,7 @@ def preprocess(arguments, out_prefix, chr_len_file_name, annotation_filename, in
     bins, _ = meta.chr_sizes.bin_cols_or_rows(CACHE_CHUNK_SIZE)
     def callback(idx):
         if idx % PRINT_MODULO == 0:
-            print(idx+1, "of", len(bins)*len(bins)*255*len(meta.datasets), end="\t\t\t\t\t\r")
+            print(idx+1, "of", len(bins)*len(bins)*MAP_Q_MAX*len(meta.datasets), end="\t\t\t\t\t\r")
     tree.make_cache(bins, len(meta.datasets), callback)
 
     if not ONLY_CACHE:
@@ -124,7 +124,7 @@ def preprocess(arguments, out_prefix, chr_len_file_name, annotation_filename, in
             meta.add_normalization(name, path, for_row == "True", cnt)
     def callback_2(idx):
         if idx % PRINT_MODULO == 0:
-            print(idx+1, "of", len(bins)*255*len(meta.datasets), end="\t\t\t\t\t\r")
+            print(idx+1, "of", len(bins)*MAP_Q_MAX*len(meta.datasets), end="\t\t\t\t\t\r")
     print("(step 6 of 6) creating normalizations cache...\t\t\t\t\t")
     t_n.make_cache(bins, len(meta.datasets), callback_2)
 

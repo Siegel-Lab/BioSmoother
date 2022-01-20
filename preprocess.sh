@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -p slim16 -c 18 -J preprocess_heatmap --mail-user=markus.rainer.schmidt@gmail.com --mail-type END --time=240:00:00
+#SBATCH -p slim16 -c 18 -J preprocess_heatmap --mail-user=markus.rainer.schmidt@gmail.com --mail-type END --time=240:00:00 -o slurm_preprocess_heatmap-%j.out
 
 BED_FOLDER="/work/project/ladsie_012/ABS.2.2/2021-10-26_NS502-NS521_ABS_CR_RADICL_inputMicroC/bed_files"
 BED_SUFFIX="RNA.sorted.bed_K1K2.bed_K4.bed_R_D.bed_R_D_K1K2.bed_R_D_PRE1.bed"
