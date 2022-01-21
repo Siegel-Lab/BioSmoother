@@ -1,7 +1,0 @@
-ssh -L 5006:localhost:5006 mschmidt@MBIOHW30.bio.med.uni-muenchen.de
-
-
-bokeh serve heatmap_server/ --allow-websocket-origin=localhost:5006
-
-ssh -fNR 5006:localhost:5006 mschmidt@10.201.1.254 && bokeh serve heatmap_server/ --allo
-w-websocket-origin=localhost:5006

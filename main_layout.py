@@ -882,9 +882,9 @@ class MainLayout:
                                     self.render_time_record[-1][1]) + ")"
             print(s, end="\033[K\r")
 
-            def callback():
-                self.curr_bin_size.text = s
-            self.curdoc.add_next_tick_callback(callback)
+            #def callback():
+            #    self.curr_bin_size.text = s
+            #self.curdoc.add_next_tick_callback(callback)
 
     def render_done(self):
         if len(self.render_time_record) > 0:
@@ -921,7 +921,7 @@ class MainLayout:
             h_bin, 10**self.min_max_bin_size.value[0]), 10**self.min_max_bin_size.value[1])
         bin_coords, bin_cols, bin_rows, bin_coords_2, bin_cols_2, bin_rows_2 = self.bin_coords(
             area, h_bin)
-        print("bin_size", h_bin)
+        print("bin_size", h_bin, "\033[K")
         bins, info = self.make_bins(h_bin, bin_coords)
         flat = self.flatten_bins(bins)
         norm = self.norm_bins(h_bin, flat, bin_cols, bin_rows)

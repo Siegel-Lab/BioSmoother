@@ -7,9 +7,10 @@ BED_SUFFIX="RNA.sorted.bed_K1K2.bed_K4.bed_R_D.bed_R_D_K1K2.bed_R_D_PRE1.bed"
 BAM_FOLDER="/work/project/ladsie_012/ABS.2.2/20210608_Inputs"
 BAM_SUFFIX="R1.sorted.bam"
 
+export SPATIALINDEX_C_LIBRARY="$(pwd)/libspatialindex_c.so"
 python3 preprocess.py \
     -l Lister427.sizes \
-    -o out/test2 \
+    -o out/test \
     -a ../heatmap_static/HGAP3_Tb427v10_merged_2021_06_21.gff3 \
     -i "${BED_FOLDER}/NS504_P10_Total_3.${BED_SUFFIX}" P10_Total_Rep3 True \
     -i "${BED_FOLDER}/NS505_N50_Total_1.${BED_SUFFIX}" P10_Total_Rep1 True \

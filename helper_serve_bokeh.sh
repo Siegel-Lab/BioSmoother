@@ -8,6 +8,7 @@ ssh -fNR 5006:localhost:5006 ${SLURM_JOB_USER}@${SLURM_LAUNCH_NODE_IPADDR}
 # serve bokeh
 echo "starting bokeh server"
 cd ..
+export SPATIALINDEX_C_LIBRARY="$(pwd)/heatmap_server/libspatialindex_c.so"
 bokeh serve heatmap_server/ --allow-websocket-origin=localhost:5006
 # kill port forwarding process
 ps -ef | grep "ssh -fNR 5006:localhost:5006 ${SLURM_JOB_USER}@${SLURM_LAUNCH_NODE_IPADDR}" | grep -v grep | awk '{print $2}' | xargs kill
