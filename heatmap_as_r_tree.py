@@ -2,7 +2,6 @@ from rtree import index, core
 import ctypes
 
 H = 0.5
-CACHE_CHUNK_SIZE = 100000
 MAP_Q_MAX = 256
 
 core.rt.Index_Setup_count.argtypes = [ctypes.c_void_p]
@@ -19,7 +18,7 @@ class Tree_4:
                         id+H, map_q+H, rna_pos+H, dna_pos+H), obj=info)
         self.next_id += 1
 
-    def count(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX, from_cache=False):
+    def count(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX):
         return self.idx.count((id, map_q_min, rna_from, dna_from, id+H, map_q_max-H, rna_to-H, dna_to-H))
 
     def info(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX):
@@ -46,7 +45,7 @@ class Tree_3:
                         id+H, map_q+H, pos), obj=info)
         self.next_id += 1
 
-    def count(self, id, pos_from, pos_to, map_q_min=0, map_q_max=MAP_Q_MAX, from_cache=False):
+    def count(self, id, pos_from, pos_to, map_q_min=0, map_q_max=MAP_Q_MAX):
         return self.idx.count((id, map_q_min, pos_from, id+H, map_q_max-H, pos_to-H))
 
     def make_count_cache(self):

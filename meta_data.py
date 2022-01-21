@@ -12,6 +12,7 @@ class MetaData:
         self.norm_id_by_path = {}
         self.annotations = {}
         self.info = info
+        self.norm = {}
 
     def set_chr_sizes(self, chr_sizes):
         self.chr_sizes = chr_sizes
@@ -23,6 +24,11 @@ class MetaData:
     def add_normalization(self, name, path, x_axis, num_reads):
         self.normalizations.append([name, path, x_axis, num_reads])
         self.norm_id_by_path[path] = len(self.normalizations)-1
+
+    def add_wig_normalization(self, name, path, x_axis, xs, ys):
+        self.normalizations.append([name, path, x_axis, 0])
+        self.norm_id_by_path[path] = len(self.normalizations)-1
+        self.norm[len(self.normalizations)-1] = Coverage().set_x_y(xs, ys)
 
     def add_annotations(self, annotation_list):
         starts = {}
@@ -49,6 +55,9 @@ class MetaData:
         with open(file_name, "rb") as in_file:
             return pickle.load(in_file)
 
+    def norm_via_tree(self, idx):
+        return self.normalizations[idx][1][-4:] == ".bam"
+
     def setup(self, main_layout):
         self.chr_sizes.setup(main_layout)
         
@@ -57,13 +66,15 @@ class MetaData:
         opt = [ (str(idx), data[0]) for idx, data in enumerate(self.datasets)]
         main_layout.group_a.options = opt
         main_layout.group_b.options = opt
-        main_layout.group_a.value = [ str(idx) for idx, data in enumerate(self.datasets) if data[2] ]
-        main_layout.group_b.value = [ str(idx) for idx, data in enumerate(self.datasets) if not data[2] ]
+        main_layout.group_a.value = [ str(idx) for idx, data in enumerate(self.datasets) if data[2] in ["a", "both"] ]
+        main_layout.group_b.value = [ str(idx) for idx, data in enumerate(self.datasets) if data[2] in ["b", "both"] ]
         opt = [ (str(idx), data[0]) for idx, data in enumerate(self.normalizations)]
         main_layout.norm_x.options = opt
         main_layout.norm_y.options = opt
-        main_layout.norm_x.value = [ str(idx) for idx, data in enumerate(self.normalizations) if not data[2] ]
-        main_layout.norm_y.value = [ str(idx) for idx, data in enumerate(self.normalizations) if data[2] ]
+        main_layout.norm_x.value = [ str(idx) for idx, data in enumerate(
+                                                                self.normalizations) if data[2] in ["col", "both"] ]
+        main_layout.norm_y.value = [ str(idx) for idx, data in enumerate(
+                                                                self.normalizations) if data[2] in ["row", "both"] ]
 
         main_layout.displayed_annos.options = list(self.annotations.keys())
         main_layout.displayed_annos.value = list(self.annotations.keys())

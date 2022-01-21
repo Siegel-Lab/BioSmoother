@@ -5,6 +5,16 @@ class Coverage:
         self.yys = []
         self.num_reads = 0
         self.sorted = []
+        self.xs = None
+
+    def set_x_y(self, xs, ys):
+        self.xs = xs
+        self.yys = []
+        c = 0
+        for y in ys:
+            c += y
+            self.yys.append(c)
+        return self
 
     def set(self, starts, ends, s):
         starts.sort()

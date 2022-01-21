@@ -12,9 +12,9 @@ python3 preprocess.py \
     -l Lister427.sizes \
     -o out/test \
     -a ../heatmap_static/HGAP3_Tb427v10_merged_2021_06_21.gff3 \
-    -i "${BED_FOLDER}/NS504_P10_Total_3.${BED_SUFFIX}" P10_Total_Rep3 True \
-    -i "${BED_FOLDER}/NS505_N50_Total_1.${BED_SUFFIX}" P10_Total_Rep1 True \
-    -i "${BED_FOLDER}/NS508_P10_NPM_1.${BED_SUFFIX}" P10_NPM_Rep1 False \
-    -i "${BED_FOLDER}/NS511_N50_NPM_1.${BED_SUFFIX}" N50_NPM_Rep1 False \
-    -n "${BAM_FOLDER}/WT1_gDNA_inputATAC.${BAM_SUFFIX}" gDNA_inputATAC False \
-    -n "${BAM_FOLDER}/WT1_RNAseq_NS320.${BAM_SUFFIX}" RNAseq_NS320 True
+    -i "${BED_FOLDER}/NS504_P10_Total_3.${BED_SUFFIX}" P10_Total_Rep3 a \
+    -i "${BED_FOLDER}/NS505_N50_Total_1.${BED_SUFFIX}" P10_Total_Rep1 a \
+    -i "${BED_FOLDER}/NS508_P10_NPM_1.${BED_SUFFIX}" P10_NPM_Rep1 b \
+    -i "${BED_FOLDER}/NS511_N50_NPM_1.${BED_SUFFIX}" N50_NPM_Rep1 b \
+    -n "${BAM_FOLDER}/WT1_gDNA_inputATAC.${BAM_SUFFIX}" gDNA_inputATAC col \
+    -n "${BAM_FOLDER}/WT1_RNAseq_NS320.${BAM_SUFFIX}" RNAseq_NS320 row

@@ -14,14 +14,18 @@ head -n 1000 "${BED_FOLDER}/NS511_N50_NPM_1.${BED_SUFFIX}" > "out/data/Mini_NS51
 samtools view -h "${BAM_FOLDER}/WT1_gDNA_inputATAC.${BAM_SUFFIX}" | head -n 1000 | samtools view -b - > "out/data/Mini_WT1_gDNA_inputATAC.${BAM_SUFFIX}"
 samtools view -h "${BAM_FOLDER}/WT1_RNAseq_NS320.${BAM_SUFFIX}" | head -n 1000 | samtools view -b - > "out/data/Mini_WT1_RNAseq_NS320.${BAM_SUFFIX}"
 
+head -n 1000 "/work/project/ladsie_012/ABS.2.2/20210608_Inputs/smallRNA/GSM1385605_Tb_WT_DMOG_smallRNA_For.wig" | \
+    sed --expression='s/TP13J3/Chr1_3A_Tb427v10/g' > "out/data/Mini_wig.wig"
+
 export SPATIALINDEX_C_LIBRARY="./libspatialindex_c.so"
 python3 preprocess.py \
     -l Lister427.sizes \
     -o out/mini \
     -a ../heatmap_static/HGAP3_Tb427v10_merged_2021_06_21.gff3 \
-    -i "out/data/Mini_NS504_P10_Total_3.${BED_SUFFIX}" P10_Total_Rep3 True \
-    -i "out/data/Mini_NS505_N50_Total_1.${BED_SUFFIX}" P10_Total_Rep1 True \
-    -i "out/data/Mini_NS508_P10_NPM_1.${BED_SUFFIX}" P10_NPM_Rep1 False \
-    -i "out/data/Mini_NS511_N50_NPM_1.${BED_SUFFIX}" N50_NPM_Rep1 False \
-    -n "out/data/Mini_WT1_gDNA_inputATAC.${BAM_SUFFIX}" gDNA_inputATAC False \
-    -n "out/data/Mini_WT1_RNAseq_NS320.${BAM_SUFFIX}" RNAseq_NS320 True
+    -i "out/data/Mini_NS504_P10_Total_3.${BED_SUFFIX}" P10_Total_Rep3 a \
+    -i "out/data/Mini_NS505_N50_Total_1.${BED_SUFFIX}" P10_Total_Rep1 a \
+    -i "out/data/Mini_NS508_P10_NPM_1.${BED_SUFFIX}" P10_NPM_Rep1 b \
+    -i "out/data/Mini_NS511_N50_NPM_1.${BED_SUFFIX}" N50_NPM_Rep1 b \
+    -n "out/data/Mini_WT1_gDNA_inputATAC.${BAM_SUFFIX}" gDNA_inputATAC col \
+    -n "out/data/Mini_WT1_RNAseq_NS320.${BAM_SUFFIX}" RNAseq_NS320 row \
+    -n "out/data/Mini_wig.wig" RNAseq_NS320 neither

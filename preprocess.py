@@ -58,6 +58,38 @@ def parse_annotations(annotation_file, axis_start_pos_offset):
                                  int(to_pos) + axis_start_pos_offset[chrom], extras.replace(";", "\n")))
     return annos
 
+def parse_wig_file(filename, chr_start_idx):
+    with open(filename, "r") as in_file_1:
+        curr_chr = None
+        xs = [0]
+        ys = [0]
+        track = None
+        y = "track"
+        x = "variableStep chrom="
+        for line in in_file_1.readlines():
+            if line[:len(y)] == y:
+                if not track is None:
+                    xs.append(chr_start_idx['end'])
+                    ys.append(0)
+                    yield xs, ys, track
+                    xs = [0]
+                    ys = [0]
+                track = line[line.index("name=\"")+len("name=\""):-2]
+            elif line[:len(x)] == x:
+                curr_chr = line[len(x):line.index(" span=")]
+                if not curr_chr in chr_start_idx:
+                    print("WIG file contains unknown contig", curr_chr)
+                else:
+                    xs.append(chr_start_idx[curr_chr])
+                    ys.append(0)
+            elif curr_chr in chr_start_idx:
+                a, b = line[:-1].split(" ")
+                xs.append(int(a) + chr_start_idx[curr_chr])
+                ys.append(float(b))
+        xs.append(chr_start_idx['end'])
+        ys.append(0)
+        yield xs, ys, track
+
 
 def preprocess(arguments, out_prefix, chr_len_file_name, annotation_filename, interaction_filenames,
                normalization_filenames):
@@ -88,7 +120,7 @@ def preprocess(arguments, out_prefix, chr_len_file_name, annotation_filename, in
             y = meta.chr_sizes.coordinate(pos_2, chr_2) # DNA
             tree.insert(read_name, len(meta.datasets), x, y, min(mapq_1, mapq_2))
             cnt += 1
-        meta.add_dataset(name, path, group_a == "True", cnt)
+        meta.add_dataset(name, path, group_a, cnt)
     if os.path.isfile(out_prefix + ".heat.cache.db.dat"):
         os.remove(out_prefix + ".heat.cache.db.dat")
     if os.path.isfile(out_prefix + ".heat.cache.db.idx"):
@@ -103,14 +135,18 @@ def preprocess(arguments, out_prefix, chr_len_file_name, annotation_filename, in
     t_n = Tree_3(out_prefix + ".norm.db")
     print("(step 5 of 6) processing normalizations...\t\t\t\t\t")
     for idx, (path, name, for_row) in enumerate(normalization_filenames):
-        cnt = 0
-        for idx_2, (read_name, chrom, start_pos, map_q) in enumerate(parse_norm_file(path)):
-            if idx_2 % PRINT_MODULO == 0:
-                print("file", idx+1, "of", len(normalization_filenames), ", line", idx_2+1, end="\t\t\t\t\t\r")
-            x = meta.chr_sizes.coordinate(start_pos, chrom)
-            t_n.insert(read_name, len(meta.normalizations), x, map_q)
-            cnt += 1
-        meta.add_normalization(name, path, for_row == "True", cnt)
+        if path[-4:] == ".wig":
+            for xs, ys, n in parse_wig_file(path, meta.chr_sizes.chr_start_pos):
+                meta.add_wig_normalization(name + ": " + n, path, for_row, xs, ys)
+        else:
+            cnt = 0
+            for idx_2, (read_name, chrom, start_pos, map_q) in enumerate(parse_norm_file(path)):
+                if idx_2 % PRINT_MODULO == 0:
+                    print("file", idx+1, "of", len(normalization_filenames), ", line", idx_2+1, end="\t\t\t\t\t\r")
+                x = meta.chr_sizes.coordinate(start_pos, chrom)
+                t_n.insert(read_name, len(meta.normalizations), x, map_q)
+                cnt += 1
+            meta.add_normalization(name, path, for_row, cnt)
     t_n.make_count_cache()
 
     meta.save(out_prefix + ".meta")
@@ -121,9 +157,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-l', '--chr_len', metavar="PATH", required=True)
     parser.add_argument('-o', '--out_prefix', metavar="PATH", required=True)
-    parser.add_argument('-i', '--interaction', action='append', nargs=3, metavar=("PATH", "NAME", "GROUP_A"), 
+    parser.add_argument('-i', '--interaction', action='append', nargs=3, metavar=("PATH", "NAME", "GROUP"), 
                     required=True)
-    parser.add_argument('-n', '--normalization', action='append', nargs=3, metavar=("PATH", "NAME", "FOR_ROW"), 
+    parser.add_argument('-n', '--normalization', action='append', nargs=3, metavar=("PATH", "NAME", "GROUP"), 
                     required=True)
     parser.add_argument('-a', '--annotations', metavar="PATH", default=None)
 

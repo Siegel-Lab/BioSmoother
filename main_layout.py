@@ -648,18 +648,13 @@ class MainLayout:
         for idx, _ in enumerate(self.meta.datasets):
             bins.append([])
             for idx_2, (x, y, w, h) in enumerate(bin_coords):
-                self.render_step_log(
-                    name + ("_cache" if h_bin >=
-                            CACHE_CHUNK_SIZE else "_no_cache"),
-                    idx_2 + idx * len(bin_coords), len(bin_coords)*len(self.meta.datasets))
+                self.render_step_log(name, idx_2 + idx * len(bin_coords), len(bin_coords)*len(self.meta.datasets))
                 if abs(x - y) >= self.diag_dist_slider.value:
-                    n = self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value,
-                                       from_cache=h_bin >= CACHE_CHUNK_SIZE)
+                    n = self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value)
                     bins[-1].append(
                         max(n-min_, 0))
-                    if n <= 10 and h_bin < CACHE_CHUNK_SIZE:
-                        info[idx_2] += self.idx.info(idx, y,
-                                                     y+h, x, x+w, *self.mapq_slider.value)
+                    if n <= 10:
+                        info[idx_2] += self.idx.info(idx, y, y+h, x, x+w, *self.mapq_slider.value)
                 else:
                     bins[-1].append(0)
         return bins, info
@@ -689,7 +684,9 @@ class MainLayout:
 
     def norm_num_reads(self, rows):
         return self.flatten_norm([
-            [self.idx_norm.count(int(idx), 0, self.meta.chr_sizes.chr_start_pos["end"], *self.mapq_slider.value)
+            [self.idx_norm.count(int(idx), 0, self.meta.chr_sizes.chr_start_pos["end"], *self.mapq_slider.value) \
+                if self.meta.norm_via_tree(int(idx)) \
+                else self.meta.norm[int(idx)].count(0, self.meta.chr_sizes.chr_start_pos["end"]) \
                 for idx in (self.norm_x.value if rows else self.norm_y.value)]])[0]
 
     def norm_bins(self, h_bin, bins_l, cols, rows):
@@ -846,7 +843,8 @@ class MainLayout:
 
     def linear_bins_norm(self, bins, rows):
         return self.flatten_norm([
-            [self.idx_norm.count(int(idx), x[0], x[0] + x[1], *self.mapq_slider.value)
+            [self.idx_norm.count(int(idx), x[0], x[0] + x[1], *self.mapq_slider.value) \
+                if self.meta.norm_via_tree(int(idx)) else self.meta.norm[int(idx)].count(x[0], x[0] + x[1]) \
                 for idx in (self.norm_x.value if rows else self.norm_y.value)]
             if not x is None else [float('NaN')] for x in bins])
 
@@ -1101,6 +1099,8 @@ class MainLayout:
                         os.path.exists(self.meta_file.value + ".norm.db.dat"):
                     self.idx_norm = Tree_3(self.meta_file.value + ".norm.db")
                     self.trigger_render()
+        else:
+            print("File not found")
 
     def trigger_render(self):
         self.force_render = True
