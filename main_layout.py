@@ -13,6 +13,7 @@ import os
 from heatmap_as_r_tree import *
 from bokeh.palettes import Viridis256, Category10
 from datetime import datetime, timedelta
+import preprocess
 from bokeh.document import without_document_lock
 
 SETTINGS_WIDTH = 200
@@ -651,8 +652,7 @@ class MainLayout:
                 self.render_step_log(name, idx_2 + idx * len(bin_coords), len(bin_coords)*len(self.meta.datasets))
                 if abs(x - y) >= self.diag_dist_slider.value:
                     n = self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value)
-                    bins[-1].append(
-                        max(n-min_, 0))
+                    bins[-1].append(max(n-min_, 0))
                     if n <= 10:
                         info[idx_2] += self.idx.info(idx, y, y+h, x, x+w, *self.mapq_slider.value)
                 else:
@@ -1089,18 +1089,40 @@ class MainLayout:
 
     def setup(self):
         print("loading...")
-        if os.path.exists(self.meta_file.value + ".meta"):
-            self.meta = MetaData.load(self.meta_file.value + ".meta")
+        if self.meta is None:
+            bed_folder = "/work/project/ladsie_012/ABS.2.2/2021-10-26_NS502-NS521_ABS_CR_RADICL_inputMicroC/bed_files"
+            bed_suffix = "RNA.sorted.bed_K1K2.bed_K4.bed_R_D.bed_R_D_K1K2.bed_R_D_PRE1.bed"
+            bam_folder = "/work/project/ladsie_012/ABS.2.2/20210608_Inputs"
+            bam_suffix="R1.sorted.bam"
+            meta, tree, t_n = preprocess.preprocess(
+                "", "out/mini", "heatmap_server/Lister427.sizes", 
+                "heatmap_static/HGAP3_Tb427v10_merged_2021_06_21.gff3", [
+                (bed_folder + "/NS504_P10_Total_3." + bed_suffix, "P10_Total_Rep3", "a"),
+                (bed_folder + "/NS505_N50_Total_1." + bed_suffix, "P10_Total_Rep1", "a"),
+                (bed_folder + "/NS508_P10_NPM_1." + bed_suffix, "P10_NPM_Rep1", "b"),
+                (bed_folder + "/NS511_N50_NPM_1." + bed_suffix, "N50_NPM_Rep1", "b"),
+            ], [
+                (bam_folder + "/WT1_gDNA_inputATAC." + bam_suffix, "gDNA_inputATAC", "col"),
+                (bam_folder + "/WT1_RNAseq_NS320." + bam_suffix, "RNAseq_NS320", "row"),
+            ])
+            self.meta = meta
             self.meta.setup(self)
-            if os.path.exists(self.meta_file.value + ".heat.db.idx") and \
-                    os.path.exists(self.meta_file.value + ".heat.db.dat"):
-                self.idx = Tree_4(self.meta_file.value + ".heat.db")
-                if os.path.exists(self.meta_file.value + ".norm.db.idx") and \
-                        os.path.exists(self.meta_file.value + ".norm.db.dat"):
-                    self.idx_norm = Tree_3(self.meta_file.value + ".norm.db")
-                    self.trigger_render()
-        else:
-            print("File not found")
+            self.idx = tree
+            self.idx_norm = t_n
+            self.trigger_render()
+        if False:
+            if os.path.exists(self.meta_file.value + ".meta"):
+                self.meta = MetaData.load(self.meta_file.value + ".meta")
+                self.meta.setup(self)
+                if os.path.exists(self.meta_file.value + ".heat.db.idx") and \
+                        os.path.exists(self.meta_file.value + ".heat.db.dat"):
+                    self.idx = Tree_4(self.meta_file.value + ".heat.db")
+                    if os.path.exists(self.meta_file.value + ".norm.db.idx") and \
+                            os.path.exists(self.meta_file.value + ".norm.db.dat"):
+                        self.idx_norm = Tree_3(self.meta_file.value + ".norm.db")
+                        self.trigger_render()
+            else:
+                print("File not found")
 
     def trigger_render(self):
         self.force_render = True
@@ -1146,3 +1168,6 @@ class MainLayout:
         self.do_render = True
         self.force_render = True
         self.render_callback()
+
+        #def callback():
+        #self.curdoc.add_next_tick_callback(callback)
