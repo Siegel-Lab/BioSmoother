@@ -69,4 +69,7 @@ class Coverage:
     def info(self, f, t):
         if not hasattr(self, "sorted"):
             return "n/a"
-        return self.sorted[bisect.bisect_left(self.sorted, (f, 0, ""))][2]
+        idx = bisect.bisect_left(self.sorted, (f, 0, ""))
+        if idx >= len(self.sorted):
+            return ""
+        return self.sorted[idx][2]

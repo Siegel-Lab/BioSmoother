@@ -251,15 +251,15 @@ class MainLayout:
         ret.on_click(_event)
         return ret
 
-    def __init__(self):
-        self.meta = None
+    def __init__(self, meta, tree, t_n):
+        self.meta = meta
         self.do_render = False
         self.force_render = True
         self.curdoc = curdoc()
         self.last_drawing_area = (0, 0, 0, 0)
         self.curr_area_size = 1
-        self.idx = None
-        self.idx_norm = None
+        self.idx = tree
+        self.idx_norm = t_n
         self.render_curr_step = 0
         self.render_reason = ""
         self.render_last_step = None
@@ -514,9 +514,6 @@ class MainLayout:
         self.num_bins.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
 
-        self.meta_file = TextInput(value="heatmap_server/out/")
-        self.meta_file.on_change("value", lambda x, y, z: self.setup())
-
         self.group_a = MultiChoice(value=[], options=[],
                                    placeholder="Group A")
         self.group_a.on_change("value", lambda x, y, z: self.trigger_render())
@@ -557,7 +554,7 @@ class MainLayout:
 
         _settings = Tabs(
             tabs=[
-                Panel(child=column([tool_bar, self.meta_file, show_hide, self.symmetrie, self.diag_dist_slider,
+                Panel(child=column([tool_bar, show_hide, self.symmetrie, self.diag_dist_slider,
                                     div_displayed_annos, self.displayed_annos, self.min_max_bin_size,
                                     self.curr_bin_size]),
                       title="General"),
@@ -1087,43 +1084,6 @@ class MainLayout:
                 lambda: self.render_callback(), self.update_frequency_slider.value*1000)
         self.curdoc.add_next_tick_callback(callback)
 
-    def setup(self):
-        print("loading...")
-        if self.meta is None:
-            bed_folder = "/work/project/ladsie_012/ABS.2.2/2021-10-26_NS502-NS521_ABS_CR_RADICL_inputMicroC/bed_files"
-            bed_suffix = "RNA.sorted.bed_K1K2.bed_K4.bed_R_D.bed_R_D_K1K2.bed_R_D_PRE1.bed"
-            bam_folder = "/work/project/ladsie_012/ABS.2.2/20210608_Inputs"
-            bam_suffix="R1.sorted.bam"
-            meta, tree, t_n = preprocess.preprocess(
-                "", "out/mini", "heatmap_server/Lister427.sizes", 
-                "heatmap_static/HGAP3_Tb427v10_merged_2021_06_21.gff3", [
-                (bed_folder + "/NS504_P10_Total_3." + bed_suffix, "P10_Total_Rep3", "a"),
-                (bed_folder + "/NS505_N50_Total_1." + bed_suffix, "P10_Total_Rep1", "a"),
-                (bed_folder + "/NS508_P10_NPM_1." + bed_suffix, "P10_NPM_Rep1", "b"),
-                (bed_folder + "/NS511_N50_NPM_1." + bed_suffix, "N50_NPM_Rep1", "b"),
-            ], [
-                (bam_folder + "/WT1_gDNA_inputATAC." + bam_suffix, "gDNA_inputATAC", "col"),
-                (bam_folder + "/WT1_RNAseq_NS320." + bam_suffix, "RNAseq_NS320", "row"),
-            ])
-            self.meta = meta
-            self.meta.setup(self)
-            self.idx = tree
-            self.idx_norm = t_n
-            self.trigger_render()
-        if False:
-            if os.path.exists(self.meta_file.value + ".meta"):
-                self.meta = MetaData.load(self.meta_file.value + ".meta")
-                self.meta.setup(self)
-                if os.path.exists(self.meta_file.value + ".heat.db.idx") and \
-                        os.path.exists(self.meta_file.value + ".heat.db.dat"):
-                    self.idx = Tree_4(self.meta_file.value + ".heat.db")
-                    if os.path.exists(self.meta_file.value + ".norm.db.idx") and \
-                            os.path.exists(self.meta_file.value + ".norm.db.dat"):
-                        self.idx_norm = Tree_3(self.meta_file.value + ".norm.db")
-                        self.trigger_render()
-            else:
-                print("File not found")
-
     def trigger_render(self):
         self.force_render = True
 
@@ -1163,11 +1123,9 @@ class MainLayout:
                 lambda: self.render_callback(), self.update_frequency_slider.value*1000)
 
     def set_root(self):
+        self.meta.setup(self)
         self.curdoc.clear()
         self.curdoc.add_root(self.root)
         self.do_render = True
         self.force_render = True
         self.render_callback()
-
-        #def callback():
-        #self.curdoc.add_next_tick_callback(callback)

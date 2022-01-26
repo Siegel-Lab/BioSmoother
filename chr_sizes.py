@@ -62,7 +62,7 @@ class ChrSizes:
             s = sn
         return s
 
-    def __init__(self, file_name):
+    def __init__(self, file_name, filter=lambda x: True):
         # load the exact chr lenghts from file
         self.chr_order = []
         self.chr_sizes = {}
@@ -70,9 +70,12 @@ class ChrSizes:
         with open(file_name, "r") as len_file:
             for line in len_file:
                 chr_name, chr_len = line.split("\t")
-                self.chr_order.append(chr_name)
-                self.chr_sizes[chr_name] = int(chr_len)
-                self.chr_sizes_l.append(int(chr_len))
+                if filter(chr_name):
+                    self.chr_order.append(chr_name)
+                    self.chr_sizes[chr_name] = int(chr_len)
+                    self.chr_sizes_l.append(int(chr_len))
+                else:
+                    print("filtered", chr_name)
 
         self.lcs = self.longest_common_suffix(self.chr_order)
 
