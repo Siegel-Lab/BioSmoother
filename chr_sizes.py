@@ -75,7 +75,7 @@ class ChrSizes:
                     self.chr_sizes[chr_name] = int(chr_len)
                     self.chr_sizes_l.append(int(chr_len))
                 else:
-                    print("filtered", chr_name)
+                    print("filtered out", chr_name)
 
         self.lcs = self.longest_common_suffix(self.chr_order)
 

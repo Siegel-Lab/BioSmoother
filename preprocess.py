@@ -102,15 +102,16 @@ def parse_wig_file(filename, chr_start_idx):
 
 
 def preprocess(arguments, out_prefix, chr_len_file_name, annotation_filename, interaction_filenames,
-               normalization_filenames, cache_size=1000, threads=56):
+               normalization_filenames, cache_size=10000, threads=56):
     if "/" in out_prefix:
         out_folder = out_prefix[:out_prefix.rfind("/")]
         if not os.path.exists(out_folder):
             os.makedirs(out_folder)
     meta = MetaData(arguments)
+    test = False
     print("(step 1 of 8) loading chromosome sizes...\033[K")
-    meta.set_chr_sizes(ChrSizes(chr_len_file_name)) # , filter=lambda x: "Chr10_" in x
-    dna_bins = [int(x) for (x, _) in meta.chr_sizes.bin_cols_or_rows(100000)[0]] + [meta.chr_sizes.chr_start_pos["end"]]
+    meta.set_chr_sizes(ChrSizes(chr_len_file_name, filter=lambda x: ("Chr10_" in x) or not test))
+    dna_bins = [int(x) for (x, _) in meta.chr_sizes.bin_cols_or_rows(10000)[0]] + [meta.chr_sizes.chr_start_pos["end"]]
 
     if not annotation_filename is None:
         print("(step 2 of 8) loading annotations...\033[K")
@@ -133,14 +134,15 @@ def preprocess(arguments, out_prefix, chr_len_file_name, annotation_filename, in
             rna_pos = meta.chr_sizes.coordinate(pos_1, chr_1)  # RNA
             dna_pos = meta.chr_sizes.coordinate(pos_2, chr_2)  # DNA
             map_q = min(mapq_1, mapq_2)
-            data[-1][1].append([[rna_pos, dna_pos, map_q], read_name])
+            data[-1][1].append([[rna_pos, dna_pos, map_q], read_name[0]])
             cnt += 1
-            #if cnt > 1000000:
-            #    break
+            if cnt > 100000 and test:
+                break
         meta.add_dataset(name, path, group_a, cnt)
     print("(step 4 of 8) processing interactions...\033[K")
-    tree = Tree_4(data, [dna_bins, dna_bins, list(range(258))], cache_size, threads)
-    print("(step 5 of 8) creating interaction cache...\033[K")
+    tree = Tree_4(out_prefix + ".inter").setup(data, [dna_bins, dna_bins, list(range(258))], cache_size, threads)
+    print("(step 5 of 8) serializing interaction...\033[K")
+    tree.save()
 
     data = []
     print("(step 6 of 8) loading normalizations...\033[K")
@@ -159,14 +161,17 @@ def preprocess(arguments, out_prefix, chr_len_file_name, annotation_filename, in
                 if not chrom in meta.chr_sizes.chr_sizes:
                     continue
                 pos = meta.chr_sizes.coordinate(start_pos, chrom)
-                data[-1][1].append([[pos, map_q], read_name])
+                data[-1][1].append([[pos, map_q], read_name[0]])
                 cnt += 1
-                #if cnt > 1000000:
-                #    break
+                if cnt > 100000 and test:
+                    break
             meta.add_normalization(name, path, for_row, cnt)
     print("(step 7 of 8) processing normalizations...\033[K")
-    t_n = Tree_3(data, [dna_bins, list(range(258))], cache_size, threads)
-    print("(step 8 of 8) creating normalization cache...\033[K")
+    t_n = Tree_3(out_prefix + ".norm").setup(data, [dna_bins, list(range(258))], cache_size, threads)
+    print("(step 8 of 8) serializing normalization...\033[K")
+    t_n.save()
+
+    meta.save(out_prefix + ".meta")
 
     print("done\033[K")
     return meta, tree, t_n
