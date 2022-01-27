@@ -5,6 +5,7 @@ import random
 from heatmap_as_r_tree import *
 import subprocess
 import argparse
+import glob
 
 PRINT_MODULO = 100000
 
@@ -107,11 +108,13 @@ def preprocess(arguments, out_prefix, chr_len_file_name, annotation_filename, in
         out_folder = out_prefix[:out_prefix.rfind("/")]
         if not os.path.exists(out_folder):
             os.makedirs(out_folder)
+    for f in glob.glob(out_prefix + ".*"):
+        os.remove(f)
     meta = MetaData(arguments)
     test = False
     print("(step 1 of 8) loading chromosome sizes...\033[K")
     meta.set_chr_sizes(ChrSizes(chr_len_file_name, filter=lambda x: ("Chr10_" in x) or not test))
-    dna_bins = [int(x) for (x, _) in meta.chr_sizes.bin_cols_or_rows(10000)[0]] + [meta.chr_sizes.chr_start_pos["end"]]
+    dna_bins = [int(x) for (x, _) in meta.chr_sizes.bin_cols_or_rows(20000)[0]] + [meta.chr_sizes.chr_start_pos["end"]]
 
     if not annotation_filename is None:
         print("(step 2 of 8) loading annotations...\033[K")

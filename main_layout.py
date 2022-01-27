@@ -15,6 +15,7 @@ from bokeh.palettes import Viridis256, Category10
 from datetime import datetime, timedelta
 import preprocess
 from bokeh.document import without_document_lock
+import psutil
 
 SETTINGS_WIDTH = 200
 DEFAULT_SIZE = 50
@@ -1086,6 +1087,7 @@ class MainLayout:
             self.curdoc.add_timeout_callback(
                 lambda: self.render_callback(), self.update_frequency_slider.value*1000)
         self.curdoc.add_next_tick_callback(callback)
+        print("currently used RAM:", psutil.virtual_memory().percent)
 
     def setup(self):
         print("loading...")

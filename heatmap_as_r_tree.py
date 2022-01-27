@@ -26,8 +26,8 @@ class Tree_4:
 
     def save(self):
         for d in self.root.values():
-            d.make_caches(10000)
-            d.save()
+            #d.make_caches(10000)
+            d.save(100000)
 
 
     def info(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX):
@@ -61,8 +61,8 @@ class Tree_3:
 
     def save(self):
         for d in self.root.values():
-            d.make_caches(10000)
-            d.save()
+            #d.make_caches(10000)
+            d.save(100000)
 
 
     def info(self, id, pos_from, pos_to, map_q_min=0, map_q_max=MAP_Q_MAX):
