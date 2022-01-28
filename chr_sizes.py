@@ -154,7 +154,7 @@ class ChrSizes:
         ret = []
         ret_2 = []
         x_chrs = [idx for idx, (c_start, c_size) in enumerate(zip(self.chr_starts, self.chr_sizes_l))
-                  if c_start <= end and c_start + c_size >= start and c_size >= h_bin]
+                  if c_start <= end and c_start + c_size >= start and c_size*10 >= h_bin]
         if none_for_chr_border:
             ret.append(None)
             ret_2.append(None)

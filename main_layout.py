@@ -1,7 +1,7 @@
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, FileInput, TextInput, MultiChoice, FuncTickFormatter, Div, HoverTool
+from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, MultiChoice, FuncTickFormatter, Div, HoverTool
 import math
 from datetime import datetime
 from tornado import gen
@@ -13,9 +13,8 @@ import os
 from heatmap_as_r_tree import *
 from bokeh.palettes import Viridis256, Category10
 from datetime import datetime, timedelta
-import preprocess
-from bokeh.document import without_document_lock
 import psutil
+from concurrent.futures import ThreadPoolExecutor
 
 SETTINGS_WIDTH = 200
 DEFAULT_SIZE = 50
@@ -25,6 +24,7 @@ RAW_PLOT_NAME = "Cov"
 
 DIV_MARGIN = (5, 5, 0, 5)
 
+executor = ThreadPoolExecutor(max_workers=1)
 
 class FigureMaker:
     _show_hide = {}
@@ -877,13 +877,12 @@ class MainLayout:
                 if not sub_step_total is None:
                     s += " of " + str(sub_step_total)
                 if len(self.render_time_record) > 0:
-                    s += " (" + str(datetime.now() -
-                                    self.render_time_record[-1][1]) + ")"
+                    s += " (" + str(datetime.now() - self.render_time_record[-1][1]) + ")"
             print(s, end="\033[K\r")
 
-            #def callback():
-            #    self.curr_bin_size.text = s
-            #self.curdoc.add_next_tick_callback(callback)
+            def callback():
+                self.curr_bin_size.text = s
+            self.curdoc.add_next_tick_callback(callback)
 
     def render_done(self):
         if len(self.render_time_record) > 0:
@@ -896,201 +895,204 @@ class MainLayout:
         for idx, (name, time) in enumerate(self.render_time_record):
             print("step " + str(idx), str(time),
                   str(int(100*time/total_time)) + "%", name, "\033[K", sep="\t")
+        print("currently used RAM:", psutil.virtual_memory().percent, "%\033[K")
 
     @gen.coroutine
     @without_document_lock
     def render(self, area):
-        if self.meta is None or self.idx is None:
-            self.curr_bin_size.text = "Waiting for Fileinput."
-            self.curdoc.add_timeout_callback(
-                lambda: self.render_callback(), self.update_frequency_slider.value*1000)
-            return
-        area_bin = (area[2] - area[0]) * \
-            (area[3] - area[1]) / self.num_bins.value
+        def unlocked_task():
+            if self.meta is None or self.idx is None:
+                self.curr_bin_size.text = "Waiting for Fileinput."
+                self.curdoc.add_timeout_callback(
+                    lambda: self.render_callback(), self.update_frequency_slider.value*1000)
+                return
+            area_bin = (area[2] - area[0]) * \
+                (area[3] - area[1]) / self.num_bins.value
 
-        def power_of_ten(x):
-            n = 0
-            while True:
-                for i in [1, 1.25, 2.5, 5]:
-                    if i*10**n >= x:
-                        return i*10**n
-                n += 1
-        h_bin = power_of_ten(math.sqrt(area_bin))
-        h_bin = min(max(
-            h_bin, 10**self.min_max_bin_size.value[0]), 10**self.min_max_bin_size.value[1])
-        bin_coords, bin_cols, bin_rows, bin_coords_2, bin_cols_2, bin_rows_2 = self.bin_coords(
-            area, h_bin)
-        print("bin_size", h_bin, "\033[K")
-        bins, info = self.make_bins(h_bin, bin_coords)
-        flat = self.flatten_bins(bins)
-        norm = self.norm_bins(h_bin, flat, bin_cols, bin_rows)
-        sym = self.bin_symmentry(h_bin, norm, bin_coords, bin_cols, bin_rows)
-        c = self.color_bins(sym)
-        b_col = Viridis256[(MAP_Q_MAX-1) //
-                           2] if self.betw_group_d == "sub" else Viridis256[0]
-        purged, purged_coords, purged_coords_2, purged_sym, purged_flat_a, purged_flat_b, purged_info = \
-            self.purge(b_col, c, bin_coords, bin_coords_2,
-                       self.color_bins_a(sym), *flat, info)
+            def power_of_ten(x):
+                n = 0
+                while True:
+                    for i in [1, 1.25, 2.5, 5]:
+                        if i*10**n >= x:
+                            return i*10**n
+                    n += 1
+            h_bin = power_of_ten(math.sqrt(area_bin))
+            h_bin = min(max(
+                h_bin, 10**self.min_max_bin_size.value[0]), 10**self.min_max_bin_size.value[1])
+            bin_coords, bin_cols, bin_rows, bin_coords_2, bin_cols_2, bin_rows_2 = self.bin_coords(
+                area, h_bin)
+            print("bin_size", h_bin, "\033[K")
+            bins, info = self.make_bins(h_bin, bin_coords)
+            flat = self.flatten_bins(bins)
+            norm = self.norm_bins(h_bin, flat, bin_cols, bin_rows)
+            sym = self.bin_symmentry(h_bin, norm, bin_coords, bin_cols, bin_rows)
+            c = self.color_bins(sym)
+            b_col = Viridis256[(MAP_Q_MAX-1) //
+                            2] if self.betw_group_d == "sub" else Viridis256[0]
+            purged, purged_coords, purged_coords_2, purged_sym, purged_flat_a, purged_flat_b, purged_info = \
+                self.purge(b_col, c, bin_coords, bin_coords_2,
+                        self.color_bins_a(sym), *flat, info)
 
-        norm_visible = FigureMaker.is_visible(
-            "raw") and FigureMaker.is_visible("ratio")
+            norm_visible = FigureMaker.is_visible(
+                "raw") and FigureMaker.is_visible("ratio")
 
-        if norm_visible:
-            raw_bin_rows, raw_bin_rows_2 = self.bin_rows(area, h_bin, False)
-            raw_bin_cols, raw_bin_cols_2 = self.bin_cols(area, h_bin, False)
+            if norm_visible:
+                raw_bin_rows, raw_bin_rows_2 = self.bin_rows(area, h_bin, False)
+                raw_bin_cols, raw_bin_cols_2 = self.bin_cols(area, h_bin, False)
 
-            raw_x_norm = self.linear_bins_norm(raw_bin_rows, True)
-            raw_y_norm = self.linear_bins_norm(raw_bin_cols, False)
-            raw_x_heat = self.color_bins_a(self.row_norm(h_bin, raw_bin_rows))
-            raw_y_heat = self.color_bins_a(self.col_norm(h_bin, raw_bin_cols))
-            raw_x_ratio = [a/b if not b == 0 else 0 for a,
-                           b in zip(raw_x_heat, raw_x_norm)]
-            raw_y_ratio = [a/b if not b == 0 else 0 for a,
-                           b in zip(raw_y_heat, raw_y_norm)]
-        else:
-            raw_bin_rows, raw_bin_rows_2 = ([], [])
-            raw_bin_cols, raw_bin_cols_2 = ([], [])
+                raw_x_norm = self.linear_bins_norm(raw_bin_rows, True)
+                raw_y_norm = self.linear_bins_norm(raw_bin_cols, False)
+                raw_x_heat = self.color_bins_a(self.row_norm(h_bin, raw_bin_rows))
+                raw_y_heat = self.color_bins_a(self.col_norm(h_bin, raw_bin_cols))
+                raw_x_ratio = [a/b if not b == 0 else 0 for a,
+                            b in zip(raw_x_heat, raw_x_norm)]
+                raw_y_ratio = [a/b if not b == 0 else 0 for a,
+                            b in zip(raw_y_heat, raw_y_norm)]
+            else:
+                raw_bin_rows, raw_bin_rows_2 = ([], [])
+                raw_bin_cols, raw_bin_cols_2 = ([], [])
 
-            raw_x_norm = []
-            raw_y_norm = []
-            raw_x_heat = []
-            raw_y_heat = []
-            raw_x_ratio = []
-            raw_y_ratio = []
+                raw_x_norm = []
+                raw_y_norm = []
+                raw_x_heat = []
+                raw_y_heat = []
+                raw_x_ratio = []
+                raw_y_ratio = []
 
-        self.render_step_log("setup_col_data_sources")
-        d_heatmap = {
-            "b": [x[1] for x in purged_coords],
-            "l": [x[0] for x in purged_coords],
-            "t": [x[1] + x[3] for x in purged_coords],
-            "r": [x[0] + x[2] for x in purged_coords],
-            "c": purged,
-            "chr_x": [x[0] for x in purged_coords_2],
-            "chr_y": [x[2] for x in purged_coords_2],
-            "x1": [x[1] for x in purged_coords_2],
-            "x2": [x[1] + y[2] for x, y in zip(purged_coords_2, purged_coords)],
-            "y1": [x[3] for x in purged_coords_2],
-            "y2": [x[3] + y[3] for x, y in zip(purged_coords_2, purged_coords)],
-            "s": purged_sym,
-            "d_a": purged_flat_a,
-            "d_b": purged_flat_b,
-            "info": [x for x in purged_info],
-        }
+            self.render_step_log("setup_col_data_sources")
+            d_heatmap = {
+                "b": [x[1] for x in purged_coords],
+                "l": [x[0] for x in purged_coords],
+                "t": [x[1] + x[3] for x in purged_coords],
+                "r": [x[0] + x[2] for x in purged_coords],
+                "c": purged,
+                "chr_x": [x[0] for x in purged_coords_2],
+                "chr_y": [x[2] for x in purged_coords_2],
+                "x1": [x[1] for x in purged_coords_2],
+                "x2": [x[1] + y[2] for x, y in zip(purged_coords_2, purged_coords)],
+                "y1": [x[3] for x in purged_coords_2],
+                "y2": [x[3] + y[3] for x, y in zip(purged_coords_2, purged_coords)],
+                "s": purged_sym,
+                "d_a": purged_flat_a,
+                "d_b": purged_flat_b,
+                "info": [x for x in purged_info],
+            }
 
-        raw_data_x = {
-            "pos": [p for x in raw_bin_rows for p in [x[0], x[0] + x[1]]],
-            "chr": [x[0] for x in raw_bin_rows_2 for _ in [0, 1]],
-            "pos1": [x[1] for x in raw_bin_rows_2 for _ in [0, 1]],
-            "pos2": [x[1] + y[1] for x, y in zip(raw_bin_rows_2, raw_bin_rows) for _ in [0, 1]],
-            "norm": [x for x in raw_x_norm for _ in [0, 1]],
-            "heat": [x for x in raw_x_heat for _ in [0, 1]],
-            "ratio": [x for x in raw_x_ratio for _ in [0, 1]],
-        }
-        raw_data_y = {
-            "pos": [p for x in raw_bin_cols for p in [x[0], x[0] + x[1]]],
-            "chr": [x[0] for x in raw_bin_cols_2 for _ in [0, 1]],
-            "pos1": [x[1] for x in raw_bin_cols_2 for _ in [0, 1]],
-            "pos2": [x[1] + y[1] for x, y in zip(raw_bin_cols_2, raw_bin_cols) for _ in [0, 1]],
-            "norm": [x for x in raw_y_norm for _ in [0, 1]],
-            "heat": [x for x in raw_y_heat for _ in [0, 1]],
-            "ratio": [x for x in raw_y_ratio for _ in [0, 1]],
-        }
+            raw_data_x = {
+                "pos": [p for x in raw_bin_rows for p in [x[0], x[0] + x[1]]],
+                "chr": [x[0] for x in raw_bin_rows_2 for _ in [0, 1]],
+                "pos1": [x[1] for x in raw_bin_rows_2 for _ in [0, 1]],
+                "pos2": [x[1] + y[1] for x, y in zip(raw_bin_rows_2, raw_bin_rows) for _ in [0, 1]],
+                "norm": [x for x in raw_x_norm for _ in [0, 1]],
+                "heat": [x for x in raw_x_heat for _ in [0, 1]],
+                "ratio": [x for x in raw_x_ratio for _ in [0, 1]],
+            }
+            raw_data_y = {
+                "pos": [p for x in raw_bin_cols for p in [x[0], x[0] + x[1]]],
+                "chr": [x[0] for x in raw_bin_cols_2 for _ in [0, 1]],
+                "pos1": [x[1] for x in raw_bin_cols_2 for _ in [0, 1]],
+                "pos2": [x[1] + y[1] for x, y in zip(raw_bin_cols_2, raw_bin_cols) for _ in [0, 1]],
+                "norm": [x for x in raw_y_norm for _ in [0, 1]],
+                "heat": [x for x in raw_y_heat for _ in [0, 1]],
+                "ratio": [x for x in raw_y_ratio for _ in [0, 1]],
+            }
 
-        d_anno_x = {
-            "chr": [],
-            "pos1": [],
-            "pos2": [],
-            "x": [],
-            "s": [],
-            "e": [],
-            "c": [],
-            "n": [],
-            "info": [],
-        }
-        if FigureMaker.is_visible("annotation"):
-            for idx, anno in enumerate(self.displayed_annos.value):
-                for rb_2, (s, e), x in zip(bin_rows_2, bin_rows,
-                                           self.annotation_bins(bin_rows, self.meta.annotations[anno])):
-                    if x > 0:
-                        d_anno_x["chr"].append(rb_2[0])
-                        d_anno_x["pos1"].append(rb_2[1])
-                        d_anno_x["pos2"].append(rb_2[1] + e-s)
-                        d_anno_x["n"].append(x)
-                        d_anno_x["x"].append(anno)
-                        d_anno_x["s"].append(s)
-                        d_anno_x["e"].append(s + e)
-                        d_anno_x["c"].append(Category10[10][idx % 10])
-                        if x > 1:
-                            d_anno_x["info"].append("n/a")
-                        else:
-                            d_anno_x["info"].append(
-                                self.meta.annotations[anno].info(s, e))
+            d_anno_x = {
+                "chr": [],
+                "pos1": [],
+                "pos2": [],
+                "x": [],
+                "s": [],
+                "e": [],
+                "c": [],
+                "n": [],
+                "info": [],
+            }
+            if FigureMaker.is_visible("annotation"):
+                for idx, anno in enumerate(self.displayed_annos.value):
+                    for rb_2, (s, e), x in zip(bin_rows_2, bin_rows,
+                                            self.annotation_bins(bin_rows, self.meta.annotations[anno])):
+                        if x > 0:
+                            d_anno_x["chr"].append(rb_2[0])
+                            d_anno_x["pos1"].append(rb_2[1])
+                            d_anno_x["pos2"].append(rb_2[1] + e-s)
+                            d_anno_x["n"].append(x)
+                            d_anno_x["x"].append(anno)
+                            d_anno_x["s"].append(s)
+                            d_anno_x["e"].append(s + e)
+                            d_anno_x["c"].append(Category10[10][idx % 10])
+                            if x > 1:
+                                d_anno_x["info"].append("n/a")
+                            else:
+                                d_anno_x["info"].append(
+                                    self.meta.annotations[anno].info(s, e))
 
-        d_anno_y = {
-            "chr": [],
-            "pos1": [],
-            "pos2": [],
-            "x": [],
-            "s": [],
-            "e": [],
-            "c": [],
-            "n": [],
-            "info": [],
-        }
-        if FigureMaker.is_visible("annotation"):
-            for idx, anno in enumerate(self.displayed_annos.value):
-                for rb_2, (s, e), x in zip(bin_cols_2, bin_cols,
-                                           self.annotation_bins(bin_cols, self.meta.annotations[anno])):
-                    if x > 0:
-                        d_anno_y["chr"].append(rb_2[0])
-                        d_anno_y["pos1"].append(rb_2[1])
-                        d_anno_y["pos2"].append(rb_2[1] + e-s)
-                        d_anno_y["n"].append(x)
-                        d_anno_y["x"].append(anno)
-                        d_anno_y["s"].append(s)
-                        d_anno_y["e"].append(s + e)
-                        d_anno_y["c"].append(Category10[10][idx % 10])
-                        if x > 1:
-                            d_anno_y["info"].append("n/a")
-                        else:
-                            d_anno_y["info"].append(
-                                self.meta.annotations[anno].info(s, e))
+            d_anno_y = {
+                "chr": [],
+                "pos1": [],
+                "pos2": [],
+                "x": [],
+                "s": [],
+                "e": [],
+                "c": [],
+                "n": [],
+                "info": [],
+            }
+            if FigureMaker.is_visible("annotation"):
+                for idx, anno in enumerate(self.displayed_annos.value):
+                    for rb_2, (s, e), x in zip(bin_cols_2, bin_cols,
+                                            self.annotation_bins(bin_cols, self.meta.annotations[anno])):
+                        if x > 0:
+                            d_anno_y["chr"].append(rb_2[0])
+                            d_anno_y["pos1"].append(rb_2[1])
+                            d_anno_y["pos2"].append(rb_2[1] + e-s)
+                            d_anno_y["n"].append(x)
+                            d_anno_y["x"].append(anno)
+                            d_anno_y["s"].append(s)
+                            d_anno_y["e"].append(s + e)
+                            d_anno_y["c"].append(Category10[10][idx % 10])
+                            if x > 1:
+                                d_anno_y["info"].append("n/a")
+                            else:
+                                d_anno_y["info"].append(
+                                    self.meta.annotations[anno].info(s, e))
 
-        self.render_step_log("transfer_data")
+            self.render_step_log("transfer_data")
 
-        def callback():
-            def mmax(*args):
-                m = 0
-                for x in args:
-                    if not x is None and x > m:
-                        m = x
-                return m
-            self.anno_x.x_range.factors = self.displayed_annos.value
-            self.anno_y.y_range.factors = self.displayed_annos.value
+            def callback():
+                def mmax(*args):
+                    m = 0
+                    for x in args:
+                        if not x is None and x > m:
+                            m = x
+                    return m
+                self.anno_x.x_range.factors = self.displayed_annos.value
+                self.anno_y.y_range.factors = self.displayed_annos.value
 
-            self.curr_bin_size.text = "Redering Done; Current Bin Size:" + \
-                str(h_bin)
+                self.curr_bin_size.text = "Redering Done; Current Bin Size:" + \
+                    str(h_bin)
 
-            self.raw_x_axis.xaxis.bounds = (0, mmax(*raw_x_heat, *raw_x_norm))
-            self.ratio_x_axis.xaxis.bounds = (0, mmax(*raw_x_ratio))
-            self.raw_y_axis.yaxis.bounds = (0, mmax(*raw_y_heat, *raw_y_norm))
-            self.ratio_y_axis.yaxis.bounds = (0, mmax(*raw_y_ratio))
+                self.raw_x_axis.xaxis.bounds = (0, mmax(*raw_x_heat, *raw_x_norm))
+                self.ratio_x_axis.xaxis.bounds = (0, mmax(*raw_x_ratio))
+                self.raw_y_axis.yaxis.bounds = (0, mmax(*raw_y_heat, *raw_y_norm))
+                self.ratio_y_axis.yaxis.bounds = (0, mmax(*raw_y_ratio))
 
-            self.heatmap.background_fill_color = b_col
-            self.heatmap_data.data = d_heatmap
-            self.raw_data_x.data = raw_data_x
-            self.raw_data_y.data = raw_data_y
+                self.heatmap.background_fill_color = b_col
+                self.heatmap_data.data = d_heatmap
+                self.raw_data_x.data = raw_data_x
+                self.raw_data_y.data = raw_data_y
 
-            self.anno_x_data.data = d_anno_x
-            self.anno_y_data.data = d_anno_y
-            self.render_done()
-            self.curdoc.add_timeout_callback(
-                lambda: self.render_callback(), self.update_frequency_slider.value*1000)
-        self.curdoc.add_next_tick_callback(callback)
-        print("currently used RAM:", psutil.virtual_memory().percent)
+                self.anno_x_data.data = d_anno_x
+                self.anno_y_data.data = d_anno_y
+                self.render_done()
+                self.curdoc.add_timeout_callback(
+                    lambda: self.render_callback(), self.update_frequency_slider.value*1000)
+            self.curdoc.add_next_tick_callback(callback)
+
+        yield executor.submit(unlocked_task)
 
     def setup(self):
-        print("loading...")
+        print("loading...\033[K")
         #if self.meta is None:
         #    bed_folder = "/work/project/ladsie_012/ABS.2.2/2021-10-26_NS502-NS521_ABS_CR_RADICL_inputMicroC/bed_files"
         #    bed_suffix = "RNA.sorted.bed_K1K2.bed_K4.bed_R_D.bed_R_D_K1K2.bed_R_D_PRE1.bed"
@@ -1116,8 +1118,9 @@ class MainLayout:
             if os.path.exists(self.meta_file.value + ".meta"):
                 self.meta = MetaData.load(self.meta_file.value + ".meta")
                 self.meta.setup(self)
-                self.idx = Tree_4(self.meta_file.value + ".inter").load(len(self.meta.datasets), 1000, 56)
-                self.idx_norm = Tree_3(self.meta_file.value + ".norm").load(len(self.meta.normalizations), 100, 56)
+                self.idx = Tree_4(self.meta_file.value + ".inter").load(len(self.meta.datasets), 5000, 56)
+                self.idx_norm = Tree_3(self.meta_file.value + ".norm").load(len(self.meta.normalizations), 500, 56)
+                print("done loading\033[K")
                 self.trigger_render()
             else:
                 print("File not found")
@@ -1138,7 +1141,7 @@ class MainLayout:
                 # print(overlap)
                 if curr_area_size / self.curr_area_size < min_change or self.force_render or \
                         MainLayout.area_outside(self.last_drawing_area, curr_area):
-                    self.new_render("n/a")
+                    self.new_render("startup")
                     if curr_area_size / self.curr_area_size < min_change:
                         self.new_render("zoom")
                     if self.force_render:
