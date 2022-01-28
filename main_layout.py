@@ -1117,7 +1117,7 @@ class MainLayout:
                 self.meta = MetaData.load(self.meta_file.value + ".meta")
                 self.meta.setup(self)
                 self.idx = Tree_4(self.meta_file.value + ".inter").load(len(self.meta.datasets), 1000, 56)
-                self.idx_norm = Tree_3(self.meta_file.value + ".norm").load(len(self.meta.normalizations), 1000, 56)
+                self.idx_norm = Tree_3(self.meta_file.value + ".norm").load(len(self.meta.normalizations), 100, 56)
                 self.trigger_render()
             else:
                 print("File not found")
