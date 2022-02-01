@@ -6,7 +6,7 @@ import math
 from datetime import datetime
 from tornado import gen
 from bokeh.document import without_document_lock
-from bokeh.models import Panel, Tabs
+from bokeh.models import Panel, Tabs, Spacer
 from bokeh.models import Range1d
 from meta_data import *
 import os
@@ -15,6 +15,7 @@ from bokeh.palettes import Viridis256, Category10
 from datetime import datetime, timedelta
 import psutil
 from concurrent.futures import ThreadPoolExecutor
+from bokeh.models import BoxAnnotation
 
 SETTINGS_WIDTH = 200
 DEFAULT_SIZE = 50
@@ -26,10 +27,12 @@ DIV_MARGIN = (5, 5, 0, 5)
 
 executor = ThreadPoolExecutor(max_workers=1)
 
+
 class FigureMaker:
     _show_hide = {}
     _hidable_plots = []
     _unhide_button = None
+    render_areas = {}
 
     def __init__(self):
         self.args = {}
@@ -71,7 +74,17 @@ class FigureMaker:
         ret.yaxis.axis_label_text_font_size = "10px"
         ret.xaxis.axis_label_standoff = 0
         ret.yaxis.axis_label_standoff = 0
+        ret.xgrid.level = "glyph"
+        ret.ygrid.level = "glyph"
+        ret.background_fill_color = "lightgrey"
+        render_area = BoxAnnotation(fill_alpha=1, top=0, bottom=0, fill_color='white', level="image")
+        ret.add_layout(render_area)
+        FigureMaker.render_areas[ret] = render_area
         return ret
+
+    @staticmethod
+    def plot_render_area(plot):
+        return FigureMaker.render_areas[plot]
 
     def range1d(self):
         self._range1d = True
@@ -88,19 +101,23 @@ class FigureMaker:
     def link_y(self, other):
         self.args["y_range"] = other.y_range
         self.args["sizing_mode"] = "stretch_height"
+        #self.args["height_policy"] = "min"
         self.args["height"] = 10
         self.no_border_v = True
         return self
 
     def link_x(self, other):
         self.args["x_range"] = other.x_range
-        self.args["sizing_mode"] = "stretch_width"
-        self.args["width"] = 10
+        #self.args["sizing_mode"] = "stretch_width"
+        self.args["width_policy"] = "fit"
+        self.args["width"] = None
         self.no_border_h = True
         return self
 
     def stretch(self):
         self.args["sizing_mode"] = "stretch_both"
+        #self.args["width_policy"] = "fit"
+        #self.args["height_policy"] = "max"
         self.args["height"] = 10
         self.args["width"] = 10
         self.no_border_h = True
@@ -120,9 +137,10 @@ class FigureMaker:
         self.x_axis_visible = True
         self.args["x_range"] = other.x_range
         self.args["frame_height"] = 1
-        if other.sizing_mode in ["stretch_both", "stretch_width"]:
-            self.args["sizing_mode"] = "stretch_width"
-            self.w(10)
+        if other.sizing_mode in ["stretch_both", "stretch_width"] or other.width_policy in ["fit", "max"]:
+            #self.args["sizing_mode"] = "stretch_width"
+            self.args["width_policy"] = "fit"
+            self.w(None)
         else:
             self.w(other.width)
             self.args["sizing_mode"] = "fixed"
@@ -138,8 +156,9 @@ class FigureMaker:
         self.y_axis_visible = True
         self.args["y_range"] = other.y_range
         self.args["frame_width"] = 1
-        if other.sizing_mode in ["stretch_both", "stretch_height"]:
+        if other.sizing_mode in ["stretch_both", "stretch_height"] or other.height_policy in ["fit", "max"]:
             self.args["sizing_mode"] = "stretch_height"
+            #self.args["height_policy"] = "max"
             self.h(10)
         else:
             self.h(other.height)
@@ -150,11 +169,11 @@ class FigureMaker:
         return self
 
     def categorical_x(self):
-        self.args["x_range"] = []
+        self.args["x_range"] = [""]
         return self
 
     def categorical_y(self):
-        self.args["y_range"] = []
+        self.args["y_range"] = [""]
         return self
 
     def hide_on(self, key):
@@ -208,7 +227,7 @@ class FigureMaker:
                     (("☑ " if FigureMaker._show_hide[key] or key == "tools" else "☐ ") + name, key))
             return menu
         ret = Dropdown(label="Show/Hide", menu=make_menu(),
-                       width=SETTINGS_WIDTH)
+                       width=SETTINGS_WIDTH, sizing_mode="stretch_width")
 
         def event(e):
             FigureMaker.toggle_hide(e.item)
@@ -240,7 +259,7 @@ class MainLayout:
             for name, key in options:
                 menu.append((("☑ " if d[key] else "☐ ") + name, key))
             return menu
-        ret = Dropdown(label=title, menu=make_menu(), width=SETTINGS_WIDTH)
+        ret = Dropdown(label=title, menu=make_menu(), width=SETTINGS_WIDTH, sizing_mode="stretch_width")
 
         def _event(e):
             for _, key in options:
@@ -274,7 +293,8 @@ class MainLayout:
              "y1": [], "y2": [], "s": [], "d_a": [], "d_b": [], 'info': []}
         self.heatmap_data = ColumnDataSource(data=d)
         self.heatmap.quad(left="l", bottom="b", right="r", top="t", fill_color="c", line_color=None,
-                          source=self.heatmap_data, level="image")
+                          source=self.heatmap_data, level="underlay")
+
 
         self.heatmap.add_tools(HoverTool(
             tooltips=[
@@ -315,6 +335,7 @@ class MainLayout:
         self.ratio_x_axis = FigureMaker().x_axis_of(
             self.ratio_x).combine_tools(tollbars).get()
         self.ratio_x_axis.xaxis.axis_label = "Ratio"
+        self.ratio_x_axis.xaxis.ticker.desired_num_ticks = 3
 
         self.ratio_y = FigureMaker().h(DEFAULT_SIZE).link_x(
             self.heatmap).hide_on("ratio").combine_tools(tollbars).get()
@@ -322,6 +343,7 @@ class MainLayout:
         self.ratio_y_axis = FigureMaker().y_axis_of(
             self.ratio_y).combine_tools(tollbars).get()
         self.ratio_y_axis.yaxis.axis_label = "Ratio"
+        self.ratio_y_axis.xaxis.ticker.desired_num_ticks = 3
 
         self.raw_x = FigureMaker().w(DEFAULT_SIZE).link_y(
             self.heatmap).hide_on("raw").combine_tools(tollbars).get()
@@ -329,6 +351,7 @@ class MainLayout:
         self.raw_x_axis = FigureMaker().x_axis_of(
             self.raw_x).combine_tools(tollbars).get()
         self.raw_x_axis.xaxis.axis_label = "Cov"
+        self.raw_x_axis.xaxis.ticker.desired_num_ticks = 3
 
         self.raw_y = FigureMaker().h(DEFAULT_SIZE).link_x(
             self.heatmap).hide_on("raw").combine_tools(tollbars).get()
@@ -336,6 +359,7 @@ class MainLayout:
         self.raw_y_axis = FigureMaker().y_axis_of(
             self.raw_y).combine_tools(tollbars).get()
         self.raw_y_axis.yaxis.axis_label = "Cov"
+        self.raw_y_axis.xaxis.ticker.desired_num_ticks = 3
 
         d_x = {
             "chr": [],
@@ -446,39 +470,51 @@ class MainLayout:
                                                    "tracks_abs"),
                                                   ("Coverage of Normalization Reads (Scaled to Rendered Area)", "tracks_rel"))
 
+        def stretch_event(e):
+            self.heatmap.sizing_mode = e
+            if e == "stretch_both":
+                self.settings.width_policy = "fixed"
+            else:
+                self.settings.width_policy = "max"
+        self.stretch = self.dropdown_select("Stretch/Scale", stretch_event,
+                                                  ("Stretch", "stretch_both"),
+                                                  ("Scale", "scale_height"))
+
         self.mapq_slider = RangeSlider(width=SETTINGS_WIDTH, start=0, end=MAP_Q_MAX, value=(0, MAP_Q_MAX), step=1,
-                                       title="Mapping Quality Bounds")
+                                       title="Mapping Quality Bounds", sizing_mode="stretch_width")
         self.mapq_slider.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
 
         self.interactions_bounds_slider = Slider(width=SETTINGS_WIDTH, start=0, end=100, value=0, step=1,
-                                                 title="Color Scale Begin")
+                                                 title="Color Scale Begin", sizing_mode="stretch_width")
         self.interactions_bounds_slider.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
 
         self.interactions_slider = Slider(width=SETTINGS_WIDTH, start=-50, end=50, value=10, step=0.1,
-                                          title="Color Scale Log Base")  # , format="0[.]000")
+                                          title="Color Scale Log Base", 
+                                          sizing_mode="stretch_width")  # , format="0[.]000")
         self.interactions_slider.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
 
         self.update_frequency_slider = Slider(width=SETTINGS_WIDTH, start=0.1, end=3, value=0.5, step=0.1,
-                                              title="Update Frequency [seconds]", format="0[.]000")
+                                              title="Update Frequency [seconds]", format="0[.]000"
+                                              , sizing_mode="stretch_width")
 
         self.redraw_slider = Slider(width=SETTINGS_WIDTH, start=0, end=100, value=90, step=1,
-                                    title="Redraw if zoomed in by [%]")
+                                    title="Redraw if zoomed in by [%]", sizing_mode="stretch_width")
 
         self.add_area_slider = Slider(width=SETTINGS_WIDTH, start=0, end=500, value=100, step=10,
-                                      title="Additional Draw Area [%]")
+                                      title="Additional Draw Area [%]", sizing_mode="stretch_width")
         self.add_area_slider.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
 
         self.diag_dist_slider = Slider(width=SETTINGS_WIDTH, start=0, end=1000, value=0, step=1,
-                                       title="Minimum Distance from Diagonal")
+                                       title="Minimum Distance from Diagonal", sizing_mode="stretch_width")
         self.diag_dist_slider.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
 
         self.anno_size_slider = Slider(width=SETTINGS_WIDTH, start=10, end=500, value=DEFAULT_SIZE, step=1,
-                                       title=ANNOTATION_PLOT_NAME + " Plot Size")
+                                       title=ANNOTATION_PLOT_NAME + " Plot Size", sizing_mode="stretch_width")
 
         def anno_size_slider_event(attr, old, new):
             self.anno_x.width = self.anno_size_slider.value
@@ -489,7 +525,7 @@ class MainLayout:
             "value_throttled", anno_size_slider_event)
 
         self.ratio_size_slider = Slider(width=SETTINGS_WIDTH, start=10, end=500, value=DEFAULT_SIZE, step=1,
-                                        title=RATIO_PLOT_NAME + " Plot Size")
+                                        title=RATIO_PLOT_NAME + " Plot Size", sizing_mode="stretch_width")
 
         def ratio_size_slider_event(attr, old, new):
             self.ratio_x.width = self.ratio_size_slider.value
@@ -500,7 +536,7 @@ class MainLayout:
             "value_throttled", ratio_size_slider_event)
 
         self.raw_size_slider = Slider(width=SETTINGS_WIDTH, start=10, end=500, value=DEFAULT_SIZE, step=1,
-                                      title=RAW_PLOT_NAME + " Plot Size")
+                                      title=RAW_PLOT_NAME + " Plot Size", sizing_mode="stretch_width")
 
         def raw_size_slider_event(attr, old, new):
             self.raw_x.width = self.raw_size_slider.value
@@ -511,10 +547,12 @@ class MainLayout:
             "value_throttled", raw_size_slider_event)
 
         self.num_bins = Slider(width=SETTINGS_WIDTH, start=1000, end=100000, value=30000, step=1000,
-                               title="Number of Bins")
+                               title="Number of Bins", sizing_mode="stretch_width")
         self.num_bins.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
             
+        meta_file_label = Div(text="Data path:")
+        meta_file_label.margin = DIV_MARGIN
         self.meta_file = TextInput(value="heatmap_server/out/")
         self.meta_file.on_change("value", lambda x, y, z: self.setup())
 
@@ -554,36 +592,41 @@ class MainLayout:
         self.norm_y.on_change("value", lambda x, y, z: self.trigger_render())
 
         self.info_div = Div(text="n/a", style={"word-break": "break-all", "max-width": str(
-            SETTINGS_WIDTH)+"px"}, width=SETTINGS_WIDTH, sizing_mode="stretch_height")
+            SETTINGS_WIDTH)+"px"}, width=SETTINGS_WIDTH, sizing_mode="stretch_width")
+
+        def make_panel(title, children):
+            r = Panel(child=column(children, sizing_mode="stretch_width"), title=title)
+            return r
 
         _settings = Tabs(
             tabs=[
-                Panel(child=column([tool_bar, self.meta_file, show_hide, self.symmetrie, self.diag_dist_slider,
+                make_panel("General", [tool_bar, self.meta_file, show_hide, self.symmetrie, self.diag_dist_slider,
                                     div_displayed_annos, self.displayed_annos, self.min_max_bin_size,
                                     self.curr_bin_size]),
-                      title="General"),
-                Panel(child=column([self.normalization, self.mapq_slider, self.interactions_bounds_slider,
+                make_panel("Normalization", [self.normalization, self.mapq_slider, self.interactions_bounds_slider,
                                     self.interactions_slider, div_norm_x, self.norm_x, div_norm_y, self.norm_y]),
-                      title="Normalization"),
-                Panel(child=column([self.in_group, self.betw_group, div_group_a, self.group_a, div_group_b, self.group_b]),
-                      title="Replicates"),
-                Panel(child=column([self.num_bins, self.update_frequency_slider, self.redraw_slider,
+                make_panel("Replicates", [self.in_group, self.betw_group, div_group_a, self.group_a, div_group_b, self.group_b]),
+                make_panel("GUI", [self.num_bins, self.update_frequency_slider, self.redraw_slider,
                                     self.add_area_slider,
-                                    self.anno_size_slider, self.raw_size_slider, self.ratio_size_slider]),
-                      title="GUI"),
-                Panel(child=column([self.info_div]),
-                      title="Info"),
+                                    self.anno_size_slider, self.raw_size_slider, self.ratio_size_slider,
+                                    self.stretch]),
+                make_panel("Info", [self.info_div]),
             ],
-            sizing_mode="stretch_height"
+            sizing_mode="stretch_both"
         )
 
         FigureMaker._hidable_plots.append((_settings, ["tools"]))
-        settings = row([_settings, FigureMaker.reshow_settings()],
-                       sizing_mode="stretch_height")
+        self.settings = row([_settings, FigureMaker.reshow_settings()],
+                       css_classes=["full_height"])
+        self.settings.height = 100
+        self.settings.min_height = 100
+        self.settings.height_policy = "fixed"
+        self.settings.width = SETTINGS_WIDTH
+        self.settings.width_policy = "fixed"
 
         grid_layout = [
             [self.heatmap_y_axis, self.anno_x,   self.raw_x,
-                self.ratio_x,      None,              self.heatmap,   settings],
+                self.ratio_x,      None,              self.heatmap,   self.settings],
             [None,              self.anno_x_axis, self.raw_x_axis,
                 self.ratio_x_axis, None,              None,               None],
             [None,              None,             None,            None,
@@ -596,7 +639,7 @@ class MainLayout:
                 None,            self.heatmap_x_axis, None],
         ]
 
-        self.root = grid(grid_layout, sizing_mode="stretch_both")
+        self.root = grid(grid_layout) # , sizing_mode="stretch_both"
 
     # overlap of the given areas relative to the larger area
     @staticmethod
@@ -670,8 +713,8 @@ class MainLayout:
 
     def read_norm(self, idx):
         n = []
-        for dataset in self.meta.datasets:
-            if dataset[2] == (idx == 0):
+        for idx, dataset in enumerate(self.meta.datasets):
+            if str(idx) in (self.group_a.value if idx == 0 else self.group_b.value):
                 n.append(dataset[3])
         if self.in_group_d == "min":
             n = min(n)
@@ -718,9 +761,10 @@ class MainLayout:
                     return (self.norm_num_reads(True) * self.norm_num_reads(False)) / d
                 ret.append([x*get_norm(idx_2) for idx_2, x in enumerate(bins)])
                 if self.normalization_d == "tracks_rel":
-                    _max = max(*ret[-1], 0.001)
-                    for i in range(len(ret[-1])):
-                        ret[-1][i] = ret[-1][i] / _max
+                    _max = max(*ret[-1], 0)
+                    if _max > 0:
+                        for i in range(len(ret[-1])):
+                            ret[-1][i] = ret[-1][i] / _max
                 else:
                     for i in range(len(ret[-1])):
                         ret[-1][i] = min(ret[-1][i], 1)
@@ -902,7 +946,9 @@ class MainLayout:
     def render(self, area):
         def unlocked_task():
             if self.meta is None or self.idx is None:
-                self.curr_bin_size.text = "Waiting for Fileinput."
+                def callback():
+                    self.curr_bin_size.text = "Waiting for Fileinput."
+                self.curdoc.add_next_tick_callback(callback)
                 self.curdoc.add_timeout_callback(
                     lambda: self.render_callback(), self.update_frequency_slider.value*1000)
                 return
@@ -919,8 +965,13 @@ class MainLayout:
             h_bin = power_of_ten(math.sqrt(area_bin))
             h_bin = min(max(
                 h_bin, 10**self.min_max_bin_size.value[0]), 10**self.min_max_bin_size.value[1])
-            bin_coords, bin_cols, bin_rows, bin_coords_2, bin_cols_2, bin_rows_2 = self.bin_coords(
-                area, h_bin)
+
+            area[0] -= area[0] % h_bin # align to nice and even number
+            area[1] -= area[1] % h_bin # align to nice and even number
+            area[2] += h_bin - (area[2] % h_bin) # align to nice and even number
+            area[3] += h_bin - (area[3] % h_bin) # align to nice and even number
+
+            bin_coords, bin_cols, bin_rows, bin_coords_2, bin_cols_2, bin_rows_2 = self.bin_coords(area, h_bin)
             print("bin_size", h_bin, "\033[K")
             bins, info = self.make_bins(h_bin, bin_coords)
             flat = self.flatten_bins(bins)
@@ -933,8 +984,7 @@ class MainLayout:
                 self.purge(b_col, c, bin_coords, bin_coords_2,
                         self.color_bins_a(sym), *flat, info)
 
-            norm_visible = FigureMaker.is_visible(
-                "raw") and FigureMaker.is_visible("ratio")
+            norm_visible = FigureMaker.is_visible("raw") or FigureMaker.is_visible("ratio")
 
             if norm_visible:
                 raw_bin_rows, raw_bin_rows_2 = self.bin_rows(area, h_bin, False)
@@ -1077,7 +1127,24 @@ class MainLayout:
                 self.raw_y_axis.yaxis.bounds = (0, mmax(*raw_y_heat, *raw_y_norm))
                 self.ratio_y_axis.yaxis.bounds = (0, mmax(*raw_y_ratio))
 
-                self.heatmap.background_fill_color = b_col
+                def set_bounds(plot, left=None, right=None, top=None, bottom=None, color=None):
+                    ra = FigureMaker.plot_render_area(plot)
+                    ra.left = area[0] if left is None else left
+                    ra.bottom = area[1] if bottom is None else bottom
+                    ra.right = area[2] if right is None else right
+                    ra.top =area[3] if top is None else top
+                    if not color is None:
+                        ra.fill_color = color
+
+                set_bounds(self.raw_x, left=0, right=mmax(*raw_x_heat, *raw_x_norm))
+                set_bounds(self.ratio_x, left=0, right=mmax(*raw_x_ratio))
+                set_bounds(self.anno_x, left=None, right=None)
+                set_bounds(self.raw_y, bottom=0, top=mmax(*raw_y_heat, *raw_y_norm))
+                set_bounds(self.ratio_y, bottom=0, top=mmax(*raw_y_ratio))
+                set_bounds(self.anno_y, bottom=None, top=None)
+
+                set_bounds(self.heatmap, color=b_col)
+
                 self.heatmap_data.data = d_heatmap
                 self.raw_data_x.data = raw_data_x
                 self.raw_data_y.data = raw_data_y
@@ -1151,8 +1218,8 @@ class MainLayout:
                     self.force_render = False
                     self.curr_area_size = curr_area_size
                     x = self.add_area_slider.value/100
-                    new_area = (curr_area[0] - w*x, curr_area[1] - h*x,
-                                curr_area[2] + w*x, curr_area[3] + h*x)
+                    new_area = [curr_area[0] - w*x, curr_area[1] - h*x,
+                                curr_area[2] + w*x, curr_area[3] + h*x]
                     self.last_drawing_area = new_area
 
                     def callback():
