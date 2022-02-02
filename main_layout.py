@@ -29,8 +29,9 @@ executor = ThreadPoolExecutor(max_workers=1)
 
 
 class FigureMaker:
-    _show_hide = {}
+    _show_hide = {"grid_lines": True}
     _hidable_plots = []
+    _plots = []
     _unhide_button = None
     render_areas = {}
 
@@ -80,6 +81,7 @@ class FigureMaker:
         render_area = BoxAnnotation(fill_alpha=1, top=0, bottom=0, fill_color='white', level="image")
         ret.add_layout(render_area)
         FigureMaker.render_areas[ret] = render_area
+        FigureMaker._plots.append(ret)
         return ret
 
     @staticmethod
@@ -204,6 +206,9 @@ class FigureMaker:
                     break
         if not FigureMaker._unhide_button is None:
             FigureMaker._unhide_button.visible = not FigureMaker._show_hide["tools"]
+        for plot in FigureMaker._plots:
+            plot.grid.grid_line_color = "darkgrey" if FigureMaker._show_hide["grid_lines"] else None
+            #plot.grid.minor_grid_line_color = "grey" if FigureMaker._show_hide["grid_lines"] else None
 
     @staticmethod
     def toggle_hide(key):
@@ -225,6 +230,8 @@ class FigureMaker:
             for name, key in names:
                 menu.append(
                     (("☑ " if FigureMaker._show_hide[key] or key == "tools" else "☐ ") + name, key))
+            menu.append(
+                (("☑ " if FigureMaker._show_hide[key] else "☐ ") + "Grid Lines", "grid_lines"))
             return menu
         ret = Dropdown(label="Show/Hide", menu=make_menu(),
                        width=SETTINGS_WIDTH, sizing_mode="stretch_width")
