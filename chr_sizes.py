@@ -45,7 +45,6 @@ export class ExtraTicksTicker extends BasicTicker {
 class ExtraTicksTicker(BasicTicker):
     __implementation__ = TypeScript(TS_CODE)
     extra_ticks = List(Float)
-    display_extra_ticks = Bool
 
 
 class ChrSizes:

@@ -1,7 +1,7 @@
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, MultiChoice, FuncTickFormatter, Div, HoverTool
+from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, MultiChoice, FuncTickFormatter, Div, HoverTool, Toggle
 import math
 from datetime import datetime
 from tornado import gen
@@ -199,15 +199,20 @@ class FigureMaker:
     @staticmethod
     def update_visibility():
         for plot, keys in FigureMaker._hidable_plots:
-            plot.visible = True
+            visible = True
             for key in keys:
                 if not FigureMaker._show_hide[key]:
-                    plot.visible = False
+                    visible = False
                     break
+            if plot.visible != visible:
+                plot.visible = visible
         if not FigureMaker._unhide_button is None:
-            FigureMaker._unhide_button.visible = not FigureMaker._show_hide["tools"]
+            if FigureMaker._unhide_button.visible == FigureMaker._show_hide["tools"]:
+                FigureMaker._unhide_button.visible = not FigureMaker._show_hide["tools"]
+        c = "darkgrey" if FigureMaker._show_hide["grid_lines"] else None
         for plot in FigureMaker._plots:
-            plot.grid.grid_line_color = "darkgrey" if FigureMaker._show_hide["grid_lines"] else None
+            if plot.grid.grid_line_color != c:
+                plot.grid.grid_line_color = c
             #plot.grid.minor_grid_line_color = "grey" if FigureMaker._show_hide["grid_lines"] else None
 
     @staticmethod
@@ -553,7 +558,7 @@ class MainLayout:
         self.raw_size_slider.on_change(
             "value_throttled", raw_size_slider_event)
 
-        self.num_bins = Slider(width=SETTINGS_WIDTH, start=1000, end=100000, value=30000, step=1000,
+        self.num_bins = Slider(width=SETTINGS_WIDTH, start=10000, end=1000000, value=60000, step=10000,
                                title="Number of Bins", sizing_mode="stretch_width")
         self.num_bins.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
@@ -577,8 +582,14 @@ class MainLayout:
             "value", lambda x, y, z: self.trigger_render())
 
         power_tick = FuncTickFormatter(
-            code="return \"10^\"+Math.floor(tick)")  # Math.pow(10, tick)
-        self.min_max_bin_size = RangeSlider(start=0, end=15, value=(0, 6), step=1, title="Bin Size Bounds [nt]",
+            code="""
+            if (tick / 9 >= 7)
+                return Math.ceil((1 + tick % 9)) + "*10^" + Math.floor(tick / 9) + "bp";
+            else if (tick / 9 >= 3)
+                return Math.ceil((1 + tick % 9) * Math.pow(10, Math.floor(tick / 9)-3)) + "kbp";
+            else
+                return Math.ceil((1 + tick % 9) * Math.pow(10, Math.floor(tick / 9))) + "bp"; """)
+        self.min_max_bin_size = RangeSlider(start=0, end=9*15, value=(0, 9*6), step=1, title="Bin Size Bounds [nt]",
                                             format=power_tick)
         self.min_max_bin_size.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
@@ -602,11 +613,22 @@ class MainLayout:
             SETTINGS_WIDTH)+"px"}, width=SETTINGS_WIDTH, sizing_mode="stretch_width")
 
         def make_panel(title, children):
-            r = Panel(child=column(children, sizing_mode="stretch_width"), title=title)
+            t = Toggle(active=False, button_type="light")
+
+            r = column([t] + children, sizing_mode="stretch_width")
+            def callback(e):
+                if t.active:
+                    p = "▿ "
+                else:
+                    p = "▸ "
+                t.label = p + title
+                for c in children:
+                    c.visible = t.active
+            t.on_click(callback)
+            callback(None)
             return r
 
-        _settings = Tabs(
-            tabs=[
+        _settings = column([
                 make_panel("General", [tool_bar, self.meta_file, show_hide, self.symmetrie, self.diag_dist_slider,
                                     div_displayed_annos, self.displayed_annos, self.min_max_bin_size,
                                     self.curr_bin_size]),
@@ -623,7 +645,10 @@ class MainLayout:
         )
 
         FigureMaker._hidable_plots.append((_settings, ["tools"]))
-        self.settings = row([_settings, FigureMaker.reshow_settings()],
+        sp = Spacer()
+        sp.width = 20
+        sp.width_policy = "fixed"
+        self.settings = row([_settings, FigureMaker.reshow_settings(), sp],
                        css_classes=["full_height"])
         self.settings.height = 100
         self.settings.min_height = 100
@@ -791,8 +816,8 @@ class MainLayout:
                 if str(idx_2) in self.group_b.value:
                     b.append(bins[idx_2][idx])
             if self.in_group_d == "min":
-                aa = min(a + [0])
-                bb = min(b + [0])
+                aa = min(a) if len(a) > 0 else 0
+                bb = min(b) if len(b) > 0 else 0
             elif self.in_group_d == "sum":
                 aa = sum(a)
                 bb = sum(b)
@@ -878,11 +903,7 @@ class MainLayout:
         elif self.symmetrie_d == "sym" or self.symmetrie_d == "asym":
             bins_2, _ = self.make_bins(
                 h_bin, [(y, x, h, w) for x, y, w, h in bin_coords], name="make_bins_symmetrie")
-            flat = self.flatten_bins(bins_2)
-            raw_x_norm = self.linear_bins_norm(bin_cols, True)
-            raw_y_norm = self.linear_bins_norm(bin_rows, False)
-            norms = self.norm_bins(
-                h_bin, flat, bin_coords, bin_rows, bin_cols, raw_x_norm, raw_y_norm)
+            norms = self.norm_bins(h_bin, bins_2, bin_rows, bin_cols)
             if self.symmetrie_d == "sym":
                 return [[min(a, b) for a, b in zip(bin, norm)] for bin, norm in zip(bins, norms)]
             else:
@@ -924,29 +945,30 @@ class MainLayout:
             s = "rendering due to " + self.render_reason + "."
             if len(step_name) > 0:
                 s += " Step " + str(self.render_curr_step) + \
-                    " " + str(step_name) + " Substep " + str(sub_step)
+                    " " + str(step_name) + ". Substep " + str(sub_step)
                 if not sub_step_total is None:
-                    s += " of " + str(sub_step_total)
+                    s += " of " + str(sub_step_total) + ". "
                 if len(self.render_time_record) > 0:
-                    s += " (" + str(datetime.now() - self.render_time_record[-1][1]) + ")"
+                    s += " Runtime: " + str(datetime.now() - self.render_time_record[-1][1])
             print(s, end="\033[K\r")
 
             def callback():
-                self.curr_bin_size.text = s
+                self.curr_bin_size.text = s.replace(". ", "<br>")
             self.curdoc.add_next_tick_callback(callback)
 
-    def render_done(self):
+    def render_done(self, bin_amount):
         if len(self.render_time_record) > 0:
             self.render_time_record[-1][1] = datetime.now() - \
                 self.render_time_record[-1][1]
-        print("render done, times used:\033[K")
+        print("render done, used time:\033[K")
         total_time = timedelta()
         for x in self.render_time_record:
             total_time += x[1]
         for idx, (name, time) in enumerate(self.render_time_record):
             print("step " + str(idx), str(time),
                   str(int(100*time/total_time)) + "%", name, "\033[K", sep="\t")
-        print("currently used RAM:", psutil.virtual_memory().percent, "%\033[K")
+        print("Currently used RAM:", psutil.virtual_memory().percent, "%\033[K")
+        print("Number of displayed bins:", bin_amount, "\033[K")
 
     @gen.coroutine
     @without_document_lock
@@ -970,8 +992,10 @@ class MainLayout:
                             return i*10**n
                     n += 1
             h_bin = power_of_ten(math.sqrt(area_bin))
-            h_bin = min(max(
-                h_bin, 10**self.min_max_bin_size.value[0]), 10**self.min_max_bin_size.value[1])
+            def comp_bin_size(idx):
+                t = self.min_max_bin_size.value[idx]
+                return math.ceil((1 + t % 9) * 10**(t // 9))
+            h_bin = min(max(h_bin, comp_bin_size(0)), comp_bin_size(1))
 
             area[0] -= area[0] % h_bin # align to nice and even number
             area[1] -= area[1] % h_bin # align to nice and even number
@@ -1123,10 +1147,14 @@ class MainLayout:
                         if not x is None and x > m:
                             m = x
                     return m
-                self.anno_x.x_range.factors = self.displayed_annos.value
-                self.anno_y.y_range.factors = self.displayed_annos.value
+                if len(self.displayed_annos.value) == 0:
+                    self.anno_x.x_range.factors = [""]
+                    self.anno_y.y_range.factors = [""]
+                else:
+                    self.anno_x.x_range.factors = self.displayed_annos.value
+                    self.anno_y.y_range.factors = self.displayed_annos.value
 
-                self.curr_bin_size.text = "Redering Done; Current Bin Size:" + \
+                self.curr_bin_size.text = "Redering Donen\nCurrent Bin Size:" + \
                     str(h_bin)
 
                 self.raw_x_axis.xaxis.bounds = (0, mmax(*raw_x_heat, *raw_x_norm))
@@ -1145,9 +1173,9 @@ class MainLayout:
 
                 set_bounds(self.raw_x, left=0, right=mmax(*raw_x_heat, *raw_x_norm))
                 set_bounds(self.ratio_x, left=0, right=mmax(*raw_x_ratio))
-                set_bounds(self.anno_x, left=None, right=None)
                 set_bounds(self.raw_y, bottom=0, top=mmax(*raw_y_heat, *raw_y_norm))
                 set_bounds(self.ratio_y, bottom=0, top=mmax(*raw_y_ratio))
+                set_bounds(self.anno_x, left=None, right=None)
                 set_bounds(self.anno_y, bottom=None, top=None)
 
                 set_bounds(self.heatmap, color=b_col)
@@ -1155,10 +1183,9 @@ class MainLayout:
                 self.heatmap_data.data = d_heatmap
                 self.raw_data_x.data = raw_data_x
                 self.raw_data_y.data = raw_data_y
-
                 self.anno_x_data.data = d_anno_x
                 self.anno_y_data.data = d_anno_y
-                self.render_done()
+                self.render_done(len(bins[0]))
                 self.curdoc.add_timeout_callback(
                     lambda: self.render_callback(), self.update_frequency_slider.value*1000)
             self.curdoc.add_next_tick_callback(callback)

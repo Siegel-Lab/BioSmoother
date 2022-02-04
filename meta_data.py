@@ -76,6 +76,7 @@ class MetaData:
         main_layout.norm_y.value = [ str(idx) for idx, data in enumerate(
                                                                 self.normalizations) if data[2] in ["row", "both"] ]
 
-        main_layout.displayed_annos.options = list(self.annotations.keys())
-        main_layout.displayed_annos.value = list(self.annotations.keys())
+        opt = [(x, x) for x in self.annotations.keys()]
+        main_layout.displayed_annos.options = opt
+        main_layout.displayed_annos.value = [x for x in self.annotations.keys()]
 
