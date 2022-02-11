@@ -1,3 +1,7 @@
+__author__ = "Markus Schmidt"
+__version__ = "0.0.3"
+__email__ = "Markus.Schmidt@lmu.de"
+
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
@@ -210,10 +214,11 @@ class FigureMaker:
             if FigureMaker._unhide_button.visible == FigureMaker._show_hide["tools"]:
                 FigureMaker._unhide_button.visible = not FigureMaker._show_hide["tools"]
         c = "darkgrey" if FigureMaker._show_hide["grid_lines"] else None
+        c2 = "lightgrey" if FigureMaker._show_hide["grid_lines"] else None
         for plot in FigureMaker._plots:
             if plot.grid.grid_line_color != c:
                 plot.grid.grid_line_color = c
-            #plot.grid.minor_grid_line_color = "grey" if FigureMaker._show_hide["grid_lines"] else None
+                plot.grid.minor_grid_line_color = c2
 
     @staticmethod
     def toggle_hide(key):
@@ -286,6 +291,7 @@ class MainLayout:
     def __init__(self):
         self.meta = None
         self.do_render = False
+        self.cancel_render = False
         self.force_render = True
         self.curdoc = curdoc()
         self.last_drawing_area = (0, 0, 0, 0)
@@ -733,15 +739,24 @@ class MainLayout:
                         info[idx_2] += self.idx.info(idx, y, y+h, x, x+w, *self.mapq_slider.value)
                 else:
                     bins[-1].append(0)
+                if self.cancel_render:
+                    print("RENDER CANCELED")
+                    return None
         return bins, info
 
     def col_norm(self, h_bin, cols):
-        return self.flatten_bins(self.make_bins(h_bin, [(c[0], 0, c[1], self.meta.chr_sizes.chr_start_pos["end"])
-                                                        if not c is None else (-2, -2, 1, 1) for c in cols], name="make_col_norm_bins")[0])
+        x = self.make_bins(h_bin, [(c[0], 0, c[1], self.meta.chr_sizes.chr_start_pos["end"])
+                                                        if not c is None else (-2, -2, 1, 1) for c in cols], name="make_col_norm_bins")
+        if x is None:
+            return None
+        return self.flatten_bins(x[0])
 
     def row_norm(self, h_bin, rows):
-        return self.flatten_bins(self.make_bins(h_bin, [(0, c[0], self.meta.chr_sizes.chr_start_pos["end"], c[1])
-                                                        if not c is None else (-2, -2, 1, 1) for c in rows], name="make_row_norm_bins")[0])
+        x = self.make_bins(h_bin, [(0, c[0], self.meta.chr_sizes.chr_start_pos["end"], c[1])
+                                                        if not c is None else (-2, -2, 1, 1) for c in rows], name="make_row_norm_bins")
+        if x is None:
+            return None
+        return self.flatten_bins(x[0])
 
     def read_norm(self, idx):
         n = []
@@ -901,8 +916,10 @@ class MainLayout:
         if self.symmetrie_d == "all":
             return bins
         elif self.symmetrie_d == "sym" or self.symmetrie_d == "asym":
-            bins_2, _ = self.make_bins(
-                h_bin, [(y, x, h, w) for x, y, w, h in bin_coords], name="make_bins_symmetrie")
+            x = self.make_bins(h_bin, [(y, x, h, w) for x, y, w, h in bin_coords], name="make_bins_symmetrie")
+            if x is None:
+                return None
+            bins_2, _ = x
             norms = self.norm_bins(h_bin, bins_2, bin_rows, bin_cols)
             if self.symmetrie_d == "sym":
                 return [[min(a, b) for a, b in zip(bin, norm)] for bin, norm in zip(bins, norms)]
@@ -974,6 +991,7 @@ class MainLayout:
     @without_document_lock
     def render(self, area):
         def unlocked_task():
+            self.cancel_render = False
             if self.meta is None or self.idx is None:
                 def callback():
                     self.curr_bin_size.text = "Waiting for Fileinput."
@@ -1102,7 +1120,7 @@ class MainLayout:
                             d_anno_x["s"].append(s)
                             d_anno_x["e"].append(s + e)
                             d_anno_x["c"].append(Category10[10][idx % 10])
-                            if x > 1:
+                            if x > 10:
                                 d_anno_x["info"].append("n/a")
                             else:
                                 d_anno_x["info"].append(
@@ -1132,7 +1150,7 @@ class MainLayout:
                             d_anno_y["s"].append(s)
                             d_anno_y["e"].append(s + e)
                             d_anno_y["c"].append(Category10[10][idx % 10])
-                            if x > 1:
+                            if x > 10:
                                 d_anno_y["info"].append("n/a")
                             else:
                                 d_anno_y["info"].append(
@@ -1227,6 +1245,8 @@ class MainLayout:
                 print("File not found")
 
     def trigger_render(self):
+        #print("TRIGGERING RENDER")
+        #self.cancel_render = True
         self.force_render = True
 
     def render_callback(self):

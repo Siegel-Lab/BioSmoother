@@ -66,9 +66,8 @@ class Coverage:
     def count(self, f, t):
         return self.yys[min(bisect.bisect_right(self.xs, t-1), len(self.yys)-1)] - \
                self.yys[min(bisect.bisect_right(self.xs, f)-1, len(self.yys)-1)]
+
     def info(self, f, t):
-        if not hasattr(self, "sorted"):
-            return "n/a"
         idx = bisect.bisect_left(self.sorted, (f, 0, ""))
         if idx >= len(self.sorted):
             return ""
