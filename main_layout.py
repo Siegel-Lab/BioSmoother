@@ -435,7 +435,7 @@ class MainLayout:
 
         anno_hover = HoverTool(
             tooltips=[
-                ('bin pos', "(@chr @pos1 - @pos2"),
+                ('bin pos', "@chr @pos1 - @pos2"),
                 ('num_annotations', "@n"),
                 ('info', "@info"),
             ]
@@ -1114,7 +1114,7 @@ class MainLayout:
                         if x > 0:
                             d_anno_x["chr"].append(rb_2[0])
                             d_anno_x["pos1"].append(rb_2[1])
-                            d_anno_x["pos2"].append(rb_2[1] + e-s)
+                            d_anno_x["pos2"].append(rb_2[1] + e)
                             d_anno_x["n"].append(x)
                             d_anno_x["x"].append(anno)
                             d_anno_x["s"].append(s)
@@ -1123,8 +1123,7 @@ class MainLayout:
                             if x > 10:
                                 d_anno_x["info"].append("n/a")
                             else:
-                                d_anno_x["info"].append(
-                                    self.meta.annotations[anno].info(s, e))
+                                d_anno_x["info"].append(self.meta.annotations[anno].info(s, s+e))
 
             d_anno_y = {
                 "chr": [],
@@ -1144,7 +1143,7 @@ class MainLayout:
                         if x > 0:
                             d_anno_y["chr"].append(rb_2[0])
                             d_anno_y["pos1"].append(rb_2[1])
-                            d_anno_y["pos2"].append(rb_2[1] + e-s)
+                            d_anno_y["pos2"].append(rb_2[1] + e)
                             d_anno_y["n"].append(x)
                             d_anno_y["x"].append(anno)
                             d_anno_y["s"].append(s)
@@ -1153,8 +1152,7 @@ class MainLayout:
                             if x > 10:
                                 d_anno_y["info"].append("n/a")
                             else:
-                                d_anno_y["info"].append(
-                                    self.meta.annotations[anno].info(s, e))
+                                d_anno_y["info"].append(self.meta.annotations[anno].info(s, s+e))
 
             self.render_step_log("transfer_data")
 

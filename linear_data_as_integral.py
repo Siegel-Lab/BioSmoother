@@ -68,7 +68,14 @@ class Coverage:
                self.yys[min(bisect.bisect_right(self.xs, f)-1, len(self.yys)-1)]
 
     def info(self, f, t):
-        idx = bisect.bisect_left(self.sorted, (f, 0, ""))
-        if idx >= len(self.sorted):
-            return ""
-        return self.sorted[idx][2]
+        idx_f = max(bisect.bisect_left(self.sorted, (f, 0, ""))-1, 0)
+        idx_t = min(bisect.bisect_left(self.sorted, (t, 0, ""))+1, len(self.sorted)-1)
+        if idx_f >= len(self.sorted):
+            return "n/a"
+        s = ""
+        for idx in range(idx_f, idx_t):
+            if self.sorted[idx][1] > f and self.sorted[idx][0] < t:
+                if len(s) > 0:
+                    s += "; "
+                s += self.sorted[idx][2]
+        return s
