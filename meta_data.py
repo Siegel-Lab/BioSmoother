@@ -2,28 +2,38 @@ from os import stat
 from chr_sizes import *
 from linear_data_as_integral import *
 import pickle
+import bisect
+from libKdpsTree import *
+
 
 class MetaData:
-    def __init__(self, info):
+    def __init__(self, mapping_quality_layers):
         self.chr_sizes = None
         self.datasets = []
         self.data_id_by_path = {}
         self.normalizations = []
         self.norm_id_by_path = {}
         self.annotations = {}
-        self.info = info
+        self.info = ""
         self.norm = {}
+        assert len(mapping_quality_layers) == SETTINGS.NUM_LAYERS
+        self.mapping_quality_layers = mapping_quality_layers
+
+    def get_layer_for_mapping_q(self, layer):
+        return bisect.bisect_right(self.mapping_quality_layers, layer)
 
     def set_chr_sizes(self, chr_sizes):
         self.chr_sizes = chr_sizes
 
-    def add_dataset(self, name, path, group_a, num_reads):
-        self.datasets.append([name, path, group_a, num_reads])
+    def add_dataset(self, name, path, group_a):
+        self.datasets.append([name, path, group_a])
         self.data_id_by_path[path] = len(self.datasets)-1
+        return len(self.datasets)-1
 
-    def add_normalization(self, name, path, x_axis, num_reads):
-        self.normalizations.append([name, path, x_axis, num_reads])
+    def add_normalization(self, name, path, x_axis):
+        self.normalizations.append([name, path, x_axis])
         self.norm_id_by_path[path] = len(self.normalizations)-1
+        return len(self.normalizations)-1
 
     def add_wig_normalization(self, name, path, x_axis, xs, ys):
         self.normalizations.append([name, path, x_axis, 0])
@@ -53,7 +63,8 @@ class MetaData:
     @staticmethod
     def load(file_name):
         with open(file_name, "rb") as in_file:
-            return pickle.load(in_file)
+            ret = pickle.load(in_file)
+            return ret
 
     def norm_via_tree(self, idx):
         return self.normalizations[idx][1][-4:] == ".bam"

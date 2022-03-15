@@ -15,7 +15,7 @@ from bokeh.models import Range1d
 from meta_data import *
 import os
 from heatmap_as_r_tree import *
-from bokeh.palettes import Viridis256, Category10
+from bokeh.palettes import Viridis256, Colorblind
 from datetime import datetime, timedelta
 import psutil
 from concurrent.futures import ThreadPoolExecutor
@@ -328,7 +328,7 @@ class MainLayout:
         self.heatmap_y_axis = FigureMaker().y_axis_of(
             self.heatmap, "RNA").combine_tools(tollbars).get()
 
-        line_hover_x = HoverTool(
+        ratio_hover_x = HoverTool(
             tooltips=[
                 ('pos', "@chr @pos1 - @pos2"),
                 ('row sum', '@heat'),
@@ -337,7 +337,7 @@ class MainLayout:
             ],
             mode='hline'
         )
-        line_hover_y = HoverTool(
+        ratio_hover_y = HoverTool(
             tooltips=[
                 ('pos', "@chr @pos1 - @pos2"),
                 ('col sum', '@heat'),
@@ -349,7 +349,7 @@ class MainLayout:
 
         self.ratio_x = FigureMaker().w(DEFAULT_SIZE).link_y(
             self.heatmap).hide_on("ratio").combine_tools(tollbars).get()
-        self.ratio_x.add_tools(line_hover_x)
+        self.ratio_x.add_tools(ratio_hover_x)
         self.ratio_x_axis = FigureMaker().x_axis_of(
             self.ratio_x).combine_tools(tollbars).get()
         self.ratio_x_axis.xaxis.axis_label = "Ratio"
@@ -357,15 +357,33 @@ class MainLayout:
 
         self.ratio_y = FigureMaker().h(DEFAULT_SIZE).link_x(
             self.heatmap).hide_on("ratio").combine_tools(tollbars).get()
-        self.ratio_y.add_tools(line_hover_y)
+        self.ratio_y.add_tools(ratio_hover_y)
         self.ratio_y_axis = FigureMaker().y_axis_of(
             self.ratio_y).combine_tools(tollbars).get()
         self.ratio_y_axis.yaxis.axis_label = "Ratio"
-        self.ratio_y_axis.xaxis.ticker.desired_num_ticks = 3
+        self.ratio_y_axis.yaxis.ticker.desired_num_ticks = 3
+
+
+        raw_hover_x = HoverTool(
+            tooltips="""
+                <div>
+                    <span style="color: @cs">@ls: $data_x</span>
+                </div>
+            """,
+            mode='hline'
+        )
+        raw_hover_y = HoverTool(
+            tooltips="""
+                <div>
+                    <span style="color: @cs">@ls: $data_y</span>
+                </div>
+            """,
+            mode='vline'
+        )
 
         self.raw_x = FigureMaker().w(DEFAULT_SIZE).link_y(
             self.heatmap).hide_on("raw").combine_tools(tollbars).get()
-        self.raw_x.add_tools(line_hover_x)
+        self.raw_x.add_tools(raw_hover_x)
         self.raw_x_axis = FigureMaker().x_axis_of(
             self.raw_x).combine_tools(tollbars).get()
         self.raw_x_axis.xaxis.axis_label = "Cov"
@@ -373,19 +391,41 @@ class MainLayout:
 
         self.raw_y = FigureMaker().h(DEFAULT_SIZE).link_x(
             self.heatmap).hide_on("raw").combine_tools(tollbars).get()
-        self.raw_y.add_tools(line_hover_y)
+        self.raw_y.add_tools(raw_hover_y)
         self.raw_y_axis = FigureMaker().y_axis_of(
             self.raw_y).combine_tools(tollbars).get()
         self.raw_y_axis.yaxis.axis_label = "Cov"
-        self.raw_y_axis.xaxis.ticker.desired_num_ticks = 3
+        self.raw_y_axis.yaxis.ticker.desired_num_ticks = 3
 
         d_x = {
             "chr": [],
             "pos1": [],
             "pos2": [],
+            "xs": [],
+            "ys": [],
+            "cs": [],
+            "ls": [],
+        }
+        d_y = {
+            "chr": [],
+            "pos1": [],
+            "pos2": [],
+            "xs": [],
+            "ys": [],
+            "cs": [],
+            "ls": [],
+        }
+        self.raw_data_x = ColumnDataSource(data=d_x)
+        self.raw_data_y = ColumnDataSource(data=d_y)
+        self.raw_x.multi_line(xs="ys", ys="xs", source=self.raw_data_x,
+                        line_color="cs")  # , level="image"
+        self.raw_y.multi_line(xs="xs", ys="ys", source=self.raw_data_y,
+                        line_color="cs")  # , level="image"
+        d_x = {
+            "chr": [],
+            "pos1": [],
+            "pos2": [],
             "pos": [],
-            "norm": [],
-            "heat": [],
             "ratio": [],
         }
         d_y = {
@@ -393,23 +433,13 @@ class MainLayout:
             "pos1": [],
             "pos2": [],
             "pos": [],
-            "norm": [],
-            "heat": [],
             "ratio": [],
         }
-        self.raw_data_x = ColumnDataSource(data=d_x)
-        self.raw_data_y = ColumnDataSource(data=d_y)
-        self.raw_x.line(x="norm", y="pos", source=self.raw_data_x,
-                        line_color="blue")  # , level="image"
-        self.raw_y.line(x="pos", y="norm", source=self.raw_data_y,
-                        line_color="orange")  # , level="image"
-        self.raw_x.line(x="heat", y="pos", source=self.raw_data_x,
-                        line_color="black")  # , level="image"
-        self.raw_y.line(x="pos", y="heat", source=self.raw_data_y,
-                        line_color="black")  # , level="image"
-        self.ratio_x.line(x="ratio", y="pos", source=self.raw_data_x,
+        self.ratio_data_x = ColumnDataSource(data=d_x)
+        self.ratio_data_y = ColumnDataSource(data=d_y)
+        self.ratio_x.line(x="ratio", y="pos", source=self.ratio_data_x,
                           line_color="black")  # , level="image"
-        self.ratio_y.line(x="pos", y="ratio", source=self.raw_data_y,
+        self.ratio_y.line(x="pos", y="ratio", source=self.ratio_data_y,
                           line_color="black")  # , level="image"
 
         self.anno_x = FigureMaker().w(DEFAULT_SIZE).link_y(self.heatmap).hide_on(
@@ -746,14 +776,14 @@ class MainLayout:
 
     def col_norm(self, h_bin, cols):
         x = self.make_bins(h_bin, [(c[0], 0, c[1], self.meta.chr_sizes.chr_start_pos["end"])
-                                                        if not c is None else (-2, -2, 1, 1) for c in cols], name="make_col_norm_bins")
+                                        if not c is None else (-2, -2, 1, 1) for c in cols], name="make_col_norm_bins")
         if x is None:
             return None
         return self.flatten_bins(x[0])
 
     def row_norm(self, h_bin, rows):
         x = self.make_bins(h_bin, [(0, c[0], self.meta.chr_sizes.chr_start_pos["end"], c[1])
-                                                        if not c is None else (-2, -2, 1, 1) for c in rows], name="make_row_norm_bins")
+                                        if not c is None else (-2, -2, 1, 1) for c in rows], name="make_row_norm_bins")
         if x is None:
             return None
         return self.flatten_bins(x[0])
@@ -932,11 +962,12 @@ class MainLayout:
         return [coverage_obj.count(x[0], x[0] + x[1]) if not x is None else float('NaN') for x in bins]
 
     def linear_bins_norm(self, bins, rows):
-        return self.flatten_norm([
+        vals = [
             [self.idx_norm.count(int(idx), x[0], x[0] + x[1], *self.mapq_slider.value) \
                 if self.meta.norm_via_tree(int(idx)) else self.meta.norm[int(idx)].count(x[0], x[0] + x[1]) \
                 for idx in (self.norm_x.value if rows else self.norm_y.value)]
-            if not x is None else [float('NaN')] for x in bins])
+            if not x is None else [float('NaN')] for x in bins]
+        return self.flatten_norm(vals), vals
 
     def new_render(self, reason):
         self.render_curr_step = 0
@@ -957,7 +988,7 @@ class MainLayout:
                 self.render_time_record.append([step_name, datetime.now()])
         modulo = 1000
         if not sub_step_total is None:
-            modulo = sub_step_total / 10
+            modulo = sub_step_total / 100
         if sub_step % modulo == 0:
             s = "rendering due to " + self.render_reason + "."
             if len(step_name) > 0:
@@ -1039,20 +1070,22 @@ class MainLayout:
                 raw_bin_rows, raw_bin_rows_2 = self.bin_rows(area, h_bin, False)
                 raw_bin_cols, raw_bin_cols_2 = self.bin_cols(area, h_bin, False)
 
-                raw_x_norm = self.linear_bins_norm(raw_bin_rows, True)
-                raw_y_norm = self.linear_bins_norm(raw_bin_cols, False)
+                raw_x_norm_combined, raw_x_norms = self.linear_bins_norm(raw_bin_rows, True)
+                raw_y_norm_combined, raw_y_norms = self.linear_bins_norm(raw_bin_cols, False)
                 raw_x_heat = self.color_bins_a(self.row_norm(h_bin, raw_bin_rows))
                 raw_y_heat = self.color_bins_a(self.col_norm(h_bin, raw_bin_cols))
                 raw_x_ratio = [a/b if not b == 0 else 0 for a,
-                            b in zip(raw_x_heat, raw_x_norm)]
+                            b in zip(raw_x_heat, raw_x_norm_combined)]
                 raw_y_ratio = [a/b if not b == 0 else 0 for a,
-                            b in zip(raw_y_heat, raw_y_norm)]
+                            b in zip(raw_y_heat, raw_y_norm_combined)]
             else:
                 raw_bin_rows, raw_bin_rows_2 = ([], [])
                 raw_bin_cols, raw_bin_cols_2 = ([], [])
 
-                raw_x_norm = []
-                raw_y_norm = []
+                raw_x_norm_combined = []
+                raw_x_norms = [[]]
+                raw_y_norm_combined = []
+                raw_y_norms = [[]]
                 raw_x_heat = []
                 raw_y_heat = []
                 raw_x_ratio = []
@@ -1077,22 +1110,66 @@ class MainLayout:
                 "info": [x for x in purged_info],
             }
 
+            def double_up(l):
+                return [x for x in l for _ in [0, 1]]
+
+            x_pos = [p for x in raw_bin_rows for p in [x[0], x[0] + x[1]]]
+            x_chr = [x[0] for x in raw_bin_rows_2 for _ in [0, 1]]
+            x_pos1 = [x[1] for x in raw_bin_rows_2 for _ in [0, 1]]
+            x_pos2 = [x[1] + y[1] for x, y in zip(raw_bin_rows_2, raw_bin_rows) for _ in [0, 1]]
+
+            x_num_raw = 2 + len(raw_x_norms[0])
+
+            y_pos = [p for x in raw_bin_cols for p in [x[0], x[0] + x[1]]]
+            y_chr = [x[0] for x in raw_bin_cols_2 for _ in [0, 1]]
+            y_pos1 = [x[1] for x in raw_bin_cols_2 for _ in [0, 1]]
+            y_pos2 = [x[1] + y[1] for x, y in zip(raw_bin_cols_2, raw_bin_cols) for _ in [0, 1]]
+
+            y_num_raw = 2 + len(raw_y_norms[0])
+
+            x_ys = []
+            for idx in range(x_num_raw-2):
+                x_ys.append([])
+                for x in raw_x_norms:
+                    for _ in [0,1]:
+                        x_ys[-1].append(x[idx])
+            y_ys = []
+            for idx in range(y_num_raw-2):
+                y_ys.append([])
+                for x in raw_y_norms:
+                    for _ in [0,1]:
+                        y_ys[-1].append(x[idx])
+
             raw_data_x = {
-                "pos": [p for x in raw_bin_rows for p in [x[0], x[0] + x[1]]],
-                "chr": [x[0] for x in raw_bin_rows_2 for _ in [0, 1]],
-                "pos1": [x[1] for x in raw_bin_rows_2 for _ in [0, 1]],
-                "pos2": [x[1] + y[1] for x, y in zip(raw_bin_rows_2, raw_bin_rows) for _ in [0, 1]],
-                "norm": [x for x in raw_x_norm for _ in [0, 1]],
-                "heat": [x for x in raw_x_heat for _ in [0, 1]],
-                "ratio": [x for x in raw_x_ratio for _ in [0, 1]],
+                "xs": [x_pos for _ in range(x_num_raw)],
+                "chr": [x_chr for _ in range(x_num_raw)],
+                "pos1": [x_pos1 for _ in range(x_num_raw)],
+                "pos2": [x_pos2 for _ in range(x_num_raw)],
+                "ys": [double_up(raw_x_heat), double_up(raw_x_norm_combined)] + x_ys,
+                "ls": ["heatmap row sum", "combined"] + [self.meta.normalizations[int(idx)][0] for idx in self.norm_x.value],
+                "cs": [Colorblind[8][idx % 8] for idx in range(x_num_raw)],
             }
             raw_data_y = {
-                "pos": [p for x in raw_bin_cols for p in [x[0], x[0] + x[1]]],
-                "chr": [x[0] for x in raw_bin_cols_2 for _ in [0, 1]],
-                "pos1": [x[1] for x in raw_bin_cols_2 for _ in [0, 1]],
-                "pos2": [x[1] + y[1] for x, y in zip(raw_bin_cols_2, raw_bin_cols) for _ in [0, 1]],
-                "norm": [x for x in raw_y_norm for _ in [0, 1]],
-                "heat": [x for x in raw_y_heat for _ in [0, 1]],
+                "xs": [y_pos for _ in range(y_num_raw)],
+                "chr": [y_chr for _ in range(y_num_raw)],
+                "pos1": [y_pos1 for _ in range(y_num_raw)],
+                "pos2": [y_pos2 for _ in range(y_num_raw)],
+                "ys": [double_up(raw_y_heat), double_up(raw_y_norm_combined)] + y_ys,
+                "ls": ["heatmap col sum", "combined"] + [self.meta.normalizations[int(idx)][0] for idx in self.norm_y.value],
+                "cs": [Colorblind[8][idx % 8] for idx in range(y_num_raw)],
+            }
+            ratio_data_x = {
+                "pos": x_pos,
+                "chr": x_chr,
+                "pos1": x_pos1,
+                "pos2": x_pos2,
+                "ratio": [x for x in raw_x_ratio for _ in [0, 1]],
+            }
+            ratio_data_y = {
+                "pos": y_pos,
+                "chr": y_chr,
+                "pos1": y_pos1,
+                "pos2": y_pos2,
                 "ratio": [x for x in raw_y_ratio for _ in [0, 1]],
             }
 
@@ -1119,7 +1196,7 @@ class MainLayout:
                             d_anno_x["x"].append(anno)
                             d_anno_x["s"].append(s)
                             d_anno_x["e"].append(s + e)
-                            d_anno_x["c"].append(Category10[10][idx % 10])
+                            d_anno_x["c"].append(Colorblind[8][idx % 8])
                             if x > 10:
                                 d_anno_x["info"].append("n/a")
                             else:
@@ -1148,7 +1225,7 @@ class MainLayout:
                             d_anno_y["x"].append(anno)
                             d_anno_y["s"].append(s)
                             d_anno_y["e"].append(s + e)
-                            d_anno_y["c"].append(Category10[10][idx % 10])
+                            d_anno_y["c"].append(Colorblind[8][idx % 8])
                             if x > 10:
                                 d_anno_y["info"].append("n/a")
                             else:
@@ -1173,9 +1250,9 @@ class MainLayout:
                 self.curr_bin_size.text = "Redering Donen\nCurrent Bin Size:" + \
                     str(h_bin)
 
-                self.raw_x_axis.xaxis.bounds = (0, mmax(*raw_x_heat, *raw_x_norm))
+                self.raw_x_axis.xaxis.bounds = (0, mmax(*raw_x_heat, *raw_x_norm_combined))
                 self.ratio_x_axis.xaxis.bounds = (0, mmax(*raw_x_ratio))
-                self.raw_y_axis.yaxis.bounds = (0, mmax(*raw_y_heat, *raw_y_norm))
+                self.raw_y_axis.yaxis.bounds = (0, mmax(*raw_y_heat, *raw_y_norm_combined))
                 self.ratio_y_axis.yaxis.bounds = (0, mmax(*raw_y_ratio))
 
                 def set_bounds(plot, left=None, right=None, top=None, bottom=None, color=None):
@@ -1187,9 +1264,9 @@ class MainLayout:
                     if not color is None:
                         ra.fill_color = color
 
-                set_bounds(self.raw_x, left=0, right=mmax(*raw_x_heat, *raw_x_norm))
+                set_bounds(self.raw_x, left=0, right=mmax(*raw_x_heat, *raw_x_norm_combined))
                 set_bounds(self.ratio_x, left=0, right=mmax(*raw_x_ratio))
-                set_bounds(self.raw_y, bottom=0, top=mmax(*raw_y_heat, *raw_y_norm))
+                set_bounds(self.raw_y, bottom=0, top=mmax(*raw_y_heat, *raw_y_norm_combined))
                 set_bounds(self.ratio_y, bottom=0, top=mmax(*raw_y_ratio))
                 set_bounds(self.anno_x, left=None, right=None)
                 set_bounds(self.anno_y, bottom=None, top=None)
@@ -1199,6 +1276,8 @@ class MainLayout:
                 self.heatmap_data.data = d_heatmap
                 self.raw_data_x.data = raw_data_x
                 self.raw_data_y.data = raw_data_y
+                self.ratio_data_x.data = ratio_data_x
+                self.ratio_data_y.data = ratio_data_y
                 self.anno_x_data.data = d_anno_x
                 self.anno_y_data.data = d_anno_y
                 self.render_done(len(bins[0]))
@@ -1235,8 +1314,8 @@ class MainLayout:
             if os.path.exists(self.meta_file.value + ".meta"):
                 self.meta = MetaData.load(self.meta_file.value + ".meta")
                 self.meta.setup(self)
-                self.idx = Tree_4(self.meta_file.value + ".inter").load(len(self.meta.datasets), 5000, 56)
-                self.idx_norm = Tree_3(self.meta_file.value + ".norm").load(len(self.meta.normalizations), 500, 56)
+                self.idx = Tree_4(self.meta_file.value)
+                self.idx_norm = Tree_3(self.meta_file.value)
                 print("done loading\033[K")
                 self.trigger_render()
             else:

@@ -3,6 +3,7 @@ from bokeh.models import FuncTickFormatter
 from bokeh.core.properties import Float, List
 from bokeh.util.compiler import TypeScript
 from bokeh.models import BasicTicker
+import bisect
 
 TS_CODE = """
 import * as p from "core/properties"
@@ -91,17 +92,8 @@ class ChrSizes:
     def coordinate(self, x, chr):
         return self.chr_start_pos[chr] + x
 
-    def setup(self, main_layout):
-        main_layout.heatmap.x_range.start = 0
-        main_layout.heatmap.x_range.end = self.chr_start_pos["end"]
-        main_layout.heatmap.y_range.start = 0
-        main_layout.heatmap.y_range.end = self.chr_start_pos["end"]
-        main_layout.heatmap.x_range.reset_start = 0
-        main_layout.heatmap.x_range.reset_end = self.chr_start_pos["end"]
-        main_layout.heatmap.y_range.reset_start = 0
-        main_layout.heatmap.y_range.reset_end = self.chr_start_pos["end"]
-
-        formater = FuncTickFormatter(
+    def get_formatter(self):
+        return FuncTickFormatter(
             args={"contig_starts": [self.chr_start_pos[chr_x] for chr_x in self.chr_order],
                   "genome_end": self.chr_start_pos["end"],
                   "contig_names": [x[:-len(self.lcs)] for x in self.chr_order]},
@@ -113,6 +105,18 @@ class ChrSizes:
                                 idx += 1;
                             return contig_names[idx] + ": " + (tick - contig_starts[idx]);
                         """)
+
+    def setup(self, main_layout):
+        main_layout.heatmap.x_range.start = 0
+        main_layout.heatmap.x_range.end = self.chr_start_pos["end"]
+        main_layout.heatmap.y_range.start = 0
+        main_layout.heatmap.y_range.end = self.chr_start_pos["end"]
+        main_layout.heatmap.x_range.reset_start = 0
+        main_layout.heatmap.x_range.reset_end = self.chr_start_pos["end"]
+        main_layout.heatmap.y_range.reset_start = 0
+        main_layout.heatmap.y_range.reset_end = self.chr_start_pos["end"]
+
+        formater = self.get_formatter()
         main_layout.heatmap_y_axis.yaxis[0].formatter = formater
         main_layout.heatmap_x_axis.xaxis[0].formatter = formater
 
@@ -144,6 +148,10 @@ class ChrSizes:
             plot.yaxis.bounds = (0, self.chr_start_pos["end"])
             plot.yaxis.major_label_text_align = "right"
             plot.yaxis.ticker.min_interval = 1
+
+    def display_to_index_pos(self, p):
+        chr_idx = bisect.bisect_right(self.chr_starts, p)
+        return self.chr_order[chr_idx], p - self.chr_starts[chr_idx]
 
     def bin_cols_or_rows(self, h_bin, start=0, end=None, none_for_chr_border=False):
         if end is None:
