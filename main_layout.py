@@ -246,7 +246,7 @@ class FigureMaker:
                 (("☑ " if FigureMaker._show_hide[key] else "☐ ") + "Grid Lines", "grid_lines"))
             return menu
         ret = Dropdown(label="Show/Hide", menu=make_menu(),
-                       width=SETTINGS_WIDTH, sizing_mode="stretch_width")
+                       width=SETTINGS_WIDTH, sizing_mode="stretch_width", css_classes=["other_button"])
 
         def event(e):
             FigureMaker.toggle_hide(e.item)
@@ -256,7 +256,7 @@ class FigureMaker:
 
     @staticmethod
     def reshow_settings():
-        FigureMaker._unhide_button = Button(label="<", width=40, height=40)
+        FigureMaker._unhide_button = Button(label="<", width=40, height=40, css_classes=["other_button"])
         FigureMaker._unhide_button.sizing_mode = "fixed"
         FigureMaker._unhide_button.visible = False
 
@@ -278,7 +278,8 @@ class MainLayout:
             for name, key in options:
                 menu.append((("☑ " if d[key] else "☐ ") + name, key))
             return menu
-        ret = Dropdown(label=title, menu=make_menu(), width=SETTINGS_WIDTH, sizing_mode="stretch_width")
+        ret = Dropdown(label=title, menu=make_menu(), width=SETTINGS_WIDTH, sizing_mode="stretch_width", 
+                        css_classes=["other_button"])
 
         def _event(e):
             for _, key in options:
@@ -558,7 +559,7 @@ class MainLayout:
         self.redraw_slider = Slider(width=SETTINGS_WIDTH, start=0, end=100, value=90, step=1,
                                     title="Redraw if zoomed in by [%]", sizing_mode="stretch_width")
 
-        self.add_area_slider = Slider(width=SETTINGS_WIDTH, start=0, end=500, value=100, step=10,
+        self.add_area_slider = Slider(width=SETTINGS_WIDTH, start=0, end=500, value=20, step=10,
                                       title="Additional Draw Area [%]", sizing_mode="stretch_width")
         self.add_area_slider.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
@@ -601,7 +602,7 @@ class MainLayout:
         self.raw_size_slider.on_change(
             "value_throttled", raw_size_slider_event)
 
-        self.num_bins = Slider(width=SETTINGS_WIDTH, start=10000, end=1000000, value=60000, step=10000,
+        self.num_bins = Slider(width=SETTINGS_WIDTH, start=10000, end=1000000, value=200000, step=10000,
                                title="Number of Bins", sizing_mode="stretch_width")
         self.num_bins.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
@@ -642,7 +643,7 @@ class MainLayout:
                 return Math.ceil((1 + tick % 9) * Math.pow(10, Math.floor(tick / 9)-3)) + "kbp";
             else
                 return Math.ceil((1 + tick % 9) * Math.pow(10, Math.floor(tick / 9))) + "bp"; """)
-        self.min_max_bin_size = RangeSlider(start=0, end=9*15, value=(0, 9*6), step=1, title="Bin Size Bounds [nt]",
+        self.min_max_bin_size = RangeSlider(start=0, end=9*15, value=(9*2, 9*5), step=1, title="Bin Size Bounds [nt]",
                                             format=power_tick)
         self.min_max_bin_size.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
@@ -665,20 +666,23 @@ class MainLayout:
         self.info_div = Div(text="n/a", style={"word-break": "break-all", "max-width": str(
             SETTINGS_WIDTH)+"px"}, width=SETTINGS_WIDTH, sizing_mode="stretch_width")
 
-        clear_annos_button = Button(label="clear all displayed annotations")
+        clear_annos_button = Button(label="clear all displayed annotations", css_classes=["other_button"])
         def event(e):
             self.displayed_annos.value = []
         clear_annos_button.on_click(event)
-        clear_filter_annos_button = Button(label="clear all filter annotations")
+        clear_filter_annos_button = Button(label="clear all filter annotations", css_classes=["other_button"])
         def event(e):
             self.filtered_annos_x.value = []
             self.filtered_annos_y.value = []
         clear_filter_annos_button.on_click(event)
 
         def make_panel(title, children):
-            t = Toggle(active=False, button_type="light")
+            t = Toggle(active=title == "General", button_type="light", css_classes=["menu_group"])
 
-            r = column([t] + children, sizing_mode="stretch_width")
+            cx = column(children, sizing_mode="stretch_width", css_classes=["offset_left"])
+            cx.margin = [0, 0, 0, 20]
+
+            r = column([t, cx], sizing_mode="stretch_width")
             def callback(e):
                 if t.active:
                     p = "▿ "
@@ -692,7 +696,7 @@ class MainLayout:
             return r
 
         _settings = column([
-                make_panel("General", [tool_bar, self.meta_file, show_hide, self.symmetrie, self.diag_dist_slider,
+                make_panel("General", [tool_bar, self.meta_file, show_hide,
                                     self.min_max_bin_size, self.curr_bin_size]),
                 make_panel("Normalization", [self.normalization, self.mapq_slider, self.interactions_bounds_slider,
                                     self.interactions_slider, div_norm_x, self.norm_x, div_norm_y, self.norm_y]),
@@ -701,7 +705,8 @@ class MainLayout:
                                     self.add_area_slider,
                                     self.anno_size_slider, self.raw_size_slider, self.ratio_size_slider,
                                     self.stretch]),
-                make_panel("Annotation", [div_displayed_annos, self.displayed_annos, clear_annos_button,
+                make_panel("Filters", [self.symmetrie, self.diag_dist_slider, 
+                                          div_displayed_annos, self.displayed_annos, clear_annos_button,
                                           div_filtered_annos_x, self.filtered_annos_x, 
                                           div_filtered_annos_y, self.filtered_annos_y, clear_filter_annos_button]),
                 make_panel("Info", [self.info_div]),
@@ -1185,7 +1190,7 @@ class MainLayout:
             y_pos1 = [x[1] for x in raw_bin_cols_2 for _ in [0, 1]]
             y_pos2 = [x[1] + y[1] for x, y in zip(raw_bin_cols_2, raw_bin_cols) for _ in [0, 1]]
 
-            y_num_raw = 2 + len(raw_y_norms[0])
+            y_num_raw = 2 + (0 if len(raw_y_norms) == 0 else len(raw_y_norms[0]))
 
             x_ys = []
             for idx in range(x_num_raw-2):
@@ -1315,8 +1320,17 @@ class MainLayout:
                     self.anno_x.x_range.factors = self.displayed_annos.value
                     self.anno_y.y_range.factors = self.displayed_annos.value
 
-                self.curr_bin_size.text = "Redering Donen\nCurrent Bin Size:" + \
-                    str(h_bin)
+                def readable_display():
+                    # @todo continue here
+                    tick = h_bin
+                    if tick / 9 >= 7:
+                        return str(math.ceil((1 + tick % 9))) + "*10^" + str(math.floor(tick / 9)) + "bp"
+                    elif tick / 9 >= 3:
+                        return str(math.ceil((1 + tick % 9) * math.pow(10, math.floor(tick / 9)-3))) + "kbp"
+                    else:
+                        return str(math.ceil((1 + tick % 9) * math.pow(10, math.floor(tick / 9)))) + "bp"
+
+                self.curr_bin_size.text = "Redering Done\nCurrent Bin Size:" + readable_display()
 
                 self.raw_x_axis.xaxis.bounds = (mmin(*raw_x_heat, *raw_x_norm_combined), 
                                                 mmax(*raw_x_heat, *raw_x_norm_combined))
