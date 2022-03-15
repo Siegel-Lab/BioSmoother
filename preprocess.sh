@@ -9,7 +9,7 @@ BED_SUF="RNA.sorted.bed_K1K2.bed_K4.bed_R_D.bed_R_D_K1K2.bed_R_D_PRE1.bed"
 BAMS="/work/project/ladsie_012/ABS.2.2/20210608_Inputs"
 BAM_SUF="R1.sorted.bam"
 
-INDEX_PREFIX="../out/test"
+INDEX_PREFIX="../out/full"
 
 python3 preprocess.py init "${INDEX_PREFIX}" ../out/Lister427.sizes -a ../heatmap_static/HGAP3_Tb427v10_merged_2021_06_21.gff3
 

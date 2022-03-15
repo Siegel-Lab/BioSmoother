@@ -2,17 +2,14 @@
 
 PRIORITY: (low to high effort)
 - chromosome picker
-- helper gets left behind sometimes (zombie process)
-- nomalizations via GRID-seq way (bins instead of RNA & theshold settable) and RADICAL-seq way
+- nomalizations via GRID-seq way (bins instead of RNA & theshold settable)
 - EXTRACT function
-- filter by annotation
 - cancel render
 
 LOW - PRIORITY:
 - no squared bins
 - general tab should be open by default
 - multiple servers in same system
-- normalization by row as well as column
 - scale by default
 - rendering do r/n? en
 - row/col norm switched in preprocess.sh? - yes
@@ -28,6 +25,7 @@ LOW - PRIORITY:
 - keep reads that map only to one bin
 - pick different color palettes
 - generate index progress print
+- read normalization -> reads per million & count number of reads via query
 
 
 

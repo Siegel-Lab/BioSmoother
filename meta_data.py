@@ -89,5 +89,7 @@ class MetaData:
 
         opt = [(x, x) for x in self.annotations.keys()]
         main_layout.displayed_annos.options = opt
+        main_layout.filtered_annos_x.options = opt
+        main_layout.filtered_annos_y.options = opt
         main_layout.displayed_annos.value = [x for x in self.annotations.keys()]
 
