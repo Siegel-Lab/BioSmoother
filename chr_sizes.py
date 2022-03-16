@@ -116,6 +116,9 @@ class ChrSizes:
         main_layout.heatmap.y_range.reset_start = 0
         main_layout.heatmap.y_range.reset_end = self.chr_start_pos["end"]
 
+        main_layout.chrom_x.options = self.chr_order
+        main_layout.chrom_y.options = self.chr_order
+
         formater = self.get_formatter()
         main_layout.heatmap_y_axis.yaxis[0].formatter = formater
         main_layout.heatmap_x_axis.xaxis[0].formatter = formater
@@ -149,30 +152,36 @@ class ChrSizes:
             plot.yaxis.major_label_text_align = "right"
             plot.yaxis.ticker.min_interval = 1
 
-    def display_to_index_pos(self, p):
-        chr_idx = bisect.bisect_right(self.chr_starts, p)
-        return self.chr_order[chr_idx], p - self.chr_starts[chr_idx]
-
-    def bin_cols_or_rows(self, h_bin, start=0, end=None, none_for_chr_border=False):
+    def bin_cols_or_rows(self, h_bin, start=0, end=None, none_for_chr_border=False, chr_filter=None):
         if end is None:
             end = self.chr_start_pos["end"]
         h_bin = max(1, h_bin)
         ret = []
         ret_2 = []
-        x_chrs = [idx for idx, (c_start, c_size) in enumerate(zip(self.chr_starts, self.chr_sizes_l))
-                  if c_start <= end and c_start + c_size >= start and c_size*10 >= h_bin]
+        ret_3 = []
+        x_chrs = []
+        subs = 0
+        for idx, (c_start, c_size, n) in enumerate(zip(self.chr_starts, self.chr_sizes_l, self.chr_order)):
+            if len(chr_filter) > 0 and n not in chr_filter:
+                subs += c_size
+            elif c_start-subs <= end and c_start-subs + c_size >= start and c_size*10 >= h_bin:
+                x_chrs.append((idx, subs))
         if none_for_chr_border:
             ret.append(None)
             ret_2.append(None)
-        for x_chr in x_chrs:
+            ret_3.append(None)
+        for x_chr, sub in x_chrs:
             x_start = self.chr_starts[x_chr]
-            x = max(int(start), x_start)
             x_end = self.chr_starts[x_chr] + self.chr_sizes_l[x_chr]
+            x = max(int(start), x_start)
             while x <= min(end, x_end):
                 ret.append((x, min(h_bin, x_end - x)))
-                ret_2.append((self.chr_order[x_chr], x + x_start))
+                ret_2.append((self.chr_order[x_chr], x - x_start))
+                ret_3.append((x-sub, min(h_bin, x_end - x)))
                 x += h_bin
+            
             if none_for_chr_border:
                 ret.append(None)
                 ret_2.append(None)
-        return ret, ret_2
+                ret_3.append(None)
+        return ret, ret_2, ret_3

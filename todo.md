@@ -5,6 +5,8 @@ PRIORITY: (low to high effort)
 - nomalizations via GRID-seq way (bins instead of RNA & theshold settable)
 - EXTRACT function
 - cancel render
+- filter to show only that overlay annotation x
+- mapping quality
 
 LOW - PRIORITY:
 - no squared bins

@@ -5,7 +5,7 @@ __email__ = "Markus.Schmidt@lmu.de"
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, MultiChoice, FuncTickFormatter, Div, HoverTool, Toggle
+from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, MultiChoice, FuncTickFormatter, Div, HoverTool, Toggle, Box
 import math
 from datetime import datetime
 from tornado import gen
@@ -243,7 +243,7 @@ class FigureMaker:
                 menu.append(
                     (("☑ " if FigureMaker._show_hide[key] or key == "tools" else "☐ ") + name, key))
             menu.append(
-                (("☑ " if FigureMaker._show_hide[key] else "☐ ") + "Grid Lines", "grid_lines"))
+                (("☑ " if FigureMaker._show_hide["grid_lines"] else "☐ ") + "Grid Lines", "grid_lines"))
             return menu
         ret = Dropdown(label="Show/Hide", menu=make_menu(),
                        width=SETTINGS_WIDTH, sizing_mode="stretch_width", css_classes=["other_button"])
@@ -267,29 +267,65 @@ class FigureMaker:
 
 
 class MainLayout:
-    def dropdown_select(self, title, event, *options):
+    def dropdown_select_h(self, title, event):
+
+        ret = Dropdown(label=title, menu=[], width=SETTINGS_WIDTH, sizing_mode="stretch_width", 
+                        css_classes=["other_button"])
+
+        options = []
         d = {}
-        for _, key in options:
-            d[key] = False
-        d[options[0][1]] = True
 
         def make_menu():
             menu = []
             for name, key in options:
                 menu.append((("☑ " if d[key] else "☐ ") + name, key))
-            return menu
-        ret = Dropdown(label=title, menu=make_menu(), width=SETTINGS_WIDTH, sizing_mode="stretch_width", 
-                        css_classes=["other_button"])
+            ret.menu = menu
+
+        def set_menu(op):
+            nonlocal options
+            nonlocal d
+            options = op
+            d = {}
+            for _, key in options:
+                d[key] = False
+            d[options[0][1]] = True
+            make_menu()
 
         def _event(e):
             for _, key in options:
                 d[key] = False
             d[e.item] = True
             event(e.item)
-            ret.menu = make_menu()
+            make_menu()
             self.trigger_render()
         ret.on_click(_event)
+        return ret, set_menu
+
+    def dropdown_select(self, title, event, *options):
+        ret, set_menu = self.dropdown_select_h(title, event)
+        set_menu([*options])
         return ret
+
+    def multi_choice(self, label):
+        div = Div(text=label)
+        #div.margin = DIV_MARGIN
+        choice = MultiChoice(value=[], options=[])
+        choice.on_change("value", lambda x, y, z: self.trigger_render())
+
+        clear_button = Button(label="none", css_classes=["other_button"], width=50, sizing_mode="fixed")
+        def clear_event(e):
+            choice.value = []
+        clear_button.on_click(clear_event)
+        all_button = Button(label="all", css_classes=["other_button"], width=50, sizing_mode="fixed")
+        def all_event(e):
+            choice.value = [x for x, _ in choice.options]
+        all_button.on_click(all_event)
+
+        layout = column([row([
+            div, clear_button, all_button
+        ], sizing_mode="stretch_width"), choice], sizing_mode="stretch_width")
+
+        return choice, layout
 
     def __init__(self):
         self.meta = None
@@ -526,6 +562,25 @@ class MainLayout:
                                                   ("Coverage of Normalization Reads (Scaled to Rendered Area)", "tracks_rel"),
                                                   ("Emulate RADICL-seq", "radicl-seq"))
 
+        self.square_bins_d = "view"
+        def square_bin_event(e):
+            self.square_bins_d = e
+            self.trigger_render()
+        square_bins = self.dropdown_select("Bin Aspect Ratio", square_bin_event,
+                                                  ("Squared relative to view",
+                                                   "view"),
+                                                  ("Squared relative to coordinates",
+                                                   "coord")
+                                                   )
+        self.power_ten_bin_d = "no"
+        def power_ten_bin_event(e):
+            self.power_ten_bin_d = e
+            self.trigger_render()
+        power_ten_bin = self.dropdown_select("Snap Bin Size", power_ten_bin_event,
+                                                ("Do not snap", "no"),
+                                                ("To Even Power of Ten", "p10")
+                                                  )
+
         def stretch_event(e):
             self.heatmap.sizing_mode = e
             if e == "stretch_both":
@@ -612,28 +667,14 @@ class MainLayout:
         self.meta_file = TextInput(value="heatmap_server/out/")
         self.meta_file.on_change("value", lambda x, y, z: self.setup())
 
-        self.group_a = MultiChoice(value=[], options=[],
-                                   placeholder="Group A")
-        self.group_a.on_change("value", lambda x, y, z: self.trigger_render())
-        self.group_b = MultiChoice(value=[], options=[],
-                                   placeholder="Group B")
-        self.group_b.on_change("value", lambda x, y, z: self.trigger_render())
+        self.group_a, group_a_layout = self.multi_choice("Group A")
+        self.group_b, group_b_layout = self.multi_choice("Group B")
+        
 
-        div_displayed_annos = Div(text="Displayed Annotations:")
-        div_displayed_annos.margin = DIV_MARGIN
-        self.displayed_annos = MultiChoice(value=[], options=[])
-        self.displayed_annos.on_change(
-            "value", lambda x, y, z: self.trigger_render())
-        div_filtered_annos_x = Div(text="Filter rows that overlap with:")
-        div_filtered_annos_x.margin = DIV_MARGIN
-        self.filtered_annos_x = MultiChoice(value=[], options=[])
-        self.filtered_annos_x.on_change(
-            "value", lambda x, y, z: self.trigger_render())
-        div_filtered_annos_y = Div(text="Filter columns that overlap with:")
-        div_filtered_annos_y.margin = DIV_MARGIN
-        self.filtered_annos_y = MultiChoice(value=[], options=[])
-        self.filtered_annos_y.on_change(
-            "value", lambda x, y, z: self.trigger_render())
+        self.displayed_annos, displayed_annos_layout = self.multi_choice("Displayed Annotations:")
+        
+        self.filtered_annos_x, filtered_annos_x_layout = self.multi_choice("Filter rows that overlap with:")
+        self.filtered_annos_y, filtered_annos_y_layout = self.multi_choice("Filter columns that overlap with:")
 
         power_tick = FuncTickFormatter(
             code="""
@@ -649,32 +690,39 @@ class MainLayout:
             "value_throttled", lambda x, y, z: self.trigger_render())
 
         self.curr_bin_size = Div(text="Current Bin Size: n/a")
-        div_group_a = Div(text="Group A:")
-        div_group_a.margin = DIV_MARGIN
-        div_group_b = Div(text="Group B:")
-        div_group_b.margin = DIV_MARGIN
 
-        div_norm_x = Div(text="Normalization Rows:")
-        div_norm_x.margin = DIV_MARGIN
-        div_norm_y = Div(text="Normalization Columns:")
-        div_norm_y.margin = DIV_MARGIN
-        self.norm_x = MultiChoice(value=[], options=[])
-        self.norm_x.on_change("value", lambda x, y, z: self.trigger_render())
-        self.norm_y = MultiChoice(value=[], options=[])
-        self.norm_y.on_change("value", lambda x, y, z: self.trigger_render())
+        self.norm_x, norm_x_layout = self.multi_choice("Normalization Rows:")
+        self.norm_y, norm_y_layout = self.multi_choice("Normalization Columns:")
 
         self.info_div = Div(text="n/a", style={"word-break": "break-all", "max-width": str(
             SETTINGS_WIDTH)+"px"}, width=SETTINGS_WIDTH, sizing_mode="stretch_width")
 
-        clear_annos_button = Button(label="clear all displayed annotations", css_classes=["other_button"])
-        def event(e):
-            self.displayed_annos.value = []
-        clear_annos_button.on_click(event)
-        clear_filter_annos_button = Button(label="clear all filter annotations", css_classes=["other_button"])
-        def event(e):
-            self.filtered_annos_x.value = []
-            self.filtered_annos_y.value = []
-        clear_filter_annos_button.on_click(event)
+
+        self.x_coords_d = "full_genome"
+        def x_coords_event(e):
+            self.x_coords_d = e
+            self.trigger_render()
+        x_coords, self.x_coords_update = self.dropdown_select_h("Row Coordinates", x_coords_event)
+
+        self.y_coords_d = "full_genome"
+        def y_coords_event(e):
+            self.y_coords_d = e
+            self.trigger_render()
+        y_coords, self.y_coords_update = self.dropdown_select_h("Column Coordinates", y_coords_event)
+
+        
+        self.chrom_x, chrom_x_layout = self.multi_choice("Row Chromosomes")
+        self.chrom_y, chrom_y_layout = self.multi_choice("Column Chromosomes")
+
+        self.multiple_anno_per_bin_d = "combine"
+        def multiple_anno_per_bin_event(e):
+            self.multiple_anno_per_bin_d = e
+            self.trigger_render()
+        multiple_anno_per_bin = self.dropdown_select("Multiple Annotations in Bin", multiple_anno_per_bin_event, 
+                ("Combine region from first to last annotation", "combine"), 
+                ("Use first annotation", "first"), 
+                ("Use Random annotation", "random"), 
+                ("Increase number of bins to match number of annotations (might be slow)", "force_separate"))
 
         def make_panel(title, children):
             t = Toggle(active=title == "General", button_type="light", css_classes=["menu_group"])
@@ -689,8 +737,13 @@ class MainLayout:
                 else:
                     p = "▸ "
                 t.label = p + title
-                for c in children:
-                    c.visible = t.active
+                def set_visible(x):
+                    if isinstance(x, Box):
+                        for c in x.children:
+                            set_visible(c)
+                    else:
+                        x.visible = t.active
+                set_visible(cx)
             t.on_click(callback)
             callback(None)
             return r
@@ -699,16 +752,16 @@ class MainLayout:
                 make_panel("General", [tool_bar, self.meta_file, show_hide,
                                     self.min_max_bin_size, self.curr_bin_size]),
                 make_panel("Normalization", [self.normalization, self.mapq_slider, self.interactions_bounds_slider,
-                                    self.interactions_slider, div_norm_x, self.norm_x, div_norm_y, self.norm_y]),
-                make_panel("Replicates", [self.in_group, self.betw_group, div_group_a, self.group_a, div_group_b, self.group_b]),
+                                    self.interactions_slider, norm_x_layout, norm_y_layout]),
+                make_panel("Replicates", [self.in_group, self.betw_group, group_a_layout, group_b_layout]),
                 make_panel("GUI", [self.num_bins, self.update_frequency_slider, self.redraw_slider,
                                     self.add_area_slider,
                                     self.anno_size_slider, self.raw_size_slider, self.ratio_size_slider,
-                                    self.stretch]),
+                                    self.stretch, square_bins, power_ten_bin]),
                 make_panel("Filters", [self.symmetrie, self.diag_dist_slider, 
-                                          div_displayed_annos, self.displayed_annos, clear_annos_button,
-                                          div_filtered_annos_x, self.filtered_annos_x, 
-                                          div_filtered_annos_y, self.filtered_annos_y, clear_filter_annos_button]),
+                                          displayed_annos_layout, filtered_annos_x_layout,
+                                          filtered_annos_y_layout,
+                                          x_coords, y_coords, multiple_anno_per_bin, chrom_x_layout, chrom_y_layout]),
                 make_panel("Info", [self.info_div]),
             ],
             sizing_mode="stretch_both"
@@ -767,11 +820,21 @@ class MainLayout:
 
         return b_xs < a_xs or b_ys < a_ys or b_xe > a_xe or b_ye > a_ye
 
-    def bin_cols_or_rows(self, area, h_bin, base_idx=0, none_for_chr_border=False, filter_annos=[]):
+    def bin_cols_or_rows(self, area, h_bin, base_idx=0, none_for_chr_border=False, filter_annos=[], chr_filter=None, 
+                        anno_coords=None):
         ret = []
         ret_2 = []
-        for pos_1, pos_2 in zip(*self.meta.chr_sizes.bin_cols_or_rows(h_bin, area[base_idx], 
-                                                                      area[base_idx+2], none_for_chr_border)):
+        ret_3 = []
+        if anno_coords is None:
+            coords = self.meta.chr_sizes.bin_cols_or_rows(h_bin, area[base_idx], area[base_idx+2], none_for_chr_border, 
+                                                        chr_filter)
+        else:
+            coords = self.meta.annotations[anno_coords].bin_cols_or_rows(h_bin, self.meta.chr_sizes.chr_order,
+                                                                        self.meta.chr_sizes.chr_starts,
+                                                                         area[base_idx], area[base_idx+2], 
+                                                                         none_for_chr_border, chr_filter,
+                                                                         self.multiple_anno_per_bin_d)
+        for pos_1, pos_2, pos_3 in zip(*coords):
             not_filtered = True
             if not pos_1 is None and len(filter_annos) > 0:
                 p, s = pos_1
@@ -782,31 +845,40 @@ class MainLayout:
             if not_filtered:
                 ret.append(pos_1)
                 ret_2.append(pos_2)
-        return ret, ret_2
+                ret_3.append(pos_3)
+        return ret, ret_2, ret_3
 
     def bin_cols(self, area, h_bin, none_for_chr_border=False, filter_l=None):
         if filter_l is None:
             filter_l = self.filtered_annos_y.value
-        return self.bin_cols_or_rows(area, h_bin, 0, none_for_chr_border, filter_l)
+        anno_coords = None
+        if self.x_coords_d != "full_genome":
+            anno_coords = self.x_coords_d
+        return self.bin_cols_or_rows(area, h_bin, 0, none_for_chr_border, filter_l, self.chrom_x.value, anno_coords)
 
     def bin_rows(self, area, h_bin, none_for_chr_border=False, filter_l=None):
         if filter_l is None:
             filter_l = self.filtered_annos_x.value
-        return self.bin_cols_or_rows(area, h_bin, 1, none_for_chr_border, filter_l)
+        anno_coords = None
+        if self.y_coords_d != "full_genome":
+            anno_coords = self.y_coords_d
+        return self.bin_cols_or_rows(area, h_bin, 1, none_for_chr_border, filter_l, self.chrom_y.value, anno_coords)
 
-    def bin_coords(self, area, h_bin):
+    def bin_coords(self, area, h_bin, w_bin):
         h_bin = max(1, h_bin)
         ret = []
         ret_2 = []
-        a, a_2 = self.bin_cols(area, h_bin)
-        b, b_2 = self.bin_rows(area, h_bin)
-        for (x, w), (x_chr, x_2) in zip(a, a_2):
-            for (y, h), (y_chr, y_2) in zip(b, b_2):
+        ret_3 = []
+        a, a_2, a_3 = self.bin_cols(area, h_bin)
+        b, b_2, b_3 = self.bin_rows(area, w_bin)
+        for (x, w), (x_chr, x_2), (x_3, w_3) in zip(a, a_2, a_3):
+            for (y, h), (y_chr, y_2), (y_3, h_3) in zip(b, b_2, b_3):
                 ret.append((x, y, w, h))
                 ret_2.append((x_chr, x_2, y_chr, y_2))
-        return ret, a, b, ret_2, a_2, b_2
+                ret_3.append((x_3, y_3, w_3, h_3))
+        return ret, a, b, ret_2, a_2, b_2, ret_3, a_3, b_3
 
-    def make_bins(self, h_bin, bin_coords, name="make_bins"):
+    def make_bins(self, bin_coords, name="make_bins"):
         bins = []
         info = [""]*len(bin_coords)
         min_ = self.interactions_bounds_slider.value
@@ -826,15 +898,15 @@ class MainLayout:
                     return None
         return bins, info
 
-    def col_norm(self, h_bin, cols):
-        x = self.make_bins(h_bin, [(c[0], 0, c[1], self.meta.chr_sizes.chr_start_pos["end"])
+    def col_norm(self, cols):
+        x = self.make_bins([(c[0], 0, c[1], self.meta.chr_sizes.chr_start_pos["end"])
                                         if not c is None else (-2, -2, 1, 1) for c in cols], name="make_col_norm_bins")
         if x is None:
             return None
         return self.flatten_bins(x[0])
 
-    def row_norm(self, h_bin, rows):
-        x = self.make_bins(h_bin, [(0, c[0], self.meta.chr_sizes.chr_start_pos["end"], c[1])
+    def row_norm(self, rows):
+        x = self.make_bins([(0, c[0], self.meta.chr_sizes.chr_start_pos["end"], c[1])
                                         if not c is None else (-2, -2, 1, 1) for c in rows], name="make_row_norm_bins")
         if x is None:
             return None
@@ -863,15 +935,15 @@ class MainLayout:
                 else self.meta.norm[int(idx)].count(0, self.meta.chr_sizes.chr_start_pos["end"]) \
                 for idx in (self.norm_x.value if rows else self.norm_y.value)]])[0]
 
-    def norm_bins(self, h_bin, bins_l, cols, rows):
+    def norm_bins(self, w_bin, bins_l, cols, rows):
         ret = []
         if self.normalization_d in ["tracks_abs", "tracks_rel"]:
             raw_x_norm = self.linear_bins_norm(rows, True)
             raw_y_norm = self.linear_bins_norm(cols, False)
         if self.normalization_d in ["column"]:
-            ns = self.col_norm(h_bin, cols)
+            ns = self.col_norm(cols)
         if self.normalization_d in ["row", "radicl-seq"]:
-            ns = self.row_norm(h_bin, rows)
+            ns = self.row_norm(rows)
         for idx, bins in enumerate(bins_l):
             self.render_step_log("norm_bins", idx, len(bins_l))
             if self.normalization_d == "max_bin_visible":
@@ -885,11 +957,12 @@ class MainLayout:
             elif self.normalization_d == "row":
                 ret.append([x/max(ns[idx][idx_2 % len(rows)], 1) for idx_2, x in enumerate(bins)])
             elif self.normalization_d == "radicl-seq":
-                ret.append([])
+                ret.append([0]*(len(rows)*len(cols)))
                 for idx_2 in range(len(rows)):
                     row = bins[idx_2::len(rows)]
-                    ret[-1].extend(radicl_seq_norm(row, ns[idx][idx_2], h_bin, 
-                                                   self.meta.chr_sizes.chr_start_pos["end"]))
+                    for idx_3, v in enumerate(radicl_seq_norm(row, ns[idx][idx_2], w_bin, 
+                                                   self.meta.chr_sizes.chr_start_pos["end"])):
+                        ret[-1][idx_2 + idx_3 * len(rows)] = v
             elif self.normalization_d in ["tracks_abs", "tracks_rel"]:
                 n = self.read_norm(idx)
 
@@ -1011,7 +1084,7 @@ class MainLayout:
         if self.symmetrie_d == "all":
             return bins
         elif self.symmetrie_d == "sym" or self.symmetrie_d == "asym":
-            x = self.make_bins(h_bin, [(y, x, h, w) for x, y, w, h in bin_coords], name="make_bins_symmetrie")
+            x = self.make_bins([(y, x, h, w) for x, y, w, h in bin_coords], name="make_bins_symmetrie")
             if x is None:
                 return None
             bins_2, _ = x
@@ -1095,57 +1168,67 @@ class MainLayout:
                 self.curdoc.add_timeout_callback(
                     lambda: self.render_callback(), self.update_frequency_slider.value*1000)
                 return
-            area_bin = (area[2] - area[0]) * \
-                (area[3] - area[1]) / self.num_bins.value
 
             def power_of_ten(x):
+                if self.power_ten_bin_d == "no":
+                    return x
                 n = 0
                 while True:
                     for i in [1, 1.25, 2.5, 5]:
                         if i*10**n >= x:
                             return i*10**n
                     n += 1
-            h_bin = power_of_ten(math.sqrt(area_bin))
             def comp_bin_size(idx):
                 t = self.min_max_bin_size.value[idx]
                 return math.ceil((1 + t % 9) * 10**(t // 9))
-            h_bin = min(max(h_bin, comp_bin_size(0)), comp_bin_size(1))
+            if self.square_bins_d == "view":
+                h_bin = power_of_ten( (area[2] - area[0]) / math.sqrt(self.num_bins.value) )
+                h_bin = min(max(h_bin, comp_bin_size(0)), comp_bin_size(1))
+                w_bin = power_of_ten( (area[3] - area[1]) / math.sqrt(self.num_bins.value) )
+                w_bin = min(max(w_bin, comp_bin_size(0)), comp_bin_size(1))
+            elif self.square_bins_d == "coord":
+                area_bin = (area[2] - area[0]) * (area[3] - area[1]) / self.num_bins.value
+                h_bin = power_of_ten(math.sqrt(area_bin))
+                h_bin = min(max(h_bin, comp_bin_size(0)), comp_bin_size(1))
+                w_bin = h_bin
+            else:
+                raise RuntimeError("invlaid square_bins_d value")
 
-            area[0] -= area[0] % h_bin # align to nice and even number
+            area[0] -= area[0] % w_bin # align to nice and even number
             area[1] -= area[1] % h_bin # align to nice and even number
-            area[2] += h_bin - (area[2] % h_bin) # align to nice and even number
+            area[2] += w_bin - (area[2] % w_bin) # align to nice and even number
             area[3] += h_bin - (area[3] % h_bin) # align to nice and even number
 
-            bin_coords, bin_cols, bin_rows, bin_coords_2, bin_cols_2, bin_rows_2 = self.bin_coords(area, h_bin)
-            print("bin_size", h_bin, "\033[K")
-            bins, info = self.make_bins(h_bin, bin_coords)
+            bin_coords, bin_cols, bin_rows, bin_coords_2, _, _, bin_coords_3, _, _ = self.bin_coords(area, h_bin, w_bin)
+            print("bin_size", int(h_bin), "x", int(w_bin), "\033[K")
+            bins, info = self.make_bins(bin_coords)
             flat = self.flatten_bins(bins)
-            norm = self.norm_bins(h_bin, flat, bin_cols, bin_rows)
+            norm = self.norm_bins(w_bin, flat, bin_cols, bin_rows)
             sym = self.bin_symmentry(h_bin, norm, bin_coords, bin_cols, bin_rows)
             c = self.color_bins(sym)
             b_col = Viridis256[(MAP_Q_MAX-1) //
                             2] if self.betw_group_d == "sub" else Viridis256[0]
             purged, purged_coords, purged_coords_2, purged_sym, purged_flat_a, purged_flat_b, purged_info = \
-                self.purge(b_col, c, bin_coords, bin_coords_2,
+                self.purge(b_col, c, bin_coords_3, bin_coords_2,
                         self.color_bins_a(sym), *flat, info)
 
             norm_visible = FigureMaker.is_visible("raw") or FigureMaker.is_visible("ratio")
 
             if norm_visible:
-                raw_bin_rows, raw_bin_rows_2 = self.bin_rows(area, h_bin, False)
-                raw_bin_cols, raw_bin_cols_2 = self.bin_cols(area, h_bin, False)
+                raw_bin_rows, raw_bin_rows_2, raw_bin_rows_3 = self.bin_rows(area, w_bin, False)
+                raw_bin_cols, raw_bin_cols_2, raw_bin_cols_3 = self.bin_cols(area, h_bin, False)
 
                 raw_x_norm_combined, raw_x_norms = self.linear_bins_norm(raw_bin_rows, True)
                 raw_y_norm_combined, raw_y_norms = self.linear_bins_norm(raw_bin_cols, False)
-                raw_x_heat = self.color_bins_a(self.row_norm(h_bin, raw_bin_rows))
-                raw_y_heat = self.color_bins_a(self.col_norm(h_bin, raw_bin_cols))
+                raw_x_heat = self.color_bins_a(self.row_norm(raw_bin_rows))
+                raw_y_heat = self.color_bins_a(self.col_norm(raw_bin_cols))
                 raw_x_ratio = [a/b if not b == 0 else 0 for a,
                             b in zip(raw_x_heat, raw_x_norm_combined)]
                 raw_y_ratio = [a/b if not b == 0 else 0 for a,
                             b in zip(raw_y_heat, raw_y_norm_combined)]
             else:
-                raw_bin_rows, raw_bin_rows_2 = ([], [])
-                raw_bin_cols, raw_bin_cols_2 = ([], [])
+                raw_bin_rows, raw_bin_rows_2, raw_bin_rows_3 = ([], [], [])
+                raw_bin_cols, raw_bin_cols_2, raw_bin_cols_3 = ([], [], [])
 
                 raw_x_norm_combined = []
                 raw_x_norms = [[]]
@@ -1178,14 +1261,14 @@ class MainLayout:
             def double_up(l):
                 return [x for x in l for _ in [0, 1]]
 
-            x_pos = [p for x in raw_bin_rows for p in [x[0], x[0] + x[1]]]
+            x_pos = [p for x in raw_bin_rows_3 for p in [x[0], x[0] + x[1]]]
             x_chr = [x[0] for x in raw_bin_rows_2 for _ in [0, 1]]
             x_pos1 = [x[1] for x in raw_bin_rows_2 for _ in [0, 1]]
             x_pos2 = [x[1] + y[1] for x, y in zip(raw_bin_rows_2, raw_bin_rows) for _ in [0, 1]]
 
             x_num_raw = 2 + (0 if len(raw_x_norms) == 0 else len(raw_x_norms[0]))
 
-            y_pos = [p for x in raw_bin_cols for p in [x[0], x[0] + x[1]]]
+            y_pos = [p for x in raw_bin_cols_3 for p in [x[0], x[0] + x[1]]]
             y_chr = [x[0] for x in raw_bin_cols_2 for _ in [0, 1]]
             y_pos1 = [x[1] for x in raw_bin_cols_2 for _ in [0, 1]]
             y_pos2 = [x[1] + y[1] for x, y in zip(raw_bin_cols_2, raw_bin_cols) for _ in [0, 1]]
@@ -1204,6 +1287,13 @@ class MainLayout:
                 for x in raw_y_norms:
                     for _ in [0,1]:
                         y_ys[-1].append(x[idx])
+            
+            ls_x = []
+            if len(x_ys) > 0:
+                ls_x = [self.meta.normalizations[int(idx)][0] for idx in self.norm_x.value]
+            ls_y = []
+            if len(y_ys) > 0:
+                ls_y = [self.meta.normalizations[int(idx)][0] for idx in self.norm_y.value]
 
             raw_data_x = {
                 "xs": [x_pos for _ in range(x_num_raw)],
@@ -1211,7 +1301,7 @@ class MainLayout:
                 "pos1": [x_pos1 for _ in range(x_num_raw)],
                 "pos2": [x_pos2 for _ in range(x_num_raw)],
                 "ys": [double_up(raw_x_heat), double_up(raw_x_norm_combined)] + x_ys,
-                "ls": ["heatmap row sum", "combined"] + [self.meta.normalizations[int(idx)][0] for idx in self.norm_x.value],
+                "ls": ["heatmap row sum", "combined"] + ls_x,
                 "cs": [Colorblind[8][idx % 8] for idx in range(x_num_raw)],
             }
             raw_data_y = {
@@ -1220,7 +1310,7 @@ class MainLayout:
                 "pos1": [y_pos1 for _ in range(y_num_raw)],
                 "pos2": [y_pos2 for _ in range(y_num_raw)],
                 "ys": [double_up(raw_y_heat), double_up(raw_y_norm_combined)] + y_ys,
-                "ls": ["heatmap col sum", "combined"] + [self.meta.normalizations[int(idx)][0] for idx in self.norm_y.value],
+                "ls": ["heatmap col sum", "combined"] + ls_y,
                 "cs": [Colorblind[8][idx % 8] for idx in range(y_num_raw)],
             }
             ratio_data_x = {
@@ -1250,9 +1340,9 @@ class MainLayout:
                 "info": [],
             }
             if FigureMaker.is_visible("annotation"):
-                bin_rows_unfiltr, bin_rows_2_unfiltr = self.bin_rows(area, h_bin, filter_l=[])
+                bin_rows_unfiltr, bin_rows_2_unfiltr, bin_rows_3_unfiltr = self.bin_rows(area, w_bin, filter_l=[])
                 for idx, anno in enumerate(self.displayed_annos.value):
-                    for rb_2, (s, e), x in zip(bin_rows_2_unfiltr, bin_rows_unfiltr,
+                    for rb_2, (s, e), x in zip(bin_rows_2_unfiltr, bin_rows_3_unfiltr,
                                             self.annotation_bins(bin_rows_unfiltr, self.meta.annotations[anno])):
                         if x > 0:
                             d_anno_x["chr"].append(rb_2[0])
@@ -1280,9 +1370,9 @@ class MainLayout:
                 "info": [],
             }
             if FigureMaker.is_visible("annotation"):
-                bin_cols_unfiltr, bin_cols_2_unfiltr = self.bin_cols(area, h_bin, filter_l=[])
+                bin_cols_unfiltr, bin_cols_2_unfiltr, bin_cols_3_unfiltr = self.bin_cols(area, h_bin, filter_l=[])
                 for idx, anno in enumerate(self.displayed_annos.value):
-                    for rb_2, (s, e), x in zip(bin_cols_2_unfiltr, bin_cols_unfiltr,
+                    for rb_2, (s, e), x in zip(bin_cols_2_unfiltr, bin_cols_3_unfiltr,
                                             self.annotation_bins(bin_cols_unfiltr, self.meta.annotations[anno])):
                         if x > 0:
                             d_anno_y["chr"].append(rb_2[0])
@@ -1320,17 +1410,18 @@ class MainLayout:
                     self.anno_x.x_range.factors = self.displayed_annos.value
                     self.anno_y.y_range.factors = self.displayed_annos.value
 
-                def readable_display():
-                    # @todo continue here
-                    tick = h_bin
-                    if tick / 9 >= 7:
-                        return str(math.ceil((1 + tick % 9))) + "*10^" + str(math.floor(tick / 9)) + "bp"
-                    elif tick / 9 >= 3:
-                        return str(math.ceil((1 + tick % 9) * math.pow(10, math.floor(tick / 9)-3))) + "kbp"
+                def readable_display(l):
+                    exp = int(math.log10(l)-1)
+                    x = round(l / (10**exp), 3)
+                    if exp >= 7:
+                        return str(x) + "*10^" + str(exp) + "bp"
+                    elif exp >= 3:
+                        return str(x * int(10**(exp-3))) + "kbp"
                     else:
-                        return str(math.ceil((1 + tick % 9) * math.pow(10, math.floor(tick / 9)))) + "bp"
+                        return str(x * int(10**exp)) + "bp"
 
-                self.curr_bin_size.text = "Redering Done\nCurrent Bin Size:" + readable_display()
+                self.curr_bin_size.text = "Redering Done. \nCurrent Bin Size: " + readable_display(w_bin) + " x " + \
+                                          readable_display(h_bin)
 
                 self.raw_x_axis.xaxis.bounds = (mmin(*raw_x_heat, *raw_x_norm_combined), 
                                                 mmax(*raw_x_heat, *raw_x_norm_combined))

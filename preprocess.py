@@ -106,7 +106,7 @@ def parse_wig_file(filename, chr_start_idx):
         ys.append(0)
         yield xs, ys, track
 
-TEST = False
+TEST = True
 
 def make_meta(out_prefix, chr_len_file_name, annotation_filename, mapping_quality_layers):
     meta = MetaData(mapping_quality_layers)

@@ -53,7 +53,7 @@ class MetaData:
             ends[name].append(end)
             sorted_list[name].append((start, end, info))
         for name, start_l in starts.items():
-            self.annotations[name] = Coverage().set(start_l, ends[name], sorted_list[name])
+            self.annotations[name] = Coverage().set(start_l, ends[name], sorted_list[name], self.chr_sizes)
 
 
     def save(self, file_name):
@@ -92,4 +92,10 @@ class MetaData:
         main_layout.filtered_annos_x.options = opt
         main_layout.filtered_annos_y.options = opt
         main_layout.displayed_annos.value = [x for x in self.annotations.keys()]
+
+        possible_coords = [("Genomic loci", "full_genome")]
+        for anno_names in self.annotations.keys():
+            possible_coords.append((anno_names, anno_names))
+        main_layout.x_coords_update(possible_coords)
+        main_layout.y_coords_update(possible_coords)
 
