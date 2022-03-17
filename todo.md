@@ -1,4 +1,4 @@
-= smother =
+= smpother =
 
 PRIORITY: (low to high effort)
 - chromosome picker

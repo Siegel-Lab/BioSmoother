@@ -1,3 +1,7 @@
+import os
+os.environ["STXXLLOGFILE"] = "/dev/null"
+os.environ["STXXLERRLOGFILE"] = "/dev/null"
+
 from libKdpsTree import *
 
 H = 0.5

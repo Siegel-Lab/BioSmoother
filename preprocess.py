@@ -1,7 +1,10 @@
+import os
+os.environ["STXXLLOGFILE"] = "/dev/null"
+os.environ["STXXLERRLOGFILE"] = "/dev/null"
+
 import argparse
 from meta_data import *
 from chr_sizes import *
-import os
 import random
 from heatmap_as_r_tree import *
 import subprocess

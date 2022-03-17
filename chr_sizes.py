@@ -2,24 +2,24 @@ from xmlrpc.client import Boolean
 from bokeh.models import FuncTickFormatter
 from bokeh.core.properties import Float, List
 from bokeh.util.compiler import TypeScript
-from bokeh.models import BasicTicker
+from bokeh.models import AdaptiveTicker
 import bisect
 
 TS_CODE = """
 import * as p from "core/properties"
 import {TickSpec} from "models/tickers/ticker"
-import {BasicTicker } from "models/tickers/basic_ticker"
+import {AdaptiveTicker } from "models/tickers/adaptive_ticker"
 
 export namespace ExtraTicksTicker {
   export type Attrs = p.AttrsOf<Props>
-  export type Props = BasicTicker.Props & {
+  export type Props = AdaptiveTicker.Props & {
     extra_ticks: p.Property<Array<number>>
   }
 }
 
 export interface ExtraTicksTicker extends ExtraTicksTicker.Attrs {}
 
-export class ExtraTicksTicker extends BasicTicker {
+export class ExtraTicksTicker extends AdaptiveTicker {
   properties: ExtraTicksTicker.Props
 
   constructor(attrs?: Partial<ExtraTicksTicker.Attrs>) {
@@ -43,7 +43,7 @@ export class ExtraTicksTicker extends BasicTicker {
 """
 
 
-class ExtraTicksTicker(BasicTicker):
+class ExtraTicksTicker(AdaptiveTicker):
     __implementation__ = TypeScript(TS_CODE)
     extra_ticks = List(Float)
 
@@ -106,19 +106,18 @@ class ChrSizes:
                             return contig_names[idx] + ": " + (tick - contig_starts[idx]);
                         """)
 
-    def setup(self, main_layout):
-        main_layout.heatmap.x_range.start = 0
-        main_layout.heatmap.x_range.end = self.chr_start_pos["end"]
-        main_layout.heatmap.y_range.start = 0
-        main_layout.heatmap.y_range.end = self.chr_start_pos["end"]
-        main_layout.heatmap.x_range.reset_start = 0
-        main_layout.heatmap.x_range.reset_end = self.chr_start_pos["end"]
-        main_layout.heatmap.y_range.reset_start = 0
-        main_layout.heatmap.y_range.reset_end = self.chr_start_pos["end"]
-
-        main_layout.chrom_x.options = self.chr_order
-        main_layout.chrom_y.options = self.chr_order
-
+    def setup_coordinates(self, main_layout, show_grid_lines, x_coords_d, y_coords_d):
+        if x_coords_d == "full_genome":
+            main_layout.heatmap.x_range.start = 0
+            main_layout.heatmap.x_range.end = self.chr_start_pos["end"]
+            main_layout.heatmap.x_range.reset_start = 0
+            main_layout.heatmap.x_range.reset_end = self.chr_start_pos["end"]
+        if y_coords_d == "full_genome":
+            main_layout.heatmap.y_range.start = 0
+            main_layout.heatmap.y_range.end = self.chr_start_pos["end"]
+            main_layout.heatmap.y_range.reset_start = 0
+            main_layout.heatmap.y_range.reset_end = self.chr_start_pos["end"]
+        
         formater = self.get_formatter()
         main_layout.heatmap_y_axis.yaxis[0].formatter = formater
         main_layout.heatmap_x_axis.xaxis[0].formatter = formater
@@ -131,26 +130,38 @@ class ChrSizes:
         # ticker_center = ExtraTicksTicker(
         #    extra_ticks=[self.chr_start_pos[chr_x] + self.chr_sizes[chr_x]/2 for chr_x in self.chr_order])
 
-        for plot in [main_layout.heatmap, main_layout.ratio_y, main_layout.raw_y, main_layout.anno_y,
-                     main_layout.heatmap_x_axis]:
-            plot.xgrid.minor_grid_line_alpha = plot.ygrid.grid_line_alpha
-            plot.xgrid.minor_grid_line_color = plot.xgrid.grid_line_color
-            plot.xgrid.grid_line_color = "darkgrey"
-            plot.xgrid.ticker = ticker_border
-            plot.xgrid.bounds = (0, self.chr_start_pos["end"])
-            plot.xaxis.bounds = (0, self.chr_start_pos["end"])
-            plot.xaxis.major_label_text_align = "left"
-            plot.xaxis.ticker.min_interval = 1
-        for plot in [main_layout.heatmap, main_layout.ratio_x, main_layout.raw_x, main_layout.anno_x,
-                     main_layout.heatmap_y_axis]:
-            plot.ygrid.minor_grid_line_alpha = plot.ygrid.grid_line_alpha
-            plot.ygrid.minor_grid_line_color = plot.ygrid.grid_line_color
-            plot.ygrid.grid_line_color = "darkgrey"
-            plot.ygrid.ticker = ticker_border
-            plot.ygrid.bounds = (0, self.chr_start_pos["end"])
-            plot.yaxis.bounds = (0, self.chr_start_pos["end"])
-            plot.yaxis.major_label_text_align = "right"
-            plot.yaxis.ticker.min_interval = 1
+        c = "darkgrey" if show_grid_lines else None
+        c2 = "lightgrey" if show_grid_lines else None
+        if x_coords_d == "full_genome":
+            for plot in [main_layout.heatmap, main_layout.ratio_y, main_layout.raw_y, main_layout.anno_y,
+                        main_layout.heatmap_x_axis]:
+                plot.xgrid.minor_grid_line_alpha = plot.ygrid.grid_line_alpha
+                plot.xgrid.minor_grid_line_color = plot.xgrid.grid_line_color
+                plot.xgrid.grid_line_color = c
+                plot.xgrid.minor_grid_line_color = c2
+                plot.xgrid.ticker = ticker_border
+                plot.xgrid.bounds = (0, self.chr_start_pos["end"])
+                plot.xaxis.bounds = (0, self.chr_start_pos["end"])
+                plot.xaxis.major_label_text_align = "left"
+                plot.xaxis.ticker.min_interval = 1
+        if y_coords_d == "full_genome":
+            for plot in [main_layout.heatmap, main_layout.ratio_x, main_layout.raw_x, main_layout.anno_x,
+                        main_layout.heatmap_y_axis]:
+                plot.ygrid.minor_grid_line_alpha = plot.ygrid.grid_line_alpha
+                plot.ygrid.minor_grid_line_color = plot.ygrid.grid_line_color
+                plot.ygrid.grid_line_color = c
+                plot.ygrid.minor_grid_line_color = c2
+                plot.ygrid.ticker = ticker_border
+                plot.ygrid.bounds = (0, self.chr_start_pos["end"])
+                plot.yaxis.bounds = (0, self.chr_start_pos["end"])
+                plot.yaxis.major_label_text_align = "right"
+                plot.yaxis.ticker.min_interval = 1
+
+
+    def setup(self, main_layout):
+        main_layout.chrom_x.options = self.chr_order
+        main_layout.chrom_y.options = self.chr_order
+
 
     def bin_cols_or_rows(self, h_bin, start=0, end=None, none_for_chr_border=False, chr_filter=None):
         if end is None:

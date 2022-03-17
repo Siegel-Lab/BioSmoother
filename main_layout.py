@@ -41,6 +41,9 @@ class FigureMaker:
     _unhide_button = None
     render_areas = {}
 
+    x_coords_d = "full_genome"
+    y_coords_d = "full_genome"
+
     def __init__(self):
         self.args = {}
         self.x_axis_visible = False
@@ -215,12 +218,19 @@ class FigureMaker:
         if not FigureMaker._unhide_button is None:
             if FigureMaker._unhide_button.visible == FigureMaker._show_hide["tools"]:
                 FigureMaker._unhide_button.visible = not FigureMaker._show_hide["tools"]
-        c = "darkgrey" if FigureMaker._show_hide["grid_lines"] else None
-        c2 = "lightgrey" if FigureMaker._show_hide["grid_lines"] else None
+        cx = ("darkgrey" if FigureMaker.x_coords_d == "full_genome" else "lightgrey") \
+                if FigureMaker._show_hide["grid_lines"] else None
+        cx2 = "lightgrey" if FigureMaker._show_hide["grid_lines"] and FigureMaker.x_coords_d == "full_genome" else None
+        cy = ("darkgrey" if FigureMaker.y_coords_d == "full_genome" else "lightgrey") \
+                if FigureMaker._show_hide["grid_lines"] else None
+        cy2 = "lightgrey" if FigureMaker._show_hide["grid_lines"] and FigureMaker.y_coords_d == "full_genome" else None
         for plot in FigureMaker._plots:
-            if plot.grid.grid_line_color != c:
-                plot.grid.grid_line_color = c
-                plot.grid.minor_grid_line_color = c2
+            if plot.xgrid.grid_line_color != cx:
+                plot.xgrid.grid_line_color = cx
+                plot.xgrid.minor_grid_line_color = cx2
+            if plot.ygrid.grid_line_color != cy:
+                plot.ygrid.grid_line_color = cy
+                plot.ygrid.minor_grid_line_color = cy2
 
     @staticmethod
     def toggle_hide(key):
@@ -698,15 +708,15 @@ class MainLayout:
             SETTINGS_WIDTH)+"px"}, width=SETTINGS_WIDTH, sizing_mode="stretch_width")
 
 
-        self.x_coords_d = "full_genome"
         def x_coords_event(e):
-            self.x_coords_d = e
+            FigureMaker.x_coords_d = e
+            self.setup_coordinates()
             self.trigger_render()
         x_coords, self.x_coords_update = self.dropdown_select_h("Row Coordinates", x_coords_event)
 
-        self.y_coords_d = "full_genome"
         def y_coords_event(e):
-            self.y_coords_d = e
+            FigureMaker.y_coords_d = e
+            self.setup_coordinates()
             self.trigger_render()
         y_coords, self.y_coords_update = self.dropdown_select_h("Column Coordinates", y_coords_event)
 
@@ -852,16 +862,16 @@ class MainLayout:
         if filter_l is None:
             filter_l = self.filtered_annos_y.value
         anno_coords = None
-        if self.x_coords_d != "full_genome":
-            anno_coords = self.x_coords_d
+        if FigureMaker.x_coords_d != "full_genome":
+            anno_coords = FigureMaker.x_coords_d
         return self.bin_cols_or_rows(area, h_bin, 0, none_for_chr_border, filter_l, self.chrom_x.value, anno_coords)
 
     def bin_rows(self, area, h_bin, none_for_chr_border=False, filter_l=None):
         if filter_l is None:
             filter_l = self.filtered_annos_x.value
         anno_coords = None
-        if self.y_coords_d != "full_genome":
-            anno_coords = self.y_coords_d
+        if FigureMaker.y_coords_d != "full_genome":
+            anno_coords = FigureMaker.y_coords_d
         return self.bin_cols_or_rows(area, h_bin, 1, none_for_chr_border, filter_l, self.chrom_y.value, anno_coords)
 
     def bin_coords(self, area, h_bin, w_bin):
@@ -1464,6 +1474,10 @@ class MainLayout:
 
         yield executor.submit(unlocked_task)
 
+    def setup_coordinates(self):
+        self.meta.setup_coordinates(self, FigureMaker._show_hide["grid_lines"], FigureMaker.x_coords_d, 
+                                    FigureMaker.y_coords_d)
+
     def setup(self):
         print("loading...\033[K")
         #if self.meta is None:
@@ -1491,6 +1505,7 @@ class MainLayout:
             if os.path.exists(self.meta_file.value + ".meta"):
                 self.meta = MetaData.load(self.meta_file.value + ".meta")
                 self.meta.setup(self)
+                self.setup_coordinates()
                 self.idx = Tree_4(self.meta_file.value)
                 self.idx_norm = Tree_3(self.meta_file.value)
                 print("done loading\033[K")

@@ -100,7 +100,6 @@ class Coverage:
         x_chrs = []
         subs = 0
         cont_idx = 0
-        expected_num_bins = max(int(( end - start ) / h_bin), 1)
         for idx, (c_start, c_size, n) in enumerate(zip(self.chr_starts, self.chr_sizes, chr_order)):
             if len(chr_filter) > 0 and n not in chr_filter:
                 subs += c_size
@@ -115,7 +114,7 @@ class Coverage:
             x_end = self.chr_starts[x_chr] + self.chr_sizes[x_chr]-1
             e_start = max(int(start), x_start)
             e_end = min(int(end), x_end)
-            annos_per_bin = max((e_end - e_start) // expected_num_bins, 1)
+            annos_per_bin = int(h_bin)
             if annotation_combination_strategy == "force_separate":
                 annos_per_bin = 1
             for idx in range(e_start, e_end-2, annos_per_bin):
