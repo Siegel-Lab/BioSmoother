@@ -667,7 +667,7 @@ class MainLayout:
         self.raw_size_slider.on_change(
             "value_throttled", raw_size_slider_event)
 
-        self.num_bins = Slider(width=SETTINGS_WIDTH, start=10000, end=1000000, value=200000, step=10000,
+        self.num_bins = Slider(width=SETTINGS_WIDTH, start=1000, end=100000, value=10000, step=1000,
                                title="Number of Bins", sizing_mode="stretch_width")
         self.num_bins.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
@@ -927,7 +927,9 @@ class MainLayout:
         for idx, dataset in enumerate(self.meta.datasets):
             # @todo replace with query over entire dataset
             if str(idx) in (self.group_a.value if idx == 0 else self.group_b.value):
-                n.append(dataset[3])
+                val = self.idx.count(idx, 0, self.meta.chr_sizes.chr_start_pos["end"], 0, 
+                                     self.meta.chr_sizes.chr_start_pos["end"], *self.mapq_slider.value)
+                n.append(val)
         if self.in_group_d == "min":
             n = min(n)
         elif self.in_group_d == "sum":
@@ -948,8 +950,8 @@ class MainLayout:
     def norm_bins(self, w_bin, bins_l, cols, rows):
         ret = []
         if self.normalization_d in ["tracks_abs", "tracks_rel"]:
-            raw_x_norm = self.linear_bins_norm(rows, True)
-            raw_y_norm = self.linear_bins_norm(cols, False)
+            raw_x_norm = self.linear_bins_norm(rows, True)[0]
+            raw_y_norm = self.linear_bins_norm(cols, False)[0]
         if self.normalization_d in ["column"]:
             ns = self.col_norm(cols)
         if self.normalization_d in ["row", "radicl-seq"]:
@@ -977,8 +979,7 @@ class MainLayout:
                 n = self.read_norm(idx)
 
                 def get_norm(i):
-                    d = (raw_y_norm[i // len(rows)] *
-                         raw_x_norm[i % len(rows)] * n)
+                    d = (raw_y_norm[i // len(rows)] * raw_x_norm[i % len(rows)] * n)
                     if d == 0:
                         return 0
                     return (self.norm_num_reads(True) * self.norm_num_reads(False)) / d

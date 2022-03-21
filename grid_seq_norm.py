@@ -96,7 +96,7 @@ def add_as_normalization(ranked_regions, datasets, meta, index, index_arr, map_q
             ]:
                 for layer, d in enumerate(x):
                     if layer >= map_q_layer:
-                        for (pos_x, _), read_name in d:
+                        for (_, pos_x), read_name in d:
                             index_arr.add_point(idx, pos_x, layer, read_name + "; dataset: " + str(dataset))
 
     index_arr.generate()

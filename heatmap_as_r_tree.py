@@ -21,7 +21,8 @@ class Tree_4:
         return self
 
     def count(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX):
-        return sum(self.index.count(id, [int(rna_from), int(dna_from)], [int(rna_to), int(dna_to)]))
+        ret = sum(self.index.count(id, [int(rna_from), int(dna_from)], [int(rna_to), int(dna_to)]))
+        return ret
 
     def save(self):
         pass
@@ -54,7 +55,8 @@ class Tree_3:
         return self
 
     def count(self, id, pos_from, pos_to, map_q_min=0, map_q_max=MAP_Q_MAX):
-        return sum(self.index.count(id, int(pos_from), int(pos_to)))
+        ret = sum(self.index.count(id, int(pos_from), int(pos_to)))
+        return ret
 
     def save(self):
         pass

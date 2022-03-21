@@ -11,7 +11,7 @@ ssh -fNR ${port}:localhost:${port} ${SLURM_JOB_USER}@${SLURM_LAUNCH_NODE_IPADDR}
 echo "starting bokeh server at: http://localhost:${port}/smoother"
 cd ..
 
-#gdb python3 -ex "run /home/mschmidt/.conda/envs/main/bin/bokeh serve heatmap_server/ --allow-websocket-origin=localhost:${port} --port ${port}"
+#gdb python3 -ex "run /home/mschmidt/.conda/envs/main/bin/bokeh serve smoother/ --allow-websocket-origin=localhost:${port} --port ${port}"
 bokeh serve smoother/ --allow-websocket-origin=localhost:${port} --log-level error --port ${port}
 
 # kill port forwarding process

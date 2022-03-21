@@ -2,6 +2,7 @@ from os import stat
 from chr_sizes import *
 from linear_data_as_integral import *
 import pickle
+import sys
 import bisect
 from bokeh.models import AdaptiveTicker
 from libKdpsTree import *
@@ -21,7 +22,9 @@ class MetaData:
         self.mapping_quality_layers = mapping_quality_layers
 
     def get_layer_for_mapping_q(self, layer):
-        return bisect.bisect_right(self.mapping_quality_layers, layer)
+        ret = min(bisect.bisect_right(self.mapping_quality_layers, layer), len(self.mapping_quality_layers)-1)
+        #print(layer, "->", ret, self.mapping_quality_layers, type(layer), flush=True)
+        return ret
 
     def set_chr_sizes(self, chr_sizes):
         self.chr_sizes = chr_sizes
@@ -32,12 +35,12 @@ class MetaData:
         return len(self.datasets)-1
 
     def add_normalization(self, name, path, x_axis):
-        self.normalizations.append([name, path, x_axis])
+        self.normalizations.append([name, path, x_axis, True])
         self.norm_id_by_path[path] = len(self.normalizations)-1
         return len(self.normalizations)-1
 
     def add_wig_normalization(self, name, path, x_axis, xs, ys):
-        self.normalizations.append([name, path, x_axis, 0])
+        self.normalizations.append([name, path, x_axis, 0, False])
         self.norm_id_by_path[path] = len(self.normalizations)-1
         self.norm[len(self.normalizations)-1] = Coverage().set_x_y(xs, ys)
 
@@ -68,7 +71,7 @@ class MetaData:
             return ret
 
     def norm_via_tree(self, idx):
-        return self.normalizations[idx][1][-4:] == ".bam"
+        return self.normalizations[idx][3]
 
     def setup_coordinates(self, main_layout, show_grid_lines, x_coords_d, y_coords_d):
         ticker_border = AdaptiveTicker()
@@ -122,9 +125,9 @@ class MetaData:
         main_layout.norm_x.options = opt
         main_layout.norm_y.options = opt
         main_layout.norm_x.value = [ str(idx) for idx, data in enumerate(
-                                                                self.normalizations) if data[2] in ["col", "both"] ]
-        main_layout.norm_y.value = [ str(idx) for idx, data in enumerate(
                                                                 self.normalizations) if data[2] in ["row", "both"] ]
+        main_layout.norm_y.value = [ str(idx) for idx, data in enumerate(
+                                                                self.normalizations) if data[2] in ["col", "both"] ]
 
         opt = [(x, x) for x in self.annotations.keys()]
         main_layout.displayed_annos.options = opt

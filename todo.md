@@ -6,9 +6,9 @@ PRIORITY: (low to high effort)
 - cancel render
 - filter to show only that overlay annotation x
 - mapping quality
+- normalization by tracks -> only use one track and have other empty
 
 LOW - PRIORITY:
-- no squared bins
 - general tab should be open by default
 - multiple servers in same system
 - scale by default
@@ -27,6 +27,7 @@ LOW - PRIORITY:
 - pick different color palettes
 - generate index progress print
 - read normalization -> reads per million & count number of reads via query
+- S+ tree
 
 
 

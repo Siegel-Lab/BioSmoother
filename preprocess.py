@@ -226,7 +226,7 @@ if __name__ == "__main__":
     repl_parser.add_argument('name')
     repl_parser.add_argument('-g', '--group', default="neither", choices=["a", "b", "both", "neither"], 
                             help="(default: %(default)s)")
-    repl_parser.add_argument('-r', '--runtime_memory_factor', default=1000, help="(default: %(default)s)")
+    repl_parser.add_argument('-r', '--runtime_memory_factor', default=1000, type=int, help="(default: %(default)s)")
     repl_parser.set_defaults(func=repl)
 
     norm_parser = sub_parsers.add_parser("norm")

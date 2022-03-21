@@ -11,16 +11,23 @@ BAM_SUF="R1.sorted.bam"
 
 INDEX_PREFIX="../out/test"
 
-rm "${INDEX_PREFIX}.*"
+RUNTIME_FACTOR=5000
+
+rm ${INDEX_PREFIX}.*
 
 python3 preprocess.py init "${INDEX_PREFIX}" ../out/Lister427.sizes -a ../heatmap_static/HGAP3_Tb427v10_merged_2021_06_21.gff3
 
-python3 preprocess.py repl "${INDEX_PREFIX}" "${BEDS}/NS504_P10_Total_3.${BED_SUF}" "P10_Total_Rep3" -g a
-python3 preprocess.py repl "${INDEX_PREFIX}" "${BEDS}/NS505_N50_Total_1.${BED_SUF}" "N50_Total_Rep1" -g a
-python3 preprocess.py repl "${INDEX_PREFIX}" "${BEDS}/NS508_P10_NPM_1.${BED_SUF}" "P10_NPM_Rep1" -g b
-python3 preprocess.py repl "${INDEX_PREFIX}" "${BEDS}/NS511_N50_NPM_1.${BED_SUF}" "N50_NPM_Rep1" -g b
+
+python3 preprocess.py repl "${INDEX_PREFIX}" "${BEDS}/NS504_P10_Total_3.${BED_SUF}" "P10_Total_Rep3" -g a \
+                            -r ${RUNTIME_FACTOR}
+python3 preprocess.py repl "${INDEX_PREFIX}" "${BEDS}/NS505_N50_Total_1.${BED_SUF}" "N50_Total_Rep1" -g a \
+                            -r ${RUNTIME_FACTOR}
+python3 preprocess.py repl "${INDEX_PREFIX}" "${BEDS}/NS508_P10_NPM_1.${BED_SUF}" "P10_NPM_Rep1" -g b \
+                            -r ${RUNTIME_FACTOR}
+python3 preprocess.py repl "${INDEX_PREFIX}" "${BEDS}/NS511_N50_NPM_1.${BED_SUF}" "N50_NPM_Rep1" -g b \
+                            -r ${RUNTIME_FACTOR}
 
 python3 preprocess.py norm "${INDEX_PREFIX}" "${BAMS}/WT1_gDNA_inputATAC.${BAM_SUF}" "gDNA_inputATAC" -g col
 python3 preprocess.py norm "${INDEX_PREFIX}" "${BAMS}/WT1_RNAseq_NS320.${BAM_SUF}" "RNAseq_NS320" -g row
 
-python3 preprocess.py grid-seq-norm -van -b 100000 -R 1 -D 10 ../out/test chromatin_associated_rna
+python3 preprocess.py grid-seq-norm -van -b 1000000 -R 1 -D 10 ${INDEX_PREFIX} ca_rna
