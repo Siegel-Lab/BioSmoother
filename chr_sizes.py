@@ -163,7 +163,8 @@ class ChrSizes:
         main_layout.chrom_y.options = self.chr_order
 
 
-    def bin_cols_or_rows(self, h_bin, start=0, end=None, none_for_chr_border=False, chr_filter=None):
+    def bin_cols_or_rows(self, h_bin, start=0, end=None, none_for_chr_border=False, chr_filter=[], 
+                         produce_smaller_bins=True):
         if end is None:
             end = self.chr_start_pos["end"]
         h_bin = max(1, h_bin)
@@ -186,9 +187,10 @@ class ChrSizes:
             x_end = self.chr_starts[x_chr] + self.chr_sizes_l[x_chr]
             x = max(int(start), x_start)
             while x <= min(end, x_end):
-                ret.append((x, min(h_bin, x_end - x)))
-                ret_2.append((self.chr_order[x_chr], x - x_start))
-                ret_3.append((x-sub, min(h_bin, x_end - x)))
+                if produce_smaller_bins or x + h_bin <= x_end:
+                    ret.append((x, min(h_bin, x_end - x)))
+                    ret_2.append((self.chr_order[x_chr], x - x_start))
+                    ret_3.append((x-sub, min(h_bin, x_end - x)))
                 x += h_bin
             
             if none_for_chr_border:

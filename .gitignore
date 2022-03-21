@@ -4,3 +4,4 @@ slurm*.out
 *.so*
 stxxl.errlog
 stxxl.log
+*.html

@@ -26,8 +26,18 @@ class Tree_4:
     def save(self):
         pass
 
+    def get(self, id, rna_from, rna_to, dna_from, dna_to):
+        return self.index.get(id, [int(rna_from), int(dna_from)], [int(rna_to), int(dna_to)])
+
     def info(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX):
-        return ""
+        ret = ""
+        for layer, d in enumerate(self.get(id, rna_from, rna_to, dna_from, dna_to)):
+            if layer >= map_q_min and layer < map_q_max:
+                for _, read_name in d:
+                    if not len(ret) == 0:
+                        ret += ", "
+                    ret += read_name
+        return ret
 
 
 
@@ -49,5 +59,15 @@ class Tree_3:
     def save(self):
         pass
 
+    def get(self, id, pos_from, pos_to):
+        return self.index.get(id, int(pos_from), int(pos_to))
+
     def info(self, id, pos_from, pos_to, map_q_min=0, map_q_max=MAP_Q_MAX):
-        return ""
+        ret = ""
+        for layer, d in enumerate(self.get(id, pos_from, pos_to)):
+            if layer >= map_q_min and layer < map_q_max:
+                for _, read_name in d:
+                    if not len(ret) == 0:
+                        ret += ", "
+                    ret += read_name
+        return ret

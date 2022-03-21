@@ -1,7 +1,6 @@
 = smpother =
 
 PRIORITY: (low to high effort)
-- chromosome picker
 - nomalizations via GRID-seq way (bins instead of RNA & theshold settable)
 - EXTRACT function
 - cancel render

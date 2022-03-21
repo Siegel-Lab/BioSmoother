@@ -6,11 +6,13 @@ import argparse
 from meta_data import *
 from chr_sizes import *
 import random
+import sys
 from heatmap_as_r_tree import *
 import subprocess
 import glob
 import math
 from libKdpsTree import *
+from grid_seq_norm import *
 
 PRINT_MODULO = 10000
 
@@ -185,6 +187,26 @@ def repl(args):
 def norm(args):
     add_normalization(args.index_prefix, args.path, args.name, args.group)
 
+def grid_seq_norm(args):
+    meta = MetaData.load(args.index_prefix + ".meta")
+    index = Tree_4(args.index_prefix)
+    datasets = args.datasets
+    if datasets is None or len(datasets) == 0:
+        datasets = list(range(len(meta.datasets)))
+    ranked_regions = make_grid_seq_ranked_regions(index, datasets, args.mapping_q, meta.chr_sizes,
+                                                  meta.annotations, args.annotation, args.bin_size)
+    if args.visualize:
+        make_grid_seq_plots(ranked_regions, args.filter_rna, args.filter_dna)
+    filtered_rr = filter_r_r(ranked_regions, args.filter_rna, args.filter_dna)[:100]
+    if args.add_annotation:
+        do_add_annotation(filtered_rr, meta, args.name)
+    if args.add_normalization_track:
+        index_arr = PsArray(args.index_prefix + ".norm")
+        add_as_normalization(filtered_rr, datasets, meta, index, index_arr, args.mapping_q, args.name, 
+                             "GRID-seq normalization created with " + str(sys.argv))
+
+    meta.save(args.index_prefix + ".meta")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
@@ -214,6 +236,22 @@ if __name__ == "__main__":
     norm_parser.add_argument('-g', '--group', default="neither", 
                              choices=["row", "col", "both", "neither"], help="(default: %(default)s)")
     norm_parser.set_defaults(func=norm)
+
+    grid_seq_norm_parser = sub_parsers.add_parser("grid-seq-norm")
+    grid_seq_norm_parser.add_argument('index_prefix')
+    grid_seq_norm_parser.add_argument('name')
+    grid_seq_norm_parser.add_argument('-d', '--datasets', metavar="VAL", nargs='*', type=int)
+    grid_seq_norm_parser.add_argument('-m', '--mapping_q', metavar="VAL", type=int, default=0)
+    grid_seq_norm_parser.add_argument('-b', '--bin_size', metavar="VAL", type=int, default=1000)
+    grid_seq_norm_parser.add_argument('-R', '--filter_rna', metavar="VAL", type=int, default=100)
+    grid_seq_norm_parser.add_argument('-D', '--filter_dna', metavar="VAL", type=int, default=10)
+    grid_seq_norm_parser.add_argument('-A', '--annotation',
+            help="name of the annotation to use as bins for the RNA or 'bins' to use --bin_size sized bins over the full genome", 
+            metavar="VAL", default="gene")
+    grid_seq_norm_parser.add_argument('-v', '--visualize', action='store_true')
+    grid_seq_norm_parser.add_argument('-a', '--add_annotation', action='store_true')
+    grid_seq_norm_parser.add_argument('-n', '--add_normalization_track', action='store_true')
+    grid_seq_norm_parser.set_defaults(func=grid_seq_norm)
 
     args = parser.parse_args()
     args.func(args)
