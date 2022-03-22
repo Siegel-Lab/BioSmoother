@@ -3,11 +3,11 @@
 PRIORITY: (low to high effort)
 - cancel render
 - mapping quality
-- build times
 
 MEDIUM:
 - EXTRACT function
 - filter to show only that overlay annotation x
+- ticks for coverage
 
 LOW - PRIORITY:
 - multiple servers in same system
@@ -31,8 +31,8 @@ LOW - PRIORITY:
 - by placing overlay at bottom left, memory can be saved...
 - quick config buttons
 - status to top
-
-
+- build times
+- https://stxxl.org/tags/1.4.1/common_io_counter.html
 
 
 

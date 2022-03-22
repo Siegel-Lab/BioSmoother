@@ -111,7 +111,7 @@ def parse_wig_file(filename, chr_start_idx):
         ys.append(0)
         yield xs, ys, track
 
-TEST = False
+TEST = True
 
 def make_meta(out_prefix, chr_len_file_name, annotation_filename, mapping_quality_layers):
     meta = MetaData(mapping_quality_layers)
@@ -143,7 +143,7 @@ def add_replicate(out_prefix, path, name, group_a, runtime_factor):
         if map_q >= meta.mapping_quality_layers[0]:
             index.add_point(idx, [pos_1, pos_2], meta.get_layer_for_mapping_q(map_q), read_name)
         cnt += 1
-        if cnt > 100000 and TEST:
+        if cnt > 1000000 and TEST:
             break
     # trigger gen for the last chromosome pair
     n = int(math.log(cnt) * runtime_factor)
@@ -171,7 +171,7 @@ def add_normalization(out_prefix, path, name, for_row):
             if map_q >= meta.mapping_quality_layers[0]:
                 index.add_point(idx, pos, meta.get_layer_for_mapping_q(map_q), read_name)
             cnt += 1
-            if cnt > 100000 and TEST:
+            if cnt > 1000000 and TEST:
                 break
     print("generating index")
     index.generate()

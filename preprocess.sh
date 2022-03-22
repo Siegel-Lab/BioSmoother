@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -p fat --mem 383G -J preprocess_heatmap --time=240:00:00 -o slurm_preprocess_heatmap-%j.out
+#SBATCH -p fat --mem 383G -J preprocess_heatmap --time=240:00:00 -o slurm_preprocess_heatmap-%j.out --mail-user=markus.rainer.schmidt@gmail.com --mail-type END
 
 module load ngs/samtools/1.9
 
@@ -9,10 +9,9 @@ BED_SUF="RNA.sorted.bed_K1K2.bed_K4.bed_R_D.bed_R_D_K1K2.bed_R_D_PRE1.bed"
 BAMS="/work/project/ladsie_012/ABS.2.2/20210608_Inputs"
 BAM_SUF="R1.sorted.bam"
 
-INDEX_PREFIX="../out/full"
+INDEX_PREFIX="../out/test"
 
-#RUNTIME_FACTOR=5000
-RUNTIME_FACTOR=10000
+RUNTIME_FACTOR=5000
 
 rm ${INDEX_PREFIX}.*
 

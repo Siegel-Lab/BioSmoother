@@ -99,7 +99,6 @@ class Coverage:
         ret_3 = []
         x_chrs = []
         subs = 0
-        cont_idx = 0
         for idx, (c_start, c_size, n) in enumerate(zip(self.chr_starts, self.chr_sizes, chr_order)):
             if len(chr_filter) > 0 and n not in chr_filter:
                 subs += c_size
@@ -121,15 +120,14 @@ class Coverage:
                 if annotation_combination_strategy == "combine":
                     s, _, _ = self.sorted[idx]
                     #print(idx + annos_per_bin - 1, e_end-1, len(self.sorted))
-                    _, e, _ = self.sorted[min(idx + annos_per_bin - 1, e_end-2)]
+                    _, e, _ = self.sorted[min(idx + annos_per_bin - 1, e_end)]
                 elif annotation_combination_strategy == "random":
-                    s, e, _ = self.sorted[random.randint(idx, min(idx + annos_per_bin - 1, e_end-2))]
+                    s, e, _ = self.sorted[random.randint(idx, min(idx + annos_per_bin - 1, e_end))]
                 else: # first or force_separate
                     s, e, _ = self.sorted[idx]
                 ret.append((s, e - s))
                 ret_2.append((chr_order[x_chr], s - chr_starts[x_chr]))
-                ret_3.append((cont_idx - sub, annos_per_bin))
-                cont_idx += annos_per_bin
+                ret_3.append((idx - sub, annos_per_bin))
             if none_for_chr_border:
                 ret.append(None)
                 ret_2.append(None)

@@ -1206,13 +1206,13 @@ class MainLayout:
                 return math.ceil((1 + t % 9) * 10**(t // 9))
             if self.square_bins_d == "view":
                 h_bin = power_of_ten( (area[2] - area[0]) / math.sqrt(self.num_bins.value) )
-                h_bin = min(max(h_bin, comp_bin_size(0)), comp_bin_size(1))
+                h_bin = min(max(h_bin, comp_bin_size(0), 1), comp_bin_size(1))
                 w_bin = power_of_ten( (area[3] - area[1]) / math.sqrt(self.num_bins.value) )
-                w_bin = min(max(w_bin, comp_bin_size(0)), comp_bin_size(1))
+                w_bin = min(max(w_bin, comp_bin_size(0), 1), comp_bin_size(1))
             elif self.square_bins_d == "coord":
                 area_bin = (area[2] - area[0]) * (area[3] - area[1]) / self.num_bins.value
                 h_bin = power_of_ten(math.sqrt(area_bin))
-                h_bin = min(max(h_bin, comp_bin_size(0)), comp_bin_size(1))
+                h_bin = min(max(h_bin, comp_bin_size(0), 1), comp_bin_size(1))
                 w_bin = h_bin
             else:
                 raise RuntimeError("invlaid square_bins_d value")
@@ -1435,7 +1435,7 @@ class MainLayout:
 
                 def readable_display(l):
                     exp = int(math.log10(l)-1)
-                    x = round(l / (10**exp), 3)
+                    x = max(1, round(l / (10**exp), 3))
                     if exp >= 7:
                         return str(x) + "*10^" + str(exp) + "bp"
                     elif exp >= 3:
