@@ -700,16 +700,22 @@ class MainLayout:
         self.min_max_bin_size.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
 
-        self.curr_bin_size = Div(text="Current Bin Size: n/a", css_classes=["twenty_percent"])
-        self.curr_bin_size.height = 100
-        self.curr_bin_size.min_height = 100
-        self.curr_bin_size.height_policy = "fixed"
+        self.curr_bin_size = Div(text="Current Bin Size: n/a", sizing_mode="stretch_width")
+        
+        self.spinner = Div(text="<div class=\"lds-spinner\"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>")
+        #self.spinner = Div(text="<div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>", css_classes=["lds-spinner"])
+        self.spinner.css_classes = ["fade-out"]
+
+        self.info_field = row([self.spinner, self.curr_bin_size], css_classes=["twenty_percent"])
+        self.info_field.height = 100
+        self.info_field.min_height = 100
+        self.info_field.height_policy = "fixed"
 
         self.norm_x, norm_x_layout = self.multi_choice("Normalization Rows:")
         self.norm_y, norm_y_layout = self.multi_choice("Normalization Columns:")
 
         self.info_div = Div(text="n/a", style={"word-break": "break-all", "max-width": str(
-            SETTINGS_WIDTH)+"px"}, width=SETTINGS_WIDTH, sizing_mode="stretch_width")
+            SETTINGS_WIDTH)+"px"}, sizing_mode="stretch_width")
 
 
         def x_coords_event(e):
@@ -737,6 +743,7 @@ class MainLayout:
                 ("Use first annotation", "first"), 
                 ("Use Random annotation", "random"), 
                 ("Increase number of bins to match number of annotations (might be slow)", "force_separate"))
+
 
         def make_panel(title, children):
             t = Toggle(active=title == "General", button_type="light", css_classes=["menu_group"])
@@ -787,7 +794,7 @@ class MainLayout:
 
 
         _settings_n_info = column([
-                self.curr_bin_size,
+                self.info_field,
                 _settings
             ],
             sizing_mode="fixed",
@@ -1234,6 +1241,10 @@ class MainLayout:
                     self.curdoc.add_timeout_callback(
                         lambda: self.render_callback(), self.update_frequency_slider.value*1000)
                     return False
+                    
+                def callback():
+                    self.spinner.css_classes = ["fade-in"]
+                self.curdoc.add_next_tick_callback(callback)
 
                 def power_of_ten(x):
                     if self.power_ten_bin_d == "no":
@@ -1517,7 +1528,7 @@ class MainLayout:
                         else:
                             return str(x * int(10**exp)) + "bp"
 
-                    self.curr_bin_size.text = "Redering Done. \nCurrent Bin Size: " + readable_display(w_bin) + \
+                    self.curr_bin_size.text = "Redering Done.<br>Current Bin Size: " + readable_display(w_bin) + \
                                             " x " + readable_display(h_bin)
 
                     self.raw_x_axis.xaxis.bounds = (mmin(*raw_x_heat, *raw_x_norm_combined), 
@@ -1561,6 +1572,9 @@ class MainLayout:
                 return True
             while cancelable_task() is None:
                 pass
+            def callback():
+                self.spinner.css_classes = ["fade-out"]
+            self.curdoc.add_next_tick_callback(callback)
 
         yield executor.submit(unlocked_task)
 
@@ -1570,38 +1584,41 @@ class MainLayout:
 
     def setup(self):
         print("loading...\033[K")
-        #if self.meta is None:
-        #    bed_folder = "/work/project/ladsie_012/ABS.2.2/2021-10-26_NS502-NS521_ABS_CR_RADICL_inputMicroC/bed_files"
-        #    bed_suffix = "RNA.sorted.bed_K1K2.bed_K4.bed_R_D.bed_R_D_K1K2.bed_R_D_PRE1.bed"
-        #    bam_folder = "/work/project/ladsie_012/ABS.2.2/20210608_Inputs"
-        #    bam_suffix="R1.sorted.bam"
-        #    meta, tree, t_n = preprocess.preprocess(
-        #        "", "out/mini", "heatmap_server/Lister427.sizes", 
-        #        "heatmap_static/HGAP3_Tb427v10_merged_2021_06_21.gff3", [
-        #        (bed_folder + "/NS504_P10_Total_3." + bed_suffix, "P10_Total_Rep3", "a"),
-        #        (bed_folder + "/NS505_N50_Total_1." + bed_suffix, "P10_Total_Rep1", "a"),
-        #        (bed_folder + "/NS508_P10_NPM_1." + bed_suffix, "P10_NPM_Rep1", "b"),
-        #        (bed_folder + "/NS511_N50_NPM_1." + bed_suffix, "N50_NPM_Rep1", "b"),
-        #    ], [
-        #        (bam_folder + "/WT1_gDNA_inputATAC." + bam_suffix, "gDNA_inputATAC", "col"),
-        #        (bam_folder + "/WT1_RNAseq_NS320." + bam_suffix, "RNAseq_NS320", "row"),
-        #    ])
-        #    self.meta = meta
-        #    self.meta.setup(self)
-        #    self.idx = tree
-        #    self.idx_norm = t_n
-        #    self.trigger_render()
-        if True:
-            if os.path.exists(self.meta_file.value + ".meta"):
-                self.meta = MetaData.load(self.meta_file.value + ".meta")
-                self.meta.setup(self)
-                self.setup_coordinates()
-                self.idx = Tree_4(self.meta_file.value)
-                self.idx_norm = Tree_3(self.meta_file.value)
-                print("done loading\033[K")
-                self.trigger_render()
-            else:
-                print("File not found")
+        self.spinner.css_classes = ["fade-in"]
+        def callback():
+            #if self.meta is None:
+            #    bed_folder = "/work/project/ladsie_012/ABS.2.2/2021-10-26_NS502-NS521_ABS_CR_RADICL_inputMicroC/bed_files"
+            #    bed_suffix = "RNA.sorted.bed_K1K2.bed_K4.bed_R_D.bed_R_D_K1K2.bed_R_D_PRE1.bed"
+            #    bam_folder = "/work/project/ladsie_012/ABS.2.2/20210608_Inputs"
+            #    bam_suffix="R1.sorted.bam"
+            #    meta, tree, t_n = preprocess.preprocess(
+            #        "", "out/mini", "heatmap_server/Lister427.sizes", 
+            #        "heatmap_static/HGAP3_Tb427v10_merged_2021_06_21.gff3", [
+            #        (bed_folder + "/NS504_P10_Total_3." + bed_suffix, "P10_Total_Rep3", "a"),
+            #        (bed_folder + "/NS505_N50_Total_1." + bed_suffix, "P10_Total_Rep1", "a"),
+            #        (bed_folder + "/NS508_P10_NPM_1." + bed_suffix, "P10_NPM_Rep1", "b"),
+            #        (bed_folder + "/NS511_N50_NPM_1." + bed_suffix, "N50_NPM_Rep1", "b"),
+            #    ], [
+            #        (bam_folder + "/WT1_gDNA_inputATAC." + bam_suffix, "gDNA_inputATAC", "col"),
+            #        (bam_folder + "/WT1_RNAseq_NS320." + bam_suffix, "RNAseq_NS320", "row"),
+            #    ])
+            #    self.meta = meta
+            #    self.meta.setup(self)
+            #    self.idx = tree
+            #    self.idx_norm = t_n
+            #    self.trigger_render()
+            if True:
+                if os.path.exists(self.meta_file.value + ".meta"):
+                    self.meta = MetaData.load(self.meta_file.value + ".meta")
+                    self.meta.setup(self)
+                    self.setup_coordinates()
+                    self.idx = Tree_4(self.meta_file.value)
+                    self.idx_norm = Tree_3(self.meta_file.value)
+                    print("done loading\033[K")
+                    self.trigger_render()
+                else:
+                    print("File not found")
+        self.curdoc.add_next_tick_callback(callback)
 
     def trigger_render(self):
         self.cancel_render = True
