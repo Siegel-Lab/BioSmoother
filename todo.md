@@ -1,19 +1,16 @@
 = smoother =
 
 PRIORITY: (low to high effort)
-- cancel render
 - mapping quality
 
 MEDIUM:
 - EXTRACT function
 - filter to show only that overlay annotation x
-- ticks for coverage
+- coverage y-axis ticks are too many
 
 LOW - PRIORITY:
 - multiple servers in same system
 - scale by default
-- rendering do r/n? en
-- row/col norm switched in preprocess.sh? - yes
 - save pictures
 - pick port dynamically or allow picking port
 - samtools i.e. conda environment
@@ -31,7 +28,7 @@ LOW - PRIORITY:
 - by placing overlay at bottom left, memory can be saved...
 - quick config buttons
 - status to top
-- build times
+- build times (binary search unnecessary if tree can be traversed in order...)
 - https://stxxl.org/tags/1.4.1/common_io_counter.html
 
 

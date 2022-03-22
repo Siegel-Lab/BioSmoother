@@ -1,6 +1,6 @@
 #!/bin/bash
 
-port=5007
+port=5006
 
 # inform user about whats happening first
 echo "opening tunnel to your login node, so that your browser can connect to the bokeh server"

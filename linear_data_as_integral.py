@@ -90,7 +90,8 @@ class Coverage:
 
     def bin_cols_or_rows(self, h_bin, chr_order, chr_starts, start=0, end=None, none_for_chr_border=False, 
                          chr_filter=None,
-                         annotation_combination_strategy="combine"):
+                         annotation_combination_strategy="combine",
+                         is_canceld=lambda: False):
         if end is None:
             end = self.chr_starts[-1] + self.chr_sizes[-1]
         h_bin = max(1, h_bin)
@@ -112,7 +113,7 @@ class Coverage:
             x_start = self.chr_starts[x_chr]
             x_end = self.chr_starts[x_chr] + self.chr_sizes[x_chr]
             e_start = max(int(start), x_start)
-            e_end = min(int(end), x_end, len(self.sorted))
+            e_end = min(int(end), x_end, len(self.sorted)-1)
             annos_per_bin = int(h_bin)
             if annotation_combination_strategy == "force_separate":
                 annos_per_bin = 1
@@ -132,4 +133,6 @@ class Coverage:
                 ret.append(None)
                 ret_2.append(None)
                 ret_3.append(None)
+            if is_canceld():
+                return
         return ret, ret_2, ret_3

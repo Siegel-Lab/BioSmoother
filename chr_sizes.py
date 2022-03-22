@@ -164,7 +164,7 @@ class ChrSizes:
 
 
     def bin_cols_or_rows(self, h_bin, start=0, end=None, none_for_chr_border=False, chr_filter=[], 
-                         produce_smaller_bins=True):
+                         produce_smaller_bins=True, is_canceld=lambda: False):
         if end is None:
             end = self.chr_start_pos["end"]
         h_bin = max(1, h_bin)
@@ -191,6 +191,8 @@ class ChrSizes:
                     ret.append((x, min(h_bin, x_end - x)))
                     ret_2.append((self.chr_order[x_chr], x - x_start))
                     ret_3.append((x-sub, min(h_bin, x_end - x)))
+                if is_canceld():
+                    return
                 x += h_bin
             
             if none_for_chr_border:
