@@ -9,9 +9,10 @@ BED_SUF="RNA.sorted.bed_K1K2.bed_K4.bed_R_D.bed_R_D_K1K2.bed_R_D_PRE1.bed"
 BAMS="/work/project/ladsie_012/ABS.2.2/20210608_Inputs"
 BAM_SUF="R1.sorted.bam"
 
-INDEX_PREFIX="../out/test"
+INDEX_PREFIX="../out/full"
 
-RUNTIME_FACTOR=5000
+#RUNTIME_FACTOR=5000
+RUNTIME_FACTOR=10000
 
 rm ${INDEX_PREFIX}.*
 
@@ -30,4 +31,4 @@ python3 preprocess.py repl "${INDEX_PREFIX}" "${BEDS}/NS511_N50_NPM_1.${BED_SUF}
 python3 preprocess.py norm "${INDEX_PREFIX}" "${BAMS}/WT1_gDNA_inputATAC.${BAM_SUF}" "gDNA_inputATAC" -g col
 python3 preprocess.py norm "${INDEX_PREFIX}" "${BAMS}/WT1_RNAseq_NS320.${BAM_SUF}" "RNAseq_NS320" -g row
 
-python3 preprocess.py grid-seq-norm -van -b 1000000 -R 1 -D 10 ${INDEX_PREFIX} ca_rna
+python3 preprocess.py grid-seq-norm -van -b 10000 -R 0.005 -D 1 ${INDEX_PREFIX} caGene

@@ -26,12 +26,12 @@ def compute_anno_reads_binned(index, datasets, anno_from, anno_to, bins, map_q_l
 def rank_regions(index, datasets, regions, chr_sizes, map_q_layer, bins_size=1000):
     ranked_regions = []
     binned_genome = chr_sizes.bin_cols_or_rows(bins_size, produce_smaller_bins=False)[0]
-    for start, size, info in regions:
+    for start, end, info in regions:
         ranked_regions.append((
-            compute_anno_reads(index, datasets, start, start + size, chr_sizes.chr_start_pos["end"], map_q_layer),
-            compute_anno_reads_binned(index, datasets, start, start + size, binned_genome, map_q_layer), 
+            compute_anno_reads(index, datasets, start, end, chr_sizes.chr_start_pos["end"], map_q_layer),
+            compute_anno_reads_binned(index, datasets, start, end, binned_genome, map_q_layer), 
             start, 
-            size,
+            end,
             info))
     return ranked_regions
 
@@ -70,29 +70,29 @@ def make_grid_seq_plots(ranked_regions, filter_rna, filter_dna):
 def make_grid_seq_ranked_regions(index, datasets, map_q_layer, chr_sizes, annotations, 
                                   annotation="gene", bins_size=1000):
     if annotation == "bins":
-        binned_genome = [(p, s, "bin [" + str(p) + ", " + str(p+s) + ")")
+        binned_genome = [(p, p+s, "bin [" + str(p) + ", " + str(p+s) + ")")
                          for p, s in chr_sizes.bin_cols_or_rows(bins_size, produce_smaller_bins=False)[0]]
     else:
         binned_genome = annotations[annotation].sorted
     return rank_regions(index, datasets, binned_genome, chr_sizes, map_q_layer, bins_size)
 
 def filter_r_r(ranked_regions, filter_rna, filter_dna):
-    return [(start, size, info) for x, y, start, size, info in ranked_regions if x >= filter_rna and y >= filter_dna]
+    return [(start, end, info) for x, y, start, end, info in ranked_regions if x >= filter_rna and y >= filter_dna]
 
 def do_add_annotation(ranked_regions, meta, name):
-    meta.add_annotations([(name, start, start + size, info) for start, size, info in ranked_regions])
+    meta.add_annotations([(name, start, end, info) for start, end, info in ranked_regions])
 
 def add_as_normalization(ranked_regions, datasets, meta, index, index_arr, map_q_layer, name, info):
     idx = meta.add_normalization(name, info, True)
 
     for dataset in datasets:
-        for start, size, info in ranked_regions:
-            chr_idx = bisect_left(meta.chr_sizes.chr_starts, start)
+        for start, end, info in ranked_regions:
+            chr_idx = min(bisect_left(meta.chr_sizes.chr_starts, start), len(meta.chr_sizes.chr_starts)-1)
             chr_start = meta.chr_sizes.chr_starts[chr_idx]
             chr_size = meta.chr_sizes.chr_sizes_l[chr_idx]
             for x in [
-                index.get(dataset, start, start + size, 0, chr_start),
-                index.get(dataset, start, start + size, chr_start + chr_size, meta.chr_sizes.chr_start_pos["end"])
+                index.get(dataset, start, end, 0, chr_start),
+                index.get(dataset, start, end, chr_start + chr_size, meta.chr_sizes.chr_start_pos["end"])
             ]:
                 for layer, d in enumerate(x):
                     if layer >= map_q_layer:

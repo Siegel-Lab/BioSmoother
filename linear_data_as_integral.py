@@ -111,13 +111,13 @@ class Coverage:
             ret_3.append(None)
         for x_chr, sub in x_chrs:
             x_start = self.chr_starts[x_chr]
-            x_end = self.chr_starts[x_chr] + self.chr_sizes[x_chr]-1
+            x_end = self.chr_starts[x_chr] + self.chr_sizes[x_chr]
             e_start = max(int(start), x_start)
-            e_end = min(int(end), x_end)
+            e_end = min(int(end), x_end, len(self.sorted))
             annos_per_bin = int(h_bin)
             if annotation_combination_strategy == "force_separate":
                 annos_per_bin = 1
-            for idx in range(e_start, e_end-2, annos_per_bin):
+            for idx in range(e_start, e_end, annos_per_bin):
                 if annotation_combination_strategy == "combine":
                     s, _, _ = self.sorted[idx]
                     #print(idx + annos_per_bin - 1, e_end-1, len(self.sorted))

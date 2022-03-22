@@ -941,6 +941,8 @@ class MainLayout:
         return n
 
     def norm_num_reads(self, rows):
+        if len((self.norm_x.value if rows else self.norm_y.value)) == 0:
+            return 1
         return self.flatten_norm([
             [self.idx_norm.count(int(idx), 0, self.meta.chr_sizes.chr_start_pos["end"], *self.mapq_slider.value) \
                 if self.meta.norm_via_tree(int(idx)) \
@@ -1111,11 +1113,21 @@ class MainLayout:
         return [coverage_obj.count(x[0], x[0] + x[1]) if not x is None else float('NaN') for x in bins]
 
     def linear_bins_norm(self, bins, rows):
-        vals = [
-            [self.idx_norm.count(int(idx), x[0], x[0] + x[1], *self.mapq_slider.value) \
-                if self.meta.norm_via_tree(int(idx)) else self.meta.norm[int(idx)].count(x[0], x[0] + x[1]) \
-                for idx in (self.norm_x.value if rows else self.norm_y.value)]
-            if not x is None else [float('NaN')] for x in bins]
+        vals = []
+        idxs = (self.norm_x.value if rows else self.norm_y.value)
+        for x in bins:
+            vals.append([])
+            if len(idxs) == 0:
+                vals[-1].append(1)
+            else:
+                for idx in idxs:
+                    if x is None:
+                        vals[-1].append(float('NaN'))
+                    else:
+                        if self.meta.norm_via_tree(int(idx)):
+                            vals[-1].append(self.idx_norm.count(int(idx), x[0], x[0] + x[1], *self.mapq_slider.value))
+                        else:
+                            vals[-1].append(self.meta.norm[int(idx)].count(x[0], x[0] + x[1]))
         return self.flatten_norm(vals), vals
 
     def new_render(self, reason):

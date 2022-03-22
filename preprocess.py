@@ -111,7 +111,7 @@ def parse_wig_file(filename, chr_start_idx):
         ys.append(0)
         yield xs, ys, track
 
-TEST = True
+TEST = False
 
 def make_meta(out_prefix, chr_len_file_name, annotation_filename, mapping_quality_layers):
     meta = MetaData(mapping_quality_layers)
@@ -126,7 +126,7 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename, mapping_qualit
 def add_replicate(out_prefix, path, name, group_a, runtime_factor):
     meta = MetaData.load(out_prefix + ".meta")
     idx = meta.add_dataset(name, path, group_a)
-    index = KdpsTree(out_prefix)
+    index = KdpsTree(out_prefix, True)
     cnt = 0
     last_cnt = len(index)
     file_size = int(subprocess.run(['wc', '-l', path], stdout=subprocess.PIPE).stdout.decode('utf-8').split(" ")[0])
@@ -153,7 +153,7 @@ def add_replicate(out_prefix, path, name, group_a, runtime_factor):
 
 def add_normalization(out_prefix, path, name, for_row):
     meta = MetaData.load(out_prefix + ".meta")
-    index = PsArray(out_prefix + ".norm")
+    index = PsArray(out_prefix + ".norm", True)
     file_size = int(subprocess.run(['samtools', 'view', '-c', path], stdout=subprocess.PIPE).stdout.decode('utf-8'))
     file_name = simplified_filepath(path)
     if path[-4:] == ".wig":
@@ -201,7 +201,7 @@ def grid_seq_norm(args):
     if args.add_annotation:
         do_add_annotation(filtered_rr, meta, args.name)
     if args.add_normalization_track:
-        index_arr = PsArray(args.index_prefix + ".norm")
+        index_arr = PsArray(args.index_prefix + ".norm", True)
         add_as_normalization(filtered_rr, datasets, meta, index, index_arr, args.mapping_q, args.name, 
                              "GRID-seq normalization created with " + str(sys.argv))
 
@@ -243,8 +243,8 @@ if __name__ == "__main__":
     grid_seq_norm_parser.add_argument('-d', '--datasets', metavar="VAL", nargs='*', type=int)
     grid_seq_norm_parser.add_argument('-m', '--mapping_q', metavar="VAL", type=int, default=0)
     grid_seq_norm_parser.add_argument('-b', '--bin_size', metavar="VAL", type=int, default=1000)
-    grid_seq_norm_parser.add_argument('-R', '--filter_rna', metavar="VAL", type=int, default=100)
-    grid_seq_norm_parser.add_argument('-D', '--filter_dna', metavar="VAL", type=int, default=10)
+    grid_seq_norm_parser.add_argument('-R', '--filter_rna', metavar="VAL", type=float, default=100)
+    grid_seq_norm_parser.add_argument('-D', '--filter_dna', metavar="VAL", type=float, default=10)
     grid_seq_norm_parser.add_argument('-A', '--annotation',
             help="name of the annotation to use as bins for the RNA or 'bins' to use --bin_size sized bins over the full genome", 
             metavar="VAL", default="gene")

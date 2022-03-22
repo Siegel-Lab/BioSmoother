@@ -74,7 +74,7 @@ class MetaData:
         return self.normalizations[idx][3]
 
     def setup_coordinates(self, main_layout, show_grid_lines, x_coords_d, y_coords_d):
-        ticker_border = AdaptiveTicker()
+        ticker_border = AdaptiveTicker(desired_num_ticks=3)
         c = "lightgrey" if show_grid_lines else None
         c2 = None
         if x_coords_d != "full_genome":
