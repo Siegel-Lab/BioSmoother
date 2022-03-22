@@ -1,8 +1,19 @@
 .full_height {
     height: 100% !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
+    overflow: hidden !important;
     border-left: 1px solid #D3D3D3 !important;
+}
+.scroll_y {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: 85% !important;
+    top: 15% !important;
+    border-top: 1px solid #D3D3D3 !important;
+}
+.twenty_percent {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: 15% !important;
 }
 
 .menu_group {

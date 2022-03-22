@@ -700,7 +700,10 @@ class MainLayout:
         self.min_max_bin_size.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
 
-        self.curr_bin_size = Div(text="Current Bin Size: n/a")
+        self.curr_bin_size = Div(text="Current Bin Size: n/a", css_classes=["twenty_percent"])
+        self.curr_bin_size.height = 100
+        self.curr_bin_size.min_height = 100
+        self.curr_bin_size.height_policy = "fixed"
 
         self.norm_x, norm_x_layout = self.multi_choice("Normalization Rows:")
         self.norm_y, norm_y_layout = self.multi_choice("Normalization Columns:")
@@ -739,7 +742,7 @@ class MainLayout:
             t = Toggle(active=title == "General", button_type="light", css_classes=["menu_group"])
 
             cx = column(children, sizing_mode="stretch_width", css_classes=["offset_left"])
-            cx.margin = [0, 0, 0, 20]
+            cx.margin = [0, 20, 0, 20]
 
             r = column([t, cx], sizing_mode="stretch_width")
             def callback(e):
@@ -761,7 +764,7 @@ class MainLayout:
 
         _settings = column([
                 make_panel("General", [tool_bar, self.meta_file, show_hide,
-                                    self.min_max_bin_size, self.curr_bin_size]),
+                                    self.min_max_bin_size]),
                 make_panel("Normalization", [self.normalization, self.mapq_slider, self.interactions_bounds_slider,
                                     self.interactions_slider, norm_x_layout, norm_y_layout]),
                 make_panel("Replicates", [self.in_group, self.betw_group, group_a_layout, group_b_layout]),
@@ -775,15 +778,27 @@ class MainLayout:
                                           x_coords, y_coords, multiple_anno_per_bin, chrom_x_layout, chrom_y_layout]),
                 make_panel("Info", [self.info_div]),
             ],
-            sizing_mode="stretch_both"
+            sizing_mode="stretch_both",
+            css_classes=["scroll_y"]
         )
+        #_settings.height = 100
+        #_settings.min_height = 100
+        #_settings.height_policy = "fixed"
 
-        FigureMaker._hidable_plots.append((_settings, ["tools"]))
-        sp = Spacer()
-        sp.width = 20
-        sp.width_policy = "fixed"
-        self.settings = row([_settings, FigureMaker.reshow_settings(), sp],
-                       css_classes=["full_height"])
+
+        _settings_n_info = column([
+                self.curr_bin_size,
+                _settings
+            ],
+            sizing_mode="fixed",
+            css_classes=["full_height"]
+        )
+        _settings_n_info.width = SETTINGS_WIDTH
+        _settings_n_info.width_policy = "fixed"
+        
+
+        FigureMaker._hidable_plots.append((_settings_n_info, ["tools"]))
+        self.settings = row([_settings_n_info, FigureMaker.reshow_settings()], css_classes=["full_height"])
         self.settings.height = 100
         self.settings.min_height = 100
         self.settings.height_policy = "fixed"
@@ -1494,16 +1509,16 @@ class MainLayout:
 
                     def readable_display(l):
                         exp = int(math.log10(l)-1)
-                        x = max(1, round(l / (10**exp), 3))
+                        x = max(1, int(l / (10**exp)))
                         if exp >= 7:
-                            return str(round(x,2)) + "*10^" + str(exp) + "bp"
+                            return str(x) + "*10^" + str(exp) + "bp"
                         elif exp >= 3:
-                            return str(round(x,2) * int(10**(exp-3))) + "kbp"
+                            return str(x * int(10**(exp-3))) + "kbp"
                         else:
-                            return str(round(x,2) * int(10**exp)) + "bp"
+                            return str(x * int(10**exp)) + "bp"
 
-                    self.curr_bin_size.text = "Redering Done. \nCurrent Bin Size: " + readable_display(w_bin) + " x " + \
-                                            readable_display(h_bin)
+                    self.curr_bin_size.text = "Redering Done. \nCurrent Bin Size: " + readable_display(w_bin) + \
+                                            " x " + readable_display(h_bin)
 
                     self.raw_x_axis.xaxis.bounds = (mmin(*raw_x_heat, *raw_x_norm_combined), 
                                                     mmax(*raw_x_heat, *raw_x_norm_combined))

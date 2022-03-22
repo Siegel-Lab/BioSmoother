@@ -141,3 +141,11 @@ class MetaData:
         main_layout.x_coords_update(possible_coords)
         main_layout.y_coords_update(possible_coords)
 
+        
+        set_tick = FuncTickFormatter(
+            code="""return values[tick];""",
+            args={"values":self.mapping_quality_layers + [256]})
+        main_layout.mapq_slider.format = set_tick
+        main_layout.mapq_slider.end = len(self.mapping_quality_layers)
+        main_layout.mapq_slider.value = (0, len(self.mapping_quality_layers))
+
