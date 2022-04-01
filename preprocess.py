@@ -30,7 +30,7 @@ def parse_heatmap(in_filename):
             pos_1 -= 1
             pos_2 -= 1
 
-            yield read_name, strnd_1, chr_1, pos_1, strnd_2, chr_2, pos_2, mapq_1, mapq_2
+            yield read_name, strnd_1, chr_1, int(pos_1), strnd_2, chr_2, int(pos_2), mapq_1, mapq_2
 
 
 def execute(cmd):
@@ -141,7 +141,9 @@ def add_replicate(out_prefix, path, name, group_a, runtime_factor):
             continue
         map_q = min(mapq_1, mapq_2)
         if map_q >= meta.mapping_quality_layers[0]:
-            index.add_point(idx, [pos_1, pos_2], meta.get_layer_for_mapping_q(map_q), read_name)
+            act_pos_1 = meta.chr_sizes.coordinate(pos_1, chr_1)
+            act_pos_2 = meta.chr_sizes.coordinate(pos_2, chr_2)
+            index.add_point(idx, [act_pos_1, act_pos_2], meta.get_layer_for_mapping_q(map_q), read_name)
         cnt += 1
         if cnt > 1000000 and TEST:
             break
@@ -169,7 +171,8 @@ def add_normalization(out_prefix, path, name, for_row):
             if not chrom in meta.chr_sizes.chr_sizes:
                 continue
             if map_q >= meta.mapping_quality_layers[0]:
-                index.add_point(idx, pos, meta.get_layer_for_mapping_q(map_q), read_name)
+                act_pos = meta.chr_sizes.coordinate(pos, chrom)
+                index.add_point(idx, act_pos, meta.get_layer_for_mapping_q(map_q), read_name)
             cnt += 1
             if cnt > 1000000 and TEST:
                 break

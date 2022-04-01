@@ -11,7 +11,7 @@ BAM_SUF="R1.sorted.bam"
 
 INDEX_PREFIX="../out/test"
 
-RUNTIME_FACTOR=5000
+RUNTIME_FACTOR=1000
 
 rm ${INDEX_PREFIX}.*
 
@@ -30,4 +30,8 @@ python3 preprocess.py repl "${INDEX_PREFIX}" "${BEDS}/NS511_N50_NPM_1.${BED_SUF}
 python3 preprocess.py norm "${INDEX_PREFIX}" "${BAMS}/WT1_gDNA_inputATAC.${BAM_SUF}" "gDNA_inputATAC" -g col
 python3 preprocess.py norm "${INDEX_PREFIX}" "${BAMS}/WT1_RNAseq_NS320.${BAM_SUF}" "RNAseq_NS320" -g row
 
+# test with this:
+# python3 preprocess.py grid-seq-norm -v -b 10000 -R 0.005 -D 1 ${INDEX_PREFIX} caGene
+
+# once -R and -D are correct use this:
 python3 preprocess.py grid-seq-norm -van -b 10000 -R 0.005 -D 1 ${INDEX_PREFIX} caGene

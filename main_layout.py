@@ -675,7 +675,7 @@ class MainLayout:
             
         meta_file_label = Div(text="Data path:")
         meta_file_label.margin = DIV_MARGIN
-        self.meta_file = TextInput(value="heatmap_server/out/")
+        self.meta_file = TextInput(value="out/")
         self.meta_file.on_change("value", lambda x, y, z: self.setup())
 
         self.group_a, group_a_layout = self.multi_choice("Group A")
@@ -714,10 +714,6 @@ class MainLayout:
         self.norm_x, norm_x_layout = self.multi_choice("Normalization Rows:")
         self.norm_y, norm_y_layout = self.multi_choice("Normalization Columns:")
 
-        self.info_div = Div(text="n/a", style={"word-break": "break-all", "max-width": str(
-            SETTINGS_WIDTH)+"px"}, sizing_mode="stretch_width")
-
-
         def x_coords_event(e):
             FigureMaker.x_coords_d = e
             self.setup_coordinates()
@@ -744,6 +740,25 @@ class MainLayout:
                 ("Use Random annotation", "random"), 
                 ("Increase number of bins to match number of annotations (might be slow)", "force_separate"))
 
+        self.do_export = None
+        def export_event(e):
+            self.do_export = e
+            self.trigger_render()
+        self.export_button = self.dropdown_select("Export", export_event,
+                                                  ("Current View", "current"),
+                                                  ("Full Matrix", "full"))
+
+        export_label = Div(text="Output Prefix:")
+        export_label.margin = DIV_MARGIN
+        self.export_file = TextInput(value="export1")
+        
+        self.export_sele, export_sele_layout = self.multi_choice("Export Selection")
+        self.export_sele.options = [
+            ("heatmap", "Heatmap"),
+            ("col_sum", "Column Sum"),
+            ("row_sum", "Row Sum")
+        ]
+        self.export_sele.value = ["heatmap"]
 
         def make_panel(title, children):
             t = Toggle(active=title == "General", button_type="light", css_classes=["menu_group"])
@@ -770,7 +785,7 @@ class MainLayout:
             return r
 
         _settings = column([
-                make_panel("General", [tool_bar, self.meta_file, show_hide,
+                make_panel("General", [tool_bar, meta_file_label, self.meta_file, show_hide,
                                     self.min_max_bin_size]),
                 make_panel("Normalization", [self.normalization, self.mapq_slider, self.interactions_bounds_slider,
                                     self.interactions_slider, norm_x_layout, norm_y_layout]),
@@ -783,7 +798,7 @@ class MainLayout:
                                           displayed_annos_layout, filtered_annos_x_layout,
                                           filtered_annos_y_layout,
                                           x_coords, y_coords, multiple_anno_per_bin, chrom_x_layout, chrom_y_layout]),
-                make_panel("Info", [self.info_div]),
+                make_panel("Export", [export_label, self.export_file, export_sele_layout, self.export_button]),
             ],
             sizing_mode="stretch_both",
             css_classes=["scroll_y"]
@@ -1276,6 +1291,12 @@ class MainLayout:
                 area[2] += w_bin - (area[2] % w_bin) # align to nice and even number
                 area[3] += h_bin - (area[3] % h_bin) # align to nice and even number
 
+                if self.do_export == "full":
+                    area[0] = 0
+                    area[1] = 0
+                    area[2] = self.meta.chr_sizes.chr_start_pos["end"]
+                    area[3] = self.meta.chr_sizes.chr_start_pos["end"]
+
                 xx = self.bin_coords(area, h_bin, w_bin)
                 if self.cancel_render:
                     return
@@ -1511,12 +1532,13 @@ class MainLayout:
                             if not x is None and x < m:
                                 m = x
                         return m
-                    if len(self.displayed_annos.value) == 0:
-                        self.anno_x.x_range.factors = [""]
-                        self.anno_y.y_range.factors = [""]
-                    else:
-                        self.anno_x.x_range.factors = self.displayed_annos.value
-                        self.anno_y.y_range.factors = self.displayed_annos.value
+                    if self.do_export is None:
+                        if len(self.displayed_annos.value) == 0:
+                            self.anno_x.x_range.factors = [""]
+                            self.anno_y.y_range.factors = [""]
+                        else:
+                            self.anno_x.x_range.factors = self.displayed_annos.value
+                            self.anno_y.y_range.factors = self.displayed_annos.value
 
                     def readable_display(l):
                         exp = int(math.log10(l)-1)
@@ -1531,43 +1553,63 @@ class MainLayout:
                     self.curr_bin_size.text = "Redering Done.<br>Current Bin Size: " + readable_display(w_bin) + \
                                             " x " + readable_display(h_bin)
 
-                    self.raw_x_axis.xaxis.bounds = (mmin(*raw_x_heat, *raw_x_norm_combined), 
-                                                    mmax(*raw_x_heat, *raw_x_norm_combined))
-                    self.ratio_x_axis.xaxis.bounds = (0, mmax(*raw_x_ratio))
-                    self.raw_y_axis.yaxis.bounds = (mmin(*raw_y_heat, *raw_y_norm_combined), 
-                                                    mmax(*raw_y_heat, *raw_y_norm_combined))
-                    self.ratio_y_axis.yaxis.bounds = (0, mmax(*raw_y_ratio))
+                    if self.do_export is None:
+                        self.raw_x_axis.xaxis.bounds = (mmin(*raw_x_heat, *raw_x_norm_combined), 
+                                                        mmax(*raw_x_heat, *raw_x_norm_combined))
+                        self.ratio_x_axis.xaxis.bounds = (0, mmax(*raw_x_ratio))
+                        self.raw_y_axis.yaxis.bounds = (mmin(*raw_y_heat, *raw_y_norm_combined), 
+                                                        mmax(*raw_y_heat, *raw_y_norm_combined))
+                        self.ratio_y_axis.yaxis.bounds = (0, mmax(*raw_y_ratio))
 
-                    def set_bounds(plot, left=None, right=None, top=None, bottom=None, color=None):
-                        ra = FigureMaker.plot_render_area(plot)
-                        ra.left = area[0] if left is None else left
-                        ra.bottom = area[1] if bottom is None else bottom
-                        ra.right = area[2] if right is None else right
-                        ra.top =area[3] if top is None else top
-                        if not color is None:
-                            ra.fill_color = color
+                        def set_bounds(plot, left=None, right=None, top=None, bottom=None, color=None):
+                            ra = FigureMaker.plot_render_area(plot)
+                            ra.left = area[0] if left is None else left
+                            ra.bottom = area[1] if bottom is None else bottom
+                            ra.right = area[2] if right is None else right
+                            ra.top =area[3] if top is None else top
+                            if not color is None:
+                                ra.fill_color = color
 
-                    set_bounds(self.raw_x, left=mmin(*raw_x_heat, *raw_x_norm_combined), 
-                                right=mmax(*raw_x_heat, *raw_x_norm_combined))
-                    set_bounds(self.ratio_x, left=0, right=mmax(*raw_x_ratio))
-                    set_bounds(self.raw_y, bottom=mmin(*raw_y_heat, *raw_y_norm_combined),
-                                top=mmax(*raw_y_heat, *raw_y_norm_combined))
-                    set_bounds(self.ratio_y, bottom=0, top=mmax(*raw_y_ratio))
-                    set_bounds(self.anno_x, left=None, right=None)
-                    set_bounds(self.anno_y, bottom=None, top=None)
+                        set_bounds(self.raw_x, left=mmin(*raw_x_heat, *raw_x_norm_combined), 
+                                    right=mmax(*raw_x_heat, *raw_x_norm_combined))
+                        set_bounds(self.ratio_x, left=0, right=mmax(*raw_x_ratio))
+                        set_bounds(self.raw_y, bottom=mmin(*raw_y_heat, *raw_y_norm_combined),
+                                    top=mmax(*raw_y_heat, *raw_y_norm_combined))
+                        set_bounds(self.ratio_y, bottom=0, top=mmax(*raw_y_ratio))
+                        set_bounds(self.anno_x, left=None, right=None)
+                        set_bounds(self.anno_y, bottom=None, top=None)
 
-                    set_bounds(self.heatmap, color=b_col)
+                        set_bounds(self.heatmap, color=b_col)
 
-                    self.heatmap_data.data = d_heatmap
-                    self.raw_data_x.data = raw_data_x
-                    self.raw_data_y.data = raw_data_y
-                    self.ratio_data_x.data = ratio_data_x
-                    self.ratio_data_y.data = ratio_data_y
-                    self.anno_x_data.data = d_anno_x
-                    self.anno_y_data.data = d_anno_y
+                        self.heatmap_data.data = d_heatmap
+                        self.raw_data_x.data = raw_data_x
+                        self.raw_data_y.data = raw_data_y
+                        self.ratio_data_x.data = ratio_data_x
+                        self.ratio_data_y.data = ratio_data_y
+                        self.anno_x_data.data = d_anno_x
+                        self.anno_y_data.data = d_anno_y
+                    self.do_export = None
                     self.render_done(len(bins[0]))
                     self.curdoc.add_timeout_callback(
                         lambda: self.render_callback(), self.update_frequency_slider.value*1000)
+
+                if not self.do_export is None:
+                    if "heatmap" in self.export_sele.value:
+                        with open(self.export_file.value + ".heatmap.bed", "w") as out_file:
+                            for c, (x_chr_, x_2_, y_chr_, y_2_) in zip(self.color_bins_a(sym), bin_coords_2):
+                                out_file.write("\t".join([x_chr_, str(int(x_2_)), y_chr_, str(int(y_2_)), 
+                                                          str(c)]) + "\n")
+                    if "col_sum" in self.export_sele.value:
+                        with open(self.export_file.value + ".columns.bed", "w") as out_file:
+                            for c, x_chr_, x_2_, x_ in zip(raw_y_ratio, y_chr, y_pos1, y_pos):
+                                if not x_ is float('NaN'):
+                                    out_file.write("\t".join([x_chr_, str(int(x_2_)), str(c)]) + "\n")
+                    if "row_sum" in self.export_sele.value:
+                        with open(self.export_file.value + ".rows.bed", "w") as out_file:
+                            for c, x_chr_, x_2_, x_ in zip(raw_x_ratio, x_chr, x_pos1, x_pos):
+                                if not x_ is float('NaN'):
+                                    out_file.write("\t".join([x_chr_, str(int(x_2_)), str(c)]) + "\n")
+
                 self.curdoc.add_next_tick_callback(callback)
                 return True
             while cancelable_task() is None:

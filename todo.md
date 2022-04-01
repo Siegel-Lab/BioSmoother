@@ -1,12 +1,12 @@
 = smoother =
 
 PRIORITY: (low to high effort)
-- mapping quality
-
-MEDIUM:
 - EXTRACT function
 - filter to show only that overlay annotation x
 - coverage y-axis ticks are too many
+- does radicl sec do normalization for rna?
+- uneven distribution between contigs in grid seq normalization
+- hi-c normalization
 
 LOW - PRIORITY:
 - multiple servers in same system
@@ -27,13 +27,18 @@ LOW - PRIORITY:
     - align points to blocks
 - by placing overlay at bottom left, memory can be saved...
 - quick config buttons
-- status to top
 - build times (binary search unnecessary if tree can be traversed in order...)
 - https://stxxl.org/tags/1.4.1/common_io_counter.html
-
-
-
-
+- slider for radicl - seq significance
+- remove yellow color!!!!
+- separate pickers for showing normalization reads and normalizing by them
+- column coordinates -> remove axis coords
+- columns/row chromosomes pickers -> wrong way round
+    - axis labels are wrong!
+- keep reads that map to the same bind
+- organize code
+- put help messages
+- give buttons better names
 
 
 

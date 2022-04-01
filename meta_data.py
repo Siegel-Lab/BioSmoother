@@ -114,8 +114,6 @@ class MetaData:
     def setup(self, main_layout):
         self.chr_sizes.setup(main_layout)
         
-        if hasattr(self, "info"):
-            main_layout.info_div.text = self.info
         opt = [ (str(idx), data[0]) for idx, data in enumerate(self.datasets)]
         main_layout.group_a.options = opt
         main_layout.group_b.options = opt
