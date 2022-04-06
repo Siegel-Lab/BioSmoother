@@ -11,7 +11,7 @@ from heatmap_as_r_tree import *
 import subprocess
 import glob
 import math
-from libKdpsTree import *
+from libSps import *
 from grid_seq_norm import *
 
 PRINT_MODULO = 10000
@@ -112,9 +112,10 @@ def parse_wig_file(filename, chr_start_idx):
         yield xs, ys, track
 
 TEST = True
+TEST_FAC = 100000
 
-def make_meta(out_prefix, chr_len_file_name, annotation_filename, mapping_quality_layers):
-    meta = MetaData(mapping_quality_layers)
+def make_meta(out_prefix, chr_len_file_name, annotation_filename):
+    meta = MetaData()
     meta.set_chr_sizes(ChrSizes(chr_len_file_name, filter=lambda x: ("Chr10_" in x) or not TEST))
 
     if not annotation_filename is None:
@@ -123,10 +124,9 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename, mapping_qualit
     meta.save(out_prefix + ".meta")
 
 
-def add_replicate(out_prefix, path, name, group_a, runtime_factor):
+def add_replicate(out_prefix, path, name, group_a):
     meta = MetaData.load(out_prefix + ".meta")
-    idx = meta.add_dataset(name, path, group_a)
-    index = KdpsTree(out_prefix, True)
+    index = SparsePrefixSum_5D(out_prefix, True)
     cnt = 0
     last_cnt = len(index)
     file_size = int(subprocess.run(['wc', '-l', path], stdout=subprocess.PIPE).stdout.decode('utf-8').split(" ")[0])
@@ -140,29 +140,27 @@ def add_replicate(out_prefix, path, name, group_a, runtime_factor):
         if not chr_2 in meta.chr_sizes.chr_sizes:
             continue
         map_q = min(mapq_1, mapq_2)
-        if map_q >= meta.mapping_quality_layers[0]:
-            act_pos_1 = meta.chr_sizes.coordinate(pos_1, chr_1)
-            act_pos_2 = meta.chr_sizes.coordinate(pos_2, chr_2)
-            index.add_point(idx, [act_pos_1, act_pos_2], meta.get_layer_for_mapping_q(map_q), read_name)
+        act_pos_1 = meta.chr_sizes.coordinate(pos_1, chr_1)
+        act_pos_2 = meta.chr_sizes.coordinate(pos_2, chr_2)
+        index.add_point([act_pos_1, act_pos_2, map_q, 0, 0], read_name)
         cnt += 1
-        if cnt > 1000000 and TEST:
+        if cnt > TEST_FAC and TEST:
             break
-    # trigger gen for the last chromosome pair
-    n = int(math.log(cnt) * runtime_factor)
     print("generating index")
-    index.generate(idx, n, last_cnt, cnt + last_cnt)
+    idx = index.generate(last_cnt, cnt + last_cnt)
+    meta.add_dataset(name, path, group_a, idx)
     meta.save(out_prefix + ".meta")
 
 def add_normalization(out_prefix, path, name, for_row):
     meta = MetaData.load(out_prefix + ".meta")
-    index = PsArray(out_prefix + ".norm", True)
+    index = SparsePrefixSum_3D(out_prefix + ".norm", True)
+    last_cnt = len(index)
     file_size = int(subprocess.run(['samtools', 'view', '-c', path], stdout=subprocess.PIPE).stdout.decode('utf-8'))
     file_name = simplified_filepath(path)
     if path[-4:] == ".wig":
         for xs, ys, n in parse_wig_file(path, meta.chr_sizes.chr_start_pos):
             meta.add_wig_normalization(name + ": " + n, path, for_row, xs, ys)
     else:
-        idx = meta.add_normalization(name, path, for_row)
         cnt = 0
         for idx_2, (read_name, chrom, pos, map_q) in enumerate(parse_norm_file(path)):
             if idx_2 % PRINT_MODULO == 0:
@@ -170,22 +168,22 @@ def add_normalization(out_prefix, path, name, for_row):
                       100*(idx_2+1)/file_size, "%", end="\033[K\r")
             if not chrom in meta.chr_sizes.chr_sizes:
                 continue
-            if map_q >= meta.mapping_quality_layers[0]:
-                act_pos = meta.chr_sizes.coordinate(pos, chrom)
-                index.add_point(idx, act_pos, meta.get_layer_for_mapping_q(map_q), read_name)
+            act_pos = meta.chr_sizes.coordinate(pos, chrom)
+            index.add_point([act_pos, map_q, 0], read_name)
             cnt += 1
-            if cnt > 1000000 and TEST:
+            if cnt > TEST_FAC and TEST:
                 break
-    print("generating index")
-    index.generate()
+        print("generating index")
+        idx = index.generate(last_cnt, cnt + last_cnt)
+        meta.add_normalization(name, path, for_row, idx)
     meta.save(out_prefix + ".meta")
 
 
 def init(args):
-    make_meta(args.index_prefix, args.chr_len, args.annotations, args.mapping_q)
+    make_meta(args.index_prefix, args.chr_len, args.annotations)
 
 def repl(args):
-    add_replicate(args.index_prefix, args.path, args.name, args.group, args.runtime_memory_factor)
+    add_replicate(args.index_prefix, args.path, args.name, args.group)
 
 def norm(args):
     add_normalization(args.index_prefix, args.path, args.name, args.group)
@@ -220,7 +218,6 @@ if __name__ == "__main__":
     init_parser.add_argument('index_prefix')
     init_parser.add_argument('chr_len')
     init_parser.add_argument('-a', '--annotations', metavar="PATH", default=None)
-    init_parser.add_argument('-m', '--mapping_q', metavar="VAL", nargs=3, type=int, default=[0, 1, 3])
     init_parser.set_defaults(func=init)
 
     repl_parser = sub_parsers.add_parser("repl")
@@ -229,7 +226,6 @@ if __name__ == "__main__":
     repl_parser.add_argument('name')
     repl_parser.add_argument('-g', '--group', default="neither", choices=["a", "b", "both", "neither"], 
                             help="(default: %(default)s)")
-    repl_parser.add_argument('-r', '--runtime_memory_factor', default=1000, type=int, help="(default: %(default)s)")
     repl_parser.set_defaults(func=repl)
 
     norm_parser = sub_parsers.add_parser("norm")

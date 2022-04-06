@@ -2,7 +2,7 @@ import os
 os.environ["STXXLLOGFILE"] = "/dev/null"
 os.environ["STXXLERRLOGFILE"] = "/dev/null"
 
-from libKdpsTree import *
+from libSps import *
 
 H = 0.5
 MAP_Q_MAX = 256
@@ -12,7 +12,7 @@ MAP_Q_MAX = 256
 class Tree_4:
     def __init__(self, file_name):
         self.file_name = file_name
-        self.index = KdpsTree(file_name)
+        self.index = SparsePrefixSum_5D(file_name)
 
     def setup(self, data, bins, cache_size, threads):
         return self
@@ -21,9 +21,8 @@ class Tree_4:
         return self
 
     def count(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX):
-        ret = sum(v if mq >= map_q_min and mq < map_q_max else 0 for mq, v in enumerate(
-                                self.index.count(id, [int(rna_from), int(dna_from)], [int(rna_to), int(dna_to)])))
-        return ret
+        return self.index.count(id, [int(rna_from), int(dna_from), map_q_min, 0, 0], 
+                                    [int(rna_to), int(dna_to), map_q_max, 1, 1])
 
     def save(self):
         pass
@@ -45,7 +44,7 @@ class Tree_4:
 
 class Tree_3:
     def __init__(self, file_name):
-        self.index = PsArray(file_name + ".norm")
+        self.index = SparsePrefixSum_3D(file_name + ".norm")
         self.file_name = file_name
         self.root = {}
 
@@ -56,9 +55,7 @@ class Tree_3:
         return self
 
     def count(self, id, pos_from, pos_to, map_q_min=0, map_q_max=MAP_Q_MAX):
-        ret = sum(v if mq >= map_q_min and mq < map_q_max else 0 for mq, v in enumerate(
-                                    self.index.count(id, int(pos_from), int(pos_to))))
-        return ret
+        return self.index.count(id, [int(pos_from), map_q_min, 0], [int(pos_to), map_q_max, 1])
 
     def save(self):
         pass

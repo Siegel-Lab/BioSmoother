@@ -5,44 +5,36 @@ import pickle
 import sys
 import bisect
 from bokeh.models import AdaptiveTicker
-from libKdpsTree import *
 
 
 class MetaData:
-    def __init__(self, mapping_quality_layers):
+    def __init__(self):
         self.chr_sizes = None
-        self.datasets = []
+        self.datasets = {}
         self.data_id_by_path = {}
-        self.normalizations = []
+        self.normalizations = {}
         self.norm_id_by_path = {}
         self.annotations = {}
         self.info = ""
         self.norm = {}
-        assert len(mapping_quality_layers) == SETTINGS.NUM_LAYERS
-        self.mapping_quality_layers = mapping_quality_layers
 
-    def get_layer_for_mapping_q(self, layer):
-        ret = min(bisect.bisect_right(self.mapping_quality_layers, layer), len(self.mapping_quality_layers)-1)
-        #print(layer, "->", ret, self.mapping_quality_layers, type(layer), flush=True)
-        return ret
 
     def set_chr_sizes(self, chr_sizes):
         self.chr_sizes = chr_sizes
 
-    def add_dataset(self, name, path, group_a):
-        self.datasets.append([name, path, group_a])
-        self.data_id_by_path[path] = len(self.datasets)-1
-        return len(self.datasets)-1
+    def add_dataset(self, name, path, group_a, idx):
+        self.datasets[idx] = ([name, path, group_a])
+        self.data_id_by_path[path] = idx
 
-    def add_normalization(self, name, path, x_axis):
-        self.normalizations.append([name, path, x_axis, True])
-        self.norm_id_by_path[path] = len(self.normalizations)-1
-        return len(self.normalizations)-1
+    def add_normalization(self, name, path, x_axis, idx):
+        self.normalizations[idx] = ([name, path, x_axis, True])
+        self.norm_id_by_path[path] = idx
 
     def add_wig_normalization(self, name, path, x_axis, xs, ys):
-        self.normalizations.append([name, path, x_axis, 0, False])
-        self.norm_id_by_path[path] = len(self.normalizations)-1
-        self.norm[len(self.normalizations)-1] = Coverage().set_x_y(xs, ys)
+        idx = -len(self.normalizations)-1
+        self.normalizations[idx] = ([name, path, x_axis, 0, False])
+        self.norm_id_by_path[path] = idx
+        self.norm[idx] = Coverage().set_x_y(xs, ys)
 
     def add_annotations(self, annotation_list):
         starts = {}
@@ -114,18 +106,16 @@ class MetaData:
     def setup(self, main_layout):
         self.chr_sizes.setup(main_layout)
         
-        opt = [ (str(idx), data[0]) for idx, data in enumerate(self.datasets)]
+        opt = [ (str(idx), data[0]) for idx, data in self.datasets.items()]
         main_layout.group_a.options = opt
         main_layout.group_b.options = opt
-        main_layout.group_a.value = [ str(idx) for idx, data in enumerate(self.datasets) if data[2] in ["a", "both"] ]
-        main_layout.group_b.value = [ str(idx) for idx, data in enumerate(self.datasets) if data[2] in ["b", "both"] ]
-        opt = [ (str(idx), data[0]) for idx, data in enumerate(self.normalizations)]
+        main_layout.group_a.value = [ str(idx) for idx, data in self.datasets.items() if data[2] in ["a", "both"] ]
+        main_layout.group_b.value = [ str(idx) for idx, data in self.datasets.items() if data[2] in ["b", "both"] ]
+        opt = [ (str(idx), data[0]) for idx, data in self.normalizations.items()]
         main_layout.norm_x.options = opt
         main_layout.norm_y.options = opt
-        main_layout.norm_x.value = [ str(idx) for idx, data in enumerate(
-                                                                self.normalizations) if data[2] in ["row", "both"] ]
-        main_layout.norm_y.value = [ str(idx) for idx, data in enumerate(
-                                                                self.normalizations) if data[2] in ["col", "both"] ]
+        main_layout.norm_x.value = [ str(idx) for idx, data in self.normalizations.items() if data[2] in ["row", "both"] ]
+        main_layout.norm_y.value = [ str(idx) for idx, data in self.normalizations.items() if data[2] in ["col", "both"] ]
 
         opt = [(x, x) for x in self.annotations.keys()]
         main_layout.displayed_annos.options = opt
@@ -138,12 +128,4 @@ class MetaData:
             possible_coords.append((anno_names, anno_names))
         main_layout.x_coords_update(possible_coords)
         main_layout.y_coords_update(possible_coords)
-
-        
-        set_tick = FuncTickFormatter(
-            code="""return values[tick];""",
-            args={"values":self.mapping_quality_layers + [256]})
-        main_layout.mapq_slider.format = set_tick
-        main_layout.mapq_slider.end = len(self.mapping_quality_layers)
-        main_layout.mapq_slider.value = (0, len(self.mapping_quality_layers))
 

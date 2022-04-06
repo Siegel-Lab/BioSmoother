@@ -695,7 +695,7 @@ class MainLayout:
                 return Math.ceil((1 + tick % 9) * Math.pow(10, Math.floor(tick / 9)-3)) + "kbp";
             else
                 return Math.ceil((1 + tick % 9) * Math.pow(10, Math.floor(tick / 9))) + "bp"; """)
-        self.min_max_bin_size = RangeSlider(start=0, end=9*15, value=(9*2, 9*5), step=1, title="Bin Size Bounds [nt]",
+        self.min_max_bin_size = RangeSlider(start=0, end=9*15, value=(9*2, 9*6), step=1, title="Bin Size Bounds [nt]",
                                             format=power_tick)
         self.min_max_bin_size.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
