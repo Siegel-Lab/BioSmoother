@@ -1520,6 +1520,7 @@ class MainLayout:
 
                 @gen.coroutine
                 def callback():
+                    self.curdoc.hold()
                     def mmax(*args):
                         m = 0
                         for x in args:
@@ -1589,6 +1590,7 @@ class MainLayout:
                         self.anno_x_data.data = d_anno_x
                         self.anno_y_data.data = d_anno_y
                     self.do_export = None
+                    self.curdoc.unhold()
                     self.render_done(len(bins[0]))
                     self.curdoc.add_timeout_callback(
                         lambda: self.render_callback(), self.update_frequency_slider.value*1000)
@@ -1704,6 +1706,8 @@ class MainLayout:
     def set_root(self):
         self.curdoc.clear()
         self.curdoc.add_root(self.root)
+        self.curdoc.title = "Smoother"
         self.do_render = True
         self.force_render = True
+
         self.render_callback()

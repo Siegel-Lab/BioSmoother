@@ -80,7 +80,7 @@ button {
     width: 6px;
     height: 18px;
     border-radius: 40%;
-    background: rgb(0, 0, 0);
+    background: #000000;
   }  
   .lds-spinner div:nth-child(1) {
     transform: rotate(0deg);

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-srun --pty helper_serve_bokeh.sh
+srun  -p fat --pty helper_serve_bokeh.sh
