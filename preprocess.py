@@ -126,7 +126,7 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename):
 
 def add_replicate(out_prefix, path, name, group_a):
     meta = MetaData.load(out_prefix + ".meta")
-    index = SparsePrefixSum_5D(out_prefix, True)
+    index = DependantDimSparsePrefixSum_5D(out_prefix, True)
     cnt = 0
     last_cnt = len(index)
     file_size = int(subprocess.run(['wc', '-l', path], stdout=subprocess.PIPE).stdout.decode('utf-8').split(" ")[0])
@@ -140,8 +140,8 @@ def add_replicate(out_prefix, path, name, group_a):
         if not chr_2 in meta.chr_sizes.chr_sizes:
             continue
         map_q = min(mapq_1, mapq_2)
-        act_pos_1 = meta.chr_sizes.coordinate(pos_1, chr_1)
-        act_pos_2 = meta.chr_sizes.coordinate(pos_2, chr_2)
+        act_pos_1 = meta.chr_sizes.coordinate(pos_2, chr_2)
+        act_pos_2 = meta.chr_sizes.coordinate(pos_1, chr_1)
         index.add_point([act_pos_1, act_pos_2, map_q, 0, 0], read_name)
         cnt += 1
         if cnt > TEST_FAC and TEST:
