@@ -60,7 +60,7 @@ def simplified_filepath(path):
     x = path[path.rindex("/")+1:]
     return x[:x.index(".")]
 
-def parse_annotations(annotation_file, axis_start_pos_offset):
+def parse_annotations(annotation_file, axis_start_pos_offset, dividend):
     annos = []
 
     annotation_types = set()
@@ -74,12 +74,13 @@ def parse_annotations(annotation_file, axis_start_pos_offset):
             if not chrom in axis_start_pos_offset:
                 continue
             annotation_types.add(annotation_type)
-            annos.append((annotation_type, axis_start_pos_offset[chrom] + int(from_pos),
-                        int(to_pos) + axis_start_pos_offset[chrom], extras.replace(";", "\n")))
+            s = axis_start_pos_offset[chrom] + int(from_pos) // dividend
+            e = int(to_pos) // dividend + axis_start_pos_offset[chrom]
+            annos.append((annotation_type, s, max(s+1, e), extras.replace(";", "\n")))
     return annos
 
 
-def parse_wig_file(filename, chr_start_idx):
+def parse_wig_file(filename, chr_start_idx, dividend):
     with open(filename, "r") as in_file_1:
         curr_chr = None
         xs = [0]
@@ -105,7 +106,7 @@ def parse_wig_file(filename, chr_start_idx):
                     ys.append(0)
             elif curr_chr in chr_start_idx:
                 a, b = line[:-1].split(" ")
-                xs.append(int(a) + chr_start_idx[curr_chr])
+                xs.append(int(a) // dividend + chr_start_idx[curr_chr])
                 ys.append(float(b))
         xs.append(chr_start_idx['end'])
         ys.append(0)
@@ -114,12 +115,12 @@ def parse_wig_file(filename, chr_start_idx):
 TEST = True
 TEST_FAC = 100000
 
-def make_meta(out_prefix, chr_len_file_name, annotation_filename):
-    meta = MetaData()
-    meta.set_chr_sizes(ChrSizes(chr_len_file_name, filter=lambda x: ("Chr10_" in x) or not TEST))
+def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend):
+    meta = MetaData(dividend)
+    meta.set_chr_sizes(ChrSizes(chr_len_file_name, dividend, filter=lambda x: ("Chr10_" in x) or not TEST))
 
     if not annotation_filename is None:
-        meta.add_annotations(parse_annotations(annotation_filename, meta.chr_sizes.chr_start_pos))
+        meta.add_annotations(parse_annotations(annotation_filename, meta.chr_sizes.chr_start_pos, dividend))
 
     meta.save(out_prefix + ".meta")
 
@@ -140,8 +141,8 @@ def add_replicate(out_prefix, path, name, group_a):
         if not chr_2 in meta.chr_sizes.chr_sizes:
             continue
         map_q = min(mapq_1, mapq_2)
-        act_pos_1 = meta.chr_sizes.coordinate(pos_2, chr_2)
-        act_pos_2 = meta.chr_sizes.coordinate(pos_1, chr_1)
+        act_pos_1 = meta.chr_sizes.coordinate(int(pos_2) // meta.dividend, chr_2)
+        act_pos_2 = meta.chr_sizes.coordinate(int(pos_1) // meta.dividend, chr_1)
         index.add_point([act_pos_1, act_pos_2, map_q, 0, 0], read_name)
         cnt += 1
         if cnt > TEST_FAC and TEST:
@@ -158,7 +159,7 @@ def add_normalization(out_prefix, path, name, for_row):
     file_size = int(subprocess.run(['samtools', 'view', '-c', path], stdout=subprocess.PIPE).stdout.decode('utf-8'))
     file_name = simplified_filepath(path)
     if path[-4:] == ".wig":
-        for xs, ys, n in parse_wig_file(path, meta.chr_sizes.chr_start_pos):
+        for xs, ys, n in parse_wig_file(path, meta.chr_sizes.chr_start_pos, meta.dividend):
             meta.add_wig_normalization(name + ": " + n, path, for_row, xs, ys)
     else:
         cnt = 0
@@ -168,7 +169,7 @@ def add_normalization(out_prefix, path, name, for_row):
                       100*(idx_2+1)/file_size, "%", end="\033[K\r")
             if not chrom in meta.chr_sizes.chr_sizes:
                 continue
-            act_pos = meta.chr_sizes.coordinate(pos, chrom)
+            act_pos = meta.chr_sizes.coordinate(int(pos) // meta.dividend, chrom)
             index.add_point([act_pos, map_q, 0], read_name)
             cnt += 1
             if cnt > TEST_FAC and TEST:
@@ -180,7 +181,7 @@ def add_normalization(out_prefix, path, name, for_row):
 
 
 def init(args):
-    make_meta(args.index_prefix, args.chr_len, args.annotations)
+    make_meta(args.index_prefix, args.chr_len, args.annotations, args.dividend)
 
 def repl(args):
     add_replicate(args.index_prefix, args.path, args.name, args.group)
@@ -217,6 +218,7 @@ if __name__ == "__main__":
     init_parser = sub_parsers.add_parser("init")
     init_parser.add_argument('index_prefix')
     init_parser.add_argument('chr_len')
+    init_parser.add_argument('-d', '--dividend',  type=int, default=1)
     init_parser.add_argument('-a', '--annotations', metavar="PATH", default=None)
     init_parser.set_defaults(func=init)
 

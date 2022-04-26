@@ -1272,7 +1272,7 @@ class MainLayout:
                         n += 1
                 def comp_bin_size(idx):
                     t = self.min_max_bin_size.value[idx]
-                    return math.ceil((1 + t % 9) * 10**(t // 9))
+                    return max(1, math.ceil((1 + t % 9) * 10**(t // 9)) // self.meta.dividend)
                 if self.square_bins_d == "view":
                     h_bin = power_of_ten( (area[2] - area[0]) / math.sqrt(self.num_bins.value) )
                     h_bin = min(max(h_bin, comp_bin_size(0), 1), comp_bin_size(1))

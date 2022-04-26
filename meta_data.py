@@ -8,7 +8,7 @@ from bokeh.models import AdaptiveTicker
 
 
 class MetaData:
-    def __init__(self):
+    def __init__(self, dividend):
         self.chr_sizes = None
         self.datasets = {}
         self.data_id_by_path = {}
@@ -17,6 +17,7 @@ class MetaData:
         self.annotations = {}
         self.info = ""
         self.norm = {}
+        self.dividend = dividend
 
 
     def set_chr_sizes(self, chr_sizes):

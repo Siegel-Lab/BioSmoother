@@ -60,7 +60,7 @@ class ChrSizes:
             s = sn
         return s
 
-    def __init__(self, file_name, filter=lambda x: True):
+    def __init__(self, file_name, dividend, filter=lambda x: True):
         # load the exact chr lenghts from file
         self.chr_order = []
         self.chr_sizes = {}
@@ -70,8 +70,8 @@ class ChrSizes:
                 chr_name, chr_len = line.split("\t")
                 if filter(chr_name):
                     self.chr_order.append(chr_name)
-                    self.chr_sizes[chr_name] = int(chr_len)
-                    self.chr_sizes_l.append(int(chr_len))
+                    self.chr_sizes[chr_name] = max(1, int(chr_len) // dividend)
+                    self.chr_sizes_l.append(max(1, int(chr_len) // dividend))
                 else:
                     print("filtered out", chr_name)
 
@@ -92,10 +92,11 @@ class ChrSizes:
     def coordinate(self, x, chr):
         return self.chr_start_pos[chr] + x
 
-    def get_formatter(self):
+    def get_formatter(self, dividend):
         return FuncTickFormatter(
             args={"contig_starts": [self.chr_start_pos[chr_x] for chr_x in self.chr_order],
                   "genome_end": self.chr_start_pos["end"],
+                  "dividend": dividend,
                   "contig_names": [x[:-len(self.lcs)] for x in self.chr_order]},
             code="""
                             if(tick < 0 || tick >= genome_end)
@@ -103,7 +104,7 @@ class ChrSizes:
                             var idx = 0;
                             while(contig_starts[idx + 1] <= tick)
                                 idx += 1;
-                            return contig_names[idx] + ": " + (tick - contig_starts[idx]);
+                            return contig_names[idx] + ": " + dividend * (tick - contig_starts[idx]);
                         """)
 
     def setup_coordinates(self, main_layout, show_grid_lines, x_coords_d, y_coords_d):
@@ -118,7 +119,7 @@ class ChrSizes:
             main_layout.heatmap.y_range.reset_start = 0
             main_layout.heatmap.y_range.reset_end = self.chr_start_pos["end"]
         
-        formater = self.get_formatter()
+        formater = self.get_formatter(main_layout.meta.dividend)
         main_layout.heatmap_y_axis.yaxis[0].formatter = formater
         main_layout.heatmap_x_axis.xaxis[0].formatter = formater
 
