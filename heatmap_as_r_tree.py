@@ -12,7 +12,7 @@ MAP_Q_MAX = 256
 class Tree_4:
     def __init__(self, file_name):
         self.file_name = file_name
-        self.index = DependantDimSparsePrefixSum_5D(file_name)
+        self.index = CachedDependantDimPrefixSum_5D(file_name)
 
     def setup(self, data, bins, cache_size, threads):
         return self
@@ -47,7 +47,7 @@ class Tree_4:
 
 class Tree_3:
     def __init__(self, file_name):
-        self.index = SparsePrefixSum_3D(file_name + ".norm")
+        self.index = CachedPrefixSum_3D(file_name + ".norm")
         self.file_name = file_name
         self.root = {}
 

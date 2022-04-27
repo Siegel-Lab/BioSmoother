@@ -1,0 +1,6 @@
+.id_smoother_rsa
+.id_smoother_rsa.pub
+__pycache__/
+playing-around.css
+slurm_*
+*.so

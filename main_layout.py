@@ -6,6 +6,7 @@ from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
 from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, MultiChoice, FuncTickFormatter, Div, HoverTool, Toggle, Box
+from bokeh.io import export_png, export_svg
 import math
 from datetime import datetime
 from tornado import gen
@@ -544,9 +545,9 @@ class MainLayout:
             self.betw_group_d = e
             self.trigger_render()
         self.betw_group = self.dropdown_select("Between Group", betw_group_event,
-                                               ("Sum", "sum"), ("Show First Group", "1st"), (
-                                                   "Show Second Group", "2nd"), ("Substract", "sub"),
-                                               ("Difference", "dif"), ("Minimum", "min"), ("Maximum", "max"))
+                                               ("Sum", "sum"), ("Show First Group [a]", "1st"), (
+                                                   "Show Second Group [b]", "2nd"), ("Substract [a-b]", "sub"),
+                                               ("Difference [|a-b|]", "dif"), ("Minimum [min(a,b)]", "min"), ("Maximum [max(a,b)]", "max"))
 
         self.symmetrie_d = "all"
 
@@ -583,13 +584,13 @@ class MainLayout:
                                                   ("Squared relative to coordinates",
                                                    "coord")
                                                    )
-        self.power_ten_bin_d = "no"
+        self.power_ten_bin_d = "p10"
         def power_ten_bin_event(e):
             self.power_ten_bin_d = e
             self.trigger_render()
         power_ten_bin = self.dropdown_select("Snap Bin Size", power_ten_bin_event,
-                                                ("Do not snap", "no"),
-                                                ("To Even Power of Ten", "p10")
+                                                ("To Even Power of Ten", "p10"),
+                                                ("Do not snap", "no")
                                                   )
 
         def stretch_event(e):
@@ -671,6 +672,12 @@ class MainLayout:
         self.num_bins = Slider(width=SETTINGS_WIDTH, start=1000, end=100000, value=10000, step=1000,
                                title="Number of Bins", sizing_mode="stretch_width")
         self.num_bins.on_change(
+            "value_throttled", lambda x, y, z: self.trigger_render())
+
+            
+        self.radical_seq_accept = Slider(width=SETTINGS_WIDTH, start=0.01, end=0.1, value=0.05, step=0.01,
+                               title="pAccept for binominal test", sizing_mode="stretch_width")
+        self.radical_seq_accept.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
             
         meta_file_label = Div(text="Data path:")
@@ -759,6 +766,28 @@ class MainLayout:
             ("row_sum", "Row Sum")
         ]
         self.export_sele.value = ["heatmap"]
+    
+        self.export_type, export_type_layout = self.multi_choice("Export Type")
+        self.export_type.options = [
+            ("data", "Data"),
+            #("svg", "SVG-Picture"), # cannot find non buggy selenium version
+            #("png", "PNG-Picture")
+        ]
+        self.export_type.value = ["data"]
+
+        
+        grid_seq_config = Button(label="Grid Seq-like @todo", sizing_mode="stretch_width", css_classes=["other_button"])
+        def grid_seq_event(e):
+            # @todo 
+            self.normalization_d = "column"
+            self.trigger_render()
+        grid_seq_config.on_click(grid_seq_event)
+        radicl_seq_config = Button(label="Radicl Seq-like", sizing_mode="stretch_width", css_classes=["other_button"])
+        def radicl_seq_event(e):
+            self.normalization_d = "radicl-seq" # @todo also update menu
+            self.betw_group_d = "max"
+            self.trigger_render()
+        radicl_seq_config.on_click(radicl_seq_event)
 
         def make_panel(title, children):
             t = Toggle(active=title == "General", button_type="light", css_classes=["menu_group"])
@@ -788,7 +817,7 @@ class MainLayout:
                 make_panel("General", [tool_bar, meta_file_label, self.meta_file, show_hide,
                                     self.min_max_bin_size]),
                 make_panel("Normalization", [self.normalization, self.mapq_slider, self.interactions_bounds_slider,
-                                    self.interactions_slider, norm_x_layout, norm_y_layout]),
+                                    self.interactions_slider, norm_x_layout, norm_y_layout, self.radical_seq_accept]),
                 make_panel("Replicates", [self.in_group, self.betw_group, group_a_layout, group_b_layout]),
                 make_panel("Interface", [self.num_bins, self.update_frequency_slider, self.redraw_slider,
                                     self.add_area_slider,
@@ -798,7 +827,10 @@ class MainLayout:
                                           displayed_annos_layout, filtered_annos_x_layout,
                                           filtered_annos_y_layout,
                                           x_coords, y_coords, multiple_anno_per_bin, chrom_x_layout, chrom_y_layout]),
-                make_panel("Export", [export_label, self.export_file, export_sele_layout, self.export_button]),
+                make_panel("Export", [export_label, self.export_file, export_sele_layout, 
+                                        #export_type_layout, 
+                                      self.export_button]),
+                make_panel("Quick Config", [grid_seq_config, radicl_seq_config]),
             ],
             sizing_mode="stretch_both",
             css_classes=["scroll_y"]
@@ -1035,7 +1067,8 @@ class MainLayout:
                 for idx_2 in range(len(rows)):
                     row = bins[idx_2::len(rows)]
                     for idx_3, v in enumerate(radicl_seq_norm(row, ns[idx][idx_2], w_bin, 
-                                                   self.meta.chr_sizes.chr_start_pos["end"])):
+                                                   self.meta.chr_sizes.chr_start_pos["end"],
+                                                   self.radical_seq_accept.value)):
                         ret[-1][idx_2 + idx_3 * len(rows)] = v
             elif self.normalization_d in ["tracks_abs", "tracks_rel"]:
                 n = self.read_norm(idx)
@@ -1542,7 +1575,7 @@ class MainLayout:
                             self.anno_y.y_range.factors = self.displayed_annos.value
 
                     def readable_display(l):
-                        exp = int(math.log10(l)-1)
+                        exp = max(1, int(math.log10(l)-1))
                         x = max(1, int(l / (10**exp)))
                         if exp >= 7:
                             return str(x) + "*10^" + str(exp) + "bp"
@@ -1596,21 +1629,29 @@ class MainLayout:
                         lambda: self.render_callback(), self.update_frequency_slider.value*1000)
 
                 if not self.do_export is None:
-                    if "heatmap" in self.export_sele.value:
-                        with open(self.export_file.value + ".heatmap.bed", "w") as out_file:
-                            for c, (x_chr_, x_2_, y_chr_, y_2_) in zip(self.color_bins_a(sym), bin_coords_2):
-                                out_file.write("\t".join([x_chr_, str(int(x_2_)), y_chr_, str(int(y_2_)), 
-                                                          str(c)]) + "\n")
-                    if "col_sum" in self.export_sele.value:
-                        with open(self.export_file.value + ".columns.bed", "w") as out_file:
-                            for c, x_chr_, x_2_, x_ in zip(raw_y_ratio, y_chr, y_pos1, y_pos):
-                                if not x_ is float('NaN'):
-                                    out_file.write("\t".join([x_chr_, str(int(x_2_)), str(c)]) + "\n")
-                    if "row_sum" in self.export_sele.value:
-                        with open(self.export_file.value + ".rows.bed", "w") as out_file:
-                            for c, x_chr_, x_2_, x_ in zip(raw_x_ratio, x_chr, x_pos1, x_pos):
-                                if not x_ is float('NaN'):
-                                    out_file.write("\t".join([x_chr_, str(int(x_2_)), str(c)]) + "\n")
+                    if "data" in self.export_type.value:
+                        if "heatmap" in self.export_sele.value:
+                            with open(self.export_file.value + ".heatmap.bed", "w") as out_file:
+                                for c, (x_chr_, x_2_, y_chr_, y_2_) in zip(self.color_bins_a(sym), bin_coords_2):
+                                    out_file.write("\t".join([x_chr_, str(int(x_2_)), y_chr_, str(int(y_2_)), 
+                                                            str(c)]) + "\n")
+                        if "col_sum" in self.export_sele.value:
+                            with open(self.export_file.value + ".columns.bed", "w") as out_file:
+                                for c, x_chr_, x_2_, x_ in zip(raw_y_ratio, y_chr, y_pos1, y_pos):
+                                    if not x_ is float('NaN'):
+                                        out_file.write("\t".join([x_chr_, str(int(x_2_)), str(c)]) + "\n")
+                        if "row_sum" in self.export_sele.value:
+                            with open(self.export_file.value + ".rows.bed", "w") as out_file:
+                                for c, x_chr_, x_2_, x_ in zip(raw_x_ratio, x_chr, x_pos1, x_pos):
+                                    if not x_ is float('NaN'):
+                                        out_file.write("\t".join([x_chr_, str(int(x_2_)), str(c)]) + "\n")
+                    if "png" in self.export_type.value:
+                        export_png(self.heatmap, filename=self.export_file.value + ".heatmap.png")
+                    if "svg" in self.export_type.value:
+                        bckup = self.heatmap.output_backend
+                        self.heatmap.output_backend = "svg"
+                        export_svg(self.heatmap, filename=self.export_file.value + ".heatmap.svg")
+                        self.heatmap.output_backend = bckup
 
                 self.curdoc.add_next_tick_callback(callback)
                 return True

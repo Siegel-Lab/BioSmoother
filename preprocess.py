@@ -112,7 +112,7 @@ def parse_wig_file(filename, chr_start_idx, dividend):
         ys.append(0)
         yield xs, ys, track
 
-TEST = True
+TEST = False
 TEST_FAC = 100000
 
 def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend):
@@ -127,7 +127,7 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend):
 
 def add_replicate(out_prefix, path, name, group_a):
     meta = MetaData.load(out_prefix + ".meta")
-    index = DependantDimSparsePrefixSum_5D(out_prefix, True)
+    index = CachedDependantDimPrefixSum_5D(out_prefix, True)
     cnt = 0
     last_cnt = len(index)
     file_size = int(subprocess.run(['wc', '-l', path], stdout=subprocess.PIPE).stdout.decode('utf-8').split(" ")[0])
@@ -154,7 +154,7 @@ def add_replicate(out_prefix, path, name, group_a):
 
 def add_normalization(out_prefix, path, name, for_row):
     meta = MetaData.load(out_prefix + ".meta")
-    index = SparsePrefixSum_3D(out_prefix + ".norm", True)
+    index = CachedPrefixSum_3D(out_prefix + ".norm", True)
     last_cnt = len(index)
     file_size = int(subprocess.run(['samtools', 'view', '-c', path], stdout=subprocess.PIPE).stdout.decode('utf-8'))
     file_name = simplified_filepath(path)
