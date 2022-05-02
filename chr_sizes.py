@@ -108,20 +108,20 @@ class ChrSizes:
                         """)
 
     def setup_coordinates(self, main_layout, show_grid_lines, x_coords_d, y_coords_d):
+        formater = self.get_formatter(main_layout.meta.dividend)
         if x_coords_d == "full_genome":
             main_layout.heatmap.x_range.start = 0
             main_layout.heatmap.x_range.end = self.chr_start_pos["end"]
             main_layout.heatmap.x_range.reset_start = 0
             main_layout.heatmap.x_range.reset_end = self.chr_start_pos["end"]
+            main_layout.heatmap_x_axis.xaxis[0].formatter = formater
         if y_coords_d == "full_genome":
             main_layout.heatmap.y_range.start = 0
             main_layout.heatmap.y_range.end = self.chr_start_pos["end"]
             main_layout.heatmap.y_range.reset_start = 0
             main_layout.heatmap.y_range.reset_end = self.chr_start_pos["end"]
+            main_layout.heatmap_y_axis.yaxis[0].formatter = formater
         
-        formater = self.get_formatter(main_layout.meta.dividend)
-        main_layout.heatmap_y_axis.yaxis[0].formatter = formater
-        main_layout.heatmap_x_axis.xaxis[0].formatter = formater
 
         ticker_border = ExtraTicksTicker(
             extra_ticks=[self.chr_start_pos[chr_x]

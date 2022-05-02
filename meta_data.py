@@ -5,6 +5,7 @@ import pickle
 import sys
 import bisect
 from bokeh.models import AdaptiveTicker
+from bokeh.models import FuncTickFormatter
 
 
 class MetaData:
@@ -65,6 +66,23 @@ class MetaData:
 
     def norm_via_tree(self, idx):
         return self.normalizations[idx][3]
+    
+    
+    def get_formatter(self, l):
+        ll = []
+        idx = 0
+        for x, _, _ in l:
+            while idx + 1 < len(self.chr_sizes.chr_starts) and x > self.chr_sizes.chr_starts[idx + 1]:
+                idx += 1
+            ll.append(self.chr_sizes.chr_order[idx][:-len(self.chr_sizes.lcs)] 
+                        + ": " + str(x - self.chr_sizes.chr_starts[idx]))
+        return FuncTickFormatter(
+            args={"l": ll},
+            code="""
+                if(tick < 0 || tick >= l.length)
+                    return "n/a";
+                return l[tick];
+            """)
 
     def setup_coordinates(self, main_layout, show_grid_lines, x_coords_d, y_coords_d):
         ticker_border = AdaptiveTicker(desired_num_ticks=3)
@@ -86,6 +104,7 @@ class MetaData:
                 plot.xaxis.bounds = (0, self.annotations[x_coords_d].num_reads)
                 plot.xaxis.major_label_text_align = "left"
                 plot.xaxis.ticker.min_interval = 1
+            main_layout.heatmap_x_axis.xaxis[0].formatter = self.get_formatter(self.annotations[x_coords_d].sorted)
         if y_coords_d != "full_genome":
             main_layout.heatmap.y_range.start = 0
             main_layout.heatmap.y_range.end = self.annotations[y_coords_d].num_reads
@@ -102,6 +121,7 @@ class MetaData:
                 plot.yaxis.bounds = (0, self.annotations[y_coords_d].num_reads)
                 plot.yaxis.major_label_text_align = "right"
                 plot.yaxis.ticker.min_interval = 1
+            main_layout.heatmap_y_axis.yaxis[0].formatter = self.get_formatter(self.annotations[y_coords_d].sorted)
         self.chr_sizes.setup_coordinates(main_layout, show_grid_lines, x_coords_d, y_coords_d)
 
     def setup(self, main_layout):

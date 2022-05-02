@@ -12,7 +12,7 @@ from datetime import datetime
 from tornado import gen
 from bokeh.document import without_document_lock
 from bokeh.models import Panel, Tabs, Spacer
-from bokeh.models import Range1d
+from bokeh.models import Range1d, ColorBar, ContinuousColorMapper
 from meta_data import *
 import os
 from heatmap_as_r_tree import *
@@ -536,8 +536,10 @@ class MainLayout:
         def in_group_event(e):
             self.in_group_d = e
             self.trigger_render()
-        self.in_group = self.dropdown_select("In Group", in_group_event, ("Sum", "sum"), ("Minimium", "min"),
-                                             ("Difference", "dif"))
+        self.in_group = self.dropdown_select("In Group", in_group_event, 
+                                             ("Sum [a+b+c+...]", "sum"), 
+                                             ("Minimium [min(a,b,c,...)]", "min"),
+                                             ("Difference [|a-b|+|a-c|+|b-c|+...]", "dif"))
 
         self.betw_group_d = "sum"
 
@@ -545,7 +547,7 @@ class MainLayout:
             self.betw_group_d = e
             self.trigger_render()
         self.betw_group = self.dropdown_select("Between Group", betw_group_event,
-                                               ("Sum", "sum"), ("Show First Group [a]", "1st"), (
+                                               ("Sum [a+b]", "sum"), ("Show First Group [a]", "1st"), (
                                                    "Show Second Group [b]", "2nd"), ("Substract [a-b]", "sub"),
                                                ("Difference [|a-b|]", "dif"), ("Minimum [min(a,b)]", "min"), ("Maximum [max(a,b)]", "max"))
 
@@ -555,7 +557,9 @@ class MainLayout:
             self.symmetrie_d = e
             self.trigger_render()
         self.symmetrie = self.dropdown_select("Symmetry", symmetrie_event,
-                                              ("Show All", "all"), ("Only Show Symmetric", "sym"), ("Only Show Asymmetric", "asym"))
+                                              ("Show All Interactions", "all"), 
+                                              ("Only Show Symmetric Interactions", "sym"), 
+                                              ("Only Show Asymmetric Interactions", "asym"))
 
         self.normalization_d = "max_bin_visible"
 
@@ -816,7 +820,8 @@ class MainLayout:
         _settings = column([
                 make_panel("General", [tool_bar, meta_file_label, self.meta_file, show_hide,
                                     self.min_max_bin_size]),
-                make_panel("Normalization", [self.normalization, self.mapq_slider, self.interactions_bounds_slider,
+                make_panel("Normalization", [self.normalization, self.mapq_slider,
+                                    self.interactions_bounds_slider,
                                     self.interactions_slider, norm_x_layout, norm_y_layout, self.radical_seq_accept]),
                 make_panel("Replicates", [self.in_group, self.betw_group, group_a_layout, group_b_layout]),
                 make_panel("Interface", [self.num_bins, self.update_frequency_slider, self.redraw_slider,
