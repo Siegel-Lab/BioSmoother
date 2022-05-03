@@ -4,16 +4,19 @@ os.environ["STXXLERRLOGFILE"] = "/dev/null"
 
 from libSps import *
 
+
 H = 0.5
 MAP_Q_MAX = 256
 
 
 
 class Tree_4:
-    def __init__(self, file_name):
-        self.file_name = file_name
-        #self.index = CachedDependantDimPrefixSum_5D(file_name)
-        self.index = DiskDependantDimPrefixSum_5D(file_name)
+    def __init__(self, file_name, cached=False):
+        self.file_name = file_name        
+        if cached:
+            self.index = CachedDependantDimPrefixSum_5D(file_name)
+        else:
+            self.index = DiskDependantDimPrefixSum_5D(file_name)
 
     def setup(self, data, bins, cache_size, threads):
         return self
@@ -47,9 +50,11 @@ class Tree_4:
 
 
 class Tree_3:
-    def __init__(self, file_name):
-        #self.index = CachedPrefixSum_3D(file_name + ".norm")
-        self.index = DiskPrefixSum_3D(file_name + ".norm")
+    def __init__(self, file_name, cached=False):
+        if cached:
+            self.index = CachedPrefixSum_3D(file_name + ".norm")
+        else:
+            self.index = DiskPrefixSum_3D(file_name + ".norm")
         self.file_name = file_name
         self.root = {}
 

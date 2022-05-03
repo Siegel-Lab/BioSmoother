@@ -112,12 +112,11 @@ def parse_wig_file(filename, chr_start_idx, dividend):
         ys.append(0)
         yield xs, ys, track
 
-TEST = False
 TEST_FAC = 100000
 
-def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend):
+def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test=False):
     meta = MetaData(dividend)
-    meta.set_chr_sizes(ChrSizes(chr_len_file_name, dividend, filter=lambda x: ("Chr10_" in x) or not TEST))
+    meta.set_chr_sizes(ChrSizes(chr_len_file_name, dividend, filter=lambda x: ("Chr10_" in x) or not test))
 
     if not annotation_filename is None:
         meta.add_annotations(parse_annotations(annotation_filename, meta.chr_sizes.chr_start_pos, dividend))
@@ -125,10 +124,12 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend):
     meta.save(out_prefix + ".meta")
 
 
-def add_replicate(out_prefix, path, name, group_a):
+def add_replicate(out_prefix, path, name, group_a, test=False, cached=False):
     meta = MetaData.load(out_prefix + ".meta")
-    index = CachedDependantDimPrefixSum_5D(out_prefix, True)
-    #index = RamDependantDimPrefixSum_5D(out_prefix, True)
+    if cached:
+        index = CachedDependantDimPrefixSum_5D(out_prefix, True)
+    else:
+        index = DiskDependantDimPrefixSum_5D(out_prefix, True)
     cnt = 0
     last_cnt = len(index)
     file_size = int(subprocess.run(['wc', '-l', path], stdout=subprocess.PIPE).stdout.decode('utf-8').split(" ")[0])
@@ -146,17 +147,19 @@ def add_replicate(out_prefix, path, name, group_a):
         act_pos_2 = meta.chr_sizes.coordinate(int(pos_1) // meta.dividend, chr_1)
         index.add_point([act_pos_1, act_pos_2, map_q, 0, 0], read_name)
         cnt += 1
-        if cnt > TEST_FAC and TEST:
+        if cnt > TEST_FAC and test:
             break
     print("generating index")
     idx = index.generate(last_cnt, cnt + last_cnt)
     meta.add_dataset(name, path, group_a, idx)
     meta.save(out_prefix + ".meta")
 
-def add_normalization(out_prefix, path, name, for_row):
+def add_normalization(out_prefix, path, name, for_row, test=False, cached=False):
     meta = MetaData.load(out_prefix + ".meta")
-    index = CachedPrefixSum_3D(out_prefix + ".norm", True)
-    #index = RamPrefixSum_3D(out_prefix + ".norm", True)
+    if cached:
+        index = CachedPrefixSum_3D(out_prefix + ".norm", True)
+    else:
+        index = DiskPrefixSum_3D(out_prefix + ".norm", True)
     last_cnt = len(index)
     file_size = int(subprocess.run(['samtools', 'view', '-c', path], stdout=subprocess.PIPE).stdout.decode('utf-8'))
     file_name = simplified_filepath(path)
@@ -174,7 +177,7 @@ def add_normalization(out_prefix, path, name, for_row):
             act_pos = meta.chr_sizes.coordinate(int(pos) // meta.dividend, chrom)
             index.add_point([act_pos, map_q, 0], read_name)
             cnt += 1
-            if cnt > TEST_FAC and TEST:
+            if cnt > TEST_FAC and test:
                 break
         print("generating index")
         idx = index.generate(last_cnt, cnt + last_cnt)
@@ -183,17 +186,17 @@ def add_normalization(out_prefix, path, name, for_row):
 
 
 def init(args):
-    make_meta(args.index_prefix, args.chr_len, args.annotations, args.dividend)
+    make_meta(args.index_prefix, args.chr_len, args.annotations, args.dividend, args.test)
 
 def repl(args):
-    add_replicate(args.index_prefix, args.path, args.name, args.group)
+    add_replicate(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached)
 
 def norm(args):
-    add_normalization(args.index_prefix, args.path, args.name, args.group)
+    add_normalization(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached)
 
 def grid_seq_norm(args):
     meta = MetaData.load(args.index_prefix + ".meta")
-    index = Tree_4(args.index_prefix)
+    index = Tree_4(args.index_prefix, not args.uncached)
     datasets = args.datasets
     if datasets is None or len(datasets) == 0:
         datasets = list(range(len(meta.datasets)))
@@ -213,6 +216,10 @@ def grid_seq_norm(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+
+    ## deebugging arguments
+    parser.add_argument('--test', help=argparse.SUPPRESS, action='store_true')
+    parser.add_argument('--uncached', help=argparse.SUPPRESS, action='store_true')
 
     sub_parsers = parser.add_subparsers(help='sub-command', dest="cmd")
     sub_parsers.required=True
@@ -257,5 +264,6 @@ if __name__ == "__main__":
     grid_seq_norm_parser.set_defaults(func=grid_seq_norm)
 
     args = parser.parse_args()
+
     args.func(args)
 
