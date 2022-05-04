@@ -857,7 +857,7 @@ class MainLayout:
         
 
         FigureMaker._hidable_plots.append((_settings_n_info, ["tools"]))
-        self.settings = row([_settings_n_info, FigureMaker.reshow_settings()], css_classes=["full_height"])
+        self.settings = row([Spacer(sizing_mode="stretch_both"), _settings_n_info, FigureMaker.reshow_settings()], css_classes=["full_height"])
         self.settings.height = 100
         self.settings.min_height = 100
         self.settings.height_policy = "fixed"

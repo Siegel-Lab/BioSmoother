@@ -2,13 +2,10 @@
 
 ## Coding
 
-PRIORITY: (low to high effort)
 - does radicl sec do normalization for rna?
 - uneven distribution between contigs in grid seq normalization
 - hi-c normalization
 - try removing sparse coords for overlay count-entires
-
-LOW - PRIORITY:
 - write down normalizations
 - keep reads that map only to one bin
 - grid seq norm progress print
@@ -24,4 +21,4 @@ LOW - PRIORITY:
 ## Other
 
 - libSps documentation & code cleanup
-
+- add Claudia's data (send instructions)

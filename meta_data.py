@@ -24,8 +24,8 @@ class MetaData:
     def set_chr_sizes(self, chr_sizes):
         self.chr_sizes = chr_sizes
 
-    def add_dataset(self, name, path, group_a, idx):
-        self.datasets[idx] = ([name, path, group_a])
+    def add_dataset(self, name, path, group_a, idx, idx_end=None):
+        self.datasets[idx] = ([name, path, group_a, idx_end])
         self.data_id_by_path[path] = idx
 
     def add_normalization(self, name, path, x_axis, idx):

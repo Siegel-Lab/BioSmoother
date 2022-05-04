@@ -30,6 +30,15 @@ Bulk of the manual
 
 ## Importing Data
 
+### Preprocessing Data (_Anna_)
+
+generating the chromosome lengths file
+annotation file
+bed & wig files
+input formats
+output all alignments
+provide some sample files
+
 ### Create Index (_Anna_)
 
 creating an empty index
@@ -90,7 +99,11 @@ getting the current development version
 
 ## The Datastructure (_Markus_)
 
+link to datastructure github
+
 ### Brief Algorithmic Description
+
+### Fileformat specification
 
 ### Implementation Details
 

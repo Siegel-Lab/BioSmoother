@@ -1,7 +1,4 @@
 import os
-os.environ["STXXLLOGFILE"] = "/dev/null"
-os.environ["STXXLERRLOGFILE"] = "/dev/null"
-
 import argparse
 from meta_data import *
 from chr_sizes import *
@@ -25,13 +22,42 @@ def parse_heatmap(in_filename):
             # parse file columns
             read_name, strnd_1, chr_1, pos_1, _, strnd_2, chr_2, pos_2, _2, mapq_1, mapq_2 = line.split()
             # convert number values to ints
-            pos_1, pos_2, mapq_1, mapq_2 = (
-                int(x) for x in (pos_1, pos_2, mapq_1, mapq_2))
+            pos_1, pos_2, mapq_1, mapq_2 = (int(x) for x in (pos_1, pos_2, mapq_1, mapq_2))
             pos_1 -= 1
             pos_2 -= 1
 
             yield read_name, strnd_1, chr_1, int(pos_1), strnd_2, chr_2, int(pos_2), mapq_1, mapq_2
 
+def group_heatmap(in_filename, file_size):
+    file_name = simplified_filepath(in_filename)
+    groups = {}
+    for idx_2, (read_name, _, chr_1, pos_1, _, chr_2, pos_2, mapq_1, mapq_2) in enumerate(parse_heatmap(in_filename)):
+        map_q = min(mapq_1, mapq_2)
+        if not read_name in groups:
+            groups[read_name] = []
+        groups[read_name].append((chr_1, int(pos_1), chr_2, int(pos_2), int(map_q)))
+        
+        if idx_2 % PRINT_MODULO == 0:
+            print("loading file", file_name, ", line", idx_2+1, "of", file_size, "=", 
+                    100*(idx_2+1)/file_size, "%", end="\033[K\r")
+
+    for idx, (read_name, group) in enumerate(groups.items()):
+        if idx % PRINT_MODULO == 0:
+            print("processing ", file_name, ", read", idx+1, "of", len(groups), "=", 
+                    100*(idx+1)/len(groups), "%", end="\033[K\r")
+        chr_1 = group[0][0]
+        chr_2 = group[0][2]
+        for g_chr_1, _, g_chr_2, _, _ in group:
+            if g_chr_1 != chr_1:
+                continue # no reads that come from different chromosomes
+            if g_chr_2 != chr_2:
+                continue # no reads that come from different chromosomes
+        pos_1_s = min([g[1] for g in group])
+        pos_2_s = min([g[3] for g in group])
+        pos_1_e = max([g[1] for g in group])
+        pos_2_e = max([g[3] for g in group])
+        map_q = max([g[4] for g in group])
+        yield read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q
 
 def execute(cmd):
     popen = subprocess.Popen(
@@ -55,6 +81,30 @@ def parse_norm_file(filename):
 
         read_name, flag, chrom, start_pos, map_q, *other = split
         yield read_name, chrom, int(start_pos), int(map_q)
+
+def group_norm_file(in_filename, file_size):
+    file_name = simplified_filepath(in_filename)
+    groups = {}
+    for idx_2, (read_name, chrom, pos, map_q) in enumerate(parse_norm_file(in_filename)):
+        if idx_2 % PRINT_MODULO == 0:
+            print("loading file", file_name, ", line", idx_2+1, "of", file_size, "=", 
+                    100*(idx_2+1)/file_size, "%", end="\033[K\r")
+        if not read_name in groups:
+            groups[read_name] = []
+        groups[read_name].append((chrom, int(pos), int(map_q)))
+
+    for idx, (read_name, group) in enumerate(groups.items()):
+        if idx % PRINT_MODULO == 0:
+            print("processing ", file_name, ", read", idx+1, "of", len(groups), "=", 
+                    100*(idx+1)/len(groups), "%", end="\033[K\r")
+        chr_1 = group[0][0]
+        for chr_2, _, _ in group:
+            if chr_2 != chr_1:
+                continue # no reads that come from different chromosomes
+        pos_s = min([g[1] for g in group])
+        pos_e = max([g[1] for g in group])
+        map_q = max([g[2] for g in group])
+        yield read_name, chr_1, pos_s, pos_e, map_q
 
 def simplified_filepath(path):
     x = path[path.rindex("/")+1:]
@@ -127,60 +177,54 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test
 def add_replicate(out_prefix, path, name, group_a, test=False, cached=False):
     meta = MetaData.load(out_prefix + ".meta")
     if cached:
-        index = CachedDependantDimPrefixSum_5D(out_prefix, True)
+        index = CachedDependantDimRectanglesPrefixSum_3D(out_prefix, True)
     else:
-        index = DiskDependantDimPrefixSum_5D(out_prefix, True)
+        index = DiskDependantDimRectanglesPrefixSum_3D(out_prefix, True)
     cnt = 0
     last_cnt = len(index)
     file_size = int(subprocess.run(['wc', '-l', path], stdout=subprocess.PIPE).stdout.decode('utf-8').split(" ")[0])
-    file_name = simplified_filepath(path)
-    for idx_2, (read_name, _, chr_1, pos_1, _, chr_2, pos_2, mapq_1, mapq_2) in enumerate(parse_heatmap(path)):
-        if idx_2 % PRINT_MODULO == 0:
-            print("loading file", file_name, ", line", idx_2+1, "of", file_size, "=", 
-                    100*(idx_2+1)/file_size, "%", end="\033[K\r")
+    for read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q in group_heatmap(path, file_size):
         if not chr_1 in meta.chr_sizes.chr_sizes:
             continue
         if not chr_2 in meta.chr_sizes.chr_sizes:
             continue
-        map_q = min(mapq_1, mapq_2)
-        act_pos_1 = meta.chr_sizes.coordinate(int(pos_2) // meta.dividend, chr_2)
-        act_pos_2 = meta.chr_sizes.coordinate(int(pos_1) // meta.dividend, chr_1)
-        index.add_point([act_pos_1, act_pos_2, map_q, 0, 0], read_name)
+        act_pos_1_s = meta.chr_sizes.coordinate(pos_2_s // meta.dividend, chr_2)
+        act_pos_1_e = meta.chr_sizes.coordinate(pos_2_e // meta.dividend, chr_2)
+        act_pos_2_s = meta.chr_sizes.coordinate(pos_1_s // meta.dividend, chr_1)
+        act_pos_2_e = meta.chr_sizes.coordinate(pos_1_e // meta.dividend, chr_1)
+        index.add_point([act_pos_1_s, act_pos_2_s, map_q], [act_pos_1_e, act_pos_2_e, map_q], read_name)
         cnt += 1
         if cnt > TEST_FAC and test:
             break
     print("generating index")
-    idx = index.generate(last_cnt, cnt + last_cnt)
+    idx = index.generate(last_cnt, len(index))
     meta.add_dataset(name, path, group_a, idx)
     meta.save(out_prefix + ".meta")
 
 def add_normalization(out_prefix, path, name, for_row, test=False, cached=False):
     meta = MetaData.load(out_prefix + ".meta")
     if cached:
-        index = CachedPrefixSum_3D(out_prefix + ".norm", True)
+        index = CachedIntervalsPrefixSum_2D(out_prefix + ".norm", True)
     else:
-        index = DiskPrefixSum_3D(out_prefix + ".norm", True)
+        index = DiskIntervalsPrefixSum_2D(out_prefix + ".norm", True)
     last_cnt = len(index)
-    file_size = int(subprocess.run(['samtools', 'view', '-c', path], stdout=subprocess.PIPE).stdout.decode('utf-8'))
-    file_name = simplified_filepath(path)
     if path[-4:] == ".wig":
         for xs, ys, n in parse_wig_file(path, meta.chr_sizes.chr_start_pos, meta.dividend):
             meta.add_wig_normalization(name + ": " + n, path, for_row, xs, ys)
     else:
         cnt = 0
-        for idx_2, (read_name, chrom, pos, map_q) in enumerate(parse_norm_file(path)):
-            if idx_2 % PRINT_MODULO == 0:
-                print("loading file", file_name, ", line", idx_2+1, "of", file_size, "=", 
-                      100*(idx_2+1)/file_size, "%", end="\033[K\r")
+        file_size = int(subprocess.run(['samtools', 'view', '-c', path], stdout=subprocess.PIPE).stdout.decode('utf-8'))
+        for read_name, chrom, pos_s, pos_e, map_q in group_norm_file(path, file_size):
             if not chrom in meta.chr_sizes.chr_sizes:
                 continue
-            act_pos = meta.chr_sizes.coordinate(int(pos) // meta.dividend, chrom)
-            index.add_point([act_pos, map_q, 0], read_name)
+            act_pos_s = meta.chr_sizes.coordinate(int(pos_s) // meta.dividend, chrom)
+            act_pos_e = meta.chr_sizes.coordinate(int(pos_e) // meta.dividend, chrom)
+            index.add_point([act_pos_s, map_q], [act_pos_e, map_q], read_name)
             cnt += 1
             if cnt > TEST_FAC and test:
                 break
         print("generating index")
-        idx = index.generate(last_cnt, cnt + last_cnt)
+        idx = index.generate(last_cnt, len(index))
         meta.add_normalization(name, path, for_row, idx)
     meta.save(out_prefix + ".meta")
 
