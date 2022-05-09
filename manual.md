@@ -1,4 +1,4 @@
-# Smoother Manual
+# <img src="./static/favicon.png" align="center" width="90"> Smoother Manual
 
 @todo while writing this fix typos & wired names within the viewer
 
@@ -104,6 +104,9 @@ link to datastructure github
 ### Brief Algorithmic Description
 
 ### Fileformat specification
+
+what files
+how are they encoded (link to libSps)
 
 ### Implementation Details
 

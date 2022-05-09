@@ -686,7 +686,7 @@ class MainLayout:
             
         meta_file_label = Div(text="Data path:")
         meta_file_label.margin = DIV_MARGIN
-        self.meta_file = TextInput(value="out/")
+        self.meta_file = TextInput(value="smoother_out/")
         self.meta_file.on_change("value", lambda x, y, z: self.setup())
 
         self.group_a, group_a_layout = self.multi_choice("Group A")
@@ -1698,8 +1698,8 @@ class MainLayout:
             #    self.idx_norm = t_n
             #    self.trigger_render()
             if True:
-                if os.path.exists(self.meta_file.value + ".meta"):
-                    self.meta = MetaData.load(self.meta_file.value + ".meta")
+                if os.path.exists(self.meta_file.value + ".smoother_index"):
+                    self.meta = MetaData.load(self.meta_file.value + ".smoother_index/meta")
                     self.meta.setup(self)
                     self.setup_coordinates()
                     self.idx = Tree_4(self.meta_file.value)

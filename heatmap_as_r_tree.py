@@ -2,7 +2,7 @@ import os
 os.environ["STXXLLOGFILE"] = "/dev/null"
 os.environ["STXXLERRLOGFILE"] = "/dev/null"
 
-from libSps import *
+from libSps import make_sps_index
 
 
 H = 0.5
@@ -11,12 +11,9 @@ MAP_Q_MAX = 256
 
 
 class Tree_4:
-    def __init__(self, file_name, cached=False):
-        self.file_name = file_name        
-        if cached:
-            self.index = CachedDependantDimRectanglesPrefixSum_3D(file_name)
-        else:
-            self.index = DiskDependantDimRectanglesPrefixSum_3D(file_name)
+    def __init__(self, file_name):
+        self.file_name = file_name
+        self.index = make_sps_index(file_name + ".smoother_index/repl", 3, True, 2, "PickByFileSize", False )
 
     def setup(self, data, bins, cache_size, threads):
         return self
@@ -50,11 +47,8 @@ class Tree_4:
 
 
 class Tree_3:
-    def __init__(self, file_name, cached=False):
-        if cached:
-            self.index = CachedIntervalsPrefixSum_2D(file_name + ".norm")
-        else:
-            self.index = DiskIntervalsPrefixSum_2D(file_name + ".norm")
+    def __init__(self, file_name):
+        self.index = make_sps_index(file_name + ".smoother_index/norm", 2, False, 1, "PickByFileSize", False )
         self.file_name = file_name
         self.root = {}
 

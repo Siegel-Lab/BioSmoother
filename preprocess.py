@@ -1,4 +1,5 @@
 import os
+import stat as stat_perm
 import argparse
 from meta_data import *
 from chr_sizes import *
@@ -165,21 +166,21 @@ def parse_wig_file(filename, chr_start_idx, dividend):
 TEST_FAC = 100000
 
 def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test=False):
+    os.makedirs(out_prefix + ".smoother_index")
+    #os.chmod(out_prefix + ".smoother_index", # would make it look more like a file but do i really want that?
+    #         stat_perm.S_IWUSR | stat_perm.S_IXUSR | stat_perm.S_IXGRP | stat_perm.S_IXOTH )
     meta = MetaData(dividend)
     meta.set_chr_sizes(ChrSizes(chr_len_file_name, dividend, filter=lambda x: ("Chr10_" in x) or not test))
 
     if not annotation_filename is None:
         meta.add_annotations(parse_annotations(annotation_filename, meta.chr_sizes.chr_start_pos, dividend))
 
-    meta.save(out_prefix + ".meta")
+    meta.save(out_prefix + ".smoother_index/meta")
 
 
 def add_replicate(out_prefix, path, name, group_a, test=False, cached=False):
-    meta = MetaData.load(out_prefix + ".meta")
-    if cached:
-        index = CachedDependantDimRectanglesPrefixSum_3D(out_prefix, True)
-    else:
-        index = DiskDependantDimRectanglesPrefixSum_3D(out_prefix, True)
+    meta = MetaData.load(out_prefix + ".smoother_index/meta")
+    index = make_sps_index(out_prefix + ".smoother_index/repl", 3, True, 2, "Cached" if cached else "Disk", True )
     cnt = 0
     last_cnt = len(index)
     file_size = int(subprocess.run(['wc', '-l', path], stdout=subprocess.PIPE).stdout.decode('utf-8').split(" ")[0])
@@ -199,14 +200,11 @@ def add_replicate(out_prefix, path, name, group_a, test=False, cached=False):
     print("generating index")
     idx = index.generate(last_cnt, len(index))
     meta.add_dataset(name, path, group_a, idx)
-    meta.save(out_prefix + ".meta")
+    meta.save(out_prefix + ".smoother_index/meta")
 
 def add_normalization(out_prefix, path, name, for_row, test=False, cached=False):
-    meta = MetaData.load(out_prefix + ".meta")
-    if cached:
-        index = CachedIntervalsPrefixSum_2D(out_prefix + ".norm", True)
-    else:
-        index = DiskIntervalsPrefixSum_2D(out_prefix + ".norm", True)
+    meta = MetaData.load(out_prefix + ".smoother_index/meta")
+    index = make_sps_index(out_prefix + ".smoother_index/norm", 2, False, 1, "Cached" if cached else "Disk", True )
     last_cnt = len(index)
     if path[-4:] == ".wig":
         for xs, ys, n in parse_wig_file(path, meta.chr_sizes.chr_start_pos, meta.dividend):
@@ -226,7 +224,7 @@ def add_normalization(out_prefix, path, name, for_row, test=False, cached=False)
         print("generating index")
         idx = index.generate(last_cnt, len(index))
         meta.add_normalization(name, path, for_row, idx)
-    meta.save(out_prefix + ".meta")
+    meta.save(out_prefix + ".smoother_index/meta")
 
 
 def init(args):
@@ -239,8 +237,8 @@ def norm(args):
     add_normalization(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached)
 
 def grid_seq_norm(args):
-    meta = MetaData.load(args.index_prefix + ".meta")
-    index = Tree_4(args.index_prefix, not args.uncached)
+    meta = MetaData.load(args.index_prefix + ".smoother_index/meta")
+    index = Tree_4(args.index_prefix)
     datasets = args.datasets
     if datasets is None or len(datasets) == 0:
         datasets = list(range(len(meta.datasets)))
@@ -252,11 +250,11 @@ def grid_seq_norm(args):
     if args.add_annotation:
         do_add_annotation(filtered_rr, meta, args.name)
     if args.add_normalization_track:
-        index_arr = PsArray(args.index_prefix + ".norm", True)
+        index_arr = make_sps_index(args.index_prefix + ".smoother_index/norm", 2, False, 1, "Cached" if args.cached else "Disk", True )
         add_as_normalization(filtered_rr, datasets, meta, index, index_arr, args.mapping_q, args.name, 
                              "GRID-seq normalization created with " + str(sys.argv))
 
-    meta.save(args.index_prefix + ".meta")
+    meta.save(args.index_prefix + ".smoother_index/meta")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

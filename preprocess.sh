@@ -10,18 +10,19 @@ BED_SUF="RNA.sorted.bed_K1K2.bed_K4.bed_R_D.bed_R_D_K1K2.bed_R_D_PRE1.bed"
 BAMS="/work/project/ladsie_012/ABS.2.2/20210608_Inputs"
 BAM_SUF="R1.sorted.bam"
 
-#INDEX_PREFIX="../out/11repl/full"
-#INDEX_PREFIX="../out/4repl/full-1kb"
-INDEX_PREFIX="../out/test/test"
+#INDEX_PREFIX="../smoother_out/11repl"
+#INDEX_PREFIX="../smoother_out/4repl"
+INDEX_PREFIX="../smoother_out/test"
 
-rm ${INDEX_PREFIX}.*
+rm -r ${INDEX_PREFIX}.smoother_index
 
+echo "generating index ${INDEX_PREFIX}"
 
 #DBG_C=""
 #DBG_C="--test --uncached"
 DBG_C="--test"
 
-python3 preprocess.py ${DBG_C} init "${INDEX_PREFIX}" ../out/Lister427.sizes -a ../heatmap_static/HGAP3_Tb427v10_merged_2021_06_21.gff3 -d 10000
+python3 preprocess.py ${DBG_C} init "${INDEX_PREFIX}" Lister427.sizes -a HGAP3_Tb427v10_merged_2021_06_21.gff3 -d 10000
 
 
 python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS503_P10_Total_2.${BED_SUF}" "P10_Total_Rep2" -g a
