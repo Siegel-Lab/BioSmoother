@@ -1,29 +1,5 @@
 # <img src="./static/favicon.png" align="center" width="90"> Smoother Manual
 
-@todo while writing this fix typos & wired names within the viewer
-
-## Abstract-like hook
-
-## Quick Start
-
-- how to get using smoother most quickly
-
-## Web-version
-
-- provide URL & some simple example analysis and descritpion
-
-## BioConda Installation (_Markus_)
-
-## Usage
-
-- create index
-- add replicate
-- view index
-
-## Quick config Buttons
-
-# Main
-
 Bulk of the manual
 
 ## Table of Contents
