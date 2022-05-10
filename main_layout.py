@@ -576,7 +576,9 @@ class MainLayout:
                                                   ("Coverage of Normalization Reads (Absolute)",
                                                    "tracks_abs"),
                                                   ("Coverage of Normalization Reads (Scaled to Rendered Area)", "tracks_rel"),
-                                                  ("Emulate RADICL-seq", "radicl-seq"))
+                                                  ("Emulate RADICL-seq", "radicl-seq"),
+                                                  ("Hi-C like (scaled to largest visible bin)", "hi-c"),
+                                                  )
 
         self.square_bins_d = "view"
         def square_bin_event(e):
@@ -913,6 +915,15 @@ class MainLayout:
         if anno_coords is None:
             coords = self.meta.chr_sizes.bin_cols_or_rows(h_bin, area[base_idx], area[base_idx+2], none_for_chr_border, 
                                                             chr_filter, is_canceld=lambda: self.cancel_render)
+            if self.normalization_d == "hi-c":
+                # move start of first bin to start of genome
+                coords[0][1 if none_for_chr_border else 0][1] += coords[0][1 if none_for_chr_border else 0][0]
+                coords[0][1 if none_for_chr_border else 0][0] = 0
+            
+                # move end of last bin to end of genome
+                coords[0][-2 if none_for_chr_border else -1][1] = \
+                    self.meta.chr_sizes.chr_start_pos["end"] - coords[0][1 if none_for_chr_border else 0][0]
+
             if self.cancel_render:
                 return
         else:
@@ -1036,6 +1047,43 @@ class MainLayout:
                 else self.meta.norm[int(idx)].count(0, self.meta.chr_sizes.chr_start_pos["end"]) \
                 for idx in (self.norm_x.value if rows else self.norm_y.value)]])[0]
 
+    def hi_c_normalization(self, bins, cols, rows):
+        # max 50 iterations
+        for num_itr in range(50): 
+            assert len(bins) == len(cols) * len(rows)
+            # compute coverage & width
+            cov_rows = [(sum(bins[y + len(cols) * x] for y in range(len(cols))), v[1]) for x, v in enumerate(rows)]
+            cov_cols = [(sum(bins[y + len(cols) * x] for x in range(len(rows))), v[1]) for y, v in enumerate(cols)]
+            def unit_mean(l):
+                total_width = sum(w for v, w in l if v > 0)
+                cnt = 0
+                m = 1
+                for m, w in sorted([(v, w) for v, w in l if v > 0]):
+                    if cnt + w > total_width / 2:
+                        break
+                    cnt += w
+                return [r if r != 0 else 1 for r in [x / m for x, _ in l]]
+
+            cov_cols = unit_mean(cov_cols)
+            cov_rows = unit_mean(cov_rows)
+            assert len(cov_cols) == len(cols)
+            assert len(cov_rows) == len(rows)
+            assert len(bins) == len(cov_cols) * len(cov_rows)
+
+            max_bias_delta = 0
+            for idx in range(len(bins)):
+                bias_delta = cov_cols[idx % len(cols)] * cov_rows[idx // len(cols)]
+                bins[idx] = bins[idx] / bias_delta
+                max_bias_delta = max(max_bias_delta, abs(1-bias_delta))
+
+            if max_bias_delta < 0.01:
+                print("stopped at iteration", num_itr, "since max_bias_delta is", max_bias_delta)
+                break
+        
+        n = max(bins + [1])
+        return [x/n for x in bins]
+
+
     def norm_bins(self, w_bin, bins_l, cols, rows):
         ret = []
         if self.normalization_d in ["tracks_abs", "tracks_rel"]:
@@ -1092,6 +1140,8 @@ class MainLayout:
                 else:
                     for i in range(len(ret[-1])):
                         ret[-1][i] = min(ret[-1][i], 1)
+            elif self.normalization_d == "hi-c":
+                ret.append(self.hi_c_normalization(bins, rows, cols))
             else:
                 raise RuntimeError("Unknown normalization value")
         return ret
@@ -1142,7 +1192,7 @@ class MainLayout:
         if self.interactions_slider.value == 0:
             return c
         a = 2**self.interactions_slider.value
-        c = math.log(a*(c*(1-(1/a))+(1/a))) / math.log(a)
+        c = math.log(  a*( min(1,c)*( 1 - (1/a) ) + (1/a) )  ) / math.log(a)
         return c
 
     def color_bins_a(self, bins):
@@ -1176,7 +1226,10 @@ class MainLayout:
                 c = max(0, min(MAP_Q_MAX-1, int((MAP_Q_MAX-1)*c)))
                 ret.append(Viridis256[c])
             else:
-                ret.append(
+                if math.isnan(self.log_scale(c)):
+                    ret.append(Viridis256[0])
+                else:
+                    ret.append(
                     Viridis256[max(0, min(MAP_Q_MAX-1, int((MAP_Q_MAX-1)*self.log_scale(c))))])
         return ret
 

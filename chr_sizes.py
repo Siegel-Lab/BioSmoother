@@ -189,9 +189,9 @@ class ChrSizes:
             x = max(int(start), x_start)
             while x <= min(end, x_end):
                 if produce_smaller_bins or x + h_bin <= x_end:
-                    ret.append((x, min(h_bin, x_end - x)))
-                    ret_2.append((self.chr_order[x_chr], x - x_start))
-                    ret_3.append((x-sub, min(h_bin, x_end - x)))
+                    ret.append([x, min(h_bin, x_end - x)])
+                    ret_2.append([self.chr_order[x_chr], x - x_start])
+                    ret_3.append([x-sub, min(h_bin, x_end - x)])
                 if is_canceld():
                     return
                 x += h_bin
