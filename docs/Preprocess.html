@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documentation for the Preprocessing script &mdash; smoother 0.0.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Smoother Manual" href="Manual.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> smoother
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Readme.html">Smoother</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Manual.html">Smoother Manual</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Documentation for the Preprocessing script</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Positional Arguments">Positional Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Sub-commands:">Sub-commands:</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#init">init</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Positional Arguments_repeat1">Positional Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#repl">repl</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Positional Arguments_repeat2">Positional Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Named Arguments_repeat1">Named Arguments</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#norm">norm</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Positional Arguments_repeat3">Positional Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Named Arguments_repeat2">Named Arguments</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#grid-seq-norm">grid-seq-norm</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Positional Arguments_repeat4">Positional Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Named Arguments_repeat3">Named Arguments</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">smoother</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Documentation for the Preprocessing script</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/Preprocess.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="documentation-for-the-preprocessing-script">
+<h1>Documentation for the Preprocessing script<a class="headerlink" href="#documentation-for-the-preprocessing-script" title="Permalink to this headline"></a></h1>
+<p><p>Create indices for the smoother Hi-C data viewer.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">{</span><span class="n">init</span><span class="p">,</span><span class="n">repl</span><span class="p">,</span><span class="n">norm</span><span class="p">,</span><span class="n">grid</span><span class="o">-</span><span class="n">seq</span><span class="o">-</span><span class="n">norm</span><span class="p">}</span> <span class="o">...</span>
+</pre></div>
+</div>
+<section id="Positional Arguments">
+<h2>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this headline"></a></h2>
+<dl class="option-list">
+<dt><kbd>cmd</kbd></dt>
+<dd><p>Possible choices: init, repl, norm, grid-seq-norm</p>
+<p>Sub-command that shall be executed.</p>
+</dd>
+</dl>
+</section>
+<section id="Sub-commands:">
+<h2>Sub-commands:<a class="headerlink" href="#Sub-commands:" title="Permalink to this headline"></a></h2>
+<section id="init">
+<h3>init<a class="headerlink" href="#init" title="Permalink to this headline"></a></h3>
+<p>Create a new index.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">preprocess</span><span class="o">.</span><span class="n">py</span> <span class="n">init</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">d</span> <span class="n">DIVIDEND</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">a</span> <span class="n">PATH</span><span class="p">]</span> <span class="n">index_prefix</span> <span class="n">chr_len</span>
+</pre></div>
+</div>
+<section id="Positional Arguments_repeat1">
+<h4>Positional Arguments<a class="headerlink" href="#Positional Arguments_repeat1" title="Permalink to this headline"></a></h4>
+<dl class="option-list">
+<dt><kbd>index_prefix</kbd></dt>
+<dd><p>Path where the index shall be saved. Note: a folder with multiple files will be created.</p>
+</dd>
+<dt><kbd>chr_len</kbd></dt>
+<dd><p>Path to a file that contains the length (in nucleotides) of all chromosomes. The file shall contain 2 tab seperated columns columns: The chromosome names and their size in nucleotides. The order of chromosomes in this files will be used as the display order in the viewer.</p>
+</dd>
+</dl>
+</section>
+<section id="Named Arguments">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline"></a></h4>
+<dl class="option-list">
+<dt><kbd>-d, --dividend</kbd></dt>
+<dd><p>Divide all coordinates by this number. Larger numbers will reduce the index size and preprocessing time. However, bins with a size below this given number cannot be displayed.</p>
+</dd>
+<dt><kbd>-a, --annotations</kbd></dt>
+<dd><p>Path to a file that contains annotations for the genome. File should be in the gff3 fromat.</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="repl">
+<h3>repl<a class="headerlink" href="#repl" title="Permalink to this headline"></a></h3>
+<p>Add a replicate to a given index.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">preprocess</span><span class="o">.</span><span class="n">py</span> <span class="n">repl</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">g</span> <span class="p">{</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">both</span><span class="p">,</span><span class="n">neither</span><span class="p">}]</span> <span class="n">index_prefix</span> <span class="n">path</span> <span class="n">name</span>
+</pre></div>
+</div>
+<section id="Positional Arguments_repeat2">
+<h4>Positional Arguments<a class="headerlink" href="#Positional Arguments_repeat2" title="Permalink to this headline"></a></h4>
+<dl class="option-list">
+<dt><kbd>index_prefix</kbd></dt>
+<dd><p>Prefix that was used to create the index (see the init subcommand).</p>
+</dd>
+<dt><kbd>path</kbd></dt>
+<dd><p>Path to the .pre1.bed file that contains the aligned reads.</p>
+</dd>
+<dt><kbd>name</kbd></dt>
+<dd></dd>
+</dl>
+</section>
+<section id="Named Arguments_repeat1">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments_repeat1" title="Permalink to this headline"></a></h4>
+<dl class="option-list">
+<dt><kbd>-g, --group</kbd></dt>
+<dd><p>Possible choices: a, b, both, neither</p>
+<p>(default: “neither”)</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="norm">
+<h3>norm<a class="headerlink" href="#norm" title="Permalink to this headline"></a></h3>
+<p>Undocumented</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">preprocess</span><span class="o">.</span><span class="n">py</span> <span class="n">norm</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">g</span> <span class="p">{</span><span class="n">row</span><span class="p">,</span><span class="n">col</span><span class="p">,</span><span class="n">both</span><span class="p">,</span><span class="n">neither</span><span class="p">}]</span> <span class="n">index_prefix</span> <span class="n">path</span> <span class="n">name</span>
+</pre></div>
+</div>
+<section id="Positional Arguments_repeat3">
+<h4>Positional Arguments<a class="headerlink" href="#Positional Arguments_repeat3" title="Permalink to this headline"></a></h4>
+<dl class="option-list">
+<dt><kbd>index_prefix</kbd></dt>
+<dd></dd>
+<dt><kbd>path</kbd></dt>
+<dd></dd>
+<dt><kbd>name</kbd></dt>
+<dd></dd>
+</dl>
+</section>
+<section id="Named Arguments_repeat2">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments_repeat2" title="Permalink to this headline"></a></h4>
+<dl class="option-list">
+<dt><kbd>-g, --group</kbd></dt>
+<dd><p>Possible choices: row, col, both, neither</p>
+<p>(default: “neither”)</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="grid-seq-norm">
+<h3>grid-seq-norm<a class="headerlink" href="#grid-seq-norm" title="Permalink to this headline"></a></h3>
+<p>Undocumented</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">preprocess</span><span class="o">.</span><span class="n">py</span> <span class="n">grid</span><span class="o">-</span><span class="n">seq</span><span class="o">-</span><span class="n">norm</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">d</span> <span class="p">[</span><span class="n">VAL</span> <span class="p">[</span><span class="n">VAL</span> <span class="o">...</span><span class="p">]]]</span> <span class="p">[</span><span class="o">-</span><span class="n">m</span> <span class="n">VAL</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">b</span> <span class="n">VAL</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">-</span><span class="n">R</span> <span class="n">VAL</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">D</span> <span class="n">VAL</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">A</span> <span class="n">VAL</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">a</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">n</span><span class="p">]</span>
+                            <span class="n">index_prefix</span> <span class="n">name</span>
+</pre></div>
+</div>
+<section id="Positional Arguments_repeat4">
+<h4>Positional Arguments<a class="headerlink" href="#Positional Arguments_repeat4" title="Permalink to this headline"></a></h4>
+<dl class="option-list">
+<dt><kbd>index_prefix</kbd></dt>
+<dd></dd>
+<dt><kbd>name</kbd></dt>
+<dd></dd>
+</dl>
+</section>
+<section id="Named Arguments_repeat3">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments_repeat3" title="Permalink to this headline"></a></h4>
+<dl class="option-list">
+<dt><kbd>-d, --datasets</kbd></dt>
+<dd></dd>
+<dt><kbd>-m, --mapping_q</kbd></dt>
+<dd></dd>
+<dt><kbd>-b, --bin_size</kbd></dt>
+<dd></dd>
+<dt><kbd>-R, --filter_rna</kbd></dt>
+<dd></dd>
+<dt><kbd>-D, --filter_dna</kbd></dt>
+<dd></dd>
+<dt><kbd>-A, --annotation</kbd></dt>
+<dd><p>name of the annotation to use as bins for the RNA or ‘bins’ to use –bin_size sized bins over the full genome</p>
+</dd>
+<dt><kbd>-v, --visualize</kbd></dt>
+<dd></dd>
+<dt><kbd>-a, --add_annotation</kbd></dt>
+<dd></dd>
+<dt><kbd>-n, --add_normalization_track</kbd></dt>
+<dd></dd>
+</dl>
+</section>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Manual.html" class="btn btn-neutral float-left" title="Smoother Manual" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Markus Schmidt.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

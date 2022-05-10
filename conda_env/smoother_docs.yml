@@ -3,11 +3,19 @@ channels:
   - conda-forge
 dependencies:
   - python=3.6
+  - bokeh=2.3.2 # requires firefox=79.0 (due to bugs)
+  - tornado=6.1
+  - scipy
+  - scikit-learn=0.24.2
+  - nodejs
+  - psutil
+  - statsmodels
   - sphinx
   - sphinx_rtd_theme
   - expect
   - pip
   - pip:
     - sphinx-mdinclude
+    - sphinx-argparse
   - breathe
   - tectonic

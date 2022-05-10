@@ -1,4 +1,4 @@
-# <img src="./static/favicon.png" align="center" width="90"> Smoother Manual
+# Smoother Manual
 
 Bulk of the manual
 
@@ -88,10 +88,12 @@ how are they encoded (link to libSps)
 
 some runtime details
 
-## Citations & Bla Bla
+## Citing Smoother
+
+## References
 
 
-### Thanks to...
+## Thanks to...
 - Bokeh
 - Stxxl
 - Sparse Prefix Sums paper

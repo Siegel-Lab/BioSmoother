@@ -256,26 +256,32 @@ def grid_seq_norm(args):
 
     meta.save(args.index_prefix + ".smoother_index/meta")
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+def get_argparse():
+    parser = argparse.ArgumentParser(description='Create indices for the smoother Hi-C data viewer.')
 
     ## deebugging arguments
     parser.add_argument('--test', help=argparse.SUPPRESS, action='store_true')
     parser.add_argument('--uncached', help=argparse.SUPPRESS, action='store_true')
 
-    sub_parsers = parser.add_subparsers(help='sub-command', dest="cmd")
+    sub_parsers = parser.add_subparsers(help='Sub-command that shall be executed.', dest="cmd")
     sub_parsers.required=True
 
-    init_parser = sub_parsers.add_parser("init")
-    init_parser.add_argument('index_prefix')
-    init_parser.add_argument('chr_len')
-    init_parser.add_argument('-d', '--dividend',  type=int, default=1)
-    init_parser.add_argument('-a', '--annotations', metavar="PATH", default=None)
+    init_parser = sub_parsers.add_parser("init", help="Create a new index.")
+    init_parser.add_argument('index_prefix', 
+        help="Path where the index shall be saved. Note: a folder with multiple files will be created.")
+    init_parser.add_argument('chr_len', 
+        help="Path to a file that contains the length (in nucleotides) of all chromosomes. The file shall contain 2 tab seperated columns columns: The chromosome names and their size in nucleotides. The order of chromosomes in this files will be used as the display order in the viewer.")
+    init_parser.add_argument('-d', '--dividend', type=int, default=1,
+        help="Divide all coordinates by this number. Larger numbers will reduce the index size and preprocessing time. However, bins with a size below this given number cannot be displayed.")
+    init_parser.add_argument('-a', '--annotations', metavar="PATH", default=None,
+        help="Path to a file that contains annotations for the genome. File should be in the gff3 fromat.")
     init_parser.set_defaults(func=init)
 
-    repl_parser = sub_parsers.add_parser("repl")
-    repl_parser.add_argument('index_prefix')
-    repl_parser.add_argument('path')
+    repl_parser = sub_parsers.add_parser("repl", help="Add a replicate to a given index.")
+    repl_parser.add_argument('index_prefix', 
+        help="Prefix that was used to create the index (see the init subcommand).")
+    repl_parser.add_argument('path', 
+        help="Path to the .pre1.bed file that contains the aligned reads.")
     repl_parser.add_argument('name')
     repl_parser.add_argument('-g', '--group', default="neither", choices=["a", "b", "both", "neither"], 
                             help="(default: %(default)s)")
@@ -304,6 +310,11 @@ if __name__ == "__main__":
     grid_seq_norm_parser.add_argument('-a', '--add_annotation', action='store_true')
     grid_seq_norm_parser.add_argument('-n', '--add_normalization_track', action='store_true')
     grid_seq_norm_parser.set_defaults(func=grid_seq_norm)
+
+    return parser
+
+if __name__ == "__main__":
+    parser = get_argparse()
 
     args = parser.parse_args()
 

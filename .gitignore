@@ -8,3 +8,5 @@ Lister427.sizes
 HGAP3_Tb427v10_merged_2021_06_21.gff3
 _docs_build
 _doctrees
+tex/*
+smoother.pdf

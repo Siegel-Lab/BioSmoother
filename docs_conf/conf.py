@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath('../'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'libSps'
+project = 'smoother'
 copyright = '2022, Markus Schmidt'
 author = 'Markus Schmidt'
 
@@ -36,6 +36,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
     "sphinx_mdinclude",
+    "sphinxarg.ext",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -61,6 +62,5 @@ html_static_path = ['../static']
 
 master_doc = "index"
 
-breathe_default_project = "libSps"
 
 html_favicon="../static/favicon.ico"

@@ -1,4 +1,6 @@
-# <img src="./static/favicon.png" align="center" width="90"> Smoother
+<img src="static/favicon.png" align="center" width="90">
+
+# Smoother
 
 @todo while writing this fix typos & wired names within the viewer
 
@@ -22,6 +24,11 @@
 
 ## Quick config Buttons
 
-# Manual
+## Manual
 
 here should be the link to the full Manual.
+
+## Citing Smoother
+
+## References
+
