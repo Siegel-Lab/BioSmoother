@@ -2,7 +2,7 @@ import os
 os.environ["STXXLLOGFILE"] = "/dev/null"
 os.environ["STXXLERRLOGFILE"] = "/dev/null"
 
-from libSps import make_sps_index
+from bin.libSps import make_sps_index
 
 
 H = 0.5

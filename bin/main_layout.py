@@ -13,15 +13,15 @@ from tornado import gen
 from bokeh.document import without_document_lock
 from bokeh.models import Panel, Tabs, Spacer
 from bokeh.models import Range1d, ColorBar, ContinuousColorMapper
-from meta_data import *
+from bin.meta_data import *
 import os
-from heatmap_as_r_tree import *
+from bin.heatmap_as_r_tree import *
 from bokeh.palettes import Viridis256, Colorblind
 from datetime import datetime, timedelta
 import psutil
 from concurrent.futures import ThreadPoolExecutor
 from bokeh.models import BoxAnnotation
-from stats import *
+from bin.stats import *
 from bokeh.models.tickers import AdaptiveTicker
 
 SETTINGS_WIDTH = 200
@@ -571,13 +571,13 @@ class MainLayout:
                                                    "max_bin_visible"),
                                                   ("Number of Reads",
                                                    "num_reads"), 
-                                                   ("Column", "column"),
-                                                   ("Row", "row"),
-                                                  ("Coverage of Normalization Reads (Absolute)",
+                                                   ("Column Sum", "column"),
+                                                   ("Row Sum", "row"),
+                                                  ("Coverage Track (Absolute)",
                                                    "tracks_abs"),
-                                                  ("Coverage of Normalization Reads (Scaled to Rendered Area)", "tracks_rel"),
-                                                  ("Emulate RADICL-seq", "radicl-seq"),
-                                                  ("Hi-C like (scaled to largest visible bin)", "hi-c"),
+                                                  ("Coverage Track (Scaled)", "tracks_rel"),
+                                                  ("Binominal Test", "radicl-seq"),
+                                                  ("Iterative Correction", "hi-c"),
                                                   )
 
         self.square_bins_d = "view"

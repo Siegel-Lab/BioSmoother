@@ -1,1 +1,1 @@
-.. mdinclude:: ../Manual.md
+.. mdinclude:: ./Manual_.md

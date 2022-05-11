@@ -1,16 +1,16 @@
 import os
 import stat as stat_perm
 import argparse
-from meta_data import *
-from chr_sizes import *
+from bin.meta_data import *
+from bin.chr_sizes import *
 import random
 import sys
-from heatmap_as_r_tree import *
+from bin.heatmap_as_r_tree import *
 import subprocess
 import glob
 import math
-from libSps import *
-from grid_seq_norm import *
+from bin.libSps import *
+from bin.grid_seq_norm import *
 
 PRINT_MODULO = 10000
 

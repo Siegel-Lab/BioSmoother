@@ -1,6 +1,6 @@
 from os import stat
-from chr_sizes import *
-from linear_data_as_integral import *
+from bin.chr_sizes import *
+from bin.linear_data_as_integral import *
 import pickle
 import sys
 import bisect
