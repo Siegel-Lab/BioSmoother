@@ -5,9 +5,7 @@
 - does radicl sec do normalization for rna?
 - uneven distribution between contigs in grid seq normalization
 - try removing sparse coords for overlay count-entires
-- write down normalizations
 - grid seq norm progress print
-- read normalization -> reads per million & count number of reads via query
 - quick config buttons
 - put help messages
 - AutocompleteInput for filepath

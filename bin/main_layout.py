@@ -256,8 +256,8 @@ class FigureMaker:
             menu.append(
                 (("☑ " if FigureMaker._show_hide["grid_lines"] else "☐ ") + "Grid Lines", "grid_lines"))
             return menu
-        ret = Dropdown(label="Show/Hide", menu=make_menu(),
-                       width=SETTINGS_WIDTH, sizing_mode="stretch_width", css_classes=["other_button"])
+        ret = Dropdown(label="Show/Hide", menu=make_menu(), name="saasdasd",
+                       width=SETTINGS_WIDTH, sizing_mode="stretch_width", css_classes=["other_button", "tooltip", "tooltip_1"], height=30)
 
         def event(e):
             FigureMaker.toggle_hide(e.item)
@@ -569,8 +569,10 @@ class MainLayout:
         self.normalization = self.dropdown_select("Normalize by", normalization_event,
                                                   ("Largest Rendered Bin",
                                                    "max_bin_visible"),
-                                                  ("Number of Reads",
-                                                   "num_reads"), 
+                                                  ("Reads per Million",
+                                                   "rpm"), 
+                                                  ("Reads per Thousand",
+                                                   "rpk"), 
                                                    ("Column Sum", "column"),
                                                    ("Row Sum", "row"),
                                                   ("Coverage Track (Absolute)",
@@ -1107,9 +1109,12 @@ class MainLayout:
             if self.normalization_d == "max_bin_visible":
                 n = max(bins + [1])
                 ret.append([x/n for x in bins])
-            elif self.normalization_d == "num_reads":
+            elif self.normalization_d == "rpm":
                 n = self.read_norm(idx)
-                ret.append([x/n for x in bins])
+                ret.append([1000000 * x/n for x in bins])
+            elif self.normalization_d == "rpk":
+                n = self.read_norm(idx)
+                ret.append([1000 * x/n for x in bins])
             elif self.normalization_d == "column":
                 ret.append([x / max(ns[idx][idx_2 // len(rows)], 1) for idx_2, x in enumerate(bins)])
             elif self.normalization_d == "row":
