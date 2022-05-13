@@ -16,6 +16,9 @@ PRINT_MODULO = 10000
 
 # parses file & sets up axis and matrix to have the appropriate size
 
+def touch(f_name):
+    with open(f_name, 'a'):  # Create file if does not exist
+        pass
 
 def parse_heatmap(in_filename):
     with open(in_filename, "r") as in_file_1:
@@ -29,7 +32,7 @@ def parse_heatmap(in_filename):
 
             yield read_name, strnd_1, chr_1, int(pos_1), strnd_2, chr_2, int(pos_2), mapq_1, mapq_2
 
-def group_heatmap(in_filename, file_size):
+def group_heatmap(in_filename, file_size, no_groups=False):
     file_name = simplified_filepath(in_filename)
     groups = {}
     for idx_2, (read_name, _, chr_1, pos_1, _, chr_2, pos_2, mapq_1, mapq_2) in enumerate(parse_heatmap(in_filename)):
@@ -48,15 +51,24 @@ def group_heatmap(in_filename, file_size):
                     100*(idx+1)/len(groups), "%", end="\033[K\r")
         chr_1 = group[0][0]
         chr_2 = group[0][2]
+        do_cont = False
         for g_chr_1, _, g_chr_2, _, _ in group:
             if g_chr_1 != chr_1:
-                continue # no reads that come from different chromosomes
+                do_cont = True # no reads that come from different chromosomes
             if g_chr_2 != chr_2:
-                continue # no reads that come from different chromosomes
-        pos_1_s = min([g[1] for g in group])
-        pos_2_s = min([g[3] for g in group])
-        pos_1_e = max([g[1] for g in group])
-        pos_2_e = max([g[3] for g in group])
+                do_cont = True # no reads that come from different chromosomes
+        if do_cont:
+            continue
+        if no_groups:
+            pos_1_s = group[0][1]
+            pos_2_s = group[0][3]
+            pos_1_e = group[0][1]
+            pos_2_e = group[0][3]
+        else:
+            pos_1_s = min([g[1] for g in group])
+            pos_2_s = min([g[3] for g in group])
+            pos_1_e = max([g[1] for g in group])
+            pos_2_e = max([g[3] for g in group])
         map_q = max([g[4] for g in group])
         yield read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q
 
@@ -99,17 +111,23 @@ def group_norm_file(in_filename, file_size):
             print("processing ", file_name, ", read", idx+1, "of", len(groups), "=", 
                     100*(idx+1)/len(groups), "%", end="\033[K\r")
         chr_1 = group[0][0]
+        do_cont = False
         for chr_2, _, _ in group:
             if chr_2 != chr_1:
-                continue # no reads that come from different chromosomes
+                do_cont = True # no reads that come from different chromosomes
+        if do_cont:
+            continue
         pos_s = min([g[1] for g in group])
         pos_e = max([g[1] for g in group])
         map_q = max([g[2] for g in group])
         yield read_name, chr_1, pos_s, pos_e, map_q
 
 def simplified_filepath(path):
-    x = path[path.rindex("/")+1:]
-    return x[:x.index(".")]
+    if "/" in path:
+        x = path[path.rindex("/")+1:]
+    if "." in path:
+        return x[:x.index(".")]
+    return x
 
 def parse_annotations(annotation_file, axis_start_pos_offset, dividend):
     annos = []
@@ -163,28 +181,40 @@ def parse_wig_file(filename, chr_start_idx, dividend):
         ys.append(0)
         yield xs, ys, track
 
-TEST_FAC = 100000
+TEST_FAC = 200000
 
 def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test=False):
     os.makedirs(out_prefix + ".smoother_index")
     #os.chmod(out_prefix + ".smoother_index", # would make it look more like a file but do i really want that?
     #         stat_perm.S_IWUSR | stat_perm.S_IXUSR | stat_perm.S_IXGRP | stat_perm.S_IXOTH )
     meta = MetaData(dividend)
-    meta.set_chr_sizes(ChrSizes(chr_len_file_name, dividend, filter=lambda x: ("Chr10_" in x) or not test))
+    meta.set_chr_sizes(ChrSizes(chr_len_file_name, dividend, filter=lambda x: ("Chr1_" in x) or not test))
 
     if not annotation_filename is None:
         meta.add_annotations(parse_annotations(annotation_filename, meta.chr_sizes.chr_start_pos, dividend))
 
     meta.save(out_prefix + ".smoother_index/meta")
+    touch(out_prefix + ".smoother_index/norm.coords")
+    touch(out_prefix + ".smoother_index/norm.datsets")
+    touch(out_prefix + ".smoother_index/norm.desc")
+    touch(out_prefix + ".smoother_index/norm.overlays")
+    touch(out_prefix + ".smoother_index/norm.points")
+    touch(out_prefix + ".smoother_index/norm.prefix_sums")
+    touch(out_prefix + ".smoother_index/repl.coords")
+    touch(out_prefix + ".smoother_index/repl.datsets")
+    touch(out_prefix + ".smoother_index/repl.desc")
+    touch(out_prefix + ".smoother_index/repl.overlays")
+    touch(out_prefix + ".smoother_index/repl.points")
+    touch(out_prefix + ".smoother_index/repl.prefix_sums")
 
 
-def add_replicate(out_prefix, path, name, group_a, test=False, cached=False):
+def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_groups=False):
     meta = MetaData.load(out_prefix + ".smoother_index/meta")
     index = make_sps_index(out_prefix + ".smoother_index/repl", 3, True, 2, "Cached" if cached else "Disk", True )
     cnt = 0
     last_cnt = len(index)
     file_size = int(subprocess.run(['wc', '-l', path], stdout=subprocess.PIPE).stdout.decode('utf-8').split(" ")[0])
-    for read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q in group_heatmap(path, file_size):
+    for read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q in group_heatmap(path, file_size, no_groups):
         if not chr_1 in meta.chr_sizes.chr_sizes:
             continue
         if not chr_2 in meta.chr_sizes.chr_sizes:
@@ -231,7 +261,7 @@ def init(args):
     make_meta(args.index_prefix, args.chr_len, args.annotations, args.dividend, args.test)
 
 def repl(args):
-    add_replicate(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached)
+    add_replicate(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached, args.no_groups)
 
 def norm(args):
     add_normalization(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached)
@@ -262,6 +292,7 @@ def get_argparse():
     ## deebugging arguments
     parser.add_argument('--test', help=argparse.SUPPRESS, action='store_true')
     parser.add_argument('--uncached', help=argparse.SUPPRESS, action='store_true')
+    parser.add_argument('--no_groups', help=argparse.SUPPRESS, action='store_true')
 
     sub_parsers = parser.add_subparsers(help='Sub-command that shall be executed.', dest="cmd")
     sub_parsers.required=True

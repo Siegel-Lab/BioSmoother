@@ -822,15 +822,14 @@ class MainLayout:
         _settings = column([
                 make_panel("General", [tool_bar, meta_file_label, self.meta_file, show_hide,
                                     self.min_max_bin_size]),
-                make_panel("Normalization", [self.normalization, self.mapq_slider,
-                                    self.interactions_bounds_slider,
+                make_panel("Normalization", [self.normalization, self.interactions_bounds_slider,
                                     self.interactions_slider, norm_x_layout, norm_y_layout, self.radical_seq_accept]),
                 make_panel("Replicates", [self.in_group, self.betw_group, group_a_layout, group_b_layout]),
                 make_panel("Interface", [self.num_bins, self.update_frequency_slider, self.redraw_slider,
                                     self.add_area_slider,
                                     self.anno_size_slider, self.raw_size_slider, self.ratio_size_slider,
                                     self.stretch, square_bins, power_ten_bin]),
-                make_panel("Filters", [self.symmetrie, self.diag_dist_slider, 
+                make_panel("Filters", [self.mapq_slider, self.symmetrie, self.diag_dist_slider, 
                                           displayed_annos_layout, filtered_annos_x_layout,
                                           filtered_annos_y_layout,
                                           x_coords, y_coords, multiple_anno_per_bin, chrom_x_layout, chrom_y_layout]),
@@ -992,12 +991,12 @@ class MainLayout:
         bins = []
         info = [""]*len(bin_coords)
         min_ = self.interactions_bounds_slider.value
-        for idx, _ in enumerate(self.meta.datasets):
+        for idx, _ in sorted(list(self.meta.datasets.items())):
             bins.append([])
             for idx_2, (x, y, w, h) in enumerate(bin_coords):
                 self.render_step_log(name, idx_2 + idx * len(bin_coords), len(bin_coords)*len(self.meta.datasets))
                 if abs(x - y) >= self.diag_dist_slider.value:
-                    n = self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value)
+                    n = self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value, min(h, w), min(h, w))
                     bins[-1].append(max(n-min_, 0))
                     if n <= 10:
                         info[idx_2] += self.idx.info(idx, y, y+h, x, x+w, *self.mapq_slider.value)
@@ -1023,7 +1022,7 @@ class MainLayout:
 
     def read_norm(self, idx):
         n = []
-        for idx, dataset in enumerate(self.meta.datasets):
+        for idx, dataset in sorted(list(self.meta.datasets.items())):
             if str(idx) in (self.group_a.value if idx == 0 else self.group_b.value):
                 val = self.idx.count(idx, 0, self.meta.chr_sizes.chr_start_pos["end"], 0, 
                                      self.meta.chr_sizes.chr_start_pos["end"], *self.mapq_slider.value)
@@ -1112,9 +1111,9 @@ class MainLayout:
                 n = self.read_norm(idx)
                 ret.append([x/n for x in bins])
             elif self.normalization_d == "column":
-                ret.append([x/max(ns[idx][idx_2 // len(rows)], 1) for idx_2, x in enumerate(bins)])
+                ret.append([x / max(ns[idx][idx_2 // len(rows)], 1) for idx_2, x in enumerate(bins)])
             elif self.normalization_d == "row":
-                ret.append([x/max(ns[idx][idx_2 % len(rows)], 1) for idx_2, x in enumerate(bins)])
+                ret.append([x / max(ns[idx][idx_2 % len(rows)], 1) for idx_2, x in enumerate(bins)])
             elif self.normalization_d == "radicl-seq":
                 ret.append([0]*(len(rows)*len(cols)))
                 for idx_2 in range(len(rows)):
@@ -1467,10 +1466,10 @@ class MainLayout:
                     "c": purged,
                     "chr_x": [x[0] for x in purged_coords_2],
                     "chr_y": [x[2] for x in purged_coords_2],
-                    "x1": [x[1] for x in purged_coords_2],
-                    "x2": [x[1] + y[2] for x, y in zip(purged_coords_2, purged_coords)],
-                    "y1": [x[3] for x in purged_coords_2],
-                    "y2": [x[3] + y[3] for x, y in zip(purged_coords_2, purged_coords)],
+                    "x1": [x[1] * self.meta.dividend for x in purged_coords_2],
+                    "x2": [(x[1] + y[2]) * self.meta.dividend for x, y in zip(purged_coords_2, purged_coords)],
+                    "y1": [x[3] * self.meta.dividend for x in purged_coords_2],
+                    "y2": [(x[3] + y[3]) * self.meta.dividend for x, y in zip(purged_coords_2, purged_coords)],
                     "s": purged_sym,
                     "d_a": purged_flat_a,
                     "d_b": purged_flat_b,
@@ -1482,15 +1481,15 @@ class MainLayout:
 
                 x_pos = [p for x in raw_bin_rows_3 for p in [x[0], x[0] + x[1]]]
                 x_chr = [x[0] for x in raw_bin_rows_2 for _ in [0, 1]]
-                x_pos1 = [x[1] for x in raw_bin_rows_2 for _ in [0, 1]]
-                x_pos2 = [x[1] + y[1] for x, y in zip(raw_bin_rows_2, raw_bin_rows) for _ in [0, 1]]
+                x_pos1 = [x[1] * self.meta.dividend for x in raw_bin_rows_2 for _ in [0, 1]]
+                x_pos2 = [(x[1] + y[1]) * self.meta.dividend for x, y in zip(raw_bin_rows_2, raw_bin_rows) for _ in [0, 1]]
 
                 x_num_raw = 2 + (0 if len(raw_x_norms) == 0 else len(raw_x_norms[0]))
 
                 y_pos = [p for x in raw_bin_cols_3 for p in [x[0], x[0] + x[1]]]
                 y_chr = [x[0] for x in raw_bin_cols_2 for _ in [0, 1]]
-                y_pos1 = [x[1] for x in raw_bin_cols_2 for _ in [0, 1]]
-                y_pos2 = [x[1] + y[1] for x, y in zip(raw_bin_cols_2, raw_bin_cols) for _ in [0, 1]]
+                y_pos1 = [x[1] * self.meta.dividend for x in raw_bin_cols_2 for _ in [0, 1]]
+                y_pos2 = [(x[1] + y[1]) * self.meta.dividend for x, y in zip(raw_bin_cols_2, raw_bin_cols) for _ in [0, 1]]
 
                 y_num_raw = 2 + (0 if len(raw_y_norms) == 0 else len(raw_y_norms[0]))
 
@@ -1565,8 +1564,8 @@ class MainLayout:
                                                 self.annotation_bins(bin_rows_unfiltr, self.meta.annotations[anno])):
                             if x > 0:
                                 d_anno_x["chr"].append(rb_2[0])
-                                d_anno_x["pos1"].append(rb_2[1])
-                                d_anno_x["pos2"].append(rb_2[1] + e)
+                                d_anno_x["pos1"].append(rb_2[1] * self.meta.dividend)
+                                d_anno_x["pos2"].append((rb_2[1] + e) * self.meta.dividend)
                                 d_anno_x["n"].append(x)
                                 d_anno_x["x"].append(anno)
                                 d_anno_x["s"].append(s)
@@ -1595,8 +1594,8 @@ class MainLayout:
                                                 self.annotation_bins(bin_cols_unfiltr, self.meta.annotations[anno])):
                             if x > 0:
                                 d_anno_y["chr"].append(rb_2[0])
-                                d_anno_y["pos1"].append(rb_2[1])
-                                d_anno_y["pos2"].append(rb_2[1] + e)
+                                d_anno_y["pos1"].append(rb_2[1] * self.meta.dividend)
+                                d_anno_y["pos2"].append((rb_2[1] + e) * self.meta.dividend)
                                 d_anno_y["n"].append(x)
                                 d_anno_y["x"].append(anno)
                                 d_anno_y["s"].append(s)
@@ -1633,7 +1632,8 @@ class MainLayout:
                             self.anno_y.y_range.factors = self.displayed_annos.value
 
                     def readable_display(l):
-                        exp = max(1, int(math.log10(l)-1))
+                        l = l * self.meta.dividend
+                        exp = int(math.log10(l)-1)
                         x = max(1, int(l / (10**exp)))
                         if exp >= 7:
                             return str(x) + "*10^" + str(exp) + "bp"

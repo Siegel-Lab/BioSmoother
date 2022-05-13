@@ -109,6 +109,57 @@ adding as normalization track</p>
 <h2>Viewing Data<a class="headerlink" href="#viewing-data" title="Permalink to this headline"></a></h2>
 <section id="example-experiments-anna">
 <h3>Example Experiments (<em>Anna</em>)<a class="headerlink" href="#example-experiments-anna" title="Permalink to this headline"></a></h3>
+<section id="example-analysis-no-1-markus-departmental">
+<h4>Example Analysis No. 1 - Markus Departmental<a class="headerlink" href="#example-analysis-no-1-markus-departmental" title="Permalink to this headline"></a></h4>
+<p>The purpose of this analysis is simply to show some of the features of smoother.</p>
+<p>First, we open smoother with one of the sample datasets:
+2 replicates of Anna’s data - protein mediated and non-protein mediated RNA-DNA interactions (RADICL-seq).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">For</span> <span class="n">this</span> <span class="n">we</span> <span class="nb">open</span> <span class="n">the</span> <span class="n">viewer</span> <span class="ow">and</span> <span class="nb">type</span> <span class="mi">2</span><span class="n">repl</span> <span class="ow">in</span> <span class="n">General</span><span class="o">-&gt;</span><span class="n">Data</span> <span class="n">path</span>
+</pre></div>
+</div>
+<img src="../static/example_analysis_1/pic1.png" /><p>The grey lines we see show the borders between contigs.
+Our organism is <em>Trypanosoma Brucei</em>, which has a lot of minichromosomes -
+these are partially assembled as a lot of small unitigs at the end of the genome.
+Since they are so small they show up as a solid grey area to the top-right of the middle plot.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">We</span> <span class="n">remove</span> <span class="n">the</span> <span class="n">grey</span> <span class="n">lines</span> <span class="n">by</span> <span class="n">clicking</span> <span class="n">on</span> <span class="n">General</span><span class="o">-&gt;</span><span class="n">Show</span><span class="o">/</span><span class="n">Hide</span><span class="o">-&gt;</span><span class="n">Grid</span> <span class="n">Lines</span><span class="o">.</span>
+</pre></div>
+</div>
+<img src="../static/example_analysis_1/pic2.png" /><p>Next, the size of bins is too large to see anything.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">We</span> <span class="n">go</span> <span class="n">to</span> <span class="n">Interface</span><span class="o">-&gt;</span><span class="n">Number</span> <span class="n">of</span> <span class="n">Bins</span> <span class="ow">and</span> <span class="n">increase</span> <span class="n">the</span> <span class="n">slider</span><span class="o">.</span>
+</pre></div>
+</div>
+<img src="../static/example_analysis_1/pic3.png" /><p><em>T. brucei’s</em> genome has a lot of repetitive regions, especially at the telomeres.
+Currently all found contact points are rendered;
+however, for repetitive regions it is often impossible to map a read to a unique genomic loci.
+In such cases mappers will still map the read to one possible genomic loci, but mark the read with a low confidence (i.e. Mapping Quality) value.
+These low confidence reads produce a lot of noise.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">We</span> <span class="n">now</span> <span class="nb">filter</span> <span class="n">out</span> <span class="n">such</span> <span class="n">low</span> <span class="n">confidence</span> <span class="n">reads</span> <span class="n">by</span> <span class="n">moving</span> <span class="n">the</span> <span class="n">lower</span> <span class="n">bound</span> <span class="n">of</span> <span class="n">the</span> <span class="n">Filters</span><span class="o">-&gt;</span><span class="n">Mapping</span> <span class="n">Quality</span> <span class="n">Bounds</span> <span class="n">slider</span> <span class="kn">from</span> <span class="mi">0</span> <span class="n">to</span> <span class="mf">3.</span>
+</pre></div>
+</div>
+<img src="../static/example_analysis_1/pic4.png" /><p>Next, we want to pick our normalization technique as currently we are looking at un-normalized data.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">We</span> <span class="n">click</span> <span class="n">on</span> <span class="n">Normalization</span><span class="o">-&gt;</span><span class="n">Normalize</span> <span class="n">by</span><span class="o">-&gt;</span><span class="n">Row</span> <span class="n">Sum</span><span class="p">,</span> <span class="n">to</span> <span class="n">normalize</span> <span class="n">the</span> <span class="nb">sum</span> <span class="n">of</span> <span class="n">each</span> <span class="n">row</span> <span class="n">to</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<img src="../static/example_analysis_1/pic5.png" /><p>Finally, we have 2 replicates loaded.
+Currently, they are simply added together after normalization.
+We would like to display the differences between them though.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Hence</span><span class="p">,</span> <span class="n">we</span> <span class="n">click</span> <span class="n">on</span> <span class="n">Replicates</span><span class="o">-&gt;</span><span class="n">Between</span> <span class="n">Group</span><span class="o">-&gt;</span><span class="n">Substract</span><span class="o">.</span>
+</pre></div>
+</div>
+<img src="../static/example_analysis_1/pic6.png" /><p>We now see a log of differences between the two datasets.
+first, we would like to focus on the most striking differences.
+For this, we change color scale so that we se more differences between larger number but less between smaller numbers.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">We</span> <span class="n">move</span> <span class="n">the</span> <span class="n">Normalization</span><span class="o">-&gt;</span><span class="n">Color</span> <span class="n">Scale</span> <span class="n">Log</span> <span class="n">Base</span> <span class="n">slider</span> <span class="kn">from</span> <span class="mi">10</span> <span class="n">to</span> <span class="mf">4.</span>
+</pre></div>
+</div>
+<img src="../static/example_analysis_1/pic7.png" /><p>Now let’s inspect onf of the most striking interactions by zooming in.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">For</span> <span class="n">this</span> <span class="n">we</span> <span class="n">click</span> <span class="n">on</span> <span class="n">General</span><span class="o">-&gt;</span><span class="n">Zoom</span> <span class="p">(</span><span class="n">the</span> <span class="n">magnifying</span> <span class="n">glass</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">toolbar</span> <span class="n">at</span> <span class="n">the</span> <span class="n">top</span><span class="p">)</span> <span class="ow">and</span> <span class="n">drag</span> <span class="n">a</span> <span class="n">rectangle</span> <span class="n">around</span> <span class="n">the</span> <span class="n">interaction</span> <span class="n">we</span> <span class="n">want</span> <span class="n">to</span> <span class="n">inspect</span> <span class="n">further</span><span class="o">.</span>
+</pre></div>
+</div>
+<img src="../static/example_analysis_1/pic8.png" /><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Then</span><span class="p">,</span> <span class="n">we</span> <span class="n">hover</span> <span class="n">over</span> <span class="n">the</span> <span class="n">interaction</span><span class="o">.</span>
+</pre></div>
+</div>
+<img src="../static/example_analysis_1/pic9.png" /></section>
 </section>
 <section id="list-of-plots-and-what-they-show-anna">
 <h3>List of Plots and what they show (<em>Anna</em>)<a class="headerlink" href="#list-of-plots-and-what-they-show-anna" title="Permalink to this headline"></a></h3>
@@ -199,7 +250,7 @@ It is recommended to use these normalizations merely as an exploratory tool but 
 </tr>
 <tr class="row-odd"><td><p>Iterative Correction</p></td>
 <td></td>
-<td><p>Use the iterative correction approach developed for Hi-C data by Imakaev et al. [4].</p></td>
+<td><p>Use the iterative correction approach developed for Hi-C data by Imakaev et al. [4]. &#64;todo this is ICE correct?</p></td>
 <td><p>✔️</p></td>
 <td></td>
 <td><p>✔️</p></td>
