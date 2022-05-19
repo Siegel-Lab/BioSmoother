@@ -181,14 +181,14 @@ def parse_wig_file(filename, chr_start_idx, dividend):
         ys.append(0)
         yield xs, ys, track
 
-TEST_FAC = 200000
+TEST_FAC = 800000
 
 def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test=False):
     os.makedirs(out_prefix + ".smoother_index")
     #os.chmod(out_prefix + ".smoother_index", # would make it look more like a file but do i really want that?
     #         stat_perm.S_IWUSR | stat_perm.S_IXUSR | stat_perm.S_IXGRP | stat_perm.S_IXOTH )
     meta = MetaData(dividend)
-    meta.set_chr_sizes(ChrSizes(chr_len_file_name, dividend, filter=lambda x: ("Chr1_" in x) or not test))
+    meta.set_chr_sizes(ChrSizes(chr_len_file_name, dividend)) # filter=lambda x: ("Chr1_" in x) or not test)
 
     if not annotation_filename is None:
         meta.add_annotations(parse_annotations(annotation_filename, meta.chr_sizes.chr_start_pos, dividend))
@@ -208,7 +208,7 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test
     touch(out_prefix + ".smoother_index/repl.prefix_sums")
 
 
-def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_groups=False):
+def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_groups=False, test_idx=1):
     meta = MetaData.load(out_prefix + ".smoother_index/meta")
     index = make_sps_index(out_prefix + ".smoother_index/repl", 3, True, 2, "Cached" if cached else "Disk", True )
     cnt = 0
@@ -219,14 +219,17 @@ def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_
             continue
         if not chr_2 in meta.chr_sizes.chr_sizes:
             continue
+        if cnt < TEST_FAC*(test_idx-1) and test:
+            cnt += 1
+            continue
         act_pos_1_s = meta.chr_sizes.coordinate(pos_2_s // meta.dividend, chr_2)
         act_pos_1_e = meta.chr_sizes.coordinate(pos_2_e // meta.dividend, chr_2)
         act_pos_2_s = meta.chr_sizes.coordinate(pos_1_s // meta.dividend, chr_1)
         act_pos_2_e = meta.chr_sizes.coordinate(pos_1_e // meta.dividend, chr_1)
         index.add_point([act_pos_1_s, act_pos_2_s, map_q], [act_pos_1_e, act_pos_2_e, map_q], read_name)
-        cnt += 1
-        if cnt > TEST_FAC and test:
+        if cnt > TEST_FAC*test_idx and test:
             break
+        cnt += 1
     print("generating index")
     idx = index.generate(last_cnt, len(index))
     meta.add_dataset(name, path, group_a, idx)
@@ -261,7 +264,8 @@ def init(args):
     make_meta(args.index_prefix, args.chr_len, args.annotations, args.dividend, args.test)
 
 def repl(args):
-    add_replicate(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached, args.no_groups)
+    add_replicate(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached, args.no_groups,
+                  args.test_idx)
 
 def norm(args):
     add_normalization(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached)
@@ -290,9 +294,11 @@ def get_argparse():
     parser = argparse.ArgumentParser(description='Create indices for the smoother Hi-C data viewer.')
 
     ## deebugging arguments
+    parser.add_argument('--test_idx', help=argparse.SUPPRESS, type=int, default=1)
     parser.add_argument('--test', help=argparse.SUPPRESS, action='store_true')
     parser.add_argument('--uncached', help=argparse.SUPPRESS, action='store_true')
     parser.add_argument('--no_groups', help=argparse.SUPPRESS, action='store_true')
+    parser.add_argument('-v', "--verbosity", help="@todo make this do sth", default=1)
 
     sub_parsers = parser.add_subparsers(help='Sub-command that shall be executed.', dest="cmd")
     sub_parsers.required=True

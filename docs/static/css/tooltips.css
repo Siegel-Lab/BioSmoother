@@ -1,0 +1,28 @@
+.tooltip:after {
+    padding: 3px !important;
+    position: relative;
+    max-width: 150px;
+    text-align: center;
+    background-color: #292929;
+    color: rgb(192, 192, 192);
+
+    opacity: 0;
+    transition-property: opacity;
+}
+
+.tooltip:hover:before {
+    opacity: 1;
+}
+
+.tooltip:after {
+    opacity: 0;
+    transition-delay: 1s;
+}
+
+.tooltip:hover:after {
+    opacity: 1;
+}
+
+.tooltip_1:after {
+    content: "my tooltip 1";
+}

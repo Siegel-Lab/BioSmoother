@@ -10,3 +10,4 @@ _docs_build
 _doctrees
 tex/*
 smoother.pdf
+conda_env/smoother/

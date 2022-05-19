@@ -47,7 +47,7 @@ The purpose of this analysis is simply to show some of the features of smoother.
 First, we open smoother with one of the sample datasets: 
 2 replicates of Anna's data - protein mediated and non-protein mediated RNA-DNA interactions (RADICL-seq).
 
-    For this we open the viewer and type 2repl in General->Data path
+    For this we open the viewer and type test in General->Data path
 
 <img src="../static/example_analysis_1/pic1.png" />
 
@@ -67,6 +67,12 @@ Next, the size of bins is too large to see anything.
 
 <img src="../static/example_analysis_1/pic3.png" />
 
+Next, we want to pick our normalization technique as currently we are looking at un-normalized data.
+
+    We click on Normalization->Normalize by->Row Sum, to normalize the sum of each row to 1
+
+<img src="../static/example_analysis_1/pic4.png" />
+
 *T. brucei's* genome has a lot of repetitive regions, especially at the telomeres.
 Currently all found contact points are rendered;
 however, for repetitive regions it is often impossible to map a read to a unique genomic loci.
@@ -74,12 +80,6 @@ In such cases mappers will still map the read to one possible genomic loci, but 
 These low confidence reads produce a lot of noise.
 
     We now filter out such low confidence reads by moving the lower bound of the Filters->Mapping Quality Bounds slider from 0 to 3.
-
-<img src="../static/example_analysis_1/pic4.png" />
-
-Next, we want to pick our normalization technique as currently we are looking at un-normalized data.
-
-    We click on Normalization->Normalize by->Row Sum, to normalize the sum of each row to 1
 
 <img src="../static/example_analysis_1/pic5.png" />
 
@@ -137,7 +137,8 @@ It is recommended to use these normalizations merely as an exploratory tool but 
 | Name | Picture | Description | For Symm. | For Asymm. | Always Comparable |
 |-|-|-|-|-|-|
 | Largest Rendered Bin | | Divide the number of interactions in each bin the number of interactions in the largest rendered bin. This keeps differences between bins nicely visible by always ensuring that the colorscale is used fully. | ✔️ | ✔️ | |
-| Number of Reads | | Divide the number of interactions in each bin by the total number of reads in the dataset. | ✔️ | ✔️ | ✔️ |
+| Reads per Million | | Divide the number of interactions in each bin by the number of million reads in the dataset. | ✔️ | ✔️ | ✔️ |
+| Reads per Thousand | | Divide the number of interactions in each bin by the number of thousand reads in the dataset. | ✔️ | ✔️ | ✔️ |
 | Column Sum | | Divide the number of interactions in each bin by the number of interactions in the complete column that bin belongs to. | | ✔️ | ✔️ |
 | Row Sum | | Divide the number of interactions in each bin by the number of interactions in the complete row that bin belongs to. | | ✔️ | ✔️ |
 | Coverage of Normalization Reads (Absolute) | | Divide the number of interactions in each bin by the coverage of the normalization datasets. With the 'Normalization Rows' and 'Normalization Columns' pickers, you can decide what datasets should be used for the columns and rows. | ✔️ | ✔️ | ✔️ |
@@ -151,10 +152,6 @@ Groups A and B are normalized individually and then combined according to the 'B
 The 'In Group' operation (see Replicates section) is applied before the Normalization.
 
 
-
-##### Mapping Quality Bounds
-
-@todo move to Filters
 
 ##### Color Scale Begin \& Color Scale Log Base
 
@@ -182,9 +179,6 @@ for *a=0* the function is undefined but approaches the 45-degree diagonal, so we
 
 what do they change
 
-## Setting up a Webserver (_Markus_)
-
-smoother can be deployed as a webserver so this should be described
 
 ## Using Slurm (_Markus_)
 
@@ -193,6 +187,10 @@ smoother can run within slurm
 ## Installing via GitHub (_Markus_)
 
 getting the current development version
+
+## Setting up a Webserver (_Markus_)
+
+smoother can be deployed as a webserver so this should be described
 
 ## The Datastructure (_Markus_)
 

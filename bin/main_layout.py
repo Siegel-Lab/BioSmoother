@@ -26,6 +26,7 @@ from bokeh.models.tickers import AdaptiveTicker
 
 SETTINGS_WIDTH = 200
 DEFAULT_SIZE = 50
+DROPDOWN_HEIGHT=30
 ANNOTATION_PLOT_NAME = "Annotation"
 RATIO_PLOT_NAME = "Ratio"
 RAW_PLOT_NAME = "Cov"
@@ -256,8 +257,8 @@ class FigureMaker:
             menu.append(
                 (("☑ " if FigureMaker._show_hide["grid_lines"] else "☐ ") + "Grid Lines", "grid_lines"))
             return menu
-        ret = Dropdown(label="Show/Hide", menu=make_menu(), name="saasdasd",
-                       width=SETTINGS_WIDTH, sizing_mode="stretch_width", css_classes=["other_button", "tooltip", "tooltip_1"], height=30)
+        ret = Dropdown(label="Show/Hide", menu=make_menu(),
+                       width=SETTINGS_WIDTH, sizing_mode="fixed", css_classes=["other_button", "tooltip", "tooltip_show_hide"], height=DROPDOWN_HEIGHT)
 
         def event(e):
             FigureMaker.toggle_hide(e.item)
@@ -278,10 +279,10 @@ class FigureMaker:
 
 
 class MainLayout:
-    def dropdown_select_h(self, title, event):
+    def dropdown_select_h(self, title, event, tooltip):
 
-        ret = Dropdown(label=title, menu=[], width=SETTINGS_WIDTH, sizing_mode="stretch_width", 
-                        css_classes=["other_button"])
+        ret = Dropdown(label=title, menu=[], width=SETTINGS_WIDTH, sizing_mode="fixed", 
+                        css_classes=["other_button", "tooltip", tooltip], height=DROPDOWN_HEIGHT)
 
         options = []
         d = {}
@@ -312,8 +313,8 @@ class MainLayout:
         ret.on_click(_event)
         return ret, set_menu
 
-    def dropdown_select(self, title, event, *options):
-        ret, set_menu = self.dropdown_select_h(title, event)
+    def dropdown_select(self, title, event, tooltip, *options):
+        ret, set_menu = self.dropdown_select_h(title, event, tooltip)
         set_menu([*options])
         return ret
 
@@ -536,7 +537,7 @@ class MainLayout:
         def in_group_event(e):
             self.in_group_d = e
             self.trigger_render()
-        self.in_group = self.dropdown_select("In Group", in_group_event, 
+        self.in_group = self.dropdown_select("In Group", in_group_event, "tooltip_in_group",
                                              ("Sum [a+b+c+...]", "sum"), 
                                              ("Minimium [min(a,b,c,...)]", "min"),
                                              ("Difference [|a-b|+|a-c|+|b-c|+...]", "dif"))
@@ -546,7 +547,7 @@ class MainLayout:
         def betw_group_event(e):
             self.betw_group_d = e
             self.trigger_render()
-        self.betw_group = self.dropdown_select("Between Group", betw_group_event,
+        self.betw_group = self.dropdown_select("Between Group", betw_group_event, "tooltip_between_groups",
                                                ("Sum [a+b]", "sum"), ("Show First Group [a]", "1st"), (
                                                    "Show Second Group [b]", "2nd"), ("Substract [a-b]", "sub"),
                                                ("Difference [|a-b|]", "dif"), ("Minimum [min(a,b)]", "min"), ("Maximum [max(a,b)]", "max"))
@@ -556,7 +557,7 @@ class MainLayout:
         def symmetrie_event(e):
             self.symmetrie_d = e
             self.trigger_render()
-        self.symmetrie = self.dropdown_select("Symmetry", symmetrie_event,
+        self.symmetrie = self.dropdown_select("Symmetry", symmetrie_event, "tooltip_symmetry",
                                               ("Show All Interactions", "all"), 
                                               ("Only Show Symmetric Interactions", "sym"), 
                                               ("Only Show Asymmetric Interactions", "asym"))
@@ -566,7 +567,7 @@ class MainLayout:
         def normalization_event(e):
             self.normalization_d = e
             self.trigger_render()
-        self.normalization = self.dropdown_select("Normalize by", normalization_event,
+        self.normalization = self.dropdown_select("Normalize by", normalization_event, "tooltip_normalize_by",
                                                   ("Largest Rendered Bin",
                                                    "max_bin_visible"),
                                                   ("Reads per Million",
@@ -586,7 +587,7 @@ class MainLayout:
         def square_bin_event(e):
             self.square_bins_d = e
             self.trigger_render()
-        square_bins = self.dropdown_select("Bin Aspect Ratio", square_bin_event,
+        square_bins = self.dropdown_select("Bin Aspect Ratio", square_bin_event, "tooltip_bin_aspect_ratio",
                                                   ("Squared relative to view",
                                                    "view"),
                                                   ("Squared relative to coordinates",
@@ -596,7 +597,7 @@ class MainLayout:
         def power_ten_bin_event(e):
             self.power_ten_bin_d = e
             self.trigger_render()
-        power_ten_bin = self.dropdown_select("Snap Bin Size", power_ten_bin_event,
+        power_ten_bin = self.dropdown_select("Snap Bin Size", power_ten_bin_event, "tooltip_snap_bin_size",
                                                 ("To Even Power of Ten", "p10"),
                                                 ("Do not snap", "no")
                                                   )
@@ -607,7 +608,7 @@ class MainLayout:
                 self.settings.width_policy = "fixed"
             else:
                 self.settings.width_policy = "max"
-        self.stretch = self.dropdown_select("Stretch/Scale", stretch_event,
+        self.stretch = self.dropdown_select("Stretch/Scale", stretch_event, "tooltip_stretch_scale",
                                                   ("Stretch", "stretch_both"),
                                                   ("Scale", "scale_height"))
 
@@ -677,7 +678,7 @@ class MainLayout:
         self.raw_size_slider.on_change(
             "value_throttled", raw_size_slider_event)
 
-        self.num_bins = Slider(width=SETTINGS_WIDTH, start=1000, end=100000, value=10000, step=1000,
+        self.num_bins = Slider(width=SETTINGS_WIDTH, start=10000, end=200000, value=50000, step=10000,
                                title="Number of Bins", sizing_mode="stretch_width")
         self.num_bins.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
@@ -733,13 +734,15 @@ class MainLayout:
             FigureMaker.x_coords_d = e
             self.setup_coordinates()
             self.trigger_render()
-        x_coords, self.x_coords_update = self.dropdown_select_h("Row Coordinates", x_coords_event)
+        x_coords, self.x_coords_update = self.dropdown_select_h("Row Coordinates", x_coords_event,
+                                                                 "tooltip_row_coordinates")
 
         def y_coords_event(e):
             FigureMaker.y_coords_d = e
             self.setup_coordinates()
             self.trigger_render()
-        y_coords, self.y_coords_update = self.dropdown_select_h("Column Coordinates", y_coords_event)
+        y_coords, self.y_coords_update = self.dropdown_select_h("Column Coordinates", y_coords_event,
+                                                                 "tooltip_column_coordinates")
 
         
         self.chrom_x, chrom_x_layout = self.multi_choice("Row Chromosomes")
@@ -750,6 +753,7 @@ class MainLayout:
             self.multiple_anno_per_bin_d = e
             self.trigger_render()
         multiple_anno_per_bin = self.dropdown_select("Multiple Annotations in Bin", multiple_anno_per_bin_event, 
+                "tooltip_multiple_annotations_in_bin", 
                 ("Combine region from first to last annotation", "combine"), 
                 ("Use first annotation", "first"), 
                 ("Use Random annotation", "random"), 
@@ -759,7 +763,7 @@ class MainLayout:
         def export_event(e):
             self.do_export = e
             self.trigger_render()
-        self.export_button = self.dropdown_select("Export", export_event,
+        self.export_button = self.dropdown_select("Export", export_event, "tooltip_export",
                                                   ("Current View", "current"),
                                                   ("Full Matrix", "full"))
 
@@ -784,21 +788,26 @@ class MainLayout:
         self.export_type.value = ["data"]
 
         
-        grid_seq_config = Button(label="Grid Seq-like @todo", sizing_mode="stretch_width", css_classes=["other_button"])
+        grid_seq_config = Button(label="Grid Seq-like @todo", sizing_mode="stretch_width", 
+                                 css_classes=["other_button", "tooltip", "tooltip_grid_seq"],
+                                 height=DROPDOWN_HEIGHT)
         def grid_seq_event(e):
             # @todo 
             self.normalization_d = "column"
             self.trigger_render()
         grid_seq_config.on_click(grid_seq_event)
-        radicl_seq_config = Button(label="Radicl Seq-like", sizing_mode="stretch_width", css_classes=["other_button"])
+        radicl_seq_config = Button(label="Radicl Seq-like", sizing_mode="stretch_width", 
+                                   css_classes=["other_button", "tooltip", "tooltip_radicl_seq"],
+                                   height=DROPDOWN_HEIGHT)
         def radicl_seq_event(e):
             self.normalization_d = "radicl-seq" # @todo also update menu
             self.betw_group_d = "max"
             self.trigger_render()
         radicl_seq_config.on_click(radicl_seq_event)
 
-        def make_panel(title, children):
-            t = Toggle(active=title == "General", button_type="light", css_classes=["menu_group"])
+        def make_panel(title, tooltip, children):
+            t = Toggle(active=title == "General", button_type="light", css_classes=["menu_group", "tooltip", tooltip],
+                       height=DROPDOWN_HEIGHT)
 
             cx = column(children, sizing_mode="stretch_width", css_classes=["offset_left"])
             cx.margin = [0, 20, 0, 20]
@@ -822,23 +831,24 @@ class MainLayout:
             return r
 
         _settings = column([
-                make_panel("General", [tool_bar, meta_file_label, self.meta_file, show_hide,
-                                    self.min_max_bin_size]),
-                make_panel("Normalization", [self.normalization, self.interactions_bounds_slider,
+                make_panel("General", "tooltip_general", [tool_bar, meta_file_label, self.meta_file]),
+                make_panel("Normalization", "tooltip_normalization", [self.normalization, self.interactions_bounds_slider,
                                     self.interactions_slider, norm_x_layout, norm_y_layout, self.radical_seq_accept]),
-                make_panel("Replicates", [self.in_group, self.betw_group, group_a_layout, group_b_layout]),
-                make_panel("Interface", [self.num_bins, self.update_frequency_slider, self.redraw_slider,
+                make_panel("Replicates", "tooltip_replicates", [self.in_group, self.betw_group, group_a_layout, group_b_layout]),
+                make_panel("Interface", "tooltip_interface", [self.num_bins,
+                                    show_hide, self.min_max_bin_size,
+                                    self.update_frequency_slider, self.redraw_slider,
                                     self.add_area_slider,
                                     self.anno_size_slider, self.raw_size_slider, self.ratio_size_slider,
                                     self.stretch, square_bins, power_ten_bin]),
-                make_panel("Filters", [self.mapq_slider, self.symmetrie, self.diag_dist_slider, 
+                make_panel("Filters", "tooltip_filters", [self.mapq_slider, self.symmetrie, self.diag_dist_slider, 
                                           displayed_annos_layout, filtered_annos_x_layout,
                                           filtered_annos_y_layout,
                                           x_coords, y_coords, multiple_anno_per_bin, chrom_x_layout, chrom_y_layout]),
-                make_panel("Export", [export_label, self.export_file, export_sele_layout, 
+                make_panel("Export", "tooltip_export", [export_label, self.export_file, export_sele_layout, 
                                         #export_type_layout, 
                                       self.export_button]),
-                make_panel("Quick Config", [grid_seq_config, radicl_seq_config]),
+                make_panel("Quick Config", "tooltip_quick_config", [grid_seq_config, radicl_seq_config]),
             ],
             sizing_mode="stretch_both",
             css_classes=["scroll_y"]
@@ -1337,6 +1347,8 @@ class MainLayout:
                   str(int(100*time/total_time)) + "%", name, "\033[K", sep="\t")
         print("Currently used RAM:", psutil.virtual_memory().percent, "%\033[K")
         print("Number of displayed bins:", bin_amount, "\033[K")
+        return total_time
+
 
     @gen.coroutine
     @without_document_lock
@@ -1647,8 +1659,9 @@ class MainLayout:
                         else:
                             return str(x * int(10**exp)) + "bp"
 
-                    self.curr_bin_size.text = "Redering Done.<br>Current Bin Size: " + readable_display(w_bin) + \
-                                            " x " + readable_display(h_bin)
+                    end_text = "Redering Done.<br>Current Bin Size: " + readable_display(w_bin) + \
+                                            " x " + readable_display(h_bin) + "."
+
 
                     if self.do_export is None:
                         self.raw_x_axis.xaxis.bounds = (mmin(*raw_x_heat, *raw_x_norm_combined), 
@@ -1687,7 +1700,8 @@ class MainLayout:
                         self.anno_y_data.data = d_anno_y
                     self.do_export = None
                     self.curdoc.unhold()
-                    self.render_done(len(bins[0]))
+                    total_time = self.render_done(len(bins[0]))
+                    self.curr_bin_size.text = end_text + "<br>Took " + str(total_time) + " in total."
                     self.curdoc.add_timeout_callback(
                         lambda: self.render_callback(), self.update_frequency_slider.value*1000)
 
@@ -1731,41 +1745,25 @@ class MainLayout:
                                     FigureMaker.y_coords_d)
 
     def setup(self):
-        print("loading...\033[K")
+        print("loading index...\033[K")
         self.spinner.css_classes = ["fade-in"]
         def callback():
-            #if self.meta is None:
-            #    bed_folder = "/work/project/ladsie_012/ABS.2.2/2021-10-26_NS502-NS521_ABS_CR_RADICL_inputMicroC/bed_files"
-            #    bed_suffix = "RNA.sorted.bed_K1K2.bed_K4.bed_R_D.bed_R_D_K1K2.bed_R_D_PRE1.bed"
-            #    bam_folder = "/work/project/ladsie_012/ABS.2.2/20210608_Inputs"
-            #    bam_suffix="R1.sorted.bam"
-            #    meta, tree, t_n = preprocess.preprocess(
-            #        "", "out/mini", "heatmap_server/Lister427.sizes", 
-            #        "heatmap_static/HGAP3_Tb427v10_merged_2021_06_21.gff3", [
-            #        (bed_folder + "/NS504_P10_Total_3." + bed_suffix, "P10_Total_Rep3", "a"),
-            #        (bed_folder + "/NS505_N50_Total_1." + bed_suffix, "P10_Total_Rep1", "a"),
-            #        (bed_folder + "/NS508_P10_NPM_1." + bed_suffix, "P10_NPM_Rep1", "b"),
-            #        (bed_folder + "/NS511_N50_NPM_1." + bed_suffix, "N50_NPM_Rep1", "b"),
-            #    ], [
-            #        (bam_folder + "/WT1_gDNA_inputATAC." + bam_suffix, "gDNA_inputATAC", "col"),
-            #        (bam_folder + "/WT1_RNAseq_NS320." + bam_suffix, "RNAseq_NS320", "row"),
-            #    ])
-            #    self.meta = meta
-            #    self.meta.setup(self)
-            #    self.idx = tree
-            #    self.idx_norm = t_n
-            #    self.trigger_render()
-            if True:
+            self.curr_bin_size.text = "loading index..."
+            def callback2():
                 if os.path.exists(self.meta_file.value + ".smoother_index"):
                     self.meta = MetaData.load(self.meta_file.value + ".smoother_index/meta")
                     self.meta.setup(self)
                     self.setup_coordinates()
                     self.idx = Tree_4(self.meta_file.value)
+                    print("number of points in index: ", len(self.idx.index))
                     self.idx_norm = Tree_3(self.meta_file.value)
                     print("done loading\033[K")
                     self.trigger_render()
+                    self.curr_bin_size.text = "done loading"
                 else:
                     print("File not found")
+                    self.curr_bin_size.text = "File not found"
+            self.curdoc.add_next_tick_callback(callback2)
         self.curdoc.add_next_tick_callback(callback)
 
     def trigger_render(self):

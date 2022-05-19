@@ -114,7 +114,7 @@ adding as normalization track</p>
 <p>The purpose of this analysis is simply to show some of the features of smoother.</p>
 <p>First, we open smoother with one of the sample datasets:
 2 replicates of Anna’s data - protein mediated and non-protein mediated RNA-DNA interactions (RADICL-seq).</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">For</span> <span class="n">this</span> <span class="n">we</span> <span class="nb">open</span> <span class="n">the</span> <span class="n">viewer</span> <span class="ow">and</span> <span class="nb">type</span> <span class="mi">2</span><span class="n">repl</span> <span class="ow">in</span> <span class="n">General</span><span class="o">-&gt;</span><span class="n">Data</span> <span class="n">path</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">For</span> <span class="n">this</span> <span class="n">we</span> <span class="nb">open</span> <span class="n">the</span> <span class="n">viewer</span> <span class="ow">and</span> <span class="nb">type</span> <span class="n">test</span> <span class="ow">in</span> <span class="n">General</span><span class="o">-&gt;</span><span class="n">Data</span> <span class="n">path</span>
 </pre></div>
 </div>
 <img src="../static/example_analysis_1/pic1.png" /><p>The grey lines we see show the borders between contigs.
@@ -128,16 +128,16 @@ Since they are so small they show up as a solid grey area to the top-right of th
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">We</span> <span class="n">go</span> <span class="n">to</span> <span class="n">Interface</span><span class="o">-&gt;</span><span class="n">Number</span> <span class="n">of</span> <span class="n">Bins</span> <span class="ow">and</span> <span class="n">increase</span> <span class="n">the</span> <span class="n">slider</span><span class="o">.</span>
 </pre></div>
 </div>
-<img src="../static/example_analysis_1/pic3.png" /><p><em>T. brucei’s</em> genome has a lot of repetitive regions, especially at the telomeres.
+<img src="../static/example_analysis_1/pic3.png" /><p>Next, we want to pick our normalization technique as currently we are looking at un-normalized data.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">We</span> <span class="n">click</span> <span class="n">on</span> <span class="n">Normalization</span><span class="o">-&gt;</span><span class="n">Normalize</span> <span class="n">by</span><span class="o">-&gt;</span><span class="n">Row</span> <span class="n">Sum</span><span class="p">,</span> <span class="n">to</span> <span class="n">normalize</span> <span class="n">the</span> <span class="nb">sum</span> <span class="n">of</span> <span class="n">each</span> <span class="n">row</span> <span class="n">to</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<img src="../static/example_analysis_1/pic4.png" /><p><em>T. brucei’s</em> genome has a lot of repetitive regions, especially at the telomeres.
 Currently all found contact points are rendered;
 however, for repetitive regions it is often impossible to map a read to a unique genomic loci.
 In such cases mappers will still map the read to one possible genomic loci, but mark the read with a low confidence (i.e. Mapping Quality) value.
 These low confidence reads produce a lot of noise.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">We</span> <span class="n">now</span> <span class="nb">filter</span> <span class="n">out</span> <span class="n">such</span> <span class="n">low</span> <span class="n">confidence</span> <span class="n">reads</span> <span class="n">by</span> <span class="n">moving</span> <span class="n">the</span> <span class="n">lower</span> <span class="n">bound</span> <span class="n">of</span> <span class="n">the</span> <span class="n">Filters</span><span class="o">-&gt;</span><span class="n">Mapping</span> <span class="n">Quality</span> <span class="n">Bounds</span> <span class="n">slider</span> <span class="kn">from</span> <span class="mi">0</span> <span class="n">to</span> <span class="mf">3.</span>
-</pre></div>
-</div>
-<img src="../static/example_analysis_1/pic4.png" /><p>Next, we want to pick our normalization technique as currently we are looking at un-normalized data.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">We</span> <span class="n">click</span> <span class="n">on</span> <span class="n">Normalization</span><span class="o">-&gt;</span><span class="n">Normalize</span> <span class="n">by</span><span class="o">-&gt;</span><span class="n">Row</span> <span class="n">Sum</span><span class="p">,</span> <span class="n">to</span> <span class="n">normalize</span> <span class="n">the</span> <span class="nb">sum</span> <span class="n">of</span> <span class="n">each</span> <span class="n">row</span> <span class="n">to</span> <span class="mi">1</span>
 </pre></div>
 </div>
 <img src="../static/example_analysis_1/pic5.png" /><p>Finally, we have 2 replicates loaded.
@@ -206,49 +206,56 @@ It is recommended to use these normalizations merely as an exploratory tool but 
 <td><p>✔️</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p>Number of Reads</p></td>
+<tr class="row-odd"><td><p>Reads per Million</p></td>
 <td></td>
-<td><p>Divide the number of interactions in each bin by the total number of reads in the dataset.</p></td>
+<td><p>Divide the number of interactions in each bin by the number of million reads in the dataset.</p></td>
 <td><p>✔️</p></td>
 <td><p>✔️</p></td>
 <td><p>✔️</p></td>
 </tr>
-<tr class="row-even"><td><p>Column Sum</p></td>
+<tr class="row-even"><td><p>Reads per Thousand</p></td>
+<td></td>
+<td><p>Divide the number of interactions in each bin by the number of thousand reads in the dataset.</p></td>
+<td><p>✔️</p></td>
+<td><p>✔️</p></td>
+<td><p>✔️</p></td>
+</tr>
+<tr class="row-odd"><td><p>Column Sum</p></td>
 <td></td>
 <td><p>Divide the number of interactions in each bin by the number of interactions in the complete column that bin belongs to.</p></td>
 <td></td>
 <td><p>✔️</p></td>
 <td><p>✔️</p></td>
 </tr>
-<tr class="row-odd"><td><p>Row Sum</p></td>
+<tr class="row-even"><td><p>Row Sum</p></td>
 <td></td>
 <td><p>Divide the number of interactions in each bin by the number of interactions in the complete row that bin belongs to.</p></td>
 <td></td>
 <td><p>✔️</p></td>
 <td><p>✔️</p></td>
 </tr>
-<tr class="row-even"><td><p>Coverage of Normalization Reads (Absolute)</p></td>
+<tr class="row-odd"><td><p>Coverage of Normalization Reads (Absolute)</p></td>
 <td></td>
 <td><p>Divide the number of interactions in each bin by the coverage of the normalization datasets. With the ‘Normalization Rows’ and ‘Normalization Columns’ pickers, you can decide what datasets should be used for the columns and rows.</p></td>
 <td><p>✔️</p></td>
 <td><p>✔️</p></td>
 <td><p>✔️</p></td>
 </tr>
-<tr class="row-odd"><td><p>Coverage of Normalization Reads (Scaled)</p></td>
+<tr class="row-even"><td><p>Coverage of Normalization Reads (Scaled)</p></td>
 <td></td>
 <td><p>Same as the absolute version, but makes sure the complete colorscale is used.</p></td>
 <td><p>✔️</p></td>
 <td><p>✔️</p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p>Binominal Test</p></td>
+<tr class="row-odd"><td><p>Binominal Test</p></td>
 <td></td>
 <td><p>Use a binominal test to determine weather each bin is statistically significant, in it’s row. This strategy was created by Bonetti et al. for RADICL-seq RNA-DNA interaction data [3]. The acceptance p-value can be modified with a slider. <a href="#id1"><span class="problematic" id="id2">*</span></a>For views that do not show the entire genome, we use an approximation for the p-value adjustment that is performed after the binominal test.</p></td>
 <td></td>
 <td><p>✔️</p></td>
 <td><p>✔️*</p></td>
 </tr>
-<tr class="row-odd"><td><p>Iterative Correction</p></td>
+<tr class="row-even"><td><p>Iterative Correction</p></td>
 <td></td>
 <td><p>Use the iterative correction approach developed for Hi-C data by Imakaev et al. [4]. &#64;todo this is ICE correct?</p></td>
 <td><p>✔️</p></td>
@@ -260,10 +267,6 @@ It is recommended to use these normalizations merely as an exploratory tool but 
 <p>Since smoother is capable of normalizing data on the fly, you can zoom in to a region of interest and then dynamically change the normalization strategy.</p>
 <p>Groups A and B are normalized individually and then combined according to the ‘Between Group’ setting (see Replicates section).
 The ‘In Group’ operation (see Replicates section) is applied before the Normalization.</p>
-</section>
-<section id="mapping-quality-bounds">
-<h5>Mapping Quality Bounds<a class="headerlink" href="#mapping-quality-bounds" title="Permalink to this headline"></a></h5>
-<p>&#64;todo move to Filters</p>
 </section>
 <section id="color-scale-begin-color-scale-log-base">
 <h5>Color Scale Begin &amp; Color Scale Log Base<a class="headerlink" href="#color-scale-begin-color-scale-log-base" title="Permalink to this headline"></a></h5>
@@ -288,10 +291,6 @@ for <em>a=0</em> the function is undefined but approaches the 45-degree diagonal
 </section>
 </section>
 </section>
-<section id="setting-up-a-webserver-markus">
-<h2>Setting up a Webserver (<em>Markus</em>)<a class="headerlink" href="#setting-up-a-webserver-markus" title="Permalink to this headline"></a></h2>
-<p>smoother can be deployed as a webserver so this should be described</p>
-</section>
 <section id="using-slurm-markus">
 <h2>Using Slurm (<em>Markus</em>)<a class="headerlink" href="#using-slurm-markus" title="Permalink to this headline"></a></h2>
 <p>smoother can run within slurm</p>
@@ -299,6 +298,10 @@ for <em>a=0</em> the function is undefined but approaches the 45-degree diagonal
 <section id="installing-via-github-markus">
 <h2>Installing via GitHub (<em>Markus</em>)<a class="headerlink" href="#installing-via-github-markus" title="Permalink to this headline"></a></h2>
 <p>getting the current development version</p>
+</section>
+<section id="setting-up-a-webserver-markus">
+<h2>Setting up a Webserver (<em>Markus</em>)<a class="headerlink" href="#setting-up-a-webserver-markus" title="Permalink to this headline"></a></h2>
+<p>smoother can be deployed as a webserver so this should be described</p>
 </section>
 <section id="the-datastructure-markus">
 <h2>The Datastructure (<em>Markus</em>)<a class="headerlink" href="#the-datastructure-markus" title="Permalink to this headline"></a></h2>

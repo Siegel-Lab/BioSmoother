@@ -42,25 +42,26 @@
 <li class="toctree-l1"><a class="reference internal" href="Manual.html">Smoother Manual</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Documentation for the Preprocessing script</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#Positional Arguments">Positional Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Sub-commands:">Sub-commands:</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#init">init</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#Positional Arguments_repeat1">Positional Arguments</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Named Arguments_repeat1">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#repl">repl</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#Positional Arguments_repeat2">Positional Arguments</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#Named Arguments_repeat1">Named Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Named Arguments_repeat2">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#norm">norm</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#Positional Arguments_repeat3">Positional Arguments</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#Named Arguments_repeat2">Named Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Named Arguments_repeat3">Named Arguments</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#grid-seq-norm">grid-seq-norm</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#Positional Arguments_repeat4">Positional Arguments</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#Named Arguments_repeat3">Named Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Named Arguments_repeat4">Named Arguments</a></li>
 </ul>
 </li>
 </ul>
@@ -97,7 +98,7 @@
 <h1>Documentation for the Preprocessing script<a class="headerlink" href="#documentation-for-the-preprocessing-script" title="Permalink to this headline"></a></h1>
 <p><p>Create indices for the smoother Hi-C data viewer.</p>
 </p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">{</span><span class="n">init</span><span class="p">,</span><span class="n">repl</span><span class="p">,</span><span class="n">norm</span><span class="p">,</span><span class="n">grid</span><span class="o">-</span><span class="n">seq</span><span class="o">-</span><span class="n">norm</span><span class="p">}</span> <span class="o">...</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span> <span class="n">VERBOSITY</span><span class="p">]</span> <span class="p">{</span><span class="n">init</span><span class="p">,</span><span class="n">repl</span><span class="p">,</span><span class="n">norm</span><span class="p">,</span><span class="n">grid</span><span class="o">-</span><span class="n">seq</span><span class="o">-</span><span class="n">norm</span><span class="p">}</span> <span class="o">...</span>
 </pre></div>
 </div>
 <section id="Positional Arguments">
@@ -106,6 +107,14 @@
 <dt><kbd>cmd</kbd></dt>
 <dd><p>Possible choices: init, repl, norm, grid-seq-norm</p>
 <p>Sub-command that shall be executed.</p>
+</dd>
+</dl>
+</section>
+<section id="Named Arguments">
+<h2>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline"></a></h2>
+<dl class="option-list">
+<dt><kbd>-v, --verbosity</kbd></dt>
+<dd><p>&#64;todo make this do sth</p>
 </dd>
 </dl>
 </section>
@@ -128,8 +137,8 @@
 </dd>
 </dl>
 </section>
-<section id="Named Arguments">
-<h4>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline"></a></h4>
+<section id="Named Arguments_repeat1">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments_repeat1" title="Permalink to this headline"></a></h4>
 <dl class="option-list">
 <dt><kbd>-d, --dividend</kbd></dt>
 <dd><p>Divide all coordinates by this number. Larger numbers will reduce the index size and preprocessing time. However, bins with a size below this given number cannot be displayed.</p>
@@ -159,8 +168,8 @@
 <dd></dd>
 </dl>
 </section>
-<section id="Named Arguments_repeat1">
-<h4>Named Arguments<a class="headerlink" href="#Named Arguments_repeat1" title="Permalink to this headline"></a></h4>
+<section id="Named Arguments_repeat2">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments_repeat2" title="Permalink to this headline"></a></h4>
 <dl class="option-list">
 <dt><kbd>-g, --group</kbd></dt>
 <dd><p>Possible choices: a, b, both, neither</p>
@@ -186,8 +195,8 @@
 <dd></dd>
 </dl>
 </section>
-<section id="Named Arguments_repeat2">
-<h4>Named Arguments<a class="headerlink" href="#Named Arguments_repeat2" title="Permalink to this headline"></a></h4>
+<section id="Named Arguments_repeat3">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments_repeat3" title="Permalink to this headline"></a></h4>
 <dl class="option-list">
 <dt><kbd>-g, --group</kbd></dt>
 <dd><p>Possible choices: row, col, both, neither</p>
@@ -213,8 +222,8 @@
 <dd></dd>
 </dl>
 </section>
-<section id="Named Arguments_repeat3">
-<h4>Named Arguments<a class="headerlink" href="#Named Arguments_repeat3" title="Permalink to this headline"></a></h4>
+<section id="Named Arguments_repeat4">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments_repeat4" title="Permalink to this headline"></a></h4>
 <dl class="option-list">
 <dt><kbd>-d, --datasets</kbd></dt>
 <dd></dd>

@@ -7,14 +7,11 @@
 - try removing sparse coords for overlay count-entires
 - grid seq norm progress print
 - quick config buttons
-- put help messages
 - AutocompleteInput for filepath
     - when calling give folder where indices are located
     - restrict for public hosting
 - application mode with browsers (i.e. chrome fallback firefox)
-- multiply dividend everywhere
 
 ## Other
 
 - add Claudia's data (send instructions)
-- get it running under windoof?

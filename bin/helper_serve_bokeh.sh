@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source activate smoother
+source activate $(pwd)/conda_env/smoother
 
 port=5009
 

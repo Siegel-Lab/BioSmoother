@@ -1,4 +1,3 @@
-name: smoother
 channels:
   - conda-forge
   - bioconda
