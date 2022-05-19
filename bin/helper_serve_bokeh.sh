@@ -25,8 +25,6 @@ cd ..
 
 bokeh serve smoother --allow-websocket-origin=localhost:${port} --log-level error --port ${port}
 
-# open in aplication mode
-# .\chrome.exe --app=https://xmail.mwn.de/owa/#path=/mail
 
 # kill port forwarding process
 ps -ef | grep "ssh -fNR ${port}:localhost:${port} -i .id_smoother_rsa ${SLURM_JOB_USER}@${SLURM_LAUNCH_NODE_IPADDR}" | grep -v grep | awk '{print $2}' | xargs kill

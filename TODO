@@ -10,7 +10,7 @@
 - AutocompleteInput for filepath
     - when calling give folder where indices are located
     - restrict for public hosting
-- application mode with browsers (i.e. chrome fallback firefox)
+- application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
 
 ## Other
 

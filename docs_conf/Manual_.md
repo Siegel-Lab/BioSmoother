@@ -182,11 +182,33 @@ what do they change
 
 ## Using Slurm (_Markus_)
 
-smoother can run within slurm 
+Smoother is set up to be run on a server within the [Slurm Workload Manager](https://slurm.schedmd.com/overview.html "Go to the Slurm Webpage").
+For this, you need to log into the main node of the server, with ssh port forwarding.
+The default port that needs to be forwarded is 5009; this requires the following login command:
+
+    ssh -L 5009:localhost:5009 -t your_user_name@your_server.com
+
+Then you can navigate into the smoother folder and call the srun.sh script.
+
+    ./srun.sh
+
+This will then log into one of the slurm-client nodes (again using the port forwarding) and start smoother there.
+The command will print an url on your terminal.
+Follow this link with any webbrowser to open smoother on the server.
 
 ## Installing via GitHub (_Markus_)
 
-getting the current development version
+For installing smoother via github, run the following commands:
+
+    # clone repository
+    git clone https://github.com/MarkusRainerSchmidt/smoother
+    cd smoother
+
+    # create the required conda environment
+    ./conda_env/create_smoother_env.sh
+
+    # @todo run the install commands -> see bioconda integration
+
 
 ## Setting up a Webserver (_Markus_)
 
@@ -194,14 +216,29 @@ smoother can be deployed as a webserver so this should be described
 
 ## The Datastructure (_Markus_)
 
-link to datastructure github
+Smoother uses a Datastructure calles libSps implemented in C++ for querying the interactions as effectiveley as possible.
+You can find the [github of libSps here](https://github.com/MarkusRainerSchmidt/libSps "Go to the libSps github").
 
 ### Brief Algorithmic Description
 
 ### Fileformat specification
 
-what files
-how are they encoded (link to libSps)
+Smoothers preprocessing creates several files.
+In brief, these files contain the following information:
+
+| file | desc |
+|------|------|
+| .desc | The description of all points. |
+| .points | The coordinates of all points. |
+| .prefix_sums | The prefix sum for one position in space. |
+| .coords | The translation from real to sparse coordinates. |
+| .overlays | The overlay grid. |
+| .datasets | The individual datasets. |
+| meta | Some metadata about the index. |
+
+Apart from the meta file, all files exist once for the interaction and once for the normalization data.
+
+The exact content of these files is described [here](https://github.com/MarkusRainerSchmidt/libSps "Go to the libSps github").
 
 ### Implementation Details
 
