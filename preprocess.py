@@ -208,7 +208,8 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test
     touch(out_prefix + ".smoother_index/repl.prefix_sums")
 
 
-def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_groups=False, test_idx=1):
+def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_groups=False, test_idx=1,
+                  simulate_hic=False):
     meta = MetaData.load(out_prefix + ".smoother_index/meta")
     index = make_sps_index(out_prefix + ".smoother_index/repl", 3, True, 2, "Cached" if cached else "Disk", True )
     cnt = 0
@@ -226,6 +227,9 @@ def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_
         act_pos_1_e = meta.chr_sizes.coordinate(pos_2_e // meta.dividend, chr_2)
         act_pos_2_s = meta.chr_sizes.coordinate(pos_1_s // meta.dividend, chr_1)
         act_pos_2_e = meta.chr_sizes.coordinate(pos_1_e // meta.dividend, chr_1)
+        if simulate_hic and act_pos_1_e > act_pos_2_s:
+            act_pos_1_s, act_pos_2_s = act_pos_2_s, act_pos_1_s
+            act_pos_1_e, act_pos_2_e = act_pos_2_e, act_pos_1_e
         index.add_point([act_pos_1_s, act_pos_2_s, map_q], [act_pos_1_e, act_pos_2_e, map_q], read_name)
         if cnt > TEST_FAC*test_idx and test:
             break
@@ -265,7 +269,7 @@ def init(args):
 
 def repl(args):
     add_replicate(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached, args.no_groups,
-                  args.test_idx)
+                  args.test_idx, args.simulate_hic)
 
 def norm(args):
     add_normalization(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached)
@@ -284,7 +288,7 @@ def grid_seq_norm(args):
     if args.add_annotation:
         do_add_annotation(filtered_rr, meta, args.name)
     if args.add_normalization_track:
-        index_arr = make_sps_index(args.index_prefix + ".smoother_index/norm", 2, False, 1, "Cached" if args.cached else "Disk", True )
+        index_arr = make_sps_index(args.index_prefix + ".smoother_index/norm", 2, False, 1, "Cached" if not args.uncached else "Disk", True )
         add_as_normalization(filtered_rr, datasets, meta, index, index_arr, args.mapping_q, args.name, 
                              "GRID-seq normalization created with " + str(sys.argv))
 
@@ -299,6 +303,7 @@ def get_argparse():
     parser.add_argument('--uncached', help=argparse.SUPPRESS, action='store_true')
     parser.add_argument('--no_groups', help=argparse.SUPPRESS, action='store_true')
     parser.add_argument('-v', "--verbosity", help="@todo make this do sth", default=1)
+    parser.add_argument('--simulate_hic', help=argparse.SUPPRESS, action='store_true')
 
     sub_parsers = parser.add_subparsers(help='Sub-command that shall be executed.', dest="cmd")
     sub_parsers.required=True

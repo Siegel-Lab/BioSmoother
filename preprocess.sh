@@ -11,7 +11,7 @@ BED_SUF="RNA.sorted.bed_K1K2.bed_K4.bed_R_D.bed_R_D_K1K2.bed_R_D_PRE1.bed"
 BAMS="/work/project/ladsie_012/ABS.2.2/20210608_Inputs"
 BAM_SUF="R1.sorted.bam"
 
-INDEX_PREFIX="../smoother_out/test_cached"
+INDEX_PREFIX="../smoother_out/test"
 
 rm -r ${INDEX_PREFIX}.smoother_index
 
@@ -20,7 +20,7 @@ echo "generating index ${INDEX_PREFIX}"
 DBG_C=""
 #DBG_C="--uncached --test"
 #DBG_C="--uncached"
-#DBG_C="--test"
+#DBG_C="--test --uncached --simulate_hic"
 
 python3 preprocess.py ${DBG_C} init "${INDEX_PREFIX}" Lister427.sizes -a HGAP3_Tb427v10_merged_2021_06_21.gff3 -d 10000
 

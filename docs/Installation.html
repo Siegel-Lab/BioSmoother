@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Using Slurm (Markus) &mdash; smoother 0.0.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> smoother
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="Readme.html">Smoother</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Manual.html">Smoother Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Preprocess.html">Documentation for the Preprocessing script</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">smoother</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Using Slurm (<em>Markus</em>)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/Installation.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="using-slurm-markus">
+<h1>Using Slurm (<em>Markus</em>)<a class="headerlink" href="#using-slurm-markus" title="Permalink to this headline"></a></h1>
+<p>Smoother is set up to be run on a server within the <span class="raw-html-md"><a href="https://slurm.schedmd.com/overview.html" title="Go to the Slurm Webpage">Slurm Workload Manager</a></span>.
+For this, you need to log into the main node of the server, with ssh port forwarding.
+The default port that needs to be forwarded is 5009; this requires the following login command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ssh</span> <span class="o">-</span><span class="n">L</span> <span class="mi">5009</span><span class="p">:</span><span class="n">localhost</span><span class="p">:</span><span class="mi">5009</span> <span class="o">-</span><span class="n">t</span> <span class="n">your_user_name</span><span class="nd">@your_server</span><span class="o">.</span><span class="n">com</span>
+</pre></div>
+</div>
+<p>Then you can navigate into the smoother folder and call the srun.sh script.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">srun</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+<p>This will then log into one of the slurm-client nodes (again using the port forwarding) and start smoother there.
+The command will print an url on your terminal.
+Follow this link with any webbrowser to open smoother on the server.</p>
+</section>
+<section id="installing-via-github-markus">
+<h1>Installing via GitHub (<em>Markus</em>)<a class="headerlink" href="#installing-via-github-markus" title="Permalink to this headline"></a></h1>
+<p>For installing smoother via github, run the following commands:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># clone repository</span>
+<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">MarkusRainerSchmidt</span><span class="o">/</span><span class="n">smoother</span>
+<span class="n">cd</span> <span class="n">smoother</span>
+
+<span class="c1"># create the required conda environment</span>
+<span class="o">./</span><span class="n">conda_env</span><span class="o">/</span><span class="n">create_smoother_env</span><span class="o">.</span><span class="n">sh</span>
+
+<span class="c1"># @todo run the install commands -&gt; see bioconda integration</span>
+</pre></div>
+</div>
+</section>
+<section id="setting-up-a-webserver-markus">
+<h1>Setting up a Webserver (<em>Markus</em>)<a class="headerlink" href="#setting-up-a-webserver-markus" title="Permalink to this headline"></a></h1>
+<p>smoother can be deployed as a webserver so this should be described</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Markus Schmidt.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

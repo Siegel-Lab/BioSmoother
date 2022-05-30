@@ -1659,7 +1659,7 @@ class MainLayout:
                         else:
                             return str(x * int(10**exp)) + "bp"
 
-                    end_text = "Redering Done.<br>Current Bin Size: " + readable_display(w_bin) + \
+                    end_text = "Rendering Done.<br>Current Bin Size: " + readable_display(w_bin) + \
                                             " x " + readable_display(h_bin) + "."
 
 
