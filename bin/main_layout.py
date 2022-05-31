@@ -5,7 +5,7 @@ __email__ = "Markus.Schmidt@lmu.de"
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, MultiChoice, FuncTickFormatter, Div, HoverTool, Toggle, Box
+from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, MultiChoice, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner
 from bokeh.io import export_png, export_svg
 import math
 from datetime import datetime
@@ -16,13 +16,14 @@ from bokeh.models import Range1d, ColorBar, ContinuousColorMapper
 from bin.meta_data import *
 import os
 from bin.heatmap_as_r_tree import *
-from bokeh.palettes import Viridis256, Colorblind
+from bokeh.palettes import Viridis256, Colorblind, Plasma256, Turbo256, Greys256
 from datetime import datetime, timedelta
 import psutil
 from concurrent.futures import ThreadPoolExecutor
 from bokeh.models import BoxAnnotation
 from bin.stats import *
 from bokeh.models.tickers import AdaptiveTicker
+import bin.libSps
 
 SETTINGS_WIDTH = 200
 DEFAULT_SIZE = 50
@@ -365,6 +366,15 @@ class MainLayout:
         self.heatmap.quad(left="l", bottom="b", right="r", top="t", fill_color="c", line_color=None,
                           source=self.heatmap_data, level="underlay")
 
+        d = {"b": [], "l": [], "t": [], "r": []}
+        self.overlay_data = ColumnDataSource(data=d)
+        self.heatmap.quad(left="l", bottom="b", right="r", top="t", fill_color=None, line_color="red", 
+                            source=self.overlay_data, level="underlay")
+
+        self.overlay_dataset_id = Spinner(title="Overlay Lines Dataset Id", low=-1, step=1, value=-1, 
+                                          width=DEFAULT_SIZE, mode="int")
+        self.overlay_dataset_id.on_change("value_throttled", lambda x, y, z: self.trigger_render())
+
 
         self.heatmap.add_tools(HoverTool(
             tooltips=[
@@ -560,7 +570,9 @@ class MainLayout:
         self.symmetrie = self.dropdown_select("Symmetry", symmetrie_event, "tooltip_symmetry",
                                               ("Show All Interactions", "all"), 
                                               ("Only Show Symmetric Interactions", "sym"), 
-                                              ("Only Show Asymmetric Interactions", "asym"))
+                                              ("Only Show Asymmetric Interactions", "asym"),
+                                              ("Make Interactions Symmetric (Bottom to Top)", "botToTop"), 
+                                              ("Make Interactions Symmetric (Top to Bottom)", "topToBot"))
 
         self.normalization_d = "max_bin_visible"
 
@@ -600,6 +612,17 @@ class MainLayout:
         power_ten_bin = self.dropdown_select("Snap Bin Size", power_ten_bin_event, "tooltip_snap_bin_size",
                                                 ("To Even Power of Ten", "p10"),
                                                 ("Do not snap", "no")
+                                            )
+
+        self.color_d = "Viridis256"
+        def color_event(e):
+            self.color_d = e
+            self.trigger_render()
+        color_picker = self.dropdown_select("Color Palette", color_event, "tooltip_color",
+                                                ("Viridis", "Viridis256"),
+                                                ("Plasma", "Plasma256"),
+                                                ("Turbo", "Turbo256"),
+                                                ("Greys", "Greys256"),
                                                   )
 
         def stretch_event(e):
@@ -618,8 +641,13 @@ class MainLayout:
             "value_throttled", lambda x, y, z: self.trigger_render())
 
         self.interactions_bounds_slider = Slider(width=SETTINGS_WIDTH, start=0, end=100, value=0, step=1,
-                                                 title="Color Scale Begin", sizing_mode="stretch_width")
+                                                 title="Minimum Interactions", sizing_mode="stretch_width")
         self.interactions_bounds_slider.on_change(
+            "value_throttled", lambda x, y, z: self.trigger_render())
+
+        self.color_range_slider = RangeSlider(width=SETTINGS_WIDTH, start=0, end=1, value=(0, 1), step=0.01,
+                                                 title="Color Scale Range", sizing_mode="stretch_width")
+        self.color_range_slider.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
 
         self.interactions_slider = Slider(width=SETTINGS_WIDTH, start=-50, end=50, value=10, step=0.1,
@@ -830,9 +858,17 @@ class MainLayout:
             callback(None)
             return r
 
+        with open("smoother/VERSION", "r") as in_file:
+            smoother_version = in_file.readlines()[0][:-1]
+
+        
+        version_info = Div(text="Smoother "+ smoother_version +"<br>LibSps Version: " + bin.libSps.VERSION)
+
         _settings = column([
                 make_panel("General", "tooltip_general", [tool_bar, meta_file_label, self.meta_file]),
-                make_panel("Normalization", "tooltip_normalization", [self.normalization, self.interactions_bounds_slider,
+                make_panel("Normalization", "tooltip_normalization", [self.normalization, 
+                                    self.interactions_bounds_slider,
+                                    self.color_range_slider,
                                     self.interactions_slider, norm_x_layout, norm_y_layout, self.radical_seq_accept]),
                 make_panel("Replicates", "tooltip_replicates", [self.in_group, self.betw_group, group_a_layout, group_b_layout]),
                 make_panel("Interface", "tooltip_interface", [self.num_bins,
@@ -840,7 +876,7 @@ class MainLayout:
                                     self.update_frequency_slider, self.redraw_slider,
                                     self.add_area_slider,
                                     self.anno_size_slider, self.raw_size_slider, self.ratio_size_slider,
-                                    self.stretch, square_bins, power_ten_bin]),
+                                    self.stretch, square_bins, power_ten_bin, color_picker, self.overlay_dataset_id]),
                 make_panel("Filters", "tooltip_filters", [self.mapq_slider, self.symmetrie, self.diag_dist_slider, 
                                           displayed_annos_layout, filtered_annos_x_layout,
                                           filtered_annos_y_layout,
@@ -849,6 +885,7 @@ class MainLayout:
                                         #export_type_layout, 
                                       self.export_button]),
                 make_panel("Quick Config", "tooltip_quick_config", [grid_seq_config, radicl_seq_config]),
+                make_panel("Info", "tooltip_info", [version_info]),
             ],
             sizing_mode="stretch_both",
             css_classes=["scroll_y"]
@@ -999,6 +1036,15 @@ class MainLayout:
                     return
         return ret, a, b, ret_2, a_2, b_2, ret_3, a_3, b_3
 
+    def adjust_bin_pos_for_symmetrie(self, x, y, w, h):
+        if self.symmetrie_d == "botToTop":
+            if x >= y:
+                return y, x, h, w
+        if self.symmetrie_d == "topToBot":
+            if y >= x:
+                return y, x, h, w
+        return x, y, w, h
+
     def make_bins(self, bin_coords, name="make_bins"):
         bins = []
         info = [""]*len(bin_coords)
@@ -1008,6 +1054,7 @@ class MainLayout:
             for idx_2, (x, y, w, h) in enumerate(bin_coords):
                 self.render_step_log(name, idx_2 + idx * len(bin_coords), len(bin_coords)*len(self.meta.datasets))
                 if abs(x - y) >= self.diag_dist_slider.value:
+                    x, y, w, h = self.adjust_bin_pos_for_symmetrie(x, y, w, h)
                     n = self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value, min(h, w), min(h, w))
                     bins[-1].append(max(n-min_, 0))
                     if n <= 10:
@@ -1232,19 +1279,34 @@ class MainLayout:
             ret.append(c)
         return ret
 
+    def color(self, x):
+        if self.color_d == "Viridis256":
+            return Viridis256[x]
+        if self.color_d == "Plasma256":
+            return Plasma256[x]
+        if self.color_d == "Turbo256":
+            return Turbo256[x]
+        if self.color_d == "Greys256":
+            return Greys256[x]
+        return Viridis256[x]
+
+    def color_range(self, c):
+        c = (c - self.color_range_slider.value[0]) / (self.color_range_slider.value[1] - self.color_range_slider.value[0])
+        return max(0, min(MAP_Q_MAX-1, int((MAP_Q_MAX-1)*c)))
+        #color_range_slider
+
     def color_bins_b(self, bins):
         ret = []
         for c in bins:
             if self.betw_group_d == "sub":
                 c = self.log_scale(abs(c)) * (1 if c >= 0 else -1) / 2 + 0.5
-                c = max(0, min(MAP_Q_MAX-1, int((MAP_Q_MAX-1)*c)))
-                ret.append(Viridis256[c])
+                c = self.color_range(c) 
+                ret.append(self.color(c))
             else:
                 if math.isnan(self.log_scale(c)):
-                    ret.append(Viridis256[0])
+                    ret.append(self.color(0))
                 else:
-                    ret.append(
-                    Viridis256[max(0, min(MAP_Q_MAX-1, int((MAP_Q_MAX-1)*self.log_scale(c))))])
+                    ret.append(self.color(self.color_range(self.log_scale(c))))
         return ret
 
     def color_bins(self, bins):
@@ -1274,7 +1336,7 @@ class MainLayout:
             else:
                 return [[max(a-b, 0) for a, b in zip(bin, norm)] for bin, norm in zip(bins, norms)]
         else:
-            raise RuntimeError("Unknown symmetry value")
+            return bins
 
     def annotation_bins(self, bins, coverage_obj):
         return [coverage_obj.count(x[0], x[0] + x[1]) if not x is None else float('NaN') for x in bins]
@@ -1421,8 +1483,8 @@ class MainLayout:
                 if self.cancel_render:
                     return
                 c = self.color_bins(sym)
-                b_col = Viridis256[(MAP_Q_MAX-1) //
-                                2] if self.betw_group_d == "sub" else Viridis256[0]
+                b_col = self.color((MAP_Q_MAX-1) //
+                                2) if self.betw_group_d == "sub" else self.color(0)
                 purged, purged_coords, purged_coords_2, purged_sym, purged_flat_a, purged_flat_b, purged_info = \
                     self.purge(b_col, c, bin_coords_3, bin_coords_2,
                             self.color_bins_a(sym), *flat, info)
@@ -1473,6 +1535,21 @@ class MainLayout:
                     raw_y_heat = []
                     raw_x_ratio = []
                     raw_y_ratio = []
+                    
+                self.render_step_log("render_overlays")
+                d_overlay = {"b": [], "l": [], "t": [], "r": []}
+                if self.overlay_dataset_id.value >= 0:
+                    for grid_pos, blf, trb in self.idx.get_overlay_grid(self.overlay_dataset_id.value):
+                        if grid_pos[2] != 0:
+                            continue
+                        if grid_pos[3] != 0:
+                            continue
+                        if grid_pos[4] != 0:
+                            continue
+                        d_overlay["l"].append(min(blf[0], self.meta.chr_sizes.chr_start_pos["end"]))
+                        d_overlay["b"].append(min(blf[1], self.meta.chr_sizes.chr_start_pos["end"]))
+                        d_overlay["r"].append(min(trb[0], self.meta.chr_sizes.chr_start_pos["end"]))
+                        d_overlay["t"].append(min(trb[1], self.meta.chr_sizes.chr_start_pos["end"]))
 
                 self.render_step_log("setup_col_data_sources")
                 d_heatmap = {
@@ -1492,6 +1569,7 @@ class MainLayout:
                     "d_b": purged_flat_b,
                     "info": [x for x in purged_info],
                 }
+                
 
                 def double_up(l):
                     return [x for x in l for _ in [0, 1]]
@@ -1698,6 +1776,7 @@ class MainLayout:
                         self.ratio_data_y.data = ratio_data_y
                         self.anno_x_data.data = d_anno_x
                         self.anno_y_data.data = d_anno_y
+                        self.overlay_data.data = d_overlay
                     self.do_export = None
                     self.curdoc.unhold()
                     total_time = self.render_done(len(bins[0]))

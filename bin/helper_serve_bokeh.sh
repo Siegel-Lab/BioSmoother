@@ -1,5 +1,7 @@
 #!/bin/bash
 
+./bin/conf_version.sh
+
 source activate $(pwd)/conda_env/smoother
 
 port=5009

@@ -1,19 +1,19 @@
-### List of Plots and what they show (_Anna_)
+## List of Plots and what they show (_Anna_)
 
 the heatmap the ratio & coverage plots 
 mention hovers
 also include status text & command line output
 
 
-### List of Buttons and their functionality (_Both_)
+## List of Buttons and their functionality (_Both_)
 
 top to bottom list of things
 group by category
 don't forget the bokeh buttons
 
-#### Normalization (_Markus_)
+### Normalization (_Markus_)
 
-##### Normalize by
+#### Normalize by
 
 
 Smoother can normalize data in various ways. Some of them are suited for symmetric data (e.g. Hi-C), some for asymmetric data (e.g. RADICL-seq).
@@ -40,7 +40,7 @@ The 'In Group' operation (see Replicates section) is applied before the Normaliz
 
 
 
-##### Color Scale Begin \& Color Scale Log Base
+#### Color Scale Begin \& Color Scale Log Base
 
 After normalization, the values in each bin are between zero and one. 
 Before displaying these values in the heatmap, we apply a logarithmic transformation.
@@ -62,6 +62,6 @@ With varying values for *a*, this function always satisfies *f(0)=0* and *f(1)=1
 for *a=0* the function is undefined but approaches the 45-degree diagonal, so we hardcode *f(x)=x* for *a=0*.
 
 
-#### Quick Config Buttons (_Anna_)
+### Quick Config Buttons (_Anna_)
 
 what do they change

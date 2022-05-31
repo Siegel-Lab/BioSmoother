@@ -12,8 +12,4 @@
     - restrict for public hosting
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
 - turn on an off rectangle-mapping (height & width limit 1)
-- color scale begin affects displayed number of interactions in hover
-
-## Other
-
-- add Claudia's data (send instructions)
+- display color scale

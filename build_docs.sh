@@ -2,6 +2,8 @@
 
 source activate smoother_docs
 
+./bin/conf_version.sh
+
 
 SPHINX_EXECUTABLE=sphinx-build
 SPHINX_HTML_DIR=docs

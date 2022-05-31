@@ -1,4 +1,5 @@
 import os
+from pickle import FALSE
 import stat as stat_perm
 import argparse
 from bin.meta_data import *
@@ -209,9 +210,10 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test
 
 
 def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_groups=False, test_idx=1,
-                  simulate_hic=False):
+                  simulate_hic=False, without_dep_dim=True):
     meta = MetaData.load(out_prefix + ".smoother_index/meta")
-    index = make_sps_index(out_prefix + ".smoother_index/repl", 3, True, 2, "Cached" if cached else "Disk", True )
+    index = make_sps_index(out_prefix + ".smoother_index/repl", 3, not without_dep_dim, 
+                            2, "Cached" if cached else "Disk", True )
     cnt = 0
     last_cnt = len(index)
     file_size = int(subprocess.run(['wc', '-l', path], stdout=subprocess.PIPE).stdout.decode('utf-8').split(" ")[0])
@@ -265,16 +267,20 @@ def add_normalization(out_prefix, path, name, for_row, test=False, cached=False)
 
 
 def init(args):
+    print("LibSps Version:", VERSION)
     make_meta(args.index_prefix, args.chr_len, args.annotations, args.dividend, args.test)
 
 def repl(args):
+    print("LibSps Version:", VERSION)
     add_replicate(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached, args.no_groups,
-                  args.test_idx, args.simulate_hic)
+                  args.test_idx, args.simulate_hic, args.without_dep_dim)
 
 def norm(args):
+    print("LibSps Version:", VERSION)
     add_normalization(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached)
 
 def grid_seq_norm(args):
+    print("LibSps Version:", VERSION)
     meta = MetaData.load(args.index_prefix + ".smoother_index/meta")
     index = Tree_4(args.index_prefix)
     datasets = args.datasets
@@ -304,6 +310,7 @@ def get_argparse():
     parser.add_argument('--no_groups', help=argparse.SUPPRESS, action='store_true')
     parser.add_argument('-v', "--verbosity", help="@todo make this do sth", default=1)
     parser.add_argument('--simulate_hic', help=argparse.SUPPRESS, action='store_true')
+    parser.add_argument('--without_dep_dim', help=argparse.SUPPRESS, action='store_true')
 
     sub_parsers = parser.add_subparsers(help='Sub-command that shall be executed.', dest="cmd")
     sub_parsers.required=True

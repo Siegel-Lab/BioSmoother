@@ -9,11 +9,13 @@ H = 0.5
 MAP_Q_MAX = 256
 
 
+WITH_DEPENDENT_DIM = True
 
 class Tree_4:
     def __init__(self, file_name):
         self.file_name = file_name
-        self.index = make_sps_index(file_name + ".smoother_index/repl", 3, True, 2, "PickByFileSize", False )
+        self.index = make_sps_index(file_name + ".smoother_index/repl", 3, WITH_DEPENDENT_DIM, 2, 
+                                    "PickByFileSize", False )
 
     def setup(self, data, bins, cache_size, threads):
         return self
@@ -35,6 +37,9 @@ class Tree_4:
 
     def save(self):
         pass
+
+    def get_overlay_grid(self, id):
+        return self.index.get_overlay_grid(id)
 
     def get(self, id, rna_from, rna_to, dna_from, dna_to):
         return self.index.get(id, [int(dna_from), int(rna_from)], [int(dna_to), int(rna_to)])

@@ -9,6 +9,7 @@
 
     opacity: 0;
     transition-property: opacity;
+    pointer-events: none;
 }
 
 .tooltip:hover:before {
@@ -108,4 +109,12 @@
 
 .tooltip_radicl_seq:after {
     content: "Configure smoother to look like the RADICL-seq paper analysis";
+}
+
+.tooltip_color:after {
+    content: "Pick the color palette for the heatmap";
+}
+
+.tooltip_info:after {
+    content: "various information";
 }
