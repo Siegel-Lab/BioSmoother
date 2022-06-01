@@ -625,6 +625,18 @@ class MainLayout:
                                                 ("Greys", "Greys256"),
                                                   )
 
+        self.multi_mapping_d = "encloses"
+        def multi_mapping_event(e):
+            self.multi_mapping_d = e
+            self.trigger_render()
+        multi_mapping = self.dropdown_select("Ambiguous Mapping", multi_mapping_event, "tooltip_multi_mapping",
+                                                ("Count read if all mapping loci are within a bin", "encloses"),
+                                                ("Count read if one mapping loci is within a bin", "overlaps"),
+                                                ("Count read if first mapping loci is within a bin", "first"),
+                                                ("Count read if last mapping loci is within a bin", "last"),
+                                                ("Count read if there is only one mapping loci", "dont"),
+                                                  )
+
         def stretch_event(e):
             self.heatmap.sizing_mode = e
             if e == "stretch_both":
@@ -815,7 +827,6 @@ class MainLayout:
         ]
         self.export_type.value = ["data"]
 
-        
         grid_seq_config = Button(label="Grid Seq-like @todo", sizing_mode="stretch_width", 
                                  css_classes=["other_button", "tooltip", "tooltip_grid_seq"],
                                  height=DROPDOWN_HEIGHT)
@@ -861,7 +872,6 @@ class MainLayout:
         with open("smoother/VERSION", "r") as in_file:
             smoother_version = in_file.readlines()[0][:-1]
 
-        
         version_info = Div(text="Smoother "+ smoother_version +"<br>LibSps Version: " + bin.libSps.VERSION)
 
         _settings = column([
@@ -880,7 +890,8 @@ class MainLayout:
                 make_panel("Filters", "tooltip_filters", [self.mapq_slider, self.symmetrie, self.diag_dist_slider, 
                                           displayed_annos_layout, filtered_annos_x_layout,
                                           filtered_annos_y_layout,
-                                          x_coords, y_coords, multiple_anno_per_bin, chrom_x_layout, chrom_y_layout]),
+                                          x_coords, y_coords, multiple_anno_per_bin, chrom_x_layout, chrom_y_layout,
+                                          multi_mapping]),
                 make_panel("Export", "tooltip_export", [export_label, self.export_file, export_sele_layout, 
                                         #export_type_layout, 
                                       self.export_button]),

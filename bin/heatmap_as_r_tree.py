@@ -9,7 +9,7 @@ H = 0.5
 MAP_Q_MAX = 256
 
 
-WITH_DEPENDENT_DIM = True
+WITH_DEPENDENT_DIM = False
 
 class Tree_4:
     def __init__(self, file_name):

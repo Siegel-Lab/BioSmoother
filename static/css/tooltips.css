@@ -63,6 +63,10 @@
     content: "normalize the matrix in various ways";
 }
 
+.tooltip_multi_mapping:after {
+    content: "how to deal with reads that map to more than one loci";
+}
+
 .tooltip_in_group:after {
     content: "combine the datasets that belong to the same group by...";
 }

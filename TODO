@@ -1,10 +1,7 @@
 # smoother todo
 
-## Coding
-
 - does radicl sec do normalization for rna?
 - uneven distribution between contigs in grid seq normalization
-- try removing sparse coords for overlay count-entires
 - grid seq norm progress print
 - quick config buttons
 - AutocompleteInput for filepath
