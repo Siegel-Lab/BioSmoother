@@ -23,15 +23,11 @@ class Tree_4:
     def load(self, num_data, cache_size, threads):
         return self
 
-    def count(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX, w_limit=None, 
-              h_limit=None):
+    def count(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX):
         dna_to = max(dna_from+1, dna_to)
         rna_to = max(rna_from+1, rna_to)
         w_limit = 1
         h_limit = 1
-        if not w_limit is None and not h_limit is None:
-            return self.index.count_size_limited(id, [int(dna_from), int(rna_from), map_q_min, 0, 0], 
-                                        [int(dna_to), int(rna_to), map_q_max, int(w_limit), int(h_limit)])
         return self.index.count(id, [int(dna_from), int(rna_from), map_q_min], 
                                     [int(dna_to), int(rna_to), map_q_max])
 
@@ -69,10 +65,8 @@ class Tree_3:
     def load(self, num_data, cache_size, threads):
         return self
 
-    def count(self, id, pos_from, pos_to, map_q_min=0, map_q_max=MAP_Q_MAX, w_limit=None):
+    def count(self, id, pos_from, pos_to, map_q_min=0, map_q_max=MAP_Q_MAX):
         pos_to = max(pos_from+1, pos_to)
-        if not w_limit is None:
-            return self.index.count(id, [int(pos_from), map_q_min, 0], [int(pos_to), map_q_max, int(w_limit)])
         return self.index.count(id, [int(pos_from), map_q_min], [int(pos_to), map_q_max])
 
     def save(self):

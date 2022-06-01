@@ -1066,7 +1066,7 @@ class MainLayout:
                 self.render_step_log(name, idx_2 + idx * len(bin_coords), len(bin_coords)*len(self.meta.datasets))
                 if abs(x - y) >= self.diag_dist_slider.value:
                     x, y, w, h = self.adjust_bin_pos_for_symmetrie(x, y, w, h)
-                    n = self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value, min(h, w), min(h, w))
+                    n = self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value) # , min(h, w), min(h, w)
                     bins[-1].append(max(n-min_, 0))
                     if n <= 10:
                         info[idx_2] += self.idx.info(idx, y, y+h, x, x+w, *self.mapq_slider.value)
