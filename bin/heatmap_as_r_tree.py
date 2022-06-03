@@ -2,14 +2,23 @@ import os
 os.environ["STXXLLOGFILE"] = "/dev/null"
 os.environ["STXXLERRLOGFILE"] = "/dev/null"
 
-from bin.libSps import make_sps_index
+from bin.libSps import make_sps_index, IntersectionType
 
 
 H = 0.5
 MAP_Q_MAX = 256
 
 
-WITH_DEPENDENT_DIM = False
+WITH_DEPENDENT_DIM = True
+
+INT_TYPES = {
+    "enclosed": IntersectionType.enclosed,
+    "encloses": IntersectionType.encloses,
+    "overlaps": IntersectionType.overlaps,
+    "first": IntersectionType.first,
+    "last": IntersectionType.last,
+    "points_only": IntersectionType.points_only,
+}
 
 class Tree_4:
     def __init__(self, file_name):
@@ -23,13 +32,15 @@ class Tree_4:
     def load(self, num_data, cache_size, threads):
         return self
 
-    def count(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX):
+    def count(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX,
+              intersection_type="enclosed"):
         dna_to = max(dna_from+1, dna_to)
         rna_to = max(rna_from+1, rna_to)
         w_limit = 1
         h_limit = 1
         return self.index.count(id, [int(dna_from), int(rna_from), map_q_min], 
-                                    [int(dna_to), int(rna_to), map_q_max])
+                                    [int(dna_to), int(rna_to), map_q_max],
+                                INT_TYPES[intersection_type])
 
     def save(self):
         pass

@@ -33,7 +33,7 @@ def parse_heatmap(in_filename):
 
             yield read_name, strnd_1, chr_1, int(pos_1), strnd_2, chr_2, int(pos_2), mapq_1, mapq_2
 
-def group_heatmap(in_filename, file_size, no_groups=False):
+def group_heatmap(in_filename, file_size, no_groups=False, test=False):
     file_name = simplified_filepath(in_filename)
     groups = {}
     for idx_2, (read_name, _, chr_1, pos_1, _, chr_2, pos_2, mapq_1, mapq_2) in enumerate(parse_heatmap(in_filename)):
@@ -41,6 +41,9 @@ def group_heatmap(in_filename, file_size, no_groups=False):
         if not read_name in groups:
             groups[read_name] = []
         groups[read_name].append((chr_1, int(pos_1), chr_2, int(pos_2), int(map_q)))
+        
+        if idx_2 > TEST_FAC and test:
+            break
         
         if idx_2 % PRINT_MODULO == 0:
             print("loading file", file_name, ", line", idx_2+1, "of", file_size, "=", 
@@ -72,6 +75,9 @@ def group_heatmap(in_filename, file_size, no_groups=False):
             pos_2_e = max([g[3] for g in group])
         map_q = max([g[4] for g in group])
         yield read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q
+
+        if idx > TEST_FAC and test:
+            break
 
 def execute(cmd):
     popen = subprocess.Popen(
@@ -189,7 +195,7 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test
     #os.chmod(out_prefix + ".smoother_index", # would make it look more like a file but do i really want that?
     #         stat_perm.S_IWUSR | stat_perm.S_IXUSR | stat_perm.S_IXGRP | stat_perm.S_IXOTH )
     meta = MetaData(dividend)
-    meta.set_chr_sizes(ChrSizes(chr_len_file_name, dividend)) # filter=lambda x: ("Chr1_" in x) or not test)
+    meta.set_chr_sizes(ChrSizes(chr_len_file_name, dividend, filter=lambda x: ("Chr1_" in x) or not test))
 
     if not annotation_filename is None:
         meta.add_annotations(parse_annotations(annotation_filename, meta.chr_sizes.chr_start_pos, dividend))
@@ -210,14 +216,15 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test
 
 
 def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_groups=False, test_idx=1,
-                  simulate_hic=False, without_dep_dim=True):
+                  simulate_hic=False, without_dep_dim=True, keep_points=False):
     meta = MetaData.load(out_prefix + ".smoother_index/meta")
     index = make_sps_index(out_prefix + ".smoother_index/repl", 3, not without_dep_dim, 
                             2, "Cached" if cached else "Disk", True )
     cnt = 0
     last_cnt = len(index)
     file_size = int(subprocess.run(['wc', '-l', path], stdout=subprocess.PIPE).stdout.decode('utf-8').split(" ")[0])
-    for read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q in group_heatmap(path, file_size, no_groups):
+    for read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q in group_heatmap(path, file_size,
+                                                                                            no_groups, test):
         if not chr_1 in meta.chr_sizes.chr_sizes:
             continue
         if not chr_2 in meta.chr_sizes.chr_sizes:
@@ -240,8 +247,11 @@ def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_
     idx = index.generate(last_cnt, len(index))
     meta.add_dataset(name, path, group_a, idx)
     meta.save(out_prefix + ".smoother_index/meta")
+    if not keep_points:
+        os.remove(out_prefix + ".smoother_index/repl.points")
+        os.remove(out_prefix + ".smoother_index/repl.desc")
 
-def add_normalization(out_prefix, path, name, for_row, test=False, cached=False):
+def add_normalization(out_prefix, path, name, for_row, test=False, cached=False, keep_points=False):
     meta = MetaData.load(out_prefix + ".smoother_index/meta")
     index = make_sps_index(out_prefix + ".smoother_index/norm", 2, False, 1, "Cached" if cached else "Disk", True )
     last_cnt = len(index)
@@ -264,6 +274,9 @@ def add_normalization(out_prefix, path, name, for_row, test=False, cached=False)
         idx = index.generate(last_cnt, len(index))
         meta.add_normalization(name, path, for_row, idx)
     meta.save(out_prefix + ".smoother_index/meta")
+    if not keep_points:
+        os.remove(out_prefix + ".smoother_index/norm.points")
+        os.remove(out_prefix + ".smoother_index/norm.desc")
 
 
 def init(args):
@@ -273,11 +286,11 @@ def init(args):
 def repl(args):
     print("LibSps Version:", VERSION)
     add_replicate(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached, args.no_groups,
-                  args.test_idx, args.simulate_hic, args.without_dep_dim)
+                  args.test_idx, args.simulate_hic, args.without_dep_dim, args.keep_points)
 
 def norm(args):
     print("LibSps Version:", VERSION)
-    add_normalization(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached)
+    add_normalization(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached, args.keep_points)
 
 def grid_seq_norm(args):
     print("LibSps Version:", VERSION)
@@ -311,6 +324,7 @@ def get_argparse():
     parser.add_argument('-v', "--verbosity", help="@todo make this do sth", default=1)
     parser.add_argument('--simulate_hic', help=argparse.SUPPRESS, action='store_true')
     parser.add_argument('--without_dep_dim', help=argparse.SUPPRESS, action='store_true')
+    parser.add_argument('--keep_points', help=argparse.SUPPRESS, action='store_true')
 
     sub_parsers = parser.add_subparsers(help='Sub-command that shall be executed.', dest="cmd")
     sub_parsers.required=True

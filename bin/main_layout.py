@@ -569,10 +569,10 @@ class MainLayout:
             self.trigger_render()
         self.symmetrie = self.dropdown_select("Symmetry", symmetrie_event, "tooltip_symmetry",
                                               ("Show All Interactions", "all"), 
-                                              ("Only Show Symmetric Interactions", "sym"), 
+                                              ("Only Show Symmetric Interactions", "sym"),
                                               ("Only Show Asymmetric Interactions", "asym"),
-                                              ("Make Interactions Symmetric (Bottom to Top)", "botToTop"), 
-                                              ("Make Interactions Symmetric (Top to Bottom)", "topToBot"))
+                                              ("Make Interactions Symmetric (Bottom to Top)", "topToBot"), 
+                                              ("Make Interactions Symmetric (Top to Bottom)", "botToTop"))
 
         self.normalization_d = "max_bin_visible"
 
@@ -593,6 +593,7 @@ class MainLayout:
                                                   ("Coverage Track (Scaled)", "tracks_rel"),
                                                   ("Binominal Test", "radicl-seq"),
                                                   ("Iterative Correction", "hi-c"),
+                                                  ("Distance Dependent Decay", "ddd"),
                                                   )
 
         self.square_bins_d = "view"
@@ -625,16 +626,16 @@ class MainLayout:
                                                 ("Greys", "Greys256"),
                                                   )
 
-        self.multi_mapping_d = "encloses"
+        self.multi_mapping_d = "enclosed"
         def multi_mapping_event(e):
             self.multi_mapping_d = e
             self.trigger_render()
         multi_mapping = self.dropdown_select("Ambiguous Mapping", multi_mapping_event, "tooltip_multi_mapping",
-                                                ("Count read if all mapping loci are within a bin", "encloses"),
-                                                ("Count read if one mapping loci is within a bin", "overlaps"),
+                                                ("Count read if all mapping loci are within a bin", "enclosed"),
+                                                ("Count read if mapping loci bounding-box overlaps bin", "overlaps"),
                                                 ("Count read if first mapping loci is within a bin", "first"),
                                                 ("Count read if last mapping loci is within a bin", "last"),
-                                                ("Count read if there is only one mapping loci", "dont"),
+                                                ("Count read if there is only one mapping loci", "points_only"),
                                                   )
 
         def stretch_event(e):
@@ -1066,7 +1067,8 @@ class MainLayout:
                 self.render_step_log(name, idx_2 + idx * len(bin_coords), len(bin_coords)*len(self.meta.datasets))
                 if abs(x - y) >= self.diag_dist_slider.value:
                     x, y, w, h = self.adjust_bin_pos_for_symmetrie(x, y, w, h)
-                    n = self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value) # , min(h, w), min(h, w)
+                    n = self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value,
+                                       self.multi_mapping_d) # , min(h, w), min(h, w)
                     bins[-1].append(max(n-min_, 0))
                     if n <= 10:
                         info[idx_2] += self.idx.info(idx, y, y+h, x, x+w, *self.mapq_slider.value)
@@ -1166,12 +1168,10 @@ class MainLayout:
             raw_y_norm = raw_y_norm[0]
         if self.normalization_d in ["column"]:
             ns = self.col_norm(cols)
-            if self.cancel_render:
-                return
         if self.normalization_d in ["row", "radicl-seq"]:
             ns = self.row_norm(rows)
-            if self.cancel_render:
-                return
+        if self.cancel_render:
+            return
         for idx, bins in enumerate(bins_l):
             self.render_step_log("norm_bins", idx, len(bins_l))
             if self.normalization_d == "max_bin_visible":
@@ -1214,6 +1214,43 @@ class MainLayout:
                         ret[-1][i] = min(ret[-1][i], 1)
             elif self.normalization_d == "hi-c":
                 ret.append(self.hi_c_normalization(bins, rows, cols))
+            elif self.normalization_d == "ddd":
+                # get the distances to sample
+                dists_to_sample = set([(int(x)-int(y), w, h) for x, w in cols for y, h in rows])
+                ddd = {}
+                # for each distance we have to sample
+                for d, w, h in dists_to_sample:
+                    # sample until the result does not change anymore (less than 1%) but at least a 250 times
+                    cnt = 0
+                    val = 0
+                    while True:
+                        inc = 0
+                        STEP_SIZE=10
+                        for _ in range(STEP_SIZE):
+                            s = int(max(0, d))
+                            e = int(self.meta.chr_sizes.chr_start_pos["end"] - w - min(0, d))
+                            if s == e:
+                                x = s
+                            else:
+                                x = random.randrange(s, e, max(int(w), 1))
+                            y = x-d
+                            x_2, y_2, w_2, h_2 = self.adjust_bin_pos_for_symmetrie(x, y, w, h)
+                            inc += self.idx.count(idx, y_2, y_2+h_2, x_2, x_2+w_2, *self.mapq_slider.value, 
+                                                  self.multi_mapping_d)
+                        if val > 0:
+                            change = abs( (val/cnt) - ( (val+inc) / (cnt+STEP_SIZE) ) ) / (val/cnt)
+                        else:
+                            change = 1
+                        if (cnt >= 50 and change < 0.01) or cnt > 500:
+                            break
+                        val += inc
+                        cnt += STEP_SIZE
+                    #print("d:", d, ", sampling took", cnt, "many attempts. Last change:", change)
+                    ddd[d] = max(val/cnt, 1)
+                
+                to_append = [x / ddd[int(cols[idx_2 % len(cols)][0]) - int(rows[idx_2 // len(cols)][0])] for idx_2, x in enumerate(bins)]
+                n = max(to_append + [1])
+                ret.append([x/n for x in to_append])
             else:
                 raise RuntimeError("Unknown normalization value")
         return ret

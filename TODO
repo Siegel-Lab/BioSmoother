@@ -8,5 +8,4 @@
     - when calling give folder where indices are located
     - restrict for public hosting
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
-- turn on an off rectangle-mapping (height & width limit 1)
 - display color scale
