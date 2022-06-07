@@ -1248,7 +1248,7 @@ class MainLayout:
                     #print("d:", d, ", sampling took", cnt, "many attempts. Last change:", change)
                     ddd[d] = max(val/cnt, 1)
                 
-                to_append = [x / ddd[int(cols[idx_2 % len(cols)][0]) - int(rows[idx_2 // len(cols)][0])] for idx_2, x in enumerate(bins)]
+                to_append = [x / ddd[int(cols[idx_2 // len(rows)][0]) - int(rows[idx_2 % len(rows)][0])] for idx_2, x in enumerate(bins)]
                 n = max(to_append + [1])
                 ret.append([x/n for x in to_append])
             else:
