@@ -11,7 +11,7 @@ import math
 from datetime import datetime
 from tornado import gen
 from bokeh.document import without_document_lock
-from bokeh.models import Panel, Tabs, Spacer
+from bokeh.models import Panel, Tabs, Spacer, Slope
 from bokeh.models import Range1d, ColorBar, ContinuousColorMapper
 from bin.meta_data import *
 import os
@@ -38,11 +38,12 @@ executor = ThreadPoolExecutor(max_workers=1)
 
 
 class FigureMaker:
-    _show_hide = {"grid_lines": True}
+    _show_hide = {"grid_lines": True, "indent_line": False}
     _hidable_plots = []
     _plots = []
     _unhide_button = None
     render_areas = {}
+    _slope = None
 
     x_coords_d = "full_genome"
     y_coords_d = "full_genome"
@@ -227,6 +228,7 @@ class FigureMaker:
         cy = ("darkgrey" if FigureMaker.y_coords_d == "full_genome" else "lightgrey") \
                 if FigureMaker._show_hide["grid_lines"] else None
         cy2 = "lightgrey" if FigureMaker._show_hide["grid_lines"] and FigureMaker.y_coords_d == "full_genome" else None
+        FigureMaker._slope.line_color = "darkgrey" if FigureMaker._show_hide["indent_line"] else None
         for plot in FigureMaker._plots:
             if plot.xgrid.grid_line_color != cx:
                 plot.xgrid.grid_line_color = cx
@@ -257,6 +259,8 @@ class FigureMaker:
                     (("☑ " if FigureMaker._show_hide[key] or key == "tools" else "☐ ") + name, key))
             menu.append(
                 (("☑ " if FigureMaker._show_hide["grid_lines"] else "☐ ") + "Grid Lines", "grid_lines"))
+            menu.append(
+                (("☑ " if FigureMaker._show_hide["indent_line"] else "☐ ") + "Identity Line", "indent_line"))
             return menu
         ret = Dropdown(label="Show/Hide", menu=make_menu(),
                        width=SETTINGS_WIDTH, sizing_mode="fixed", css_classes=["other_button", "tooltip", "tooltip_show_hide"], height=DROPDOWN_HEIGHT)
@@ -389,6 +393,9 @@ class MainLayout:
             self.heatmap, "DNA").combine_tools(tollbars).get()
         self.heatmap_y_axis = FigureMaker().y_axis_of(
             self.heatmap, "RNA").combine_tools(tollbars).get()
+
+        FigureMaker._slope = Slope(gradient=1, y_intercept=0, line_color=None)
+        self.heatmap.add_layout(FigureMaker._slope)
 
         ratio_hover_x = HoverTool(
             tooltips=[
@@ -1173,7 +1180,8 @@ class MainLayout:
         if self.cancel_render:
             return
         for idx, bins in enumerate(bins_l):
-            self.render_step_log("norm_bins", idx, len(bins_l))
+            if self.normalization_d != "ddd":
+                self.render_step_log("norm_bins", idx, len(bins_l))
             if self.normalization_d == "max_bin_visible":
                 n = max(bins + [1])
                 ret.append([x/n for x in bins])
@@ -1219,7 +1227,8 @@ class MainLayout:
                 dists_to_sample = set([(int(x)-int(y), w, h) for x, w in cols for y, h in rows])
                 ddd = {}
                 # for each distance we have to sample
-                for d, w, h in dists_to_sample:
+                for id_2, (d, w, h) in enumerate(dists_to_sample):
+                    self.render_step_log("norm_bins", id_2 + idx*len(dists_to_sample), len(bins_l)*len(dists_to_sample))
                     # sample until the result does not change anymore (less than 1%) but at least a 250 times
                     cnt = 0
                     val = 0
@@ -1241,7 +1250,7 @@ class MainLayout:
                             change = abs( (val/cnt) - ( (val+inc) / (cnt+STEP_SIZE) ) ) / (val/cnt)
                         else:
                             change = 1
-                        if (cnt >= 50 and change < 0.01) or cnt > 500:
+                        if (cnt >= 50 and change < 0.02) or cnt > 500:
                             break
                         val += inc
                         cnt += STEP_SIZE
