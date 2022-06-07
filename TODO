@@ -10,3 +10,7 @@
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
 - display color scale
 - primary and secondary normalization?
+
+
+- rna gridseq plot  not working
+- annotation plot messed up

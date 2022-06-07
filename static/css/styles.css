@@ -43,6 +43,13 @@ button {
     font-weight: inherit;
 }
 
+.bk-btn-light:hover {
+    box-shadow: none;
+    background-color: transparent !important;
+    text-decoration: none !important;
+    border: none !important;
+}
+
 .bk-root .bk-btn-light.bk-active {
     background-color: inherit;
     border-color: white;

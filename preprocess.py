@@ -151,7 +151,7 @@ def parse_annotations(annotation_file, axis_start_pos_offset, dividend):
                 continue
             annotation_types.add(annotation_type)
             s = axis_start_pos_offset[chrom] + int(from_pos) // dividend
-            e = int(to_pos) // dividend + axis_start_pos_offset[chrom]
+            e = axis_start_pos_offset[chrom] + int(to_pos) // dividend
             annos.append((annotation_type, s, max(s+1, e), extras.replace(";", "\n")))
     return annos
 
@@ -182,7 +182,7 @@ def parse_wig_file(filename, chr_start_idx, dividend):
                     ys.append(0)
             elif curr_chr in chr_start_idx:
                 a, b = line[:-1].split(" ")
-                xs.append(int(a) // dividend + chr_start_idx[curr_chr])
+                xs.append(chr_start_idx[curr_chr] + int(a) // dividend)
                 ys.append(float(b))
         xs.append(chr_start_idx['end'])
         ys.append(0)

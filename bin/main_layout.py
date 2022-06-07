@@ -11,7 +11,7 @@ import math
 from datetime import datetime
 from tornado import gen
 from bokeh.document import without_document_lock
-from bokeh.models import Panel, Tabs, Spacer, Slope
+from bokeh.models import Panel, Tabs, Spacer, Slope, PreText, CustomJS
 from bokeh.models import Range1d, ColorBar, ContinuousColorMapper
 from bin.meta_data import *
 import os
@@ -25,7 +25,7 @@ from bin.stats import *
 from bokeh.models.tickers import AdaptiveTicker
 import bin.libSps
 
-SETTINGS_WIDTH = 200
+SETTINGS_WIDTH = 400
 DEFAULT_SIZE = 50
 DROPDOWN_HEIGHT=30
 ANNOTATION_PLOT_NAME = "Annotation"
@@ -33,6 +33,7 @@ RATIO_PLOT_NAME = "Ratio"
 RAW_PLOT_NAME = "Cov"
 
 DIV_MARGIN = (5, 5, 0, 5)
+BTN_MARGIN = (3, 3, 3, 3)
 
 executor = ThreadPoolExecutor(max_workers=1)
 
@@ -344,6 +345,37 @@ class MainLayout:
 
         return choice, layout
 
+    def make_slider_spinner(self, title="", value=1, start=0, end=10, step=None, width=200, 
+                            on_change=lambda _a,_b,_c: None, spinner_width=80, sizing_mode="stretch_width"):
+        spinner = Spinner(value=value, low=start, high=end, step=step, width=spinner_width)
+        slider = Slider(title=title, value=value, start=start, end=end, step=step, show_value=False, width=width-spinner_width, sizing_mode=sizing_mode)
+
+        spinner.js_link("value", slider, "value")
+        slider.js_link("value", spinner, "value")
+        slider.on_change("value_throttled", on_change)
+        spinner.on_change("value_throttled", on_change)
+
+        return slider, row([slider, spinner], width=width)
+
+    def make_range_slider_spinner(self, title="", value=(1, 2), start=0, end=10, step=None, width=200, 
+                            on_change=lambda _a,_b,_c: None, spinner_width=80, sizing_mode="stretch_width"):
+        slider = RangeSlider(title=title, value=value, start=start, end=end, step=step, show_value=False, width=width-spinner_width*2, sizing_mode=sizing_mode)
+        spinner_start = Spinner(value=value[0], low=start, high=end, step=step, width=spinner_width)
+        spinner_end = Spinner(value=value[1], low=start, high=end, step=step, width=spinner_width)
+
+        spinner_start.js_on_change('value', CustomJS(args=dict(other=slider), code="other.value = [this.value, other.value[1]]" ) )
+        slider.js_link("value", spinner_start, "value", attr_selector=0)
+
+        spinner_end.js_on_change('value', CustomJS(args=dict(other=slider), code="other.value = [other.value[0], this.value]" ) )
+        slider.js_link("value", spinner_end, "value", attr_selector=1)
+
+        slider.on_change("value_throttled", on_change)
+        spinner_end.on_change("value_throttled", on_change)
+        spinner_start.on_change("value_throttled", on_change)
+
+        return slider, row([slider, spinner_start, spinner_end], width=width)
+
+
     def __init__(self):
         self.meta = None
         self.do_render = False
@@ -545,7 +577,7 @@ class MainLayout:
         self.anno_y.add_tools(anno_hover)
 
         tool_bar = FigureMaker.get_tools(tollbars)
-        SETTINGS_WIDTH = tool_bar.width
+        #SETTINGS_WIDTH = tool_bar.width
         show_hide = FigureMaker.show_hide_dropdown(("Axes", "axis"), (RATIO_PLOT_NAME, "ratio"), (RAW_PLOT_NAME, "raw"),
                                                    (ANNOTATION_PLOT_NAME, "annotation"), ("Tools", "tools"))
 
@@ -655,87 +687,82 @@ class MainLayout:
                                                   ("Stretch", "stretch_both"),
                                                   ("Scale", "scale_height"))
 
-        self.mapq_slider = RangeSlider(width=SETTINGS_WIDTH, start=0, end=MAP_Q_MAX, value=(0, MAP_Q_MAX), step=1,
-                                       title="Mapping Quality Bounds", sizing_mode="stretch_width")
-        self.mapq_slider.on_change(
-            "value_throttled", lambda x, y, z: self.trigger_render())
+        self.mapq_slider, ms_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, start=0, end=MAP_Q_MAX, 
+                                        value=(0, MAP_Q_MAX), step=1,
+                                       title="Mapping Quality Bounds", sizing_mode="stretch_width",
+                                       on_change=lambda x, y, z: self.trigger_render())
 
-        self.interactions_bounds_slider = Slider(width=SETTINGS_WIDTH, start=0, end=100, value=0, step=1,
-                                                 title="Minimum Interactions", sizing_mode="stretch_width")
-        self.interactions_bounds_slider.on_change(
-            "value_throttled", lambda x, y, z: self.trigger_render())
+        self.interactions_bounds_slider, ibs_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0, end=100, 
+                                                  value=0, step=1,
+                                                 title="Minimum Interactions", 
+                                                 on_change=lambda x, y, z: self.trigger_render(), sizing_mode="stretch_width")
+        
 
-        self.color_range_slider = RangeSlider(width=SETTINGS_WIDTH, start=0, end=1, value=(0, 1), step=0.01,
-                                                 title="Color Scale Range", sizing_mode="stretch_width")
-        self.color_range_slider.on_change(
-            "value_throttled", lambda x, y, z: self.trigger_render())
+        self.color_range_slider, crs_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, start=0, end=1, value=(0, 1), 
+                                                step=0.01,
+                                                 title="Color Scale Range", sizing_mode="stretch_width",
+                                                 on_change=lambda x, y, z: self.trigger_render())
 
-        self.interactions_slider = Slider(width=SETTINGS_WIDTH, start=-50, end=50, value=10, step=0.1,
+        self.interactions_slider, is_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=-50, end=50, value=10, step=0.1,
                                           title="Color Scale Log Base", 
+                                          on_change=lambda x, y, z: self.trigger_render(),
                                           sizing_mode="stretch_width")  # , format="0[.]000")
-        self.interactions_slider.on_change(
-            "value_throttled", lambda x, y, z: self.trigger_render())
 
-        self.update_frequency_slider = Slider(width=SETTINGS_WIDTH, start=0.1, end=3, value=0.5, step=0.1,
-                                              title="Update Frequency [seconds]", format="0[.]000"
+        self.update_frequency_slider, ufs_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0.1, end=3, value=0.5, 
+                                               step=0.1,
+                                              title="Update Frequency [seconds]" #, format="0[.]000"
                                               , sizing_mode="stretch_width")
 
-        self.redraw_slider = Slider(width=SETTINGS_WIDTH, start=0, end=100, value=90, step=1,
+        self.redraw_slider, rs_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0, end=100, value=90, step=1,
+                                    on_change=lambda x, y, z: self.trigger_render(),
                                     title="Redraw if zoomed in by [%]", sizing_mode="stretch_width")
 
-        self.add_area_slider = Slider(width=SETTINGS_WIDTH, start=0, end=500, value=20, step=10,
+        self.add_area_slider, aas_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0, end=500, value=20, step=10,
+                                      on_change=lambda x, y, z: self.trigger_render(),
                                       title="Additional Draw Area [%]", sizing_mode="stretch_width")
-        self.add_area_slider.on_change(
-            "value_throttled", lambda x, y, z: self.trigger_render())
 
-        self.diag_dist_slider = Slider(width=SETTINGS_WIDTH, start=0, end=1000, value=0, step=1,
+        self.diag_dist_slider, dds_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0, end=1000, value=0, step=1,
+                                        on_change=lambda x, y, z: self.trigger_render(),
                                        title="Minimum Distance from Diagonal", sizing_mode="stretch_width")
-        self.diag_dist_slider.on_change(
-            "value_throttled", lambda x, y, z: self.trigger_render())
-
-        self.anno_size_slider = Slider(width=SETTINGS_WIDTH, start=10, end=500, value=DEFAULT_SIZE, step=1,
-                                       title=ANNOTATION_PLOT_NAME + " Plot Size", sizing_mode="stretch_width")
 
         def anno_size_slider_event(attr, old, new):
             self.anno_x.width = self.anno_size_slider.value
             self.anno_x_axis.width = self.anno_size_slider.value
             self.anno_y.height = self.anno_size_slider.value
             self.anno_y_axis.height = self.anno_size_slider.value
-        self.anno_size_slider.on_change(
-            "value_throttled", anno_size_slider_event)
-
-        self.ratio_size_slider = Slider(width=SETTINGS_WIDTH, start=10, end=500, value=DEFAULT_SIZE, step=1,
-                                        title=RATIO_PLOT_NAME + " Plot Size", sizing_mode="stretch_width")
+        self.anno_size_slider, ass_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=10, end=500, 
+                                       value=DEFAULT_SIZE,   step=1,
+                                       title=ANNOTATION_PLOT_NAME + " Plot Size", sizing_mode="stretch_width",
+                                       on_change=anno_size_slider_event)
 
         def ratio_size_slider_event(attr, old, new):
             self.ratio_x.width = self.ratio_size_slider.value
             self.ratio_x_axis.width = self.ratio_size_slider.value
             self.ratio_y.height = self.ratio_size_slider.value
             self.ratio_y_axis.height = self.ratio_size_slider.value
-        self.ratio_size_slider.on_change(
-            "value_throttled", ratio_size_slider_event)
-
-        self.raw_size_slider = Slider(width=SETTINGS_WIDTH, start=10, end=500, value=DEFAULT_SIZE, step=1,
-                                      title=RAW_PLOT_NAME + " Plot Size", sizing_mode="stretch_width")
+        self.ratio_size_slider, rss1_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=10, end=500, 
+                                        value=DEFAULT_SIZE, step=1,
+                                        title=RATIO_PLOT_NAME + " Plot Size", sizing_mode="stretch_width",
+                                        on_change=ratio_size_slider_event)
 
         def raw_size_slider_event(attr, old, new):
             self.raw_x.width = self.raw_size_slider.value
             self.raw_x_axis.width = self.raw_size_slider.value
             self.raw_y.height = self.raw_size_slider.value
             self.raw_y_axis.height = self.raw_size_slider.value
-        self.raw_size_slider.on_change(
-            "value_throttled", raw_size_slider_event)
+        self.raw_size_slider, rss2_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=10, end=500, 
+                                      value=DEFAULT_SIZE, step=1,
+                                      title=RAW_PLOT_NAME + " Plot Size", sizing_mode="stretch_width",
+                                      on_change=raw_size_slider_event)
 
-        self.num_bins = Slider(width=SETTINGS_WIDTH, start=10000, end=200000, value=50000, step=10000,
+        self.num_bins, nb_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=10000, end=200000, value=50000, step=10000,
+                               on_change=lambda x, y, z: self.trigger_render(),
                                title="Number of Bins", sizing_mode="stretch_width")
-        self.num_bins.on_change(
-            "value_throttled", lambda x, y, z: self.trigger_render())
 
             
-        self.radical_seq_accept = Slider(width=SETTINGS_WIDTH, start=0.01, end=0.1, value=0.05, step=0.01,
-                               title="pAccept for binominal test", sizing_mode="stretch_width")
-        self.radical_seq_accept.on_change(
-            "value_throttled", lambda x, y, z: self.trigger_render())
+        self.radical_seq_accept, rsa_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0.01, end=0.1, value=0.05, step=0.01,
+                               title="pAccept for binominal test", sizing_mode="stretch_width",
+                               on_change=lambda x, y, z: self.trigger_render())
             
         meta_file_label = Div(text="Data path:")
         meta_file_label.margin = DIV_MARGIN
@@ -763,6 +790,19 @@ class MainLayout:
                                             format=power_tick)
         self.min_max_bin_size.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
+
+        def callback(a, b):
+            self.min_max_bin_size.value = (self.min_max_bin_size.value[0] + a, self.min_max_bin_size.value[1] + b)
+        button_s_up = Button(label="▲", button_type="light", width=15, height=15, margin=BTN_MARGIN)
+        button_s_up.on_click(lambda _: callback(1, 0))
+        button_s_down = Button(label="▼", button_type="light", width=15, height=15, margin=BTN_MARGIN)
+        button_s_down.on_click(lambda _: callback(-1, 0))
+        button_e_up = Button(label="▲", button_type="light", width=15, height=15, margin=BTN_MARGIN)
+        button_e_up.on_click(lambda _: callback(0, 1))
+        button_e_down = Button(label="▼", button_type="light", width=15, height=15, margin=BTN_MARGIN)
+        button_e_down.on_click(lambda _: callback(0, -1))
+
+        mmbs_l = row([self.min_max_bin_size, column([button_s_up, button_s_down]), column([button_e_up, button_e_down])])
 
         self.curr_bin_size = Div(text="Current Bin Size: n/a", sizing_mode="stretch_width")
         
@@ -885,17 +925,13 @@ class MainLayout:
         _settings = column([
                 make_panel("General", "tooltip_general", [tool_bar, meta_file_label, self.meta_file]),
                 make_panel("Normalization", "tooltip_normalization", [self.normalization, 
-                                    self.interactions_bounds_slider,
-                                    self.color_range_slider,
-                                    self.interactions_slider, norm_x_layout, norm_y_layout, self.radical_seq_accept]),
+                                    ibs_l, crs_l, is_l, norm_x_layout, norm_y_layout, rsa_l]),
                 make_panel("Replicates", "tooltip_replicates", [self.in_group, self.betw_group, group_a_layout, group_b_layout]),
-                make_panel("Interface", "tooltip_interface", [self.num_bins,
-                                    show_hide, self.min_max_bin_size,
-                                    self.update_frequency_slider, self.redraw_slider,
-                                    self.add_area_slider,
-                                    self.anno_size_slider, self.raw_size_slider, self.ratio_size_slider,
+                make_panel("Interface", "tooltip_interface", [nb_l,
+                                    show_hide, mmbs_l,
+                                    ufs_l, rs_l, aas_l, ass_l, rss1_l, rss2_l,
                                     self.stretch, square_bins, power_ten_bin, color_picker, self.overlay_dataset_id]),
-                make_panel("Filters", "tooltip_filters", [self.mapq_slider, self.symmetrie, self.diag_dist_slider, 
+                make_panel("Filters", "tooltip_filters", [ms_l, self.symmetrie, dds_l, 
                                           displayed_annos_layout, filtered_annos_x_layout,
                                           filtered_annos_y_layout,
                                           x_coords, y_coords, multiple_anno_per_bin, chrom_x_layout, chrom_y_layout,
