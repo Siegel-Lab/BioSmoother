@@ -44,7 +44,7 @@ button {
 }
 
 .bk-btn-light:hover {
-    box-shadow: none;
+    box-shadow: none !important;
     background-color: transparent !important;
     text-decoration: none !important;
     border: none !important;
