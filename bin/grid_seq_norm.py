@@ -43,9 +43,9 @@ def one_dim_plot(ranked_regions, index, y_axis_label, title, filter, color="red"
     f.xaxis.axis_label = x_axis_label
     f.sizing_mode = "stretch_both"
     l = sum(1 if x[index] >= filter else 0 for x in ranked_regions)
-    f.dot(x=list(range(l)), y=[x[index] for x in ranked_regions if x[index] >= filter], color=color)
+    f.dot(x=list(range(l)), y=[x[index] for x in ranked_regions if x[index] >= filter], color=color, size=12)
     f.dot(x=[l+x for x in range(len(ranked_regions) - l)], y=[x[index] for x in ranked_regions if x[index] < filter],
-            color="black")
+            color="black", size=12)
     save(f)
 
 def two_dim_plot(ranked_regions, filter_rna, filter_dna):
@@ -55,7 +55,8 @@ def two_dim_plot(ranked_regions, filter_rna, filter_dna):
     f.xaxis.axis_label = "RNA reads per kb"
     f.sizing_mode = "stretch_both"
     def dot(fil, col):
-        f.dot(x=[x[0] for x in ranked_regions if fil(x)], y=[x[1] for x in ranked_regions if fil(x)], color=col)
+        f.dot(x=[x[0] for x in ranked_regions if fil(x)], y=[x[1] for x in ranked_regions if fil(x)], color=col,
+              size=12)
     dot(lambda r: r[0] < filter_rna and r[1] < filter_dna, "black")
     dot(lambda r: r[0] >= filter_rna and r[1] < filter_dna, "red")
     dot(lambda r: r[0] < filter_rna and r[1] >= filter_dna, "blue")
@@ -63,6 +64,7 @@ def two_dim_plot(ranked_regions, filter_rna, filter_dna):
     save(f)
 
 def make_grid_seq_plots(ranked_regions, filter_rna, filter_dna):
+    #print(ranked_regions)
     one_dim_plot(ranked_regions, 0, "RNA reads per kb", "Ranking RNA", filter_rna)
     one_dim_plot(ranked_regions, 1, "Maximal DNA reads in binned genome (RPK)", "Ranking DNA", filter_dna, "blue")
     two_dim_plot(ranked_regions, filter_rna, filter_dna)

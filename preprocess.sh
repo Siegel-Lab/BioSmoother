@@ -14,8 +14,8 @@ BED_SUF="RNA.sorted.bed_K1K2.bed_K4.bed_R_D.bed_R_D_K1K2.bed_R_D_PRE1.bed"
 BAMS="/work/project/ladsie_012/ABS.2.2/20210608_Inputs"
 BAM_SUF="R1.sorted.bam"
 
-INDEX_PREFIX="../smoother_out/test_full_reso"
-#INDEX_PREFIX="../smoother_out/test"
+#INDEX_PREFIX="../smoother_out/test_full_reso"
+INDEX_PREFIX="../smoother_out/test"
 
 rm -r ${INDEX_PREFIX}.smoother_index
 
@@ -27,18 +27,18 @@ echo "generating index ${INDEX_PREFIX}"
 #DBG_C="--uncached"
 DBG_C="--test"
 
-python3 preprocess.py ${DBG_C} init "${INDEX_PREFIX}" Lister427.sizes -a HGAP3_Tb427v10_merged_2021_06_21.gff3 #-d 10000
+python3 preprocess.py ${DBG_C} init "${INDEX_PREFIX}" Lister427.sizes -a HGAP3_Tb427v10_merged_2021_06_21.gff3 -d 10000
 
 # ANNA #
 
-#python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS503_P10_Total_2.${BED_SUF}" "P10_Total_Rep2" -g a
+python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS503_P10_Total_2.${BED_SUF}" "P10_Total_Rep2" -g a
 
 #python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS504_P10_Total_3.${BED_SUF}" "P10_Total_Rep3" -g a
 #python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS505_N50_Total_1.${BED_SUF}" "N50_Total_Rep1" -g a
 #python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS506_N50_Total_2.${BED_SUF}" "N50_Total_Rep2" -g a
 #python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS507_N50_Total_3.${BED_SUF}" "N50_Total_Rep3" -g a
 
-#python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS508_P10_NPM_1.${BED_SUF}" "P10_NPM_Rep1" -g b
+python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS508_P10_NPM_1.${BED_SUF}" "P10_NPM_Rep1" -g b
 
 #python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS509_P10_NPM_2.${BED_SUF}" "P10_NPM_Rep2" -g b
 #python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS510_P10_NPM_3.${BED_SUF}" "P10_NPM_Rep3" -g b
@@ -55,7 +55,7 @@ python3 preprocess.py ${DBG_C} init "${INDEX_PREFIX}" Lister427.sizes -a HGAP3_T
 #                           "${BAMS}/small_rna/ID-000723-NS1_noadapter_longer17.fq.sorted.bam" "small_RNA" -g row
 
 # test with this:
-# python3 preprocess.py ${DBG_C} grid-seq-norm -v -b 10000 -R 0.005 -D 1 ${INDEX_PREFIX} caGene
+python3 preprocess.py ${DBG_C} grid-seq-norm -v -b 10000 -R 200 -D 100000 ${INDEX_PREFIX} caGene
 
 # once -R and -D are correct use this:
 # python3 preprocess.py ${DBG_C} grid-seq-norm -van -b 10000 -R 0.005 -D 1 ${INDEX_PREFIX} caGene
@@ -64,5 +64,5 @@ python3 preprocess.py ${DBG_C} init "${INDEX_PREFIX}" Lister427.sizes -a HGAP3_T
 # CLAUDIA #
 CR_BEDS="/work/project/ladsie_010/CR3_Smoother/"
 
-python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${CR_BEDS}/pre1_P10-1_3.x" "P10_Lib1-3" -g a
-python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${CR_BEDS}/pre1_P10-4_6.x" "P10_Lib4-6" -g a
+#python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${CR_BEDS}/pre1_P10-1_3.x" "P10_Lib1-3" -g a
+#python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${CR_BEDS}/pre1_P10-4_6.x" "P10_Lib4-6" -g a

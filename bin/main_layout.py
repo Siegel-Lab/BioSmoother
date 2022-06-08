@@ -721,9 +721,10 @@ class MainLayout:
                                       on_change=lambda x, y, z: self.trigger_render(),
                                       title="Additional Draw Area [%]", sizing_mode="stretch_width")
 
-        self.diag_dist_slider, dds_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0, end=1000, value=0, step=1,
-                                        on_change=lambda x, y, z: self.trigger_render(),
-                                       title="Minimum Distance from Diagonal", sizing_mode="stretch_width")
+        self.diag_dist_slider, dds_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0, end=1000,
+                                       value=0, step=1,
+                                       on_change=lambda x, y, z: self.trigger_render(),
+                                       title="Minimum Distance from Diagonal (kbp)", sizing_mode="stretch_width")
 
         def anno_size_slider_event(attr, old, new):
             self.anno_x.width = self.anno_size_slider.value
@@ -755,9 +756,9 @@ class MainLayout:
                                       title=RAW_PLOT_NAME + " Plot Size", sizing_mode="stretch_width",
                                       on_change=raw_size_slider_event)
 
-        self.num_bins, nb_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=10000, end=200000, value=50000, step=10000,
+        self.num_bins, nb_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=10, end=1000, value=50, step=10,
                                on_change=lambda x, y, z: self.trigger_render(),
-                               title="Number of Bins", sizing_mode="stretch_width")
+                               title="Number of Bins (in thousands)", sizing_mode="stretch_width")
 
             
         self.radical_seq_accept, rsa_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0.01, end=0.1, value=0.05, step=0.01,
@@ -792,7 +793,10 @@ class MainLayout:
             "value_throttled", lambda x, y, z: self.trigger_render())
 
         def callback(a, b):
-            self.min_max_bin_size.value = (self.min_max_bin_size.value[0] + a, self.min_max_bin_size.value[1] + b)
+            self.min_max_bin_size.value = (
+                min(max(self.min_max_bin_size.value[0] + a, self.min_max_bin_size.start), self.min_max_bin_size.end), 
+                min(max(self.min_max_bin_size.value[1] + b, self.min_max_bin_size.start), self.min_max_bin_size.end)) 
+            self.trigger_render()
         button_s_up = Button(label="▲", button_type="light", width=15, height=15, margin=BTN_MARGIN)
         button_s_up.on_click(lambda _: callback(1, 0))
         button_s_down = Button(label="▼", button_type="light", width=15, height=15, margin=BTN_MARGIN)
@@ -1108,7 +1112,7 @@ class MainLayout:
             bins.append([])
             for idx_2, (x, y, w, h) in enumerate(bin_coords):
                 self.render_step_log(name, idx_2 + idx * len(bin_coords), len(bin_coords)*len(self.meta.datasets))
-                if abs(x - y) >= self.diag_dist_slider.value:
+                if abs(x - y) >= 1000 * self.diag_dist_slider.value / self.meta.dividend:
                     x, y, w, h = self.adjust_bin_pos_for_symmetrie(x, y, w, h)
                     n = self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value,
                                        self.multi_mapping_d) # , min(h, w), min(h, w)
@@ -1272,6 +1276,8 @@ class MainLayout:
                         inc = 0
                         STEP_SIZE=10
                         for _ in range(STEP_SIZE):
+                            if self.cancel_render:
+                                return
                             s = int(max(0, d))
                             e = int(self.meta.chr_sizes.chr_start_pos["end"] - w - min(0, d))
                             if s == e:
@@ -1478,7 +1484,7 @@ class MainLayout:
                 s += " Step " + str(self.render_curr_step) + \
                     " " + str(step_name) + ". Substep " + str(sub_step)
                 if not sub_step_total is None:
-                    s += " of " + str(sub_step_total) + ". "
+                    s += " of " + str(sub_step_total) + " = " + str((100*sub_step)//sub_step_total) + "%. "
                 if len(self.render_time_record) > 0:
                     s += " Runtime: " + str(datetime.now() - self.render_time_record[-1][1])
                 if self.cancel_render:
@@ -1500,9 +1506,10 @@ class MainLayout:
         for idx, (name, time) in enumerate(self.render_time_record):
             print("step " + str(idx), str(time),
                   str(int(100*time/total_time)) + "%", name, "\033[K", sep="\t")
-        print("Currently used RAM:", psutil.virtual_memory().percent, "%\033[K")
+        ram_usage = psutil.virtual_memory().percent
+        print("Currently used RAM:", ram_usage, "%\033[K")
         print("Number of displayed bins:", bin_amount, "\033[K")
-        return total_time
+        return total_time, ram_usage
 
 
     @gen.coroutine
@@ -1525,23 +1532,23 @@ class MainLayout:
 
                 def power_of_ten(x):
                     if self.power_ten_bin_d == "no":
-                        return x
+                        return math.ceil(x)
                     n = 0
                     while True:
                         for i in [1, 1.25, 2.5, 5]:
-                            if i*10**n >= x:
+                            if i*10**n > x:
                                 return i*10**n
                         n += 1
                 def comp_bin_size(idx):
                     t = self.min_max_bin_size.value[idx]
                     return max(1, math.ceil((1 + t % 9) * 10**(t // 9)) // self.meta.dividend)
                 if self.square_bins_d == "view":
-                    h_bin = power_of_ten( (area[2] - area[0]) / math.sqrt(self.num_bins.value) )
+                    h_bin = power_of_ten( (area[2] - area[0]) / math.sqrt(self.num_bins.value * 1000) )
                     h_bin = min(max(h_bin, comp_bin_size(0), 1), comp_bin_size(1))
-                    w_bin = power_of_ten( (area[3] - area[1]) / math.sqrt(self.num_bins.value) )
+                    w_bin = power_of_ten( (area[3] - area[1]) / math.sqrt(self.num_bins.value * 1000) )
                     w_bin = min(max(w_bin, comp_bin_size(0), 1), comp_bin_size(1))
                 elif self.square_bins_d == "coord":
-                    area_bin = (area[2] - area[0]) * (area[3] - area[1]) / self.num_bins.value
+                    area_bin = (area[2] - area[0]) * (area[3] - area[1]) / (self.num_bins.value * 1000)
                     h_bin = power_of_ten(math.sqrt(area_bin))
                     h_bin = min(max(h_bin, comp_bin_size(0), 1), comp_bin_size(1))
                     w_bin = h_bin
@@ -1872,8 +1879,8 @@ class MainLayout:
                         self.overlay_data.data = d_overlay
                     self.do_export = None
                     self.curdoc.unhold()
-                    total_time = self.render_done(len(bins[0]))
-                    self.curr_bin_size.text = end_text + "<br>Took " + str(total_time) + " in total."
+                    total_time, ram_usage = self.render_done(len(bins[0]))
+                    self.curr_bin_size.text = end_text + "<br>Took " + str(total_time) + " in total.<br>" + str(ram_usage) + "% RAM used.<br> " + str(len(bins[0])//1000) + "k bins rendered."
                     self.curdoc.add_timeout_callback(
                         lambda: self.render_callback(), self.update_frequency_slider.value*1000)
 
@@ -1925,6 +1932,13 @@ class MainLayout:
                 if os.path.exists(self.meta_file.value + ".smoother_index"):
                     self.meta = MetaData.load(self.meta_file.value + ".smoother_index/meta")
                     self.meta.setup(self)
+                    def to_idx(x):
+                        if x <= 0:
+                            return 0
+                        power = int(math.log10(x))
+                        return 9*power+math.ceil(x / 10**power)-1
+                    self.min_max_bin_size.start = to_idx(self.meta.dividend)
+                    self.min_max_bin_size.value = (max(9*2, to_idx(self.meta.dividend)), 9*6)
                     self.setup_coordinates()
                     self.idx = Tree_4(self.meta_file.value)
                     print("number of points in index: ", len(self.idx.index))

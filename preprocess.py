@@ -21,29 +21,38 @@ def touch(f_name):
     with open(f_name, 'a'):  # Create file if does not exist
         pass
 
-def parse_heatmap(in_filename):
+def parse_heatmap(in_filename, test, chr_filter):
     with open(in_filename, "r") as in_file_1:
+        cnt = 0
         for line in in_file_1:
             # parse file columns
             read_name, strnd_1, chr_1, pos_1, _, strnd_2, chr_2, pos_2, _2, mapq_1, mapq_2 = line.split()
+            
+            if not chr_1 in chr_filter:
+                continue
+            if not chr_2 in chr_filter:
+                continue
             # convert number values to ints
             pos_1, pos_2, mapq_1, mapq_2 = (int(x) for x in (pos_1, pos_2, mapq_1, mapq_2))
             pos_1 -= 1
             pos_2 -= 1
 
+            if cnt > TEST_FAC and test:
+                break
+            cnt += 1
+
             yield read_name, strnd_1, chr_1, int(pos_1), strnd_2, chr_2, int(pos_2), mapq_1, mapq_2
 
-def group_heatmap(in_filename, file_size, no_groups=False, test=False):
+def group_heatmap(in_filename, file_size, chr_filter, no_groups=False, test=False):
     file_name = simplified_filepath(in_filename)
     groups = {}
-    for idx_2, (read_name, _, chr_1, pos_1, _, chr_2, pos_2, mapq_1, mapq_2) in enumerate(parse_heatmap(in_filename)):
+    for idx_2, (read_name, _, chr_1, pos_1, _, chr_2, pos_2, mapq_1, mapq_2) in enumerate(parse_heatmap(in_filename,
+                                                                                                        test,
+                                                                                                        chr_filter)):
         map_q = min(mapq_1, mapq_2)
         if not read_name in groups:
             groups[read_name] = []
         groups[read_name].append((chr_1, int(pos_1), chr_2, int(pos_2), int(map_q)))
-        
-        if idx_2 > TEST_FAC and test:
-            break
         
         if idx_2 % PRINT_MODULO == 0:
             print("loading file", file_name, ", line", idx_2+1, "of", file_size, "=", 
@@ -75,9 +84,6 @@ def group_heatmap(in_filename, file_size, no_groups=False, test=False):
             pos_2_e = max([g[3] for g in group])
         map_q = max([g[4] for g in group])
         yield read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q
-
-        if idx > TEST_FAC and test:
-            break
 
 def execute(cmd):
     popen = subprocess.Popen(
@@ -203,35 +209,24 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test
     meta.save(out_prefix + ".smoother_index/meta")
     touch(out_prefix + ".smoother_index/norm.coords")
     touch(out_prefix + ".smoother_index/norm.datsets")
-    touch(out_prefix + ".smoother_index/norm.desc")
     touch(out_prefix + ".smoother_index/norm.overlays")
-    touch(out_prefix + ".smoother_index/norm.points")
     touch(out_prefix + ".smoother_index/norm.prefix_sums")
     touch(out_prefix + ".smoother_index/repl.coords")
     touch(out_prefix + ".smoother_index/repl.datsets")
-    touch(out_prefix + ".smoother_index/repl.desc")
     touch(out_prefix + ".smoother_index/repl.overlays")
-    touch(out_prefix + ".smoother_index/repl.points")
     touch(out_prefix + ".smoother_index/repl.prefix_sums")
 
 
-def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_groups=False, test_idx=1,
+def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_groups=False,
                   simulate_hic=False, without_dep_dim=True, keep_points=False):
     meta = MetaData.load(out_prefix + ".smoother_index/meta")
     index = make_sps_index(out_prefix + ".smoother_index/repl", 3, not without_dep_dim, 
                             2, "Cached" if cached else "Disk", True )
-    cnt = 0
     last_cnt = len(index)
     file_size = int(subprocess.run(['wc', '-l', path], stdout=subprocess.PIPE).stdout.decode('utf-8').split(" ")[0])
     for read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q in group_heatmap(path, file_size,
+                                                                                            meta.chr_sizes.chr_sizes,
                                                                                             no_groups, test):
-        if not chr_1 in meta.chr_sizes.chr_sizes:
-            continue
-        if not chr_2 in meta.chr_sizes.chr_sizes:
-            continue
-        if cnt < TEST_FAC*(test_idx-1) and test:
-            cnt += 1
-            continue
         act_pos_1_s = meta.chr_sizes.coordinate(pos_2_s // meta.dividend, chr_2)
         act_pos_1_e = meta.chr_sizes.coordinate(pos_2_e // meta.dividend, chr_2)
         act_pos_2_s = meta.chr_sizes.coordinate(pos_1_s // meta.dividend, chr_1)
@@ -240,14 +235,13 @@ def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_
             act_pos_1_s, act_pos_2_s = act_pos_2_s, act_pos_1_s
             act_pos_1_e, act_pos_2_e = act_pos_2_e, act_pos_1_e
         index.add_point([act_pos_1_s, act_pos_2_s, map_q], [act_pos_1_e, act_pos_2_e, map_q], read_name)
-        if cnt > TEST_FAC*test_idx and test:
-            break
-        cnt += 1
     print("generating index")
     idx = index.generate(last_cnt, len(index))
+    print("done generating index")
     meta.add_dataset(name, path, group_a, idx)
     meta.save(out_prefix + ".smoother_index/meta")
     if not keep_points:
+        del index
         os.remove(out_prefix + ".smoother_index/repl.points")
         os.remove(out_prefix + ".smoother_index/repl.desc")
 
@@ -256,6 +250,7 @@ def add_normalization(out_prefix, path, name, for_row, test=False, cached=False,
     index = make_sps_index(out_prefix + ".smoother_index/norm", 2, False, 1, "Cached" if cached else "Disk", True )
     last_cnt = len(index)
     if path[-4:] == ".wig":
+        raise RuntimeError("disabled for now")
         for xs, ys, n in parse_wig_file(path, meta.chr_sizes.chr_start_pos, meta.dividend):
             meta.add_wig_normalization(name + ": " + n, path, for_row, xs, ys)
     else:
@@ -275,6 +270,7 @@ def add_normalization(out_prefix, path, name, for_row, test=False, cached=False,
         meta.add_normalization(name, path, for_row, idx)
     meta.save(out_prefix + ".smoother_index/meta")
     if not keep_points:
+        del index
         os.remove(out_prefix + ".smoother_index/norm.points")
         os.remove(out_prefix + ".smoother_index/norm.desc")
 
@@ -286,7 +282,7 @@ def init(args):
 def repl(args):
     print("LibSps Version:", VERSION)
     add_replicate(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached, args.no_groups,
-                  args.test_idx, args.simulate_hic, args.without_dep_dim, args.keep_points)
+                  args.simulate_hic, args.without_dep_dim, args.keep_points)
 
 def norm(args):
     print("LibSps Version:", VERSION)
@@ -295,19 +291,21 @@ def norm(args):
 def grid_seq_norm(args):
     print("LibSps Version:", VERSION)
     meta = MetaData.load(args.index_prefix + ".smoother_index/meta")
+    bin_size = max(args.bin_size // meta.dividend, 1)
     index = Tree_4(args.index_prefix)
     datasets = args.datasets
     if datasets is None or len(datasets) == 0:
         datasets = list(range(len(meta.datasets)))
     ranked_regions = make_grid_seq_ranked_regions(index, datasets, args.mapping_q, meta.chr_sizes,
-                                                  meta.annotations, args.annotation, args.bin_size)
+                                                  meta.annotations, args.annotation, bin_size)
     if args.visualize:
         make_grid_seq_plots(ranked_regions, args.filter_rna, args.filter_dna)
     filtered_rr = filter_r_r(ranked_regions, args.filter_rna, args.filter_dna)[:100]
     if args.add_annotation:
         do_add_annotation(filtered_rr, meta, args.name)
     if args.add_normalization_track:
-        index_arr = make_sps_index(args.index_prefix + ".smoother_index/norm", 2, False, 1, "Cached" if not args.uncached else "Disk", True )
+        index_arr = make_sps_index(args.index_prefix + ".smoother_index/norm", 2, False, 1, 
+                                   "Cached" if not args.uncached else "Disk", True )
         add_as_normalization(filtered_rr, datasets, meta, index, index_arr, args.mapping_q, args.name, 
                              "GRID-seq normalization created with " + str(sys.argv))
 
@@ -317,7 +315,6 @@ def get_argparse():
     parser = argparse.ArgumentParser(description='Create indices for the smoother Hi-C data viewer.')
 
     ## deebugging arguments
-    parser.add_argument('--test_idx', help=argparse.SUPPRESS, type=int, default=1)
     parser.add_argument('--test', help=argparse.SUPPRESS, action='store_true')
     parser.add_argument('--uncached', help=argparse.SUPPRESS, action='store_true')
     parser.add_argument('--no_groups', help=argparse.SUPPRESS, action='store_true')

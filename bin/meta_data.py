@@ -39,19 +39,13 @@ class MetaData:
         self.norm[idx] = Coverage().set_x_y(xs, ys)
 
     def add_annotations(self, annotation_list):
-        starts = {}
-        ends = {}
         sorted_list = {}
         for name, start, end, info in annotation_list:
-            if name not in starts:
-                starts[name] = []
-                ends[name] = []
+            if name not in sorted_list:
                 sorted_list[name] = []
-            starts[name].append(start)
-            ends[name].append(end)
             sorted_list[name].append((start, end, info))
-        for name, start_l in starts.items():
-            self.annotations[name] = Coverage().set(start_l, ends[name], sorted_list[name], self.chr_sizes)
+        for name, start_l in sorted_list.items():
+            self.annotations[name] = Coverage().set(start_l, self.chr_sizes)
 
 
     def save(self, file_name):
