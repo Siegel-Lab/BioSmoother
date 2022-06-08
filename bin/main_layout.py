@@ -1285,11 +1285,14 @@ class MainLayout:
                 ret.append(self.hi_c_normalization(bins, rows, cols))
             elif self.normalization_d == "ddd":
                 # get the distances to sample
-                dists_to_sample = set([(int(x)-int(y), w, h) for x, w in cols for y, h in rows])
-                ddd = {}
+                min_dist_to_sample = min(int(x)-int(y) for x, _ in cols for y, _ in rows)
+                max_dist_to_sample = max(int(x)-int(y) for x, _ in cols for y, _ in rows)
+                ddd = []
+                NUM_BINS = 300
                 # for each distance we have to sample
-                for id_2, (d, w, h) in enumerate(dists_to_sample):
-                    self.render_step_log("norm_bins", id_2 + idx*len(dists_to_sample), len(bins_l)*len(dists_to_sample))
+                bin_size = max((max_dist_to_sample - min_dist_to_sample) // NUM_BINS, 1)
+                for id_2, d in enumerate(range(min_dist_to_sample, max_dist_to_sample, bin_size)):
+                    self.render_step_log("norm_bins", id_2 + idx*NUM_BINS, len(bins_l)*NUM_BINS)
                     # sample until the result does not change anymore (less than 1%) but at least a 250 times
                     cnt = 0
                     val = 0
@@ -1300,13 +1303,13 @@ class MainLayout:
                             if self.cancel_render:
                                 return
                             s = int(max(0, d))
-                            e = int(self.meta.chr_sizes.chr_start_pos["end"] - w - min(0, d))
-                            if s == e:
+                            e = int(self.meta.chr_sizes.chr_start_pos["end"] - bin_size - min(0, d))
+                            if s + max(int(bin_size), 1) >= e:
                                 x = s
                             else:
-                                x = random.randrange(s, e, max(int(w), 1))
+                                x = random.randrange(s, e, max(int(bin_size), 1))
                             y = x-d
-                            x_2, y_2, w_2, h_2 = self.adjust_bin_pos_for_symmetrie(x, y, w, h)
+                            x_2, y_2, w_2, h_2 = self.adjust_bin_pos_for_symmetrie(x, y, bin_size, bin_size)
                             inc += self.idx.count(idx, y_2, y_2+h_2, x_2, x_2+w_2, *self.mapq_slider.value, 
                                                   self.multi_mapping_d)
                         if val > 0:
@@ -1318,9 +1321,13 @@ class MainLayout:
                         val += inc
                         cnt += STEP_SIZE
                     #print("d:", d, ", sampling took", cnt, "many attempts. Last change:", change)
-                    ddd[d] = max(val/cnt, 1)
-                
-                to_append = [x / ddd[int(cols[idx_2 // len(rows)][0]) - int(rows[idx_2 % len(rows)][0])] for idx_2, x in enumerate(bins)]
+                    # @todo median instead of average
+                    ddd.append(max(val/cnt, 1))
+                to_append = []
+                for idx_2, x in enumerate(bins):
+                    d = int(cols[idx_2 // len(rows)][0]) - int(rows[idx_2 % len(rows)][0])
+                    ddd_idx = max(min(int((d - min_dist_to_sample) / bin_size), len(ddd)-1), 0)
+                    to_append.append(x / ddd[ddd_idx])
                 n = max(to_append + [1])
                 ret.append([x/n for x in to_append])
             else:

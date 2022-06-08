@@ -31,14 +31,14 @@ python3 preprocess.py ${DBG_C} init "${INDEX_PREFIX}" Lister427.sizes -a HGAP3_T
 
 # ANNA #
 
-python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS503_P10_Total_2.${BED_SUF}" "P10_Total_Rep2" -g a
+#python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS503_P10_Total_2.${BED_SUF}" "P10_Total_Rep2" -g a
 
 #python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS504_P10_Total_3.${BED_SUF}" "P10_Total_Rep3" -g a
 #python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS505_N50_Total_1.${BED_SUF}" "N50_Total_Rep1" -g a
 #python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS506_N50_Total_2.${BED_SUF}" "N50_Total_Rep2" -g a
 #python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS507_N50_Total_3.${BED_SUF}" "N50_Total_Rep3" -g a
 
-python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS508_P10_NPM_1.${BED_SUF}" "P10_NPM_Rep1" -g b
+#python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS508_P10_NPM_1.${BED_SUF}" "P10_NPM_Rep1" -g b
 
 #python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS509_P10_NPM_2.${BED_SUF}" "P10_NPM_Rep2" -g b
 #python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS510_P10_NPM_3.${BED_SUF}" "P10_NPM_Rep3" -g b
@@ -55,7 +55,7 @@ python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${BEDS}/NS508_P10_NPM_1.$
 #                           "${BAMS}/small_rna/ID-000723-NS1_noadapter_longer17.fq.sorted.bam" "small_RNA" -g row
 
 # test with this:
-python3 preprocess.py ${DBG_C} grid-seq-norm -v -b 10000 -R 200 -D 100000 ${INDEX_PREFIX} caGene
+#python3 preprocess.py ${DBG_C} grid-seq-norm -v -b 10000 -R 200 -D 100000 ${INDEX_PREFIX} caGene
 
 # once -R and -D are correct use this:
 # python3 preprocess.py ${DBG_C} grid-seq-norm -van -b 10000 -R 0.005 -D 1 ${INDEX_PREFIX} caGene
@@ -64,5 +64,5 @@ python3 preprocess.py ${DBG_C} grid-seq-norm -v -b 10000 -R 200 -D 100000 ${INDE
 # CLAUDIA #
 CR_BEDS="/work/project/ladsie_010/CR3_Smoother/"
 
-#python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${CR_BEDS}/pre1_P10-1_3.x" "P10_Lib1-3" -g a
-#python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${CR_BEDS}/pre1_P10-4_6.x" "P10_Lib4-6" -g a
+python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${CR_BEDS}/pre1_P10-1_3.x" "P10_Lib1-3" -g a
+python3 preprocess.py ${DBG_C} repl "${INDEX_PREFIX}" "${CR_BEDS}/pre1_P10-4_6.x" "P10_Lib4-6" -g a
