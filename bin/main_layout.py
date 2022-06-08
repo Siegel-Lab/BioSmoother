@@ -11,8 +11,8 @@ import math
 from datetime import datetime
 from tornado import gen
 from bokeh.document import without_document_lock
-from bokeh.models import Panel, Tabs, Spacer, Slope, PreText, CustomJS
-from bokeh.models import Range1d, ColorBar, ContinuousColorMapper
+from bokeh.models import Panel, Tabs, Spacer, Slope, PreText, CustomJS, FixedTicker
+from bokeh.models import Range1d, ColorBar, LinearColorMapper
 from bin.meta_data import *
 import os
 from bin.heatmap_as_r_tree import *
@@ -926,9 +926,30 @@ class MainLayout:
 
         version_info = Div(text="Smoother "+ smoother_version +"<br>LibSps Version: " + bin.libSps.VERSION)
 
+        self.color_mapper = LinearColorMapper(palette=["black"], low=0, high=1)
+        color_figure = figure(tools='', height=0)
+        color_figure.x(0,0)
+        self.color_info = ColorBar(color_mapper=self.color_mapper, orientation="horizontal", 
+                                   ticker=FixedTicker(ticks=[]))
+        self.color_info.formatter = FuncTickFormatter(
+                        args={"ticksx": [], "labelsx": []},
+                        code="""
+                            for (let i = 0; i < ticksx.length; i++)
+                                if(tick == ticksx[i])
+                                    return labelsx[i];
+                            return "n/a";
+                        """)
+        color_figure.add_layout(self.color_info, "below")
+
+        # make plot invisible
+        color_figure.axis.visible = False
+        color_figure.toolbar_location = None
+        color_figure.border_fill_alpha = 0
+        color_figure.outline_line_alpha = 0
+
         _settings = column([
                 make_panel("General", "tooltip_general", [tool_bar, meta_file_label, self.meta_file]),
-                make_panel("Normalization", "tooltip_normalization", [self.normalization, 
+                make_panel("Normalization", "tooltip_normalization", [self.normalization, color_figure,
                                     ibs_l, crs_l, is_l, norm_x_layout, norm_y_layout, rsa_l]),
                 make_panel("Replicates", "tooltip_replicates", [self.in_group, self.betw_group, group_a_layout, group_b_layout]),
                 make_panel("Interface", "tooltip_interface", [nb_l,
@@ -1390,22 +1411,28 @@ class MainLayout:
         return Viridis256[x]
 
     def color_range(self, c):
+        if self.color_range_slider.value[1] == self.color_range_slider.value[0]:
+            return 0
         c = (c - self.color_range_slider.value[0]) / (self.color_range_slider.value[1] - self.color_range_slider.value[0])
         return max(0, min(MAP_Q_MAX-1, int((MAP_Q_MAX-1)*c)))
         #color_range_slider
 
+    def color_bins_c(self, c):
+        if self.betw_group_d == "sub":
+            c = self.log_scale(abs(c)) * (1 if c >= 0 else -1) / 2 + 0.5
+            c = self.color_range(c) 
+        else:
+            if math.isnan(self.log_scale(c)):
+                return 0
+            else:
+                c = self.color_range(self.log_scale(c))
+        return c
+
+    
     def color_bins_b(self, bins):
         ret = []
         for c in bins:
-            if self.betw_group_d == "sub":
-                c = self.log_scale(abs(c)) * (1 if c >= 0 else -1) / 2 + 0.5
-                c = self.color_range(c) 
-                ret.append(self.color(c))
-            else:
-                if math.isnan(self.log_scale(c)):
-                    ret.append(self.color(0))
-                else:
-                    ret.append(self.color(self.color_range(self.log_scale(c))))
+            ret.append(self.color(self.color_bins_c(c)))
         return ret
 
     def color_bins(self, bins):
@@ -1670,6 +1697,18 @@ class MainLayout:
                     "info": [x for x in purged_info],
                 }
                 
+                best_bins = [(None,0,0)]*3
+                for cc, a, b in zip(d_heatmap["s"], d_heatmap["d_a"], d_heatmap["d_b"]):
+                    c = self.color_bins_c(cc)/255
+                    for idx, x in enumerate([0.1, 0.5, 0.9]):
+                        if best_bins[idx][0] is None or abs(c-x) < abs(best_bins[idx][0]-x):
+                            best_bins[idx] = (c, a, b)
+
+                color_bar_ticks = []
+                color_bar_tick_labels = []
+                for c, a, b in best_bins:
+                    color_bar_ticks.append(c)
+                    color_bar_tick_labels.append(str(round(c, 2)) + ": " + str(a) + "/" + str(b))
 
                 def double_up(l):
                     return [x for x in l for _ in [0, 1]]
@@ -1806,6 +1845,14 @@ class MainLayout:
                 @gen.coroutine
                 def callback():
                     self.curdoc.hold()
+                    if self.betw_group_d == "sub":
+                        palette = [xxx/50 - 1 for xxx in range(100)]
+                    else:
+                        palette = [xxx/100 for xxx in range(100)]
+                    self.color_mapper.palette = self.color_bins_b(palette)
+                    print(color_bar_ticks, color_bar_tick_labels)
+                    self.color_info.formatter.args = {"ticksx": color_bar_ticks, "labelsx": color_bar_tick_labels}
+                    self.color_info.ticker.ticks = color_bar_ticks
                     def mmax(*args):
                         m = 0
                         for x in args:
