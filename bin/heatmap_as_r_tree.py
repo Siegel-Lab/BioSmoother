@@ -6,7 +6,7 @@ from bin.libSps import make_sps_index, IntersectionType
 
 
 H = 0.5
-MAP_Q_MAX = 256
+MAP_Q_MAX = 255
 
 
 WITH_DEPENDENT_DIM = True
@@ -32,15 +32,21 @@ class Tree_4:
     def load(self, num_data, cache_size, threads):
         return self
 
+    def to_query(self, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX):
+        dna_to = max(dna_from+1, dna_to)
+        rna_to = max(rna_from+1, rna_to)
+        return ([int(dna_from), int(rna_from), MAP_Q_MAX-map_q_max], [int(dna_to), int(rna_to), MAP_Q_MAX-map_q_min])
+
+
     def count(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX,
               intersection_type="enclosed"):
         dna_to = max(dna_from+1, dna_to)
         rna_to = max(rna_from+1, rna_to)
-        w_limit = 1
-        h_limit = 1
-        return self.index.count(id, [int(dna_from), int(rna_from), map_q_min], 
-                                    [int(dna_to), int(rna_to), map_q_max],
+        return self.index.count(id, *self.to_query(rna_from, rna_to, dna_from, dna_to, map_q_min, map_q_max),
                                 INT_TYPES[intersection_type])
+
+    def count_multiple(self, id, queries, intersection_type="enclosed"):
+        return self.index.count_multiple(id, queries, INT_TYPES[intersection_type])
 
     def save(self):
         pass
@@ -78,7 +84,7 @@ class Tree_3:
 
     def count(self, id, pos_from, pos_to, map_q_min=0, map_q_max=MAP_Q_MAX):
         pos_to = max(pos_from+1, pos_to)
-        return self.index.count(id, [int(pos_from), map_q_min], [int(pos_to), map_q_max])
+        return self.index.count(id, [int(pos_from), MAP_Q_MAX-map_q_max], [int(pos_to), MAP_Q_MAX-map_q_min])
 
     def save(self):
         pass

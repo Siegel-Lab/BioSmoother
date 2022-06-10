@@ -383,6 +383,7 @@ class MainLayout:
         self.force_render = True
         self.curdoc = curdoc()
         self.last_drawing_area = (0, 0, 0, 0)
+        self.last_h_w_bin = (0, 0)
         self.curr_area_size = 1
         self.idx = None
         self.idx_norm = None
@@ -758,7 +759,7 @@ class MainLayout:
 
         self.num_bins, nb_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=10, end=1000, value=50, step=10,
                                on_change=lambda x, y, z: self.trigger_render(),
-                               title="Number of Bins (in thousands)", sizing_mode="stretch_width")
+                               title="Max number of Bins (in thousands)", sizing_mode="stretch_width")
 
             
         self.radical_seq_accept, rsa_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0.01, end=0.1, value=0.05, step=0.01,
@@ -1131,17 +1132,23 @@ class MainLayout:
         min_ = self.interactions_bounds_slider.value
         for idx, _ in sorted(list(self.meta.datasets.items())):
             bins.append([])
+            bins_to_search = []
             for idx_2, (x, y, w, h) in enumerate(bin_coords):
-                self.render_step_log(name, idx_2 + idx * len(bin_coords), len(bin_coords)*len(self.meta.datasets))
+                self.render_step_log(name + "_pre", idx_2 + idx * len(bin_coords), len(bin_coords)*len(self.meta.datasets))
                 if abs(x - y) >= 1000 * self.diag_dist_slider.value / self.meta.dividend:
                     x, y, w, h = self.adjust_bin_pos_for_symmetrie(x, y, w, h)
-                    n = self.idx.count(idx, y, y+h, x, x+w, *self.mapq_slider.value,
-                                       self.multi_mapping_d) # , min(h, w), min(h, w)
-                    bins[-1].append(max(n-min_, 0))
-                    if n <= 10:
-                        info[idx_2] += self.idx.info(idx, y, y+h, x, x+w, *self.mapq_slider.value)
+                    bins_to_search.append( self.idx.to_query(y, y+h, x, x+w, *self.mapq_slider.value) )
                 else:
-                    bins[-1].append(0)
+                    bins[-1].append(self.idx.to_query(0, 0, 0, 0, 0, 0))
+                if self.cancel_render:
+                    return
+            self.render_step_log(name + "_main")
+            ns = self.idx.count_multiple(idx, bins_to_search, self.multi_mapping_d)
+            for idx_2, (n, (x, y, w, h)) in enumerate(zip(ns, bin_coords)):
+                self.render_step_log(name + "_post", idx_2 + idx * len(bin_coords), len(bin_coords)*len(self.meta.datasets))
+                bins[-1].append(max(n-min_, 0))
+                if n <= 10 and n > 0:
+                    info[idx_2] += self.idx.info(idx, y, y+h, x, x+w, *self.mapq_slider.value)
                 if self.cancel_render:
                     return
         return bins, info
@@ -1335,16 +1342,22 @@ class MainLayout:
         return ret
 
     def flatten_bins(self, bins):
+        group_a = []
+        group_b = []
+        for idx_2 in range(len(bins)):
+            if str(idx_2) in self.group_a.value:
+                group_a.append(idx_2)
+            if str(idx_2) in self.group_b.value:
+                group_b.append(idx_2)
         ret = [[], []]
         for idx, _ in enumerate(bins[0]):
             self.render_step_log("flatten_bins", idx, len(bins[0]))
             a = []
             b = []
-            for idx_2 in range(len(bins)):
-                if str(idx_2) in self.group_a.value:
-                    a.append(bins[idx_2][idx])
-                if str(idx_2) in self.group_b.value:
-                    b.append(bins[idx_2][idx])
+            for idx_2 in group_a:
+                a.append(bins[idx_2][idx])
+            for idx_2 in group_b:
+                b.append(bins[idx_2][idx])
             if self.in_group_d == "min":
                 aa = min(a) if len(a) > 0 else 0
                 bb = min(b) if len(b) > 0 else 0
@@ -1480,7 +1493,8 @@ class MainLayout:
         for x in bins:
             vals.append([])
             if len(idxs) == 0:
-                vals[-1].append(1)
+                pass
+                #vals[-1].append(1)
             else:
                 for idx in idxs:
                     if x is None:
@@ -1503,9 +1517,9 @@ class MainLayout:
 
     def render_step_log(self, step_name="", sub_step=0, sub_step_total=None):
         if self.render_last_step is None or self.render_last_step != step_name:
-            self.render_last_step = step_name
             if self.render_last_step != step_name:
                 self.render_curr_step += 1
+            self.render_last_step = step_name
             if not len(step_name) == 0:
                 if len(self.render_time_record) > 0:
                     self.render_time_record[-1][1] = datetime.now() - \
@@ -1525,9 +1539,10 @@ class MainLayout:
                     s += " CANCELLED!!"
             print(s, end="\033[K\r")
 
-            def callback():
-                self.curr_bin_size.text = s.replace(". ", "<br>")
-            self.curdoc.add_next_tick_callback(callback)
+            if len(step_name) > 0:
+                def callback():
+                    self.curr_bin_size.text = s.replace(". ", "<br>")
+                self.curdoc.add_next_tick_callback(callback)
 
     def render_done(self, bin_amount):
         if len(self.render_time_record) > 0:
@@ -1548,7 +1563,7 @@ class MainLayout:
 
     @gen.coroutine
     @without_document_lock
-    def render(self, area):
+    def render(self, area, zoom_in_render):
         def unlocked_task():
             def cancelable_task():
                 self.cancel_render = False
@@ -1588,6 +1603,13 @@ class MainLayout:
                     w_bin = h_bin
                 else:
                     raise RuntimeError("invlaid square_bins_d value")
+
+                if self.last_h_w_bin == (h_bin, w_bin) and zoom_in_render:
+                    self.curdoc.add_timeout_callback(
+                        lambda: self.render_callback(), self.update_frequency_slider.value*1000)
+                    return True
+                self.last_h_w_bin = (h_bin, w_bin)
+                self.last_drawing_area = area
 
                 area[0] -= area[0] % w_bin # align to nice and even number
                 area[1] -= area[1] % h_bin # align to nice and even number
@@ -1714,8 +1736,10 @@ class MainLayout:
                 color_bar_ticks = []
                 color_bar_tick_labels = []
                 for c, a, b in best_bins:
-                    color_bar_ticks.append(c)
-                    color_bar_tick_labels.append(str(round(c, 2)) + ": " + str(a) + "/" + str(b))
+                    if not c is None:
+                        color_bar_ticks.append(c)
+                        color_bar_tick_labels.append(str(round(c, 2)) + ": " + str(round(a, 2)) + "/" + 
+                                                     str(round(b, 2)))
 
                 def double_up(l):
                     return [x for x in l for _ in [0, 1]]
@@ -1742,8 +1766,8 @@ class MainLayout:
                             x_ys[-1].append(x[idx])
                 y_ys = []
                 for idx in range(y_num_raw-2):
-                    y_ys.append([])
                     for x in raw_y_norms:
+                        y_ys.append([])
                         for _ in [0,1]:
                             y_ys[-1].append(x[idx])
                 
@@ -1857,7 +1881,6 @@ class MainLayout:
                     else:
                         palette = [xxx/100 for xxx in range(100)]
                     self.color_mapper.palette = self.color_bins_b(palette)
-                    print(color_bar_ticks, color_bar_tick_labels)
                     self.color_info.formatter.args = {"ticksx": color_bar_ticks, "labelsx": color_bar_tick_labels}
                     self.color_info.ticker.ticks = color_bar_ticks
                     def mmax(*args):
@@ -2020,25 +2043,27 @@ class MainLayout:
                 h = curr_area[3] - curr_area[1]
                 curr_area_size = w*h
                 min_change = 1-self.redraw_slider.value/100
+                zoom_in_render = False
                 # print(overlap)
                 if curr_area_size / self.curr_area_size < min_change or self.force_render or \
                         MainLayout.area_outside(self.last_drawing_area, curr_area):
-                    self.new_render("startup")
                     if curr_area_size / self.curr_area_size < min_change:
-                        self.new_render("zoom")
-                    if self.force_render:
-                        self.new_render("setting change")
-                    if MainLayout.area_outside(self.last_drawing_area, curr_area):
-                        self.new_render("pan")
+                        self.new_render("zoom in")
+                        zoom_in_render = True
+                    elif self.force_render:
+                        self.new_render("new setting")
+                    elif MainLayout.area_outside(self.last_drawing_area, curr_area):
+                        self.new_render("pan / zoom out")
+                    else:
+                        self.new_render("program start")
                     self.force_render = False
                     self.curr_area_size = curr_area_size
                     x = self.add_area_slider.value/100
                     new_area = [curr_area[0] - w*x, curr_area[1] - h*x,
                                 curr_area[2] + w*x, curr_area[3] + h*x]
-                    self.last_drawing_area = new_area
 
                     def callback():
-                        self.render(new_area)
+                        self.render(new_area, zoom_in_render)
                     self.curdoc.add_next_tick_callback(callback)
                     return
 

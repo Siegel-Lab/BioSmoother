@@ -234,7 +234,7 @@ def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_
         if simulate_hic and act_pos_1_e > act_pos_2_s:
             act_pos_1_s, act_pos_2_s = act_pos_2_s, act_pos_1_s
             act_pos_1_e, act_pos_2_e = act_pos_2_e, act_pos_1_e
-        index.add_point([act_pos_1_s, act_pos_2_s, map_q], [act_pos_1_e, act_pos_2_e, map_q], read_name)
+        index.add_point([act_pos_1_s, act_pos_2_s, 255-map_q], [act_pos_1_e, act_pos_2_e, 255-map_q], read_name)
     print("generating index")
     idx = index.generate(last_cnt, len(index))
     print("done generating index")
@@ -261,7 +261,7 @@ def add_normalization(out_prefix, path, name, for_row, test=False, cached=False,
                 continue
             act_pos_s = meta.chr_sizes.coordinate(int(pos_s) // meta.dividend, chrom)
             act_pos_e = meta.chr_sizes.coordinate(int(pos_e) // meta.dividend, chrom)
-            index.add_point([act_pos_s, map_q], [act_pos_e, map_q], read_name)
+            index.add_point([act_pos_s, 255-map_q], [act_pos_e, 255-map_q], read_name)
             cnt += 1
             if cnt > TEST_FAC and test:
                 break
