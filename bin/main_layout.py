@@ -398,7 +398,7 @@ class MainLayout:
         self.heatmap = FigureMaker().range1d().stretch().combine_tools(tollbars).get()
 
         d = {"b": [], "l": [], "t": [], "r": [], "c": [], "chr_x": [], "chr_y": [], "x1": [], "x2": [],
-             "y1": [], "y2": [], "s": [], "d_a": [], "d_b": [], 'info': []}
+             "y1": [], "y2": [], "s": [], "d_a": [], "d_b": []}
         self.heatmap_data = ColumnDataSource(data=d)
         self.heatmap.quad(left="l", bottom="b", right="r", top="t", fill_color="c", line_color=None,
                           source=self.heatmap_data, level="underlay")
@@ -417,8 +417,7 @@ class MainLayout:
             tooltips=[
                 ('(x, y)', "(@chr_x @x1 - @x2, @chr_y @y1 - @y2)"),
                 ('score', "@s"),
-                ('reads by group', "A: @d_a, B: @d_b"),
-                ('info', '@info')
+                ('reads by group', "A: @d_a, B: @d_b")
             ]
         ))
 
@@ -788,26 +787,21 @@ class MainLayout:
                 return Math.ceil((1 + tick % 9) * Math.pow(10, Math.floor(tick / 9)-3)) + "kbp";
             else
                 return Math.ceil((1 + tick % 9) * Math.pow(10, Math.floor(tick / 9))) + "bp"; """)
-        self.min_max_bin_size = RangeSlider(start=0, end=9*15, value=(9*2, 9*6), step=1, title="Bin Size Bounds [nt]",
-                                            format=power_tick)
+        self.min_max_bin_size = Slider(start=0, end=9*15, value=9*2, step=1, title="Minimum Bin Size",
+                                            format=power_tick, sizing_mode="stretch_width")
         self.min_max_bin_size.on_change(
             "value_throttled", lambda x, y, z: self.trigger_render())
 
-        def callback(a, b):
-            self.min_max_bin_size.value = (
-                min(max(self.min_max_bin_size.value[0] + a, self.min_max_bin_size.start), self.min_max_bin_size.end), 
-                min(max(self.min_max_bin_size.value[1] + b, self.min_max_bin_size.start), self.min_max_bin_size.end)) 
+        def callback(a):
+            self.min_max_bin_size.value = \
+                min(max(self.min_max_bin_size.value + a, self.min_max_bin_size.start), self.min_max_bin_size.end)
             self.trigger_render()
         button_s_up = Button(label="▲", button_type="light", width=15, height=15, margin=BTN_MARGIN)
-        button_s_up.on_click(lambda _: callback(1, 0))
+        button_s_up.on_click(lambda _: callback(1))
         button_s_down = Button(label="▼", button_type="light", width=15, height=15, margin=BTN_MARGIN)
-        button_s_down.on_click(lambda _: callback(-1, 0))
-        button_e_up = Button(label="▲", button_type="light", width=15, height=15, margin=BTN_MARGIN)
-        button_e_up.on_click(lambda _: callback(0, 1))
-        button_e_down = Button(label="▼", button_type="light", width=15, height=15, margin=BTN_MARGIN)
-        button_e_down.on_click(lambda _: callback(0, -1))
+        button_s_down.on_click(lambda _: callback(-1))
 
-        mmbs_l = row([self.min_max_bin_size, column([button_s_up, button_s_down]), column([button_e_up, button_e_down])])
+        mmbs_l = row([self.min_max_bin_size, column([button_s_up, button_s_down])])
 
         self.curr_bin_size = Div(text="Current Bin Size: n/a", sizing_mode="stretch_width")
         
@@ -1096,6 +1090,7 @@ class MainLayout:
         return self.bin_cols_or_rows(area, h_bin, 1, none_for_chr_border, filter_l, self.chrom_y.value, anno_coords)
 
     def bin_coords(self, area, h_bin, w_bin):
+        self.render_step_log("bin_coords")
         h_bin = max(1, h_bin)
         ret = []
         ret_2 = []
@@ -1127,45 +1122,46 @@ class MainLayout:
         return x, y, w, h
 
     def make_bins(self, bin_coords, name="make_bins"):
+        self.render_step_log(name)
+        #self.render_step_log(name + "_ini")
         bins = []
-        info = [""]*len(bin_coords)
         min_ = self.interactions_bounds_slider.value
-        for idx, _ in sorted(list(self.meta.datasets.items())):
+        map_q_value = self.mapq_slider.value
+        manhatten_dist = 1000 * self.diag_dist_slider.value / self.meta.dividend
+        for idx in sorted(list(self.meta.datasets.keys())):
             bins.append([])
             bins_to_search = []
-            for idx_2, (x, y, w, h) in enumerate(bin_coords):
-                self.render_step_log(name + "_pre", idx_2 + idx * len(bin_coords), len(bin_coords)*len(self.meta.datasets))
-                if abs(x - y) >= 1000 * self.diag_dist_slider.value / self.meta.dividend:
+            #self.render_step_log(name + "_pre")
+            for x, y, w, h in bin_coords:
+                if abs(x - y) >= manhatten_dist:
                     x, y, w, h = self.adjust_bin_pos_for_symmetrie(x, y, w, h)
-                    bins_to_search.append( self.idx.to_query(y, y+h, x, x+w, *self.mapq_slider.value) )
+                    bins_to_search.append(self.idx.to_query(y, y+h, x, x+w, *map_q_value))
                 else:
-                    bins[-1].append(self.idx.to_query(0, 0, 0, 0, 0, 0))
+                    bins_to_search.append(self.idx.to_query(0, 0, 0, 0, 0, 0))
                 if self.cancel_render:
                     return
-            self.render_step_log(name + "_main")
+            #self.render_step_log(name + "_main")
             ns = self.idx.count_multiple(idx, bins_to_search, self.multi_mapping_d)
-            for idx_2, (n, (x, y, w, h)) in enumerate(zip(ns, bin_coords)):
-                self.render_step_log(name + "_post", idx_2 + idx * len(bin_coords), len(bin_coords)*len(self.meta.datasets))
+            #self.render_step_log(name + "_post")
+            for n, (x, y, w, h) in zip(ns, bin_coords):
                 bins[-1].append(max(n-min_, 0))
-                if n <= 10 and n > 0:
-                    info[idx_2] += self.idx.info(idx, y, y+h, x, x+w, *self.mapq_slider.value)
                 if self.cancel_render:
                     return
-        return bins, info
+        return bins
 
     def col_norm(self, cols):
         x = self.make_bins([(c[0], 0, c[1], self.meta.chr_sizes.chr_start_pos["end"])
                                         if not c is None else (-2, -2, 1, 1) for c in cols], name="make_col_norm_bins")
         if self.cancel_render:
             return
-        return self.flatten_bins(x[0])
+        return self.flatten_bins(x)
 
     def row_norm(self, rows):
         x = self.make_bins([(0, c[0], self.meta.chr_sizes.chr_start_pos["end"], c[1])
                                         if not c is None else (-2, -2, 1, 1) for c in rows], name="make_row_norm_bins")
         if self.cancel_render:
             return
-        return self.flatten_bins(x[0])
+        return self.flatten_bins(x)
 
     def read_norm(self, idx):
         n = []
@@ -1231,6 +1227,8 @@ class MainLayout:
 
 
     def norm_bins(self, w_bin, bins_l, cols, rows):
+        if self.normalization_d != "ddd":
+            self.render_step_log("norm_bins", 0, len(bins_l))
         ret = []
         if self.normalization_d in ["tracks_abs", "tracks_rel"]:
             raw_x_norm = self.linear_bins_norm(rows, True)
@@ -1251,7 +1249,7 @@ class MainLayout:
             if self.normalization_d != "ddd":
                 self.render_step_log("norm_bins", idx, len(bins_l))
             if self.normalization_d == "max_bin_visible":
-                n = max(bins + [1])
+                n = max(max(bins), 1)
                 ret.append([x/n for x in bins])
             elif self.normalization_d == "rpm":
                 n = self.read_norm(idx)
@@ -1342,6 +1340,7 @@ class MainLayout:
         return ret
 
     def flatten_bins(self, bins):
+        self.render_step_log("flatten_bins", 0, len(bins[0]))
         group_a = []
         group_b = []
         for idx_2 in range(len(bins)):
@@ -1470,10 +1469,9 @@ class MainLayout:
         if self.symmetrie_d == "all":
             return bins
         elif self.symmetrie_d == "sym" or self.symmetrie_d == "asym":
-            x = self.make_bins([(y, x, h, w) for x, y, w, h in bin_coords], name="make_bins_symmetrie")
+            bins_2 = self.make_bins([(y, x, h, w) for x, y, w, h in bin_coords], name="make_bins_symmetrie")
             if self.cancel_render:
                 return
-            bins_2, _ = x
             norms = self.norm_bins(h_bin, bins_2, bin_rows, bin_cols)
             if self.cancel_render:
                 return
@@ -1588,18 +1586,18 @@ class MainLayout:
                             if i*10**n > x:
                                 return i*10**n
                         n += 1
-                def comp_bin_size(idx):
-                    t = self.min_max_bin_size.value[idx]
+                def comp_bin_size():
+                    t = self.min_max_bin_size.value
                     return max(1, math.ceil((1 + t % 9) * 10**(t // 9)) // self.meta.dividend)
                 if self.square_bins_d == "view":
                     h_bin = power_of_ten( (area[2] - area[0]) / math.sqrt(self.num_bins.value * 1000) )
-                    h_bin = min(max(h_bin, comp_bin_size(0), 1), comp_bin_size(1))
+                    h_bin = max(h_bin, comp_bin_size(), 1)
                     w_bin = power_of_ten( (area[3] - area[1]) / math.sqrt(self.num_bins.value * 1000) )
-                    w_bin = min(max(w_bin, comp_bin_size(0), 1), comp_bin_size(1))
+                    w_bin = max(w_bin, comp_bin_size(), 1)
                 elif self.square_bins_d == "coord":
                     area_bin = (area[2] - area[0]) * (area[3] - area[1]) / (self.num_bins.value * 1000)
                     h_bin = power_of_ten(math.sqrt(area_bin))
-                    h_bin = min(max(h_bin, comp_bin_size(0), 1), comp_bin_size(1))
+                    h_bin = max(h_bin, comp_bin_size(), 1)
                     w_bin = h_bin
                 else:
                     raise RuntimeError("invlaid square_bins_d value")
@@ -1622,15 +1620,14 @@ class MainLayout:
                     area[2] = self.meta.chr_sizes.chr_start_pos["end"]
                     area[3] = self.meta.chr_sizes.chr_start_pos["end"]
 
+                print("bin_size", int(h_bin), "x", int(w_bin), "\033[K")
                 xx = self.bin_coords(area, h_bin, w_bin)
                 if self.cancel_render:
                     return
                 bin_coords, bin_cols, bin_rows, bin_coords_2, _, _, bin_coords_3, _, _ = xx
-                print("bin_size", int(h_bin), "x", int(w_bin), "\033[K")
-                xx = self.make_bins(bin_coords)
+                bins = self.make_bins(bin_coords)
                 if self.cancel_render:
                     return
-                bins, info = xx
                 flat = self.flatten_bins(bins)
                 norm = self.norm_bins(w_bin, flat, bin_cols, bin_rows)
                 if self.cancel_render:
@@ -1641,9 +1638,9 @@ class MainLayout:
                 c = self.color_bins(sym)
                 b_col = self.color((MAP_Q_MAX-1) //
                                 2) if self.betw_group_d == "sub" else self.color(0)
-                purged, purged_coords, purged_coords_2, purged_sym, purged_flat_a, purged_flat_b, purged_info = \
+                purged, purged_coords, purged_coords_2, purged_sym, purged_flat_a, purged_flat_b = \
                     self.purge(b_col, c, bin_coords_3, bin_coords_2,
-                            self.color_bins_a(sym), *flat, info)
+                            self.color_bins_a(sym), *flat)
 
                 norm_visible = FigureMaker.is_visible("raw") or FigureMaker.is_visible("ratio")
 
@@ -1723,7 +1720,6 @@ class MainLayout:
                     "s": purged_sym,
                     "d_a": purged_flat_a,
                     "d_b": purged_flat_b,
-                    "info": [x for x in purged_info],
                 }
                 
                 best_bins = [(None,0,0)]*3
@@ -2015,7 +2011,7 @@ class MainLayout:
                         power = int(math.log10(x))
                         return 9*power+math.ceil(x / 10**power)-1
                     self.min_max_bin_size.start = to_idx(self.meta.dividend)
-                    self.min_max_bin_size.value = (max(9*2, to_idx(self.meta.dividend)), 9*6)
+                    self.min_max_bin_size.value = max(9*2, to_idx(self.meta.dividend))
                     self.setup_coordinates()
                     self.idx = Tree_4(self.meta_file.value)
                     print("number of points in index: ", len(self.idx.index))
