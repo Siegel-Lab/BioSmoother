@@ -1,11 +1,15 @@
 # smoother todo
 
-- does radicl sec do normalization for rna?
-- uneven distribution between contigs in grid seq normalization
 - grid seq norm progress print
 - quick config buttons
 - AutocompleteInput for filepath
     - when calling give folder where indices are located
     - restrict for public hosting
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
-- primary and secondary normalization?
+- update palette of color bar
+- in the export: for each bin print what annotations it overalps with
+
+# verification
+
+- does radicl sec do normalization for rna?
+- uneven distribution between contigs in grid seq normalization

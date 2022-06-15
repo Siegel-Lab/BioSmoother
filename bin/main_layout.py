@@ -821,14 +821,14 @@ class MainLayout:
             FigureMaker.x_coords_d = e
             self.setup_coordinates()
             self.trigger_render()
-        x_coords, self.x_coords_update = self.dropdown_select_h("Row Coordinates", x_coords_event,
+        x_coords, self.x_coords_update = self.dropdown_select_h("Column Coordinates", x_coords_event,
                                                                  "tooltip_row_coordinates")
 
         def y_coords_event(e):
             FigureMaker.y_coords_d = e
             self.setup_coordinates()
             self.trigger_render()
-        y_coords, self.y_coords_update = self.dropdown_select_h("Column Coordinates", y_coords_event,
+        y_coords, self.y_coords_update = self.dropdown_select_h("Row Coordinates", y_coords_event,
                                                                  "tooltip_column_coordinates")
 
         
@@ -1762,8 +1762,8 @@ class MainLayout:
                             x_ys[-1].append(x[idx])
                 y_ys = []
                 for idx in range(y_num_raw-2):
+                    y_ys.append([])
                     for x in raw_y_norms:
-                        y_ys.append([])
                         for _ in [0,1]:
                             y_ys[-1].append(x[idx])
                 
@@ -1819,7 +1819,10 @@ class MainLayout:
                     "info": [],
                 }
                 if FigureMaker.is_visible("annotation"):
-                    bin_rows_unfiltr, bin_rows_2_unfiltr, bin_rows_3_unfiltr = self.bin_rows(area, w_bin, filter_l=[])
+                    xx = self.bin_rows(area, w_bin, filter_l=[])
+                    if self.cancel_render:
+                        return
+                    bin_rows_unfiltr, bin_rows_2_unfiltr, bin_rows_3_unfiltr = xx
                     for idx, anno in enumerate(self.displayed_annos.value):
                         for rb_2, (s, e), x in zip(bin_rows_2_unfiltr, bin_rows_3_unfiltr,
                                                 self.annotation_bins(bin_rows_unfiltr, self.meta.annotations[anno])):
@@ -1849,7 +1852,10 @@ class MainLayout:
                     "info": [],
                 }
                 if FigureMaker.is_visible("annotation"):
-                    bin_cols_unfiltr, bin_cols_2_unfiltr, bin_cols_3_unfiltr = self.bin_cols(area, h_bin, filter_l=[])
+                    xx = self.bin_cols(area, h_bin, filter_l=[])
+                    if self.cancel_render:
+                        return
+                    bin_cols_unfiltr, bin_cols_2_unfiltr, bin_cols_3_unfiltr = xx
                     for idx, anno in enumerate(self.displayed_annos.value):
                         for rb_2, (s, e), x in zip(bin_cols_2_unfiltr, bin_cols_3_unfiltr,
                                                 self.annotation_bins(bin_cols_unfiltr, self.meta.annotations[anno])):

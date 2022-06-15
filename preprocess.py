@@ -56,12 +56,12 @@ def group_heatmap(in_filename, file_size, chr_filter, no_groups=False, test=Fals
         
         if idx_2 % PRINT_MODULO == 0:
             print("loading file", file_name, ", line", idx_2+1, "of", file_size, "=", 
-                    100*(idx_2+1)/file_size, "%", end="\033[K\r")
+                    round(100*(idx_2+1)/file_size, 2), "%", end="\033[K\r")
 
     for idx, (read_name, group) in enumerate(groups.items()):
         if idx % PRINT_MODULO == 0:
-            print("processing ", file_name, ", read", idx+1, "of", len(groups), "=", 
-                    100*(idx+1)/len(groups), "%", end="\033[K\r")
+            print("grouping ", file_name, ", read", idx+1, "of", len(groups), "=", 
+                    round(100*(idx+1)/len(groups), 2), "%", end="\033[K\r")
         chr_1 = group[0][0]
         chr_2 = group[0][2]
         do_cont = False
@@ -114,7 +114,7 @@ def group_norm_file(in_filename, file_size):
     for idx_2, (read_name, chrom, pos, map_q) in enumerate(parse_norm_file(in_filename)):
         if idx_2 % PRINT_MODULO == 0:
             print("loading file", file_name, ", line", idx_2+1, "of", file_size, "=", 
-                    100*(idx_2+1)/file_size, "%", end="\033[K\r")
+                   round( 100*(idx_2+1)/file_size, 2), "%", end="\033[K\r")
         if not read_name in groups:
             groups[read_name] = []
         groups[read_name].append((chrom, int(pos), int(map_q)))
@@ -122,7 +122,7 @@ def group_norm_file(in_filename, file_size):
     for idx, (read_name, group) in enumerate(groups.items()):
         if idx % PRINT_MODULO == 0:
             print("processing ", file_name, ", read", idx+1, "of", len(groups), "=", 
-                    100*(idx+1)/len(groups), "%", end="\033[K\r")
+                    round(100*(idx+1)/len(groups), 2), "%", end="\033[K\r")
         chr_1 = group[0][0]
         do_cont = False
         for chr_2, _, _ in group:

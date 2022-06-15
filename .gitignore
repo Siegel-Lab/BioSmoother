@@ -12,3 +12,6 @@ tex/*
 smoother.pdf
 conda_env/smoother/
 VERSION
+ranking_dna.html
+ranking_rna.html
+ranking_rna_dna.html
