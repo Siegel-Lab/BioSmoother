@@ -59,6 +59,10 @@
     content: "toggle the visibility of several GUI elements";
 }
 
+.tooltip_export_w:after {
+    content: "Include additional columns/information in the exported file";
+}
+
 .tooltip_normalize_by:after {
     content: "normalize the matrix in various ways";
 }

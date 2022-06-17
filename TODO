@@ -8,6 +8,7 @@
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
 - update palette of color bar
 - in the export: for each bin print what annotations it overalps with
+- move normalization into c++?
 
 # verification
 

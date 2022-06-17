@@ -78,10 +78,8 @@ class MetaData:
                 return l[tick];
             """)
 
-    def setup_coordinates(self, main_layout, show_grid_lines, x_coords_d, y_coords_d):
+    def setup_coordinates(self, main_layout, x_coords_d, y_coords_d):
         ticker_border = AdaptiveTicker(desired_num_ticks=3)
-        c = "lightgrey" if show_grid_lines else None
-        c2 = None
         if x_coords_d != "full_genome":
             main_layout.heatmap.x_range.start = 0
             main_layout.heatmap.x_range.end = self.annotations[x_coords_d].num_reads
@@ -89,10 +87,6 @@ class MetaData:
             main_layout.heatmap.x_range.reset_end = self.annotations[x_coords_d].num_reads
             for plot in [main_layout.heatmap, main_layout.ratio_y, main_layout.raw_y, main_layout.anno_y,
                         main_layout.heatmap_x_axis]:
-                plot.xgrid.minor_grid_line_alpha = plot.ygrid.grid_line_alpha
-                plot.xgrid.minor_grid_line_color = plot.xgrid.grid_line_color
-                plot.xgrid.grid_line_color = c
-                plot.xgrid.minor_grid_line_color = c2
                 plot.xgrid.ticker = ticker_border
                 plot.xgrid.bounds = (0, self.annotations[x_coords_d].num_reads)
                 plot.xaxis.bounds = (0, self.annotations[x_coords_d].num_reads)
@@ -106,17 +100,13 @@ class MetaData:
             main_layout.heatmap.y_range.reset_end = self.annotations[y_coords_d].num_reads
             for plot in [main_layout.heatmap, main_layout.ratio_x, main_layout.raw_x, main_layout.anno_x,
                         main_layout.heatmap_y_axis]:
-                plot.ygrid.minor_grid_line_alpha = plot.ygrid.grid_line_alpha
-                plot.ygrid.minor_grid_line_color = plot.ygrid.grid_line_color
-                plot.ygrid.grid_line_color = c
-                plot.ygrid.minor_grid_line_color = c2
                 plot.ygrid.ticker = ticker_border
                 plot.ygrid.bounds = (0, self.annotations[y_coords_d].num_reads)
                 plot.yaxis.bounds = (0, self.annotations[y_coords_d].num_reads)
                 plot.yaxis.major_label_text_align = "right"
                 plot.yaxis.ticker.min_interval = 1
             main_layout.heatmap_y_axis.yaxis[0].formatter = self.get_formatter(self.annotations[y_coords_d].sorted)
-        self.chr_sizes.setup_coordinates(main_layout, show_grid_lines, x_coords_d, y_coords_d)
+        self.chr_sizes.setup_coordinates(main_layout, x_coords_d, y_coords_d)
 
     def setup(self, main_layout):
         self.chr_sizes.setup(main_layout)

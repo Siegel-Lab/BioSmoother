@@ -27,7 +27,7 @@ DBG_C="--uncached --test"
 #DBG_C="--uncached"
 #DBG_C="--test"
 
-python3 preprocess.py ${DBG_C} init "${INDEX_PREFIX}" Lister427.sizes -a HGAP3_Tb427v10_merged_2021_06_21.gff3 -d 1000
+python3 preprocess.py ${DBG_C} init "${INDEX_PREFIX}" Lister427.sizes -a HGAP3_Tb427v10_merged_2021_06_21.gff3 -d 100
 
 # ANNA #
 

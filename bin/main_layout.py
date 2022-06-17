@@ -39,7 +39,7 @@ executor = ThreadPoolExecutor(max_workers=1)
 
 
 class FigureMaker:
-    _show_hide = {"grid_lines": True, "indent_line": False}
+    _show_hide = {"grid_lines": False, "contig_borders": True, "indent_line": False}
     _hidable_plots = []
     _plots = []
     _unhide_button = None
@@ -61,6 +61,7 @@ class FigureMaker:
         self._range1d = False
         self.no_border_h = False
         self.no_border_v = False
+        self.is_hidden = False
 
     def get(self):
         ret = figure(**self.args)
@@ -94,6 +95,8 @@ class FigureMaker:
         ret.background_fill_color = "lightgrey"
         render_area = BoxAnnotation(fill_alpha=1, top=0, bottom=0, fill_color='white', level="image")
         ret.add_layout(render_area)
+        if self.is_hidden:
+            ret.visible = False
         FigureMaker.render_areas[ret] = render_area
         FigureMaker._plots.append(ret)
         return ret
@@ -192,9 +195,13 @@ class FigureMaker:
         self.args["y_range"] = [""]
         return self
 
+    def hidden(self):
+        self.is_hidden = True
+        return self
+
     def hide_on(self, key):
         if not key in FigureMaker._show_hide:
-            FigureMaker._show_hide[key] = True
+            FigureMaker._show_hide[key] = not self.is_hidden
         self._hide_on.append(key)
         return self
 
@@ -223,19 +230,19 @@ class FigureMaker:
         if not FigureMaker._unhide_button is None:
             if FigureMaker._unhide_button.visible == FigureMaker._show_hide["tools"]:
                 FigureMaker._unhide_button.visible = not FigureMaker._show_hide["tools"]
-        cx = ("darkgrey" if FigureMaker.x_coords_d == "full_genome" else "lightgrey") \
-                if FigureMaker._show_hide["grid_lines"] else None
-        cx2 = "lightgrey" if FigureMaker._show_hide["grid_lines"] and FigureMaker.x_coords_d == "full_genome" else None
-        cy = ("darkgrey" if FigureMaker.y_coords_d == "full_genome" else "lightgrey") \
-                if FigureMaker._show_hide["grid_lines"] else None
-        cy2 = "lightgrey" if FigureMaker._show_hide["grid_lines"] and FigureMaker.y_coords_d == "full_genome" else None
+        cx = "lightgrey" if FigureMaker._show_hide["contig_borders"] else None
+        cx2 = "lightgrey" if FigureMaker._show_hide["grid_lines"] else None
+        cy = "lightgrey" if FigureMaker._show_hide["contig_borders"] else None
+        cy2 = "lightgrey" if FigureMaker._show_hide["grid_lines"] else None
         FigureMaker._slope.line_color = "darkgrey" if FigureMaker._show_hide["indent_line"] else None
         for plot in FigureMaker._plots:
             if plot.xgrid.grid_line_color != cx:
                 plot.xgrid.grid_line_color = cx
+            if plot.xgrid.minor_grid_line_color != cx2:
                 plot.xgrid.minor_grid_line_color = cx2
             if plot.ygrid.grid_line_color != cy:
                 plot.ygrid.grid_line_color = cy
+            if plot.ygrid.minor_grid_line_color != cy2:
                 plot.ygrid.minor_grid_line_color = cy2
 
     @staticmethod
@@ -262,6 +269,8 @@ class FigureMaker:
                 (("☑ " if FigureMaker._show_hide["grid_lines"] else "☐ ") + "Grid Lines", "grid_lines"))
             menu.append(
                 (("☑ " if FigureMaker._show_hide["indent_line"] else "☐ ") + "Identity Line", "indent_line"))
+            menu.append(
+                (("☑ " if FigureMaker._show_hide["contig_borders"] else "☐ ") + "Contig Borders", "contig_borders"))
             return menu
         ret = Dropdown(label="Show/Hide", menu=make_menu(),
                        width=SETTINGS_WIDTH, sizing_mode="fixed", css_classes=["other_button", "tooltip", "tooltip_show_hide"], height=DROPDOWN_HEIGHT)
@@ -402,6 +411,10 @@ class MainLayout:
         self.heatmap_data = ColumnDataSource(data=d)
         self.heatmap.quad(left="l", bottom="b", right="r", top="t", fill_color="c", line_color=None,
                           source=self.heatmap_data, level="underlay")
+        #self.heatmap.xgrid.minor_grid_line_dash = [2, 8]
+        #self.heatmap.ygrid.minor_grid_line_dash = [2, 8]
+        self.heatmap.xgrid.minor_grid_line_alpha = 0.5
+        self.heatmap.ygrid.minor_grid_line_alpha = 0.5
 
         d = {"b": [], "l": [], "t": [], "r": []}
         self.overlay_data = ColumnDataSource(data=d)
@@ -449,20 +462,28 @@ class MainLayout:
         )
 
         self.ratio_x = FigureMaker().w(DEFAULT_SIZE).link_y(
-            self.heatmap).hide_on("ratio").combine_tools(tollbars).get()
+            self.heatmap).hidden().hide_on("ratio").combine_tools(tollbars).get()
         self.ratio_x.add_tools(ratio_hover_x)
         self.ratio_x_axis = FigureMaker().x_axis_of(
             self.ratio_x).combine_tools(tollbars).get()
         self.ratio_x_axis.xaxis.axis_label = "Ratio"
-        self.ratio_x_axis.xaxis.ticker.desired_num_ticks = 3
+        self.ratio_x_axis.xaxis.ticker = AdaptiveTicker(desired_num_ticks=3)
+        self.ratio_x.xgrid.ticker = AdaptiveTicker(desired_num_ticks=3, num_minor_ticks=1)
+        self.ratio_x.xgrid.grid_line_alpha = 0
+        self.ratio_x.xgrid.minor_grid_line_alpha = 0.5
+        self.ratio_x.ygrid.minor_grid_line_alpha = 0.5
 
         self.ratio_y = FigureMaker().h(DEFAULT_SIZE).link_x(
-            self.heatmap).hide_on("ratio").combine_tools(tollbars).get()
+            self.heatmap).hidden().hide_on("ratio").combine_tools(tollbars).get()
         self.ratio_y.add_tools(ratio_hover_y)
         self.ratio_y_axis = FigureMaker().y_axis_of(
             self.ratio_y).combine_tools(tollbars).get()
         self.ratio_y_axis.yaxis.axis_label = "Ratio"
-        self.ratio_y_axis.yaxis.ticker.desired_num_ticks = 3
+        self.ratio_y_axis.yaxis.ticker = AdaptiveTicker(desired_num_ticks=3)
+        self.ratio_y.ygrid.ticker = AdaptiveTicker(desired_num_ticks=3, num_minor_ticks=1)
+        self.ratio_y.ygrid.grid_line_alpha = 0
+        self.ratio_y.ygrid.minor_grid_line_alpha = 0.5
+        self.ratio_y.xgrid.minor_grid_line_alpha = 0.5
 
 
         raw_hover_x = HoverTool(
@@ -489,7 +510,10 @@ class MainLayout:
             self.raw_x).combine_tools(tollbars).get()
         self.raw_x_axis.xaxis.axis_label = "Cov"
         self.raw_x_axis.xaxis.ticker = AdaptiveTicker(desired_num_ticks=3)
-        self.raw_x_axis.xgrid.ticker = AdaptiveTicker(desired_num_ticks=3)
+        self.raw_x.xgrid.ticker = AdaptiveTicker(desired_num_ticks=3, num_minor_ticks=1)
+        self.raw_x.xgrid.grid_line_alpha = 0
+        self.raw_x.xgrid.minor_grid_line_alpha = 0.5
+        self.raw_x.ygrid.minor_grid_line_alpha = 0.5
 
         self.raw_y = FigureMaker().h(DEFAULT_SIZE).link_x(
             self.heatmap).hide_on("raw").combine_tools(tollbars).get()
@@ -498,7 +522,10 @@ class MainLayout:
             self.raw_y).combine_tools(tollbars).get()
         self.raw_y_axis.yaxis.axis_label = "Cov"
         self.raw_y_axis.yaxis.ticker = AdaptiveTicker(desired_num_ticks=3)
-        self.raw_y_axis.ygrid.ticker = AdaptiveTicker(desired_num_ticks=3)
+        self.raw_y.ygrid.ticker = AdaptiveTicker(desired_num_ticks=3, num_minor_ticks=1)
+        self.raw_y.ygrid.grid_line_alpha = 0
+        self.raw_y.ygrid.minor_grid_line_alpha = 0.5
+        self.raw_y.xgrid.minor_grid_line_alpha = 0.5
 
         d_x = {
             "chr": [],
@@ -550,12 +577,18 @@ class MainLayout:
         self.anno_x_axis = FigureMaker().x_axis_of(
             self.anno_x).combine_tools(tollbars).get()
         self.anno_x_axis.xaxis.axis_label = "Anno"
+        self.anno_x.xgrid.minor_grid_line_alpha = 0
+        self.anno_x.xgrid.grid_line_alpha = 0
+        self.anno_x.ygrid.minor_grid_line_alpha = 0.5
 
         self.anno_y = FigureMaker().h(DEFAULT_SIZE).link_x(self.heatmap).hide_on(
             "annotation").combine_tools(tollbars).categorical_y().get()
         self.anno_y_axis = FigureMaker().y_axis_of(
             self.anno_y).combine_tools(tollbars).get()
         self.anno_y_axis.yaxis.axis_label = "Anno"
+        self.anno_y.ygrid.minor_grid_line_alpha = 0
+        self.anno_y.ygrid.grid_line_alpha = 0
+        self.anno_y.xgrid.minor_grid_line_alpha = 0.5
 
         d = {"x": [], "s": [], "e": [], "c": [], "chr": [],
              "pos1": [], "pos2": [], "info": [], "n": []}
@@ -856,13 +889,14 @@ class MainLayout:
 
         export_label = Div(text="Output Prefix:")
         export_label.margin = DIV_MARGIN
-        self.export_file = TextInput(value="export1")
+        self.export_file = TextInput(value="export")
         
         self.export_sele, export_sele_layout = self.multi_choice("Export Selection")
         self.export_sele.options = [
             ("heatmap", "Heatmap"),
             ("col_sum", "Column Sum"),
-            ("row_sum", "Row Sum")
+            ("row_sum", "Row Sum"),
+            ("anno", "Include Annotation")
         ]
         self.export_sele.value = ["heatmap"]
     
@@ -873,7 +907,7 @@ class MainLayout:
             #("png", "PNG-Picture")
         ]
         self.export_type.value = ["data"]
-
+        
         grid_seq_config = Button(label="Grid Seq-like @todo", sizing_mode="stretch_width", 
                                  css_classes=["other_button", "tooltip", "tooltip_grid_seq"],
                                  height=DROPDOWN_HEIGHT)
@@ -956,7 +990,7 @@ class MainLayout:
                                           filtered_annos_y_layout,
                                           x_coords, y_coords, multiple_anno_per_bin, chrom_x_layout, chrom_y_layout,
                                           multi_mapping]),
-                make_panel("Export", "tooltip_export", [export_label, self.export_file, export_sele_layout, 
+                make_panel("Export", "tooltip_export", [export_label, self.export_file, export_sele_layout,
                                         #export_type_layout, 
                                       self.export_button]),
                 make_panel("Quick Config", "tooltip_quick_config", [grid_seq_config, radicl_seq_config]),
@@ -1005,6 +1039,7 @@ class MainLayout:
         ]
 
         self.root = grid(grid_layout) # , sizing_mode="stretch_both"
+        FigureMaker().update_visibility()
 
     # overlap of the given areas relative to the larger area
     @staticmethod
@@ -1122,28 +1157,30 @@ class MainLayout:
         return x, y, w, h
 
     def make_bins(self, bin_coords, name="make_bins"):
-        self.render_step_log(name)
-        #self.render_step_log(name + "_ini")
+        #self.render_step_log(name)
+        self.render_step_log(name + "_ini")
         bins = []
         min_ = self.interactions_bounds_slider.value
         map_q_value = self.mapq_slider.value
         manhatten_dist = 1000 * self.diag_dist_slider.value / self.meta.dividend
+        bins_to_search = []
+        self.render_step_log(name + "_pre")
+        for x, y, w, h in bin_coords:
+            if abs(x - y) >= manhatten_dist:
+                x, y, w, h = self.adjust_bin_pos_for_symmetrie(x, y, w, h)
+                bins_to_search.append(self.idx.to_query(y, y+h, x, x+w, *map_q_value))
+            else:
+                bins_to_search.append(self.idx.to_query(0, 0, 0, 0, 0, 0))
+            if self.cancel_render:
+                return
+        self.render_step_log(name + "_main")
+        ns = []
+        for idx in sorted(list(self.meta.datasets.keys())):
+            ns.append(self.idx.count_multiple(idx, bins_to_search, self.multi_mapping_d))
+        self.render_step_log(name + "_post")
         for idx in sorted(list(self.meta.datasets.keys())):
             bins.append([])
-            bins_to_search = []
-            #self.render_step_log(name + "_pre")
-            for x, y, w, h in bin_coords:
-                if abs(x - y) >= manhatten_dist:
-                    x, y, w, h = self.adjust_bin_pos_for_symmetrie(x, y, w, h)
-                    bins_to_search.append(self.idx.to_query(y, y+h, x, x+w, *map_q_value))
-                else:
-                    bins_to_search.append(self.idx.to_query(0, 0, 0, 0, 0, 0))
-                if self.cancel_render:
-                    return
-            #self.render_step_log(name + "_main")
-            ns = self.idx.count_multiple(idx, bins_to_search, self.multi_mapping_d)
-            #self.render_step_log(name + "_post")
-            for n, (x, y, w, h) in zip(ns, bin_coords):
+            for n in ns[idx]:
                 bins[-1].append(max(n-min_, 0))
                 if self.cancel_render:
                     return
@@ -1559,6 +1596,21 @@ class MainLayout:
         return total_time, ram_usage
 
 
+    def make_anno_str(self, s, e):
+        anno_str = ""
+        if "anno" in self.export_sele.value:
+            for anno in self.displayed_annos.value:
+                c = self.meta.annotations[anno].count(s, e)
+                if c > 0 and c <= 10:
+                    if len(anno_str) > 0:
+                        anno_str += "; "
+                    anno_str += anno + ": {" + self.meta.annotations[anno].info(s, e).replace("\n", " ") + "}"
+                elif c > 0:
+                    if len(anno_str) > 0:
+                        anno_str += "; "
+                    anno_str += str(c) + "x " + anno
+        return anno_str
+
     @gen.coroutine
     @without_document_lock
     def render(self, area, zoom_in_render):
@@ -1933,7 +1985,7 @@ class MainLayout:
                             ra.left = area[0] if left is None else left
                             ra.bottom = area[1] if bottom is None else bottom
                             ra.right = area[2] if right is None else right
-                            ra.top =area[3] if top is None else top
+                            ra.top = area[3] if top is None else top
                             if not color is None:
                                 ra.fill_color = color
 
@@ -1943,8 +1995,8 @@ class MainLayout:
                         set_bounds(self.raw_y, bottom=mmin(*raw_y_heat, *raw_y_norm_combined),
                                     top=mmax(*raw_y_heat, *raw_y_norm_combined))
                         set_bounds(self.ratio_y, bottom=0, top=mmax(*raw_y_ratio))
-                        set_bounds(self.anno_x, left=None, right=None)
-                        set_bounds(self.anno_y, bottom=None, top=None)
+                        set_bounds(self.anno_x, left=0, right=len(self.displayed_annos.value))
+                        set_bounds(self.anno_y, bottom=0, top=len(self.displayed_annos.value))
 
                         set_bounds(self.heatmap, color=b_col)
 
@@ -1967,9 +2019,11 @@ class MainLayout:
                     if "data" in self.export_type.value:
                         if "heatmap" in self.export_sele.value:
                             with open(self.export_file.value + ".heatmap.bed", "w") as out_file:
-                                for c, (x_chr_, x_2_, y_chr_, y_2_) in zip(self.color_bins_a(sym), bin_coords_2):
+                                for c, (x, y, w, h), (x_chr_, x_2_, y_chr_, y_2_) in zip(
+                                            self.color_bins_a(sym), bin_coords, bin_coords_2):
                                     out_file.write("\t".join([x_chr_, str(int(x_2_)), y_chr_, str(int(y_2_)), 
-                                                            str(c)]) + "\n")
+                                                            str(c), self.make_anno_str(x, x+w), 
+                                                            self.make_anno_str(y, y+h)]) + "\n")
                         if "col_sum" in self.export_sele.value:
                             with open(self.export_file.value + ".columns.bed", "w") as out_file:
                                 for c, x_chr_, x_2_, x_ in zip(raw_y_ratio, y_chr, y_pos1, y_pos):
@@ -1999,8 +2053,8 @@ class MainLayout:
         yield executor.submit(unlocked_task)
 
     def setup_coordinates(self):
-        self.meta.setup_coordinates(self, FigureMaker._show_hide["grid_lines"], FigureMaker.x_coords_d, 
-                                    FigureMaker.y_coords_d)
+        self.meta.setup_coordinates(self, FigureMaker.x_coords_d,  FigureMaker.y_coords_d)
+        FigureMaker().update_visibility()
 
     def setup(self):
         print("loading index...\033[K")
