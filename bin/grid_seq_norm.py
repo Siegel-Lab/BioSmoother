@@ -2,6 +2,8 @@ from bisect import bisect_left
 import enum
 from bokeh.plotting import figure, save, output_file
 from bisect import bisect_left
+from bin.parse_and_group_reads import *
+import os
 
 def index_count(index, dataset, x_from, x_to, y_from, y_to, map_q_layer, on_rna):
     if on_rna:
@@ -85,20 +87,27 @@ def do_add_annotation(ranked_regions, meta, name):
     meta.add_annotations([(name, start, end, info) for start, end, info in ranked_regions])
 
 def add_as_normalization(ranked_regions, datasets, meta, index, index_arr, map_q_layer, name, info):
-    idx = meta.add_normalization(name, info, True)
+    last_cnt = len(index_arr)
 
+    ranked_regions = [(a, b) for a, b, _ in ranked_regions]
+    ranked_regions.sort()
     for dataset in datasets:
-        for start, end, info in ranked_regions:
-            chr_idx = min(bisect_left(meta.chr_sizes.chr_starts, start), len(meta.chr_sizes.chr_starts)-1)
-            chr_start = meta.chr_sizes.chr_starts[chr_idx]
-            chr_size = meta.chr_sizes.chr_sizes_l[chr_idx]
-            for x in [
-                index.get(dataset, start, end, 0, chr_start),
-                index.get(dataset, start, end, chr_start + chr_size, meta.chr_sizes.chr_start_pos["end"])
-            ]:
-                for layer, d in enumerate(x):
-                    if layer >= map_q_layer:
-                        for (_, pos_x), read_name in d:
-                            index_arr.add_point(idx, pos_x, layer, read_name + "; dataset: " + str(dataset))
+        dataset_name, path, _, _ = meta.datasets[dataset]
+        if not os.path.exists(path):
+            print("ERROR: could not find dataset", dataset_name, "at", path, ". Did you move/delete the file? The grid-seq-norm functionality requires the original input files of all used datasets. Either use -d and exclude this dataset or restore the original file.")
+            exit()
+        for read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q in group_heatmap(path, 
+                                                                        get_filesize(path), meta.chr_sizes.chr_sizes):
+            if chr_1 == chr_2:
+                continue
+            act_pos_2_s = meta.chr_sizes.coordinate(pos_1_s // meta.dividend, chr_1)
+            act_pos_2_e = meta.chr_sizes.coordinate(pos_1_e // meta.dividend, chr_1)
+            insertion_points = bisect_left(ranked_regions, (act_pos_2_e, 0))
+            ranked_reg_s, ranked_reg_e = ranked_regions[insertion_points]
+            if act_pos_2_s < ranked_reg_e and act_pos_2_e > ranked_reg_s:
+                act_pos_1_s = meta.chr_sizes.coordinate(pos_2_s // meta.dividend, chr_2)
+                act_pos_1_e = meta.chr_sizes.coordinate(pos_2_e // meta.dividend, chr_2)
+                index_arr.add_point([act_pos_1_s, 255-map_q], [act_pos_1_e, 255-map_q], read_name)
 
-    index_arr.generate()
+    idx = index_arr.generate(last_cnt, len(index_arr))
+    meta.add_normalization(name, info, True, idx)
