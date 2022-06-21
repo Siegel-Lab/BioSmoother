@@ -13,6 +13,7 @@ import math
 from bin.libSps import *
 from bin.grid_seq_norm import *
 from bin.parse_and_group_reads import *
+from bin.dist_dep_decay_norm import *
 
 
 # parses file & sets up axis and matrix to have the appropriate size
@@ -125,7 +126,6 @@ def parse_wig_file(filename, chr_start_idx, dividend):
         ys.append(0)
         yield xs, ys, track
 
-TEST_FAC = 800000
 
 def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test=False):
     os.makedirs(out_prefix + ".smoother_index")
@@ -237,6 +237,16 @@ def grid_seq_norm(args):
 
     meta.save(args.index_prefix + ".smoother_index/meta")
 
+def ddd_sample(args):
+    print("LibSps Version:", VERSION)
+    sample_dist_dep_dec(args.in_path, args.out_path)
+
+def ddd_load(args):
+    print("LibSps Version:", VERSION)
+    meta = MetaData.load(args.index_prefix + ".smoother_index/meta")
+    load_dist_dep_decay(meta, args.in_path, args.chr_list)
+    meta.save(args.index_prefix + ".smoother_index/meta")
+
 def get_argparse():
     parser = argparse.ArgumentParser(description='Create indices for the smoother Hi-C data viewer.')
 
@@ -295,6 +305,17 @@ def get_argparse():
     grid_seq_norm_parser.add_argument('-a', '--add_annotation', action='store_true')
     grid_seq_norm_parser.add_argument('-n', '--add_normalization_track', action='store_true')
     grid_seq_norm_parser.set_defaults(func=grid_seq_norm)
+    
+    ddd_sample_parser = sub_parsers.add_parser("ddd-sample")
+    ddd_sample_parser.add_argument('in_path')
+    ddd_sample_parser.add_argument('out_path')
+    ddd_sample_parser.set_defaults(func=ddd_sample)
+
+    ddd_load_parser = sub_parsers.add_parser("ddd-load")
+    ddd_load_parser.add_argument('index_prefix')
+    ddd_load_parser.add_argument('in_path')
+    ddd_load_parser.add_argument('chr_list', nargs='+')
+    ddd_load_parser.set_defaults(func=ddd_load)
 
     return parser
 

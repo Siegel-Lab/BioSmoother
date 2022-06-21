@@ -19,6 +19,31 @@ class MetaData:
         self.info = ""
         self.norm = {}
         self.dividend = dividend
+        self.dist_dep_decay_for_chr = {}
+
+    def add_dist_dep_decay(self, chr_name, x, y):
+        self.dist_dep_decay_for_chr[chr_name] = (x, y)
+
+    def get_dist_dep_decay(self, chr_x, x, chr_y, y):
+        if chr_x != chr_y:
+            return 1
+        if chr_x not in self.dist_dep_decay_for_chr:
+            return 1
+        d = abs(x - y)
+        xs, ys = self.dist_dep_decay_for_chr[chr_x]
+        idx = bisect.bisect_left(xs, d)
+        if idx >= len(xs):
+            return ys[-1]
+        if idx == 0:
+            return ys[0]
+        lo = xs[idx - 1]
+        hi = xs[idx]
+        fac = (d - lo) / (hi - lo)
+        assert fac >= 0 and fac <= 1
+        lo = ys[idx - 1]
+        hi = ys[idx]
+        r = lo * (1-fac) + hi * fac
+        return r
 
 
     def set_chr_sizes(self, chr_sizes):

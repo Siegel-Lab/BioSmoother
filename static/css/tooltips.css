@@ -83,6 +83,10 @@
     content: "stretch or scale the main matrix";
 }
 
+.tooltip_ddd:after {
+    content: "Normalize away the distance dependent decay";
+}
+
 .tooltip_bin_aspect_ratio:after {
     content: "set the height to width ratio of bins relative to...";
 }

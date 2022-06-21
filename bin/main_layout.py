@@ -24,6 +24,7 @@ from bokeh.models import BoxAnnotation
 from bin.stats import *
 from bokeh.models.tickers import AdaptiveTicker
 import bin.libSps
+from bin.render_step_logger import *
 
 SETTINGS_WIDTH = 400
 DEFAULT_SIZE = 50
@@ -396,11 +397,8 @@ class MainLayout:
         self.curr_area_size = 1
         self.idx = None
         self.idx_norm = None
-        self.render_curr_step = 0
-        self.render_reason = ""
-        self.render_last_step = None
-        self.render_last_time = None
-        self.render_time_record = []
+        self.render_logger = Logger()
+        self.smoother_version = "?"
 
         global SETTINGS_WIDTH
         tollbars = []
@@ -630,7 +628,7 @@ class MainLayout:
             self.betw_group_d = e
             self.trigger_render()
         self.betw_group = self.dropdown_select("Between Group", betw_group_event, "tooltip_between_groups",
-                                               ("Sum [a+b]", "sum"), ("Show First Group [a]", "1st"), (
+                                               ("Sum [(a+b)/2]", "sum"), ("Show First Group [a]", "1st"), (
                                                    "Show Second Group [b]", "2nd"), ("Substract [a-b]", "sub"),
                                                ("Difference [|a-b|]", "dif"), ("Minimum [min(a,b)]", "min"), ("Maximum [max(a,b)]", "max"))
 
@@ -665,7 +663,19 @@ class MainLayout:
                                                   ("Coverage Track (Scaled)", "tracks_rel"),
                                                   ("Binominal Test", "radicl-seq"),
                                                   ("Iterative Correction", "hi-c"),
-                                                  ("Distance Dependent Decay", "ddd"),
+                                                  ("No Normalization", "dont"),
+                                                  )
+
+        self.ddd_d = "no"
+
+        def ddd_event(e):
+            self.ddd_d = e
+            self.trigger_render()
+        ddd = self.dropdown_select("Distance Dependent Decay", ddd_event, "tooltip_ddd",
+                                                  ("Keep decay",
+                                                   "no"),
+                                                  ("Normalize decay away",
+                                                   "yes"), 
                                                   )
 
         self.square_bins_d = "view"
@@ -951,9 +961,9 @@ class MainLayout:
             return r
 
         with open("smoother/VERSION", "r") as in_file:
-            smoother_version = in_file.readlines()[0][:-1]
+            self.smoother_version = in_file.readlines()[0][:-1]
 
-        version_info = Div(text="Smoother "+ smoother_version +"<br>LibSps Version: " + bin.libSps.VERSION)
+        version_info = Div(text="Smoother "+ self.smoother_version +"<br>LibSps Version: " + bin.libSps.VERSION)
 
         self.color_mapper = LinearColorMapper(palette=["black"], low=0, high=1)
         color_figure = figure(tools='', height=0)
@@ -979,7 +989,7 @@ class MainLayout:
         _settings = column([
                 make_panel("General", "tooltip_general", [tool_bar, meta_file_label, self.meta_file]),
                 make_panel("Normalization", "tooltip_normalization", [self.normalization, color_figure,
-                                    ibs_l, crs_l, is_l, norm_x_layout, norm_y_layout, rsa_l]),
+                                    ibs_l, crs_l, is_l, norm_x_layout, norm_y_layout, rsa_l, ddd]),
                 make_panel("Replicates", "tooltip_replicates", [self.in_group, self.betw_group, group_a_layout, group_b_layout]),
                 make_panel("Interface", "tooltip_interface", [nb_l,
                                     show_hide, mmbs_l,
@@ -1263,9 +1273,19 @@ class MainLayout:
         return [x/n for x in bins]
 
 
+    def norm_ddd(self, bins_l, bin_coords):
+        if self.ddd_d == "no":
+            return bins_l
+        ret = []
+        for bins in bins_l:
+            ret.append([x/self.meta.get_dist_dep_decay(
+                x_chr, x_2 * self.meta.dividend, y_chr, y_2 * self.meta.dividend) \
+                        for x, (x_chr, x_2, y_chr, y_2) in zip(bins, bin_coords)])
+        return ret
+
     def norm_bins(self, w_bin, bins_l, cols, rows):
-        if self.normalization_d != "ddd":
-            self.render_step_log("norm_bins", 0, len(bins_l))
+        if self.normalization_d == "dont":
+            return bins_l
         ret = []
         if self.normalization_d in ["tracks_abs", "tracks_rel"]:
             raw_x_norm = self.linear_bins_norm(rows, True)
@@ -1283,8 +1303,6 @@ class MainLayout:
         if self.cancel_render:
             return
         for idx, bins in enumerate(bins_l):
-            if self.normalization_d != "ddd":
-                self.render_step_log("norm_bins", idx, len(bins_l))
             if self.normalization_d == "max_bin_visible":
                 n = max(max(bins), 1)
                 ret.append([x/n for x in bins])
@@ -1325,53 +1343,6 @@ class MainLayout:
                         ret[-1][i] = min(ret[-1][i], 1)
             elif self.normalization_d == "hi-c":
                 ret.append(self.hi_c_normalization(bins, rows, cols))
-            elif self.normalization_d == "ddd":
-                # get the distances to sample
-                min_dist_to_sample = min(int(x)-int(y) for x, _ in cols for y, _ in rows)
-                max_dist_to_sample = max(int(x)-int(y) for x, _ in cols for y, _ in rows)
-                ddd = []
-                NUM_BINS = 300
-                # for each distance we have to sample
-                bin_size = max((max_dist_to_sample - min_dist_to_sample) // NUM_BINS, 1)
-                for id_2, d in enumerate(range(min_dist_to_sample, max_dist_to_sample, bin_size)):
-                    self.render_step_log("norm_bins", id_2 + idx*NUM_BINS, len(bins_l)*NUM_BINS)
-                    # sample until the result does not change anymore (less than 1%) but at least a 250 times
-                    cnt = 0
-                    val = 0
-                    while True:
-                        inc = 0
-                        STEP_SIZE=10
-                        for _ in range(STEP_SIZE):
-                            if self.cancel_render:
-                                return
-                            s = int(max(0, d))
-                            e = int(self.meta.chr_sizes.chr_start_pos["end"] - bin_size - min(0, d))
-                            if s + max(int(bin_size), 1) >= e:
-                                x = s
-                            else:
-                                x = random.randrange(s, e, max(int(bin_size), 1))
-                            y = x-d
-                            x_2, y_2, w_2, h_2 = self.adjust_bin_pos_for_symmetrie(x, y, bin_size, bin_size)
-                            inc += self.idx.count(idx, y_2, y_2+h_2, x_2, x_2+w_2, *self.mapq_slider.value, 
-                                                  self.multi_mapping_d)
-                        if val > 0:
-                            change = abs( (val/cnt) - ( (val+inc) / (cnt+STEP_SIZE) ) ) / (val/cnt)
-                        else:
-                            change = 1
-                        if (cnt >= 50 and change < 0.02) or cnt > 500:
-                            break
-                        val += inc
-                        cnt += STEP_SIZE
-                    #print("d:", d, ", sampling took", cnt, "many attempts. Last change:", change)
-                    # @todo median instead of average
-                    ddd.append(max(val/cnt, 1))
-                to_append = []
-                for idx_2, x in enumerate(bins):
-                    d = int(cols[idx_2 // len(rows)][0]) - int(rows[idx_2 % len(rows)][0])
-                    ddd_idx = max(min(int((d - min_dist_to_sample) / bin_size), len(ddd)-1), 0)
-                    to_append.append(x / ddd[ddd_idx])
-                n = max(to_append + [1])
-                ret.append([x/n for x in to_append])
             else:
                 raise RuntimeError("Unknown normalization value")
         return ret
@@ -1543,57 +1514,21 @@ class MainLayout:
                         return
         return self.flatten_norm(vals), vals
 
+    def render_log_callback(self, s):
+        print(s, end="\033[K\r")
+
+        def callback():
+            self.curr_bin_size.text = s.replace(". ", "<br>")
+        self.curdoc.add_next_tick_callback(callback)
+
     def new_render(self, reason):
-        self.render_curr_step = 0
-        self.render_time_record = []
-        if not reason is None:
-            self.render_reason = reason
-            self.render_step_log()
+        self.render_logger.new_render(reason, callback=lambda s: self.render_log_callback(s))
 
     def render_step_log(self, step_name="", sub_step=0, sub_step_total=None):
-        if self.render_last_step is None or self.render_last_step != step_name:
-            if self.render_last_step != step_name:
-                self.render_curr_step += 1
-            self.render_last_step = step_name
-            if not len(step_name) == 0:
-                if len(self.render_time_record) > 0:
-                    self.render_time_record[-1][1] = datetime.now() - \
-                        self.render_time_record[-1][1]
-                self.render_time_record.append([step_name, datetime.now()])
-        if self.render_last_time is None or (datetime.now() - self.render_last_time).seconds >= 1:
-            self.render_last_time = datetime.now()
-            s = "rendering due to " + self.render_reason + "."
-            if len(step_name) > 0:
-                s += " Step " + str(self.render_curr_step) + \
-                    " " + str(step_name) + ". Substep " + str(sub_step)
-                if not sub_step_total is None:
-                    s += " of " + str(sub_step_total) + " = " + str((100*sub_step)//sub_step_total) + "%. "
-                if len(self.render_time_record) > 0:
-                    s += " Runtime: " + str(datetime.now() - self.render_time_record[-1][1])
-                if self.cancel_render:
-                    s += " CANCELLED!!"
-            print(s, end="\033[K\r")
-
-            if len(step_name) > 0:
-                def callback():
-                    self.curr_bin_size.text = s.replace(". ", "<br>")
-                self.curdoc.add_next_tick_callback(callback)
+        self.render_logger.render_step_log(step_name, sub_step, sub_step_total, callback=lambda s: self.render_log_callback(s))
 
     def render_done(self, bin_amount):
-        if len(self.render_time_record) > 0:
-            self.render_time_record[-1][1] = datetime.now() - \
-                self.render_time_record[-1][1]
-        print("render done, used time:\033[K")
-        total_time = timedelta()
-        for x in self.render_time_record:
-            total_time += x[1]
-        for idx, (name, time) in enumerate(self.render_time_record):
-            print("step " + str(idx), str(time),
-                  str(int(100*time/total_time)) + "%", name, "\033[K", sep="\t")
-        ram_usage = psutil.virtual_memory().percent
-        print("Currently used RAM:", ram_usage, "%\033[K")
-        print("Number of displayed bins:", bin_amount, "\033[K")
-        return total_time, ram_usage
+        return self.render_logger.render_done(bin_amount)
 
 
     def make_anno_str(self, s, e):
@@ -1681,7 +1616,8 @@ class MainLayout:
                 if self.cancel_render:
                     return
                 flat = self.flatten_bins(bins)
-                norm = self.norm_bins(w_bin, flat, bin_cols, bin_rows)
+                norm_ddd_out = self.norm_ddd(flat, bin_coords_2)
+                norm = self.norm_bins(w_bin, norm_ddd_out, bin_cols, bin_rows)
                 if self.cancel_render:
                     return
                 sym = self.bin_symmentry(h_bin, norm, bin_coords, bin_cols, bin_rows)
@@ -2019,21 +1955,27 @@ class MainLayout:
                     if "data" in self.export_type.value:
                         if "heatmap" in self.export_sele.value:
                             with open(self.export_file.value + ".heatmap.bed", "w") as out_file:
+                                out_file.write("##Smoother Version:" + self.smoother_version +"\n##LibSps Version: " + bin.libSps.VERSION + "\n")
+                                out_file.write("##Bin width:" + str(h_bin* self.meta.dividend) + " Bin height:" +
+                                                                str(w_bin* self.meta.dividend) + "\n")
+                                out_file.write("#chr_x\tpos_x\tchr_y\tpos_y\tscore\tannotation_x\tannotation_y\n")
                                 for c, (x, y, w, h), (x_chr_, x_2_, y_chr_, y_2_) in zip(
                                             self.color_bins_a(sym), bin_coords, bin_coords_2):
-                                    out_file.write("\t".join([x_chr_, str(int(x_2_)), y_chr_, str(int(y_2_)), 
-                                                            str(c), self.make_anno_str(x, x+w), 
+                                    out_file.write("\t".join([x_chr_, str(int(x_2_) * self.meta.dividend), 
+                                                            y_chr_, str(int(y_2_) * self.meta.dividend), 
+                                                            str(c), 
+                                                            self.make_anno_str(x, x+w), 
                                                             self.make_anno_str(y, y+h)]) + "\n")
                         if "col_sum" in self.export_sele.value:
                             with open(self.export_file.value + ".columns.bed", "w") as out_file:
                                 for c, x_chr_, x_2_, x_ in zip(raw_y_ratio, y_chr, y_pos1, y_pos):
                                     if not x_ is float('NaN'):
-                                        out_file.write("\t".join([x_chr_, str(int(x_2_)), str(c)]) + "\n")
+                                        out_file.write("\t".join([x_chr_, str(int(x_2_) * self.meta.dividend), str(c)]) + "\n")
                         if "row_sum" in self.export_sele.value:
                             with open(self.export_file.value + ".rows.bed", "w") as out_file:
                                 for c, x_chr_, x_2_, x_ in zip(raw_x_ratio, x_chr, x_pos1, x_pos):
                                     if not x_ is float('NaN'):
-                                        out_file.write("\t".join([x_chr_, str(int(x_2_)), str(c)]) + "\n")
+                                        out_file.write("\t".join([x_chr_, str(int(x_2_) * self.meta.dividend), str(c)]) + "\n")
                     if "png" in self.export_type.value:
                         export_png(self.heatmap, filename=self.export_file.value + ".heatmap.png")
                     if "svg" in self.export_type.value:
