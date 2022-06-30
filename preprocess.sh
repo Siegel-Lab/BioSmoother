@@ -21,7 +21,7 @@ INDEX_PREFIX="../smoother_out/test"
 
 rm -r ${INDEX_PREFIX}.smoother_index
 
-echo "generating index ${INDEX_PREFIX}"
+echo "working on index ${INDEX_PREFIX}"
 
 #DBG_C=""
 #DBG_C="--without_dep_dim"

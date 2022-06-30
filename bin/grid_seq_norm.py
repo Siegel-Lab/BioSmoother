@@ -28,7 +28,10 @@ def compute_anno_reads_binned(index, datasets, anno_from, anno_to, bins, map_q_l
 def rank_regions(index, datasets, regions, chr_sizes, map_q_layer, bins_size=1000):
     ranked_regions = []
     binned_genome = chr_sizes.bin_cols_or_rows(bins_size, produce_smaller_bins=False)[0]
-    for start, end, info in regions:
+    for idx, (start, end, info) in enumerate(regions):
+        if idx % PRINT_MODULO == 0:
+            print("ranking regions", idx, "of", len(regions), "=", 
+                   round( 100*(idx)/len(regions), 2), "%", end="\033[K\r")
         ranked_regions.append((
             compute_anno_reads(index, datasets, start, end, chr_sizes.chr_start_pos["end"], map_q_layer),
             compute_anno_reads_binned(index, datasets, start, end, binned_genome, map_q_layer), 
@@ -86,7 +89,7 @@ def filter_r_r(ranked_regions, filter_rna, filter_dna):
 def do_add_annotation(ranked_regions, meta, name):
     meta.add_annotations([(name, start, end, info) for start, end, info in ranked_regions])
 
-def add_as_normalization(ranked_regions, datasets, meta, index, index_arr, map_q_layer, name, info):
+def add_as_normalization(ranked_regions, datasets, meta, index_arr, name, info):
     last_cnt = len(index_arr)
 
     ranked_regions = [(a, b) for a, b, _ in ranked_regions]
@@ -103,11 +106,12 @@ def add_as_normalization(ranked_regions, datasets, meta, index, index_arr, map_q
             act_pos_2_s = meta.chr_sizes.coordinate(pos_1_s // meta.dividend, chr_1)
             act_pos_2_e = meta.chr_sizes.coordinate(pos_1_e // meta.dividend, chr_1)
             insertion_points = bisect_left(ranked_regions, (act_pos_2_e, 0))
-            ranked_reg_s, ranked_reg_e = ranked_regions[insertion_points]
-            if act_pos_2_s < ranked_reg_e and act_pos_2_e > ranked_reg_s:
-                act_pos_1_s = meta.chr_sizes.coordinate(pos_2_s // meta.dividend, chr_2)
-                act_pos_1_e = meta.chr_sizes.coordinate(pos_2_e // meta.dividend, chr_2)
-                index_arr.add_point([act_pos_1_s, 255-map_q], [act_pos_1_e, 255-map_q], read_name)
+            if insertion_points < len(insertion_points):
+                ranked_reg_s, ranked_reg_e = ranked_regions[insertion_points]
+                if act_pos_2_s < ranked_reg_e and act_pos_2_e > ranked_reg_s:
+                    act_pos_1_s = meta.chr_sizes.coordinate(pos_2_s // meta.dividend, chr_2)
+                    act_pos_1_e = meta.chr_sizes.coordinate(pos_2_e // meta.dividend, chr_2)
+                    index_arr.add_point([act_pos_1_s, 255-map_q], [act_pos_1_e, 255-map_q], read_name)
 
     idx = index_arr.generate(last_cnt, len(index_arr))
     meta.add_normalization(name, info, True, idx)

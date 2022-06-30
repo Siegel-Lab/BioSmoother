@@ -38,7 +38,9 @@ Since smoother is capable of normalizing data on the fly, you can zoom in to a r
 Groups A and B are normalized individually and then combined according to the 'Between Group' setting (see Replicates section).
 The 'In Group' operation (see Replicates section) is applied before the Normalization.
 
+#### Normalizing the RADICL-seq way
 
+@todo
 
 #### Color Scale Begin \& Color Scale Log Base
 

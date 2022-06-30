@@ -10,6 +10,7 @@ MAP_Q_MAX = 255
 
 
 WITH_DEPENDENT_DIM = True
+UNIFORM_OVERLAYS = False
 
 INT_TYPES = {
     "enclosed": IntersectionType.enclosed,
@@ -23,7 +24,7 @@ INT_TYPES = {
 class Tree_4:
     def __init__(self, file_name):
         self.file_name = file_name
-        self.index = make_sps_index(file_name + ".smoother_index/repl", 3, WITH_DEPENDENT_DIM, 2, 
+        self.index = make_sps_index(file_name + ".smoother_index/repl", 3, WITH_DEPENDENT_DIM, UNIFORM_OVERLAYS, 2, 
                                     "PickByFileSize", False )
 
     def setup(self, data, bins, cache_size, threads):
@@ -72,7 +73,7 @@ class Tree_4:
 
 class Tree_3:
     def __init__(self, file_name):
-        self.index = make_sps_index(file_name + ".smoother_index/norm", 2, False, 1, "PickByFileSize", False )
+        self.index = make_sps_index(file_name + ".smoother_index/norm", 2, False, False, 1, "PickByFileSize", False )
         self.file_name = file_name
         self.root = {}
 

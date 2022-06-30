@@ -150,7 +150,7 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test
 
 def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_groups=False, without_dep_dim=True, keep_points=False):
     meta = MetaData.load(out_prefix + ".smoother_index/meta")
-    index = make_sps_index(out_prefix + ".smoother_index/repl", 3, not without_dep_dim, 
+    index = make_sps_index(out_prefix + ".smoother_index/repl", 3, True, False, 
                             2, "Cached" if cached else "Disk", True )
     last_cnt = len(index)
     for read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q in group_heatmap(path, get_filesize(path),
@@ -173,7 +173,7 @@ def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_
 
 def add_normalization(out_prefix, path, name, for_row, test=False, cached=False, keep_points=False):
     meta = MetaData.load(out_prefix + ".smoother_index/meta")
-    index = make_sps_index(out_prefix + ".smoother_index/norm", 2, False, 1, "Cached" if cached else "Disk", True )
+    index = make_sps_index(out_prefix + ".smoother_index/norm", 2, False, False, 1, "Cached" if cached else "Disk", True )
     last_cnt = len(index)
     if path[-4:] == ".wig":
         raise RuntimeError("disabled for now")
@@ -232,7 +232,7 @@ def grid_seq_norm(args):
     if args.add_normalization_track:
         index_arr = make_sps_index(args.index_prefix + ".smoother_index/norm", 2, False, 1, 
                                    "Cached" if not args.uncached else "Disk", True )
-        add_as_normalization(filtered_rr, datasets, meta, index, index_arr, args.mapping_q, args.name, 
+        add_as_normalization(filtered_rr, datasets, meta, index_arr, args.name, 
                              "GRID-seq normalization created with " + str(sys.argv))
 
     meta.save(args.index_prefix + ".smoother_index/meta")
