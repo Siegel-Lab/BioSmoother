@@ -25,6 +25,7 @@ from bin.stats import *
 from bokeh.models.tickers import AdaptiveTicker
 import bin.libSps
 from bin.render_step_logger import *
+from bin.renderer import Renderer
 
 SETTINGS_WIDTH = 400
 DEFAULT_SIZE = 50
@@ -274,7 +275,7 @@ class FigureMaker:
                 (("☑ " if FigureMaker._show_hide["contig_borders"] else "☐ ") + "Contig Borders", "contig_borders"))
             return menu
         ret = Dropdown(label="Show/Hide", menu=make_menu(),
-                       width=SETTINGS_WIDTH, sizing_mode="fixed", css_classes=["other_button", "tooltip", "tooltip_show_hide"], height=DROPDOWN_HEIGHT)
+                       width=SETTINGS_WIDTH, sizing_mode="stretch_width", css_classes=["other_button", "tooltip", "tooltip_show_hide"], height=DROPDOWN_HEIGHT)
 
         def event(e):
             FigureMaker.toggle_hide(e.item)
@@ -297,7 +298,7 @@ class FigureMaker:
 class MainLayout:
     def dropdown_select_h(self, title, event, tooltip):
 
-        ret = Dropdown(label=title, menu=[], width=SETTINGS_WIDTH, sizing_mode="fixed", 
+        ret = Dropdown(label=title, menu=[], sizing_mode="stretch_width", 
                         css_classes=["other_button", "tooltip", tooltip], height=DROPDOWN_HEIGHT)
 
         options = []
@@ -309,14 +310,14 @@ class MainLayout:
                 menu.append((("☑ " if d[key] else "☐ ") + name, key))
             ret.menu = menu
 
-        def set_menu(op):
+        def set_menu(default_val, op):
             nonlocal options
             nonlocal d
             options = op
             d = {}
             for _, key in options:
                 d[key] = False
-            d[options[0][1]] = True
+            d[default_val] = True
             make_menu()
 
         def _event(e):
@@ -329,9 +330,9 @@ class MainLayout:
         ret.on_click(_event)
         return ret, set_menu
 
-    def dropdown_select(self, title, event, tooltip, *options):
+    def dropdown_select(self, title, event, tooltip, default_val, *options):
         ret, set_menu = self.dropdown_select_h(title, event, tooltip)
-        set_menu([*options])
+        set_menu(default_val, [*options])
         return ret
 
     def multi_choice(self, label):
@@ -356,19 +357,21 @@ class MainLayout:
         return choice, layout
 
     def make_slider_spinner(self, title="", value=1, start=0, end=10, step=None, width=200, 
-                            on_change=lambda _a,_b,_c: None, spinner_width=80, sizing_mode="stretch_width"):
+                            on_change=lambda s: None, spinner_width=80, sizing_mode="stretch_width"):
         spinner = Spinner(value=value, low=start, high=end, step=step, width=spinner_width)
         slider = Slider(title=title, value=value, start=start, end=end, step=step, show_value=False, width=width-spinner_width, sizing_mode=sizing_mode)
 
         spinner.js_link("value", slider, "value")
         slider.js_link("value", spinner, "value")
-        slider.on_change("value_throttled", on_change)
-        spinner.on_change("value_throttled", on_change)
+        def callback(_x, _y, _z):
+            on_change(slider)
+        slider.on_change("value_throttled", callback)
+        spinner.on_change("value_throttled", callback)
 
         return slider, row([slider, spinner], width=width)
 
     def make_range_slider_spinner(self, title="", value=(1, 2), start=0, end=10, step=None, width=200, 
-                            on_change=lambda _a,_b,_c: None, spinner_width=80, sizing_mode="stretch_width"):
+                            on_change=lambda s: None, spinner_width=80, sizing_mode="stretch_width"):
         slider = RangeSlider(title=title, value=value, start=start, end=end, step=step, show_value=False, width=width-spinner_width*2, sizing_mode=sizing_mode)
         spinner_start = Spinner(value=value[0], low=start, high=end, step=step, width=spinner_width)
         spinner_end = Spinner(value=value[1], low=start, high=end, step=step, width=spinner_width)
@@ -379,14 +382,16 @@ class MainLayout:
         spinner_end.js_on_change('value', CustomJS(args=dict(other=slider), code="other.value = [other.value[0], this.value]" ) )
         slider.js_link("value", spinner_end, "value", attr_selector=1)
 
-        slider.on_change("value_throttled", on_change)
-        spinner_end.on_change("value_throttled", on_change)
-        spinner_start.on_change("value_throttled", on_change)
+        def callback(_x, _y, _z):
+            on_change(slider)
+        slider.on_change("value_throttled", callback)
+        spinner_end.on_change("value_throttled", callback)
+        spinner_start.on_change("value_throttled", callback)
 
         return slider, row([slider, spinner_start, spinner_end], width=width)
 
 
-    def __init__(self):
+    def __init__(self, renderer = Renderer()):
         self.meta = None
         self.do_render = False
         self.cancel_render = False
@@ -398,7 +403,7 @@ class MainLayout:
         self.idx = None
         self.idx_norm = None
         self.render_logger = Logger()
-        self.smoother_version = "?"
+        self.renderer = renderer
 
         global SETTINGS_WIDTH
         tollbars = []
@@ -419,9 +424,13 @@ class MainLayout:
         self.heatmap.quad(left="l", bottom="b", right="r", top="t", fill_color=None, line_color="red", 
                             source=self.overlay_data, level="underlay")
 
-        self.overlay_dataset_id = Spinner(title="Overlay Lines Dataset Id", low=-1, step=1, value=-1, 
+        overlay_dataset_id = Spinner(title="Overlay Lines Dataset Id", low=-1, step=1, 
+                                          value=self.renderer.overlay_dataset_id_d, 
                                           width=DEFAULT_SIZE, mode="int")
-        self.overlay_dataset_id.on_change("value_throttled", lambda x, y, z: self.trigger_render())
+        def callback():
+            self.renderer.overlay_dataset_id_d = overlay_dataset_id.value
+            self.trigger_render()
+        overlay_dataset_id.on_change("value_throttled", lambda x, y, z: callback())
 
 
         self.heatmap.add_tools(HoverTool(
@@ -612,44 +621,40 @@ class MainLayout:
         show_hide = FigureMaker.show_hide_dropdown(("Axes", "axis"), (RATIO_PLOT_NAME, "ratio"), (RAW_PLOT_NAME, "raw"),
                                                    (ANNOTATION_PLOT_NAME, "annotation"), ("Tools", "tools"))
 
-        self.in_group_d = "sum"
-
         def in_group_event(e):
-            self.in_group_d = e
+            self.renderer.in_group_d = e
             self.trigger_render()
         self.in_group = self.dropdown_select("In Group", in_group_event, "tooltip_in_group",
+                                             self.renderer.in_group_d,
                                              ("Sum [a+b+c+...]", "sum"), 
                                              ("Minimium [min(a,b,c,...)]", "min"),
                                              ("Difference [|a-b|+|a-c|+|b-c|+...]", "dif"))
 
-        self.betw_group_d = "sum"
-
         def betw_group_event(e):
-            self.betw_group_d = e
+            self.renderer.betw_group_d = e
             self.trigger_render()
         self.betw_group = self.dropdown_select("Between Group", betw_group_event, "tooltip_between_groups",
+                                               self.renderer.betw_group_d,
                                                ("Sum [(a+b)/2]", "sum"), ("Show First Group [a]", "1st"), (
                                                    "Show Second Group [b]", "2nd"), ("Substract [a-b]", "sub"),
                                                ("Difference [|a-b|]", "dif"), ("Minimum [min(a,b)]", "min"), ("Maximum [max(a,b)]", "max"))
 
-        self.symmetrie_d = "all"
-
         def symmetrie_event(e):
-            self.symmetrie_d = e
+            self.renderer.symmetrie_d = e
             self.trigger_render()
         self.symmetrie = self.dropdown_select("Symmetry", symmetrie_event, "tooltip_symmetry",
+                                              self.renderer.symmetrie_d,
                                               ("Show All Interactions", "all"), 
                                               ("Only Show Symmetric Interactions", "sym"),
                                               ("Only Show Asymmetric Interactions", "asym"),
                                               ("Make Interactions Symmetric (Bottom to Top)", "topToBot"), 
                                               ("Make Interactions Symmetric (Top to Bottom)", "botToTop"))
 
-        self.normalization_d = "max_bin_visible"
-
         def normalization_event(e):
-            self.normalization_d = e
+            self.renderer.normalization_d = e
             self.trigger_render()
         self.normalization = self.dropdown_select("Normalize by", normalization_event, "tooltip_normalize_by",
+                                                  self.renderer.normalization_d,
                                                   ("Largest Rendered Bin",
                                                    "max_bin_visible"),
                                                   ("Reads per Million",
@@ -666,53 +671,52 @@ class MainLayout:
                                                   ("No Normalization", "dont"),
                                                   )
 
-        self.ddd_d = "no"
-
         def ddd_event(e):
-            self.ddd_d = e
+            self.renderer.ddd_d = e
             self.trigger_render()
         ddd = self.dropdown_select("Distance Dependent Decay", ddd_event, "tooltip_ddd",
+                                    self.renderer.ddd_d,
                                                   ("Keep decay",
                                                    "no"),
                                                   ("Normalize decay away",
                                                    "yes"), 
                                                   )
 
-        self.square_bins_d = "view"
         def square_bin_event(e):
-            self.square_bins_d = e
+            self.renderer.square_bins_d = e
             self.trigger_render()
         square_bins = self.dropdown_select("Bin Aspect Ratio", square_bin_event, "tooltip_bin_aspect_ratio",
+                                            self.renderer.square_bins_d,
                                                   ("Squared relative to view",
                                                    "view"),
                                                   ("Squared relative to coordinates",
                                                    "coord")
                                                    )
-        self.power_ten_bin_d = "p10"
         def power_ten_bin_event(e):
-            self.power_ten_bin_d = e
+            self.renderer.power_ten_bin_d = e
             self.trigger_render()
         power_ten_bin = self.dropdown_select("Snap Bin Size", power_ten_bin_event, "tooltip_snap_bin_size",
+                                            self.renderer.power_ten_bin_d,
                                                 ("To Even Power of Ten", "p10"),
                                                 ("Do not snap", "no")
                                             )
 
-        self.color_d = "Viridis256"
         def color_event(e):
-            self.color_d = e
+            self.renderer.color_d = e
             self.trigger_render()
         color_picker = self.dropdown_select("Color Palette", color_event, "tooltip_color",
+                                                self.renderer.color_d,
                                                 ("Viridis", "Viridis256"),
                                                 ("Plasma", "Plasma256"),
                                                 ("Turbo", "Turbo256"),
                                                 ("Greys", "Greys256"),
                                                   )
 
-        self.multi_mapping_d = "enclosed"
         def multi_mapping_event(e):
-            self.multi_mapping_d = e
+            self.renderer.multi_mapping_d = e
             self.trigger_render()
         multi_mapping = self.dropdown_select("Ambiguous Mapping", multi_mapping_event, "tooltip_multi_mapping",
+                                                self.renderer.multi_mapping_d,
                                                 ("Count read if all mapping loci are within a bin", "enclosed"),
                                                 ("Count read if mapping loci bounding-box overlaps bin", "overlaps"),
                                                 ("Count read if first mapping loci is within a bin", "first"),
@@ -726,15 +730,22 @@ class MainLayout:
                 self.settings.width_policy = "fixed"
             else:
                 self.settings.width_policy = "max"
-        self.stretch = self.dropdown_select("Stretch/Scale", stretch_event, "tooltip_stretch_scale",
+        stretch = self.dropdown_select("Stretch/Scale", stretch_event, "tooltip_stretch_scale",
+                                            self.renderer.stretch_d,
                                                   ("Stretch", "stretch_both"),
                                                   ("Scale", "scale_height"))
 
-        self.mapq_slider, ms_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, start=0, end=MAP_Q_MAX, 
+        def callback(slider):
+            self.render.mapq_min_d, self.render.mapq_max_d = slider.value
+            self.trigger_render()
+        mapq_slider, ms_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, start=0, end=MAP_Q_MAX, 
                                         value=(0, MAP_Q_MAX), step=1,
                                        title="Mapping Quality Bounds", sizing_mode="stretch_width",
-                                       on_change=lambda x, y, z: self.trigger_render())
+                                       on_change=callback)
 
+        def callback(slider):
+            self.render.mapq_min_d, self.render.mapq_max_d = slider.value
+            self.trigger_render()
         self.interactions_bounds_slider, ibs_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0, end=100, 
                                                   value=0, step=1,
                                                  title="Minimum Interactions", 
@@ -923,15 +934,15 @@ class MainLayout:
                                  height=DROPDOWN_HEIGHT)
         def grid_seq_event(e):
             # @todo 
-            self.normalization_d = "column"
+            self.renderer.normalization_d = "column"
             self.trigger_render()
         grid_seq_config.on_click(grid_seq_event)
         radicl_seq_config = Button(label="Radicl Seq-like", sizing_mode="stretch_width", 
                                    css_classes=["other_button", "tooltip", "tooltip_radicl_seq"],
                                    height=DROPDOWN_HEIGHT)
         def radicl_seq_event(e):
-            self.normalization_d = "radicl-seq" # @todo also update menu
-            self.betw_group_d = "max"
+            self.renderer.normalization_d = "radicl-seq" # @todo also update menu
+            self.renderer.betw_group_d = "max"
             self.trigger_render()
         radicl_seq_config.on_click(radicl_seq_event)
 
@@ -961,9 +972,9 @@ class MainLayout:
             return r
 
         with open("smoother/VERSION", "r") as in_file:
-            self.smoother_version = in_file.readlines()[0][:-1]
+            self.renderer.smoother_version = in_file.readlines()[0][:-1]
 
-        version_info = Div(text="Smoother "+ self.smoother_version +"<br>LibSps Version: " + bin.libSps.VERSION)
+        version_info = Div(text="Smoother "+ self.renderer.smoother_version +"<br>LibSps Version: " + bin.libSps.VERSION)
 
         self.color_mapper = LinearColorMapper(palette=["black"], low=0, high=1)
         color_figure = figure(tools='', height=0)
@@ -994,7 +1005,7 @@ class MainLayout:
                 make_panel("Interface", "tooltip_interface", [nb_l,
                                     show_hide, mmbs_l,
                                     ufs_l, rs_l, aas_l, ass_l, rss1_l, rss2_l,
-                                    self.stretch, square_bins, power_ten_bin, color_picker, self.overlay_dataset_id]),
+                                    stretch, square_bins, power_ten_bin, color_picker, overlay_dataset_id]),
                 make_panel("Filters", "tooltip_filters", [ms_l, self.symmetrie, dds_l, 
                                           displayed_annos_layout, filtered_annos_x_layout,
                                           filtered_annos_y_layout,
@@ -1026,29 +1037,32 @@ class MainLayout:
         
 
         FigureMaker._hidable_plots.append((_settings_n_info, ["tools"]))
-        self.settings = row([Spacer(sizing_mode="stretch_both"), _settings_n_info, FigureMaker.reshow_settings()], css_classes=["full_height"])
+        #Spacer(sizing_mode="stretch_both"),
+        self.settings = row([ _settings_n_info, FigureMaker.reshow_settings()], css_classes=["full_height"])
         self.settings.height = 100
         self.settings.min_height = 100
         self.settings.height_policy = "fixed"
         self.settings.width = SETTINGS_WIDTH
+        self.settings.min_width = SETTINGS_WIDTH
         self.settings.width_policy = "fixed"
+
 
         grid_layout = [
             [self.heatmap_y_axis, self.anno_x,   self.raw_x,
-                self.ratio_x,      None,              self.heatmap,   self.settings],
+                self.ratio_x,      None,              self.heatmap, None,   self.settings],
             [None,              self.anno_x_axis, self.raw_x_axis,
-                self.ratio_x_axis, None,              None,               None],
+                self.ratio_x_axis, None,              None,              None,  None],
             [None,              None,             None,            None,
-                self.ratio_y_axis, self.ratio_y,       None],
+                self.ratio_y_axis, self.ratio_y,       None, None],
             [None,              None,             None,            None,
-                self.raw_y_axis,   self.raw_y,         None],
+                self.raw_y_axis,   self.raw_y,         None, None],
             [None,              None,             None,            None,
-                self.anno_y_axis,  self.anno_y,        None],
+                self.anno_y_axis,  self.anno_y,        None, None],
             [None,              None,             None,            None,
-                None,            self.heatmap_x_axis, None],
+                None,            self.heatmap_x_axis, None, None],
         ]
 
-        self.root = grid(grid_layout) # , sizing_mode="stretch_both"
+        self.root = grid(grid_layout)
         FigureMaker().update_visibility()
 
     # overlap of the given areas relative to the larger area
@@ -1083,7 +1097,7 @@ class MainLayout:
         if anno_coords is None:
             coords = self.meta.chr_sizes.bin_cols_or_rows(h_bin, area[base_idx], area[base_idx+2], none_for_chr_border, 
                                                             chr_filter, is_canceld=lambda: self.cancel_render)
-            if self.normalization_d == "hi-c":
+            if self.renderer.normalization_d == "hi-c":
                 # move start of first bin to start of genome
                 coords[0][1 if none_for_chr_border else 0][1] += coords[0][1 if none_for_chr_border else 0][0]
                 coords[0][1 if none_for_chr_border else 0][0] = 0
@@ -1158,10 +1172,10 @@ class MainLayout:
         return ret, a, b, ret_2, a_2, b_2, ret_3, a_3, b_3
 
     def adjust_bin_pos_for_symmetrie(self, x, y, w, h):
-        if self.symmetrie_d == "botToTop":
+        if self.renderer.symmetrie_d == "botToTop":
             if x >= y:
                 return y, x, h, w
-        if self.symmetrie_d == "topToBot":
+        if self.renderer.symmetrie_d == "topToBot":
             if y >= x:
                 return y, x, h, w
         return x, y, w, h
@@ -1171,7 +1185,7 @@ class MainLayout:
         self.render_step_log(name + "_ini")
         bins = []
         min_ = self.interactions_bounds_slider.value
-        map_q_value = self.mapq_slider.value
+        map_q_value = (self.renderer.mapq_min_d, self.renderer.mapq_max_d)
         manhatten_dist = 1000 * self.diag_dist_slider.value / self.meta.dividend
         bins_to_search = []
         self.render_step_log(name + "_pre")
@@ -1186,7 +1200,7 @@ class MainLayout:
         self.render_step_log(name + "_main")
         ns = []
         for idx in sorted(list(self.meta.datasets.keys())):
-            ns.append(self.idx.count_multiple(idx, bins_to_search, self.multi_mapping_d))
+            ns.append(self.idx.count_multiple(idx, bins_to_search, self.renderer.multi_mapping_d))
         self.render_step_log(name + "_post")
         for idx in sorted(list(self.meta.datasets.keys())):
             bins.append([])
@@ -1217,11 +1231,11 @@ class MainLayout:
                 val = self.idx.count(idx, 0, self.meta.chr_sizes.chr_start_pos["end"], 0, 
                                      self.meta.chr_sizes.chr_start_pos["end"], *self.mapq_slider.value)
                 n.append(val)
-        if self.in_group_d == "min":
+        if self.renderer.in_group_d == "min":
             n = min(n)
-        elif self.in_group_d == "sum":
+        elif self.renderer.in_group_d == "sum":
             n = sum(n)
-        elif self.in_group_d == "dif":
+        elif self.renderer.in_group_d == "dif":
             n = sum(abs(x-y) for x in n for y in n)
         else:
             raise RuntimeError("Unknown in group value")
@@ -1274,7 +1288,7 @@ class MainLayout:
 
 
     def norm_ddd(self, bins_l, bin_coords):
-        if self.ddd_d == "no":
+        if self.renderer.ddd_d == "no":
             return bins_l
         ret = []
         for bins in bins_l:
@@ -1284,10 +1298,10 @@ class MainLayout:
         return ret
 
     def norm_bins(self, w_bin, bins_l, cols, rows):
-        if self.normalization_d == "dont":
+        if self.renderer.normalization_d == "dont":
             return bins_l
         ret = []
-        if self.normalization_d in ["tracks_abs", "tracks_rel"]:
+        if self.renderer.normalization_d in ["tracks_abs", "tracks_rel"]:
             raw_x_norm = self.linear_bins_norm(rows, True)
             if self.cancel_render:
                 return
@@ -1296,27 +1310,27 @@ class MainLayout:
             if self.cancel_render:
                 return
             raw_y_norm = raw_y_norm[0]
-        if self.normalization_d in ["column"]:
+        if self.renderer.normalization_d in ["column"]:
             ns = self.col_norm(cols)
-        if self.normalization_d in ["row", "radicl-seq"]:
+        if self.renderer.normalization_d in ["row", "radicl-seq"]:
             ns = self.row_norm(rows)
         if self.cancel_render:
             return
         for idx, bins in enumerate(bins_l):
-            if self.normalization_d == "max_bin_visible":
+            if self.renderer.normalization_d == "max_bin_visible":
                 n = max(max(bins), 1)
                 ret.append([x/n for x in bins])
-            elif self.normalization_d == "rpm":
+            elif self.renderer.normalization_d == "rpm":
                 n = self.read_norm(idx)
                 ret.append([1000000 * x/n for x in bins])
-            elif self.normalization_d == "rpk":
+            elif self.renderer.normalization_d == "rpk":
                 n = self.read_norm(idx)
                 ret.append([1000 * x/n for x in bins])
-            elif self.normalization_d == "column":
+            elif self.renderer.normalization_d == "column":
                 ret.append([x / max(ns[idx][idx_2 // len(rows)], 1) for idx_2, x in enumerate(bins)])
-            elif self.normalization_d == "row":
+            elif self.renderer.normalization_d == "row":
                 ret.append([x / max(ns[idx][idx_2 % len(rows)], 1) for idx_2, x in enumerate(bins)])
-            elif self.normalization_d == "radicl-seq":
+            elif self.renderer.normalization_d == "radicl-seq":
                 ret.append([0]*(len(rows)*len(cols)))
                 for idx_2 in range(len(rows)):
                     row = bins[idx_2::len(rows)]
@@ -1324,7 +1338,7 @@ class MainLayout:
                                                    self.meta.chr_sizes.chr_start_pos["end"],
                                                    self.radical_seq_accept.value)):
                         ret[-1][idx_2 + idx_3 * len(rows)] = v
-            elif self.normalization_d in ["tracks_abs", "tracks_rel"]:
+            elif self.renderer.normalization_d in ["tracks_abs", "tracks_rel"]:
                 n = self.read_norm(idx)
 
                 def get_norm(i):
@@ -1333,7 +1347,7 @@ class MainLayout:
                         return 0
                     return (self.norm_num_reads(True) * self.norm_num_reads(False)) / d
                 ret.append([x*get_norm(idx_2) for idx_2, x in enumerate(bins)])
-                if self.normalization_d == "tracks_rel":
+                if self.renderer.normalization_d == "tracks_rel":
                     _max = max(*ret[-1], 0)
                     if _max > 0:
                         for i in range(len(ret[-1])):
@@ -1341,7 +1355,7 @@ class MainLayout:
                 else:
                     for i in range(len(ret[-1])):
                         ret[-1][i] = min(ret[-1][i], 1)
-            elif self.normalization_d == "hi-c":
+            elif self.renderer.normalization_d == "hi-c":
                 ret.append(self.hi_c_normalization(bins, rows, cols))
             else:
                 raise RuntimeError("Unknown normalization value")
@@ -1365,13 +1379,13 @@ class MainLayout:
                 a.append(bins[idx_2][idx])
             for idx_2 in group_b:
                 b.append(bins[idx_2][idx])
-            if self.in_group_d == "min":
+            if self.renderer.in_group_d == "min":
                 aa = min(a) if len(a) > 0 else 0
                 bb = min(b) if len(b) > 0 else 0
-            elif self.in_group_d == "sum":
+            elif self.renderer.in_group_d == "sum":
                 aa = sum(a)
                 bb = sum(b)
-            elif self.in_group_d == "dif":
+            elif self.renderer.in_group_d == "dif":
                 aa = sum(abs(x-y) for x in a for y in a)
                 bb = sum(abs(x-y) for x in b for y in b)
             else:
@@ -1385,11 +1399,11 @@ class MainLayout:
         for x in bins:
             if x is None:
                 ret.append(x)
-            elif self.in_group_d == "min":
+            elif self.renderer.in_group_d == "min":
                 ret.append(min(x))
-            elif self.in_group_d == "sum":
+            elif self.renderer.in_group_d == "sum":
                 ret.append(sum(x))
-            elif self.in_group_d == "dif":
+            elif self.renderer.in_group_d == "dif":
                 ret.append(sum(abs(a-b) for a in x for b in x))
         return ret
 
@@ -1407,19 +1421,19 @@ class MainLayout:
         ret = []
         for x, y in zip(*bins):
             c = 0
-            if self.betw_group_d == "1st":
+            if self.renderer.betw_group_d == "1st":
                 c = x
-            elif self.betw_group_d == "2nd":
+            elif self.renderer.betw_group_d == "2nd":
                 c = y
-            elif self.betw_group_d == "sub":
+            elif self.renderer.betw_group_d == "sub":
                 c = (x - y)
-            elif self.betw_group_d == "min":
+            elif self.renderer.betw_group_d == "min":
                 c = min(x, y)
-            elif self.betw_group_d == "max":
+            elif self.renderer.betw_group_d == "max":
                 c = max(x, y)
-            elif self.betw_group_d == "dif":
+            elif self.renderer.betw_group_d == "dif":
                 c = abs(x - y)
-            elif self.betw_group_d == "sum":
+            elif self.renderer.betw_group_d == "sum":
                 c = (x + y) / 2
             else:
                 raise RuntimeError("Unknown between group value")
@@ -1427,13 +1441,13 @@ class MainLayout:
         return ret
 
     def color(self, x):
-        if self.color_d == "Viridis256":
+        if self.renderer.color_d == "Viridis256":
             return Viridis256[x]
-        if self.color_d == "Plasma256":
+        if self.renderer.color_d == "Plasma256":
             return Plasma256[x]
-        if self.color_d == "Turbo256":
+        if self.renderer.color_d == "Turbo256":
             return Turbo256[x]
-        if self.color_d == "Greys256":
+        if self.renderer.color_d == "Greys256":
             return Greys256[x]
         return Viridis256[x]
 
@@ -1445,7 +1459,7 @@ class MainLayout:
         #color_range_slider
 
     def color_bins_c(self, c):
-        if self.betw_group_d == "sub":
+        if self.renderer.betw_group_d == "sub":
             c = self.log_scale(abs(c)) * (1 if c >= 0 else -1) / 2 + 0.5
             c = self.color_range(c) 
         else:
@@ -1474,16 +1488,16 @@ class MainLayout:
         return ret
 
     def bin_symmentry(self, h_bin, bins, bin_coords, bin_cols, bin_rows):
-        if self.symmetrie_d == "all":
+        if self.renderer.symmetrie_d == "all":
             return bins
-        elif self.symmetrie_d == "sym" or self.symmetrie_d == "asym":
+        elif self.renderer.symmetrie_d == "sym" or self.renderer.symmetrie_d == "asym":
             bins_2 = self.make_bins([(y, x, h, w) for x, y, w, h in bin_coords], name="make_bins_symmetrie")
             if self.cancel_render:
                 return
             norms = self.norm_bins(h_bin, bins_2, bin_rows, bin_cols)
             if self.cancel_render:
                 return
-            if self.symmetrie_d == "sym":
+            if self.renderer.symmetrie_d == "sym":
                 return [[min(a, b) for a, b in zip(bin, norm)] for bin, norm in zip(bins, norms)]
             else:
                 return [[max(a-b, 0) for a, b in zip(bin, norm)] for bin, norm in zip(bins, norms)]
@@ -1565,7 +1579,7 @@ class MainLayout:
                 self.curdoc.add_next_tick_callback(callback)
 
                 def power_of_ten(x):
-                    if self.power_ten_bin_d == "no":
+                    if self.renderer.power_ten_bin_d == "no":
                         return math.ceil(x)
                     n = 0
                     while True:
@@ -1576,12 +1590,12 @@ class MainLayout:
                 def comp_bin_size():
                     t = self.min_max_bin_size.value
                     return max(1, math.ceil((1 + t % 9) * 10**(t // 9)) // self.meta.dividend)
-                if self.square_bins_d == "view":
+                if self.renderer.square_bins_d == "view":
                     h_bin = power_of_ten( (area[2] - area[0]) / math.sqrt(self.num_bins.value * 1000) )
                     h_bin = max(h_bin, comp_bin_size(), 1)
                     w_bin = power_of_ten( (area[3] - area[1]) / math.sqrt(self.num_bins.value * 1000) )
                     w_bin = max(w_bin, comp_bin_size(), 1)
-                elif self.square_bins_d == "coord":
+                elif self.renderer.square_bins_d == "coord":
                     area_bin = (area[2] - area[0]) * (area[3] - area[1]) / (self.num_bins.value * 1000)
                     h_bin = power_of_ten(math.sqrt(area_bin))
                     h_bin = max(h_bin, comp_bin_size(), 1)
@@ -1625,7 +1639,7 @@ class MainLayout:
                     return
                 c = self.color_bins(sym)
                 b_col = self.color((MAP_Q_MAX-1) //
-                                2) if self.betw_group_d == "sub" else self.color(0)
+                                2) if self.renderer.betw_group_d == "sub" else self.color(0)
                 purged, purged_coords, purged_coords_2, purged_sym, purged_flat_a, purged_flat_b = \
                     self.purge(b_col, c, bin_coords_3, bin_coords_2,
                             self.color_bins_a(sym), *flat)
@@ -1679,8 +1693,8 @@ class MainLayout:
                     
                 self.render_step_log("render_overlays")
                 d_overlay = {"b": [], "l": [], "t": [], "r": []}
-                if self.overlay_dataset_id.value >= 0:
-                    for grid_pos, blf, trb in self.idx.get_overlay_grid(self.overlay_dataset_id.value):
+                if self.renderer.overlay_dataset_id_d >= 0:
+                    for grid_pos, blf, trb in self.idx.get_overlay_grid(self.renderer.overlay_dataset_id_d):
                         if grid_pos[2] != 0:
                             continue
                         if grid_pos[3] != 0:
@@ -1866,7 +1880,7 @@ class MainLayout:
                 @gen.coroutine
                 def callback():
                     self.curdoc.hold()
-                    if self.betw_group_d == "sub":
+                    if self.renderer.betw_group_d == "sub":
                         palette = [xxx/50 - 1 for xxx in range(100)]
                     else:
                         palette = [xxx/100 for xxx in range(100)]
