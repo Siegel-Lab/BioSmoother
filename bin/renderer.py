@@ -32,11 +32,11 @@ class Renderer:
         self.num_bins_d = 50 # in thousands
         self.radical_seq_accept_d = 0.05
         self.meta_file_d = "smoother_out/"
-        self.group_a = None
-        self.group_b = None
+        self.group_a_d = None
+        self.group_b_d = None
         self.displayed_annos_d = None
-        self.filtered_annos_x = None
-        self.filtered_annos_y = None
+        self.filtered_annos_x_d = None
+        self.filtered_annos_y_d = None
         self.min_bin_size_d = 9*2 # @todo convert to actual size
         self.norm_x_d = None
         self.norm_y_d = None
@@ -51,3 +51,17 @@ class Renderer:
         self.show_hide_on = {"grid_lines": False, "contig_borders": True, "indent_line": False,
                              "ratio": False, "raw": True, "annotation": True, "axis": True, "tools": True}
         self.overlay_dataset_id_d = -1
+
+    def setup(self):
+        self.group_a_d = []
+        self.group_b_d = []
+        self.displayed_annos_d = []
+        self.filtered_annos_x_d = []
+        self.filtered_annos_y_d = []
+        self.norm_x_d = []
+        self.norm_y_d = []
+        #self.x_coords_d = []
+        #self.y_coords_d = []
+        self.chrom_x_d = []
+        self.chrom_y_d = []
+        #self.do_export = []

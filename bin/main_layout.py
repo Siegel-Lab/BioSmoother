@@ -335,11 +335,15 @@ class MainLayout:
         set_menu(default_val, [*options])
         return ret
 
-    def multi_choice(self, label):
+    def multi_choice(self, label, default, on_change=None, options=[]):
         div = Div(text=label)
         #div.margin = DIV_MARGIN
-        choice = MultiChoice(value=[], options=[])
-        choice.on_change("value", lambda x, y, z: self.trigger_render())
+        choice = MultiChoice(value=default, options=options)
+        if on_change is None:
+            on_change=lambda c: self.trigger_render()
+        def callback(x, y, z):
+            on_change(choice)
+        choice.on_change("value", callback)
 
         clear_button = Button(label="none", css_classes=["other_button"], width=50, sizing_mode="fixed")
         def clear_event(e):
@@ -354,7 +358,7 @@ class MainLayout:
             div, clear_button, all_button
         ], sizing_mode="stretch_width"), choice], sizing_mode="stretch_width")
 
-        return choice, layout
+        return layout
 
     def make_slider_spinner(self, title="", value=1, start=0, end=10, step=None, width=200, 
                             on_change=lambda s: None, spinner_width=80, sizing_mode="stretch_width"):
@@ -368,7 +372,7 @@ class MainLayout:
         slider.on_change("value_throttled", callback)
         spinner.on_change("value_throttled", callback)
 
-        return slider, row([slider, spinner], width=width)
+        return row([slider, spinner], width=width)
 
     def make_range_slider_spinner(self, title="", value=(1, 2), start=0, end=10, step=None, width=200, 
                             on_change=lambda s: None, spinner_width=80, sizing_mode="stretch_width"):
@@ -388,7 +392,7 @@ class MainLayout:
         spinner_end.on_change("value_throttled", callback)
         spinner_start.on_change("value_throttled", callback)
 
-        return slider, row([slider, spinner_start, spinner_end], width=width)
+        return row([slider, spinner_start, spinner_end], width=width)
 
 
     def __init__(self, renderer = Renderer()):
@@ -404,6 +408,7 @@ class MainLayout:
         self.idx_norm = None
         self.render_logger = Logger()
         self.renderer = renderer
+        self.renderer.setup()
 
         global SETTINGS_WIDTH
         tollbars = []
@@ -736,102 +741,153 @@ class MainLayout:
                                                   ("Scale", "scale_height"))
 
         def callback(slider):
-            self.render.mapq_min_d, self.render.mapq_max_d = slider.value
+            self.renderer.mapq_min_d, self.v.mapq_max_d = slider.value
             self.trigger_render()
-        mapq_slider, ms_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, start=0, end=MAP_Q_MAX, 
-                                        value=(0, MAP_Q_MAX), step=1,
+        ms_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, start=0, end=MAP_Q_MAX, 
+                                        value=(self.renderer.mapq_min_d, self.renderer.mapq_max_d), step=1,
                                        title="Mapping Quality Bounds", sizing_mode="stretch_width",
                                        on_change=callback)
 
         def callback(slider):
-            self.render.mapq_min_d, self.render.mapq_max_d = slider.value
+            self.renderer.interactions_min_d = slider.value
             self.trigger_render()
-        self.interactions_bounds_slider, ibs_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0, end=100, 
-                                                  value=0, step=1,
+        ibs_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0, end=100, 
+                                                  value=self.renderer.interactions_min_d, step=1,
                                                  title="Minimum Interactions", 
-                                                 on_change=lambda x, y, z: self.trigger_render(), sizing_mode="stretch_width")
-        
+                                                 on_change=callback, sizing_mode="stretch_width")
 
-        self.color_range_slider, crs_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, start=0, end=1, value=(0, 1), 
-                                                step=0.01,
-                                                 title="Color Scale Range", sizing_mode="stretch_width",
-                                                 on_change=lambda x, y, z: self.trigger_render())
+        def callback(slider):
+            self.renderer.color_range_start_d, self.renderer.color_range_end_d = slider.value
+            self.trigger_render()
+        crs_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, start=0, end=1, 
+                                            value=(self.renderer.color_range_start_d, self.renderer.color_range_end_d), 
+                                            step=0.01,
+                                            title="Color Scale Range", sizing_mode="stretch_width",
+                                            on_change=callback)
 
-        self.interactions_slider, is_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=-50, end=50, value=10, step=0.1,
+        def callback(slider):
+            self.renderer.interactions_slider_d = slider.value
+            self.trigger_render()
+        is_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=-50, end=50, 
+                                        value=self.renderer.interactions_slider_d, step=0.1,
                                           title="Color Scale Log Base", 
-                                          on_change=lambda x, y, z: self.trigger_render(),
+                                          on_change=callback,
                                           sizing_mode="stretch_width")  # , format="0[.]000")
 
-        self.update_frequency_slider, ufs_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0.1, end=3, value=0.5, 
+        def callback(slider):
+            self.renderer.update_frequency_slider_d = slider.value
+            self.trigger_render()
+        ufs_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0.1, end=3, 
+                                         value=self.renderer.update_frequency_slider_d, 
                                                step=0.1,
                                               title="Update Frequency [seconds]" #, format="0[.]000"
                                               , sizing_mode="stretch_width")
 
-        self.redraw_slider, rs_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0, end=100, value=90, step=1,
-                                    on_change=lambda x, y, z: self.trigger_render(),
+        def callback(slider):
+            self.renderer.redraw_slider_d = slider.value
+            self.trigger_render()
+        rs_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0, end=100, 
+                                    value=self.renderer.redraw_slider_d, step=1,
+                                    on_change=callback,
                                     title="Redraw if zoomed in by [%]", sizing_mode="stretch_width")
 
-        self.add_area_slider, aas_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0, end=500, value=20, step=10,
-                                      on_change=lambda x, y, z: self.trigger_render(),
+        def callback(slider):
+            self.renderer.add_area_slider_d = slider.value
+            self.trigger_render()
+        aas_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0, end=500, 
+                                      value=self.renderer.add_area_slider_d, step=10,
+                                      on_change=callback,
                                       title="Additional Draw Area [%]", sizing_mode="stretch_width")
 
-        self.diag_dist_slider, dds_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0, end=1000,
+        def callback(slider):
+            self.renderer.diag_dist_slider_d = slider.value
+            self.trigger_render()
+        dds_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0, end=1000,
                                        value=0, step=1,
-                                       on_change=lambda x, y, z: self.trigger_render(),
+                                       on_change=callback,
                                        title="Minimum Distance from Diagonal (kbp)", sizing_mode="stretch_width")
 
-        def anno_size_slider_event(attr, old, new):
-            self.anno_x.width = self.anno_size_slider.value
-            self.anno_x_axis.width = self.anno_size_slider.value
-            self.anno_y.height = self.anno_size_slider.value
-            self.anno_y_axis.height = self.anno_size_slider.value
-        self.anno_size_slider, ass_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=10, end=500, 
-                                       value=DEFAULT_SIZE,   step=1,
+        def anno_size_slider_event(slider):
+            self.renderer.anno_size_slide_d = slider.value
+            self.anno_x.width = slider.value
+            self.anno_x_axis.width = slider.value
+            self.anno_y.height = slider.value
+            self.anno_y_axis.height = slider.value
+        ass_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=10, end=500, 
+                                       value=self.renderer.anno_size_slide_d, step=1,
                                        title=ANNOTATION_PLOT_NAME + " Plot Size", sizing_mode="stretch_width",
                                        on_change=anno_size_slider_event)
 
-        def ratio_size_slider_event(attr, old, new):
-            self.ratio_x.width = self.ratio_size_slider.value
-            self.ratio_x_axis.width = self.ratio_size_slider.value
-            self.ratio_y.height = self.ratio_size_slider.value
-            self.ratio_y_axis.height = self.ratio_size_slider.value
-        self.ratio_size_slider, rss1_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=10, end=500, 
-                                        value=DEFAULT_SIZE, step=1,
+        def ratio_size_slider_event(slider):
+            self.renderer.ratio_size_slider_d = slider.value
+            self.ratio_x.width = slider.value
+            self.ratio_x_axis.width = slider.value
+            self.ratio_y.height = slider.value
+            self.ratio_y_axis.height = slider.value
+        rss1_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=10, end=500, 
+                                        value=self.renderer.ratio_size_slider_d, step=1,
                                         title=RATIO_PLOT_NAME + " Plot Size", sizing_mode="stretch_width",
                                         on_change=ratio_size_slider_event)
 
-        def raw_size_slider_event(attr, old, new):
-            self.raw_x.width = self.raw_size_slider.value
-            self.raw_x_axis.width = self.raw_size_slider.value
-            self.raw_y.height = self.raw_size_slider.value
-            self.raw_y_axis.height = self.raw_size_slider.value
-        self.raw_size_slider, rss2_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=10, end=500, 
-                                      value=DEFAULT_SIZE, step=1,
+        def raw_size_slider_event(slider):
+            self.renderer.raw_size_slider_d = slider.value
+            self.raw_x.width = slider.value
+            self.raw_x_axis.width = slider.value
+            self.raw_y.height = slider.value
+            self.raw_y_axis.height = slider.value
+        rss2_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=10, end=500, 
+                                      value=self.renderer.raw_size_slider_d, step=1,
                                       title=RAW_PLOT_NAME + " Plot Size", sizing_mode="stretch_width",
                                       on_change=raw_size_slider_event)
 
-        self.num_bins, nb_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=10, end=1000, value=50, step=10,
-                               on_change=lambda x, y, z: self.trigger_render(),
+        def callback(slider):
+            self.renderer.num_bins_d = slider.value
+            self.trigger_render()
+        nb_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=10, end=1000, 
+                               value=self.renderer.num_bins_d, step=10,
+                               on_change=callback,
                                title="Max number of Bins (in thousands)", sizing_mode="stretch_width")
 
-            
-        self.radical_seq_accept, rsa_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0.01, end=0.1, value=0.05, step=0.01,
+        def callback(slider):
+            self.renderer.radical_seq_accept_d = slider.value
+            self.trigger_render()
+        rsa_l = self.make_slider_spinner(width=SETTINGS_WIDTH, start=0.01, end=0.1, 
+                               value=self.renderer.radical_seq_accept_d, step=0.01,
                                title="pAccept for binominal test", sizing_mode="stretch_width",
-                               on_change=lambda x, y, z: self.trigger_render())
+                               on_change=callback)
             
         meta_file_label = Div(text="Data path:")
         meta_file_label.margin = DIV_MARGIN
         self.meta_file = TextInput(value="smoother_out/")
         self.meta_file.on_change("value", lambda x, y, z: self.setup())
 
-        self.group_a, group_a_layout = self.multi_choice("Group A")
-        self.group_b, group_b_layout = self.multi_choice("Group B")
-        
+        def callback(choice):
+            self.renderer.group_a_d = choice.value
+            self.trigger_render()
+        group_a_layout = self.multi_choice("Group A", self.renderer.group_a_d, callback)
 
-        self.displayed_annos, displayed_annos_layout = self.multi_choice("Displayed Annotations:")
+        def callback(choice):
+            self.renderer.group_b_d = choice.value
+            self.trigger_render()
+        group_b_layout = self.multi_choice("Group B", self.renderer.group_b_d, callback)
+
+        def callback(choice):
+            self.renderer.displayed_annos_d = choice.value
+            self.trigger_render()
+        displayed_annos_layout = self.multi_choice("Displayed Annotations:", 
+                                                    self.renderer.displayed_annos_d, callback)
         
-        self.filtered_annos_x, filtered_annos_x_layout = self.multi_choice("Filter rows that overlap with:")
-        self.filtered_annos_y, filtered_annos_y_layout = self.multi_choice("Filter columns that overlap with:")
+        def callback(choice):
+            self.renderer.filtered_annos_x_d = choice.value
+            self.trigger_render()
+        filtered_annos_x_layout = self.multi_choice("Filter rows that overlap with:", 
+                                                    self.renderer.filtered_annos_x_d, callback)
+        
+        def callback(choice):
+            self.renderer.filtered_annos_y_d = choice.value
+            self.trigger_render()
+        filtered_annos_y_layout = self.multi_choice("Filter columns that overlap with:",
+                                                    self.renderer.filtered_annos_y_d, callback)
 
         power_tick = FuncTickFormatter(
             code="""
@@ -843,8 +899,10 @@ class MainLayout:
                 return Math.ceil((1 + tick % 9) * Math.pow(10, Math.floor(tick / 9))) + "bp"; """)
         self.min_max_bin_size = Slider(start=0, end=9*15, value=9*2, step=1, title="Minimum Bin Size",
                                             format=power_tick, sizing_mode="stretch_width")
-        self.min_max_bin_size.on_change(
-            "value_throttled", lambda x, y, z: self.trigger_render())
+        def callback(_a, _b, _c):
+            self.renderer.min_bin_size_d = self.min_max_bin_size.value
+            self.trigger_render()
+        self.min_max_bin_size.on_change("value_throttled", callback)
 
         def callback(a):
             self.min_max_bin_size.value = \
@@ -868,66 +926,73 @@ class MainLayout:
         self.info_field.min_height = 100
         self.info_field.height_policy = "fixed"
 
-        self.norm_x, norm_x_layout = self.multi_choice("Normalization Rows:")
-        self.norm_y, norm_y_layout = self.multi_choice("Normalization Columns:")
+        def callback(choice):
+            self.renderer.norm_x_d = choice.value
+            self.trigger_render()
+        norm_x_layout = self.multi_choice("Normalization Rows:", self.renderer.norm_x_d, callback)
+    
+        def callback(choice):
+            self.renderer.norm_y_d = choice.value
+            self.trigger_render()
+        norm_y_layout = self.multi_choice("Normalization Columns:", self.renderer.norm_y_d, callback)
 
         def x_coords_event(e):
-            FigureMaker.x_coords_d = e
+            self.renderer.x_coords_d = e
             self.setup_coordinates()
             self.trigger_render()
-        x_coords, self.x_coords_update = self.dropdown_select_h("Column Coordinates", x_coords_event,
-                                                                 "tooltip_row_coordinates")
+        x_coords = self.dropdown_select("Column Coordinates", x_coords_event,
+                                                                 "tooltip_row_coordinates", self.renderer.x_coords_d)
 
         def y_coords_event(e):
-            FigureMaker.y_coords_d = e
+            self.renderer.y_coords_d = e
             self.setup_coordinates()
             self.trigger_render()
-        y_coords, self.y_coords_update = self.dropdown_select_h("Row Coordinates", y_coords_event,
-                                                                 "tooltip_column_coordinates")
+        y_coords = self.dropdown_select("Row Coordinates", y_coords_event,
+                                                                 "tooltip_column_coordinates", self.renderer.y_coords_d)
 
-        
-        self.chrom_x, chrom_x_layout = self.multi_choice("Row Chromosomes")
-        self.chrom_y, chrom_y_layout = self.multi_choice("Column Chromosomes")
+        def callback(choice):
+            self.renderer.chrom_x_d = choice.value
+            self.trigger_render()
+        chrom_x_layout = self.multi_choice("Row Chromosomes", self.renderer.chrom_x_d, callback)
 
-        self.multiple_anno_per_bin_d = "combine"
+        def callback(choice):
+            self.renderer.chrom_y_d = choice.value
+            self.trigger_render()
+        chrom_y_layout = self.multi_choice("Column Chromosomes", self.renderer.chrom_y_d, callback)
+
         def multiple_anno_per_bin_event(e):
-            self.multiple_anno_per_bin_d = e
+            self.renderer.multiple_anno_per_bin_d = e
             self.trigger_render()
         multiple_anno_per_bin = self.dropdown_select("Multiple Annotations in Bin", multiple_anno_per_bin_event, 
-                "tooltip_multiple_annotations_in_bin", 
+                "tooltip_multiple_annotations_in_bin", self.renderer.multiple_anno_per_bin_d,
                 ("Combine region from first to last annotation", "combine"), 
                 ("Use first annotation", "first"), 
                 ("Use Random annotation", "random"), 
                 ("Increase number of bins to match number of annotations (might be slow)", "force_separate"))
 
-        self.do_export = None
         def export_event(e):
-            self.do_export = e
+            self.renderer.do_export = e
             self.trigger_render()
-        self.export_button = self.dropdown_select("Export", export_event, "tooltip_export",
+        self.export_button = self.dropdown_select("Export", export_event, "tooltip_export", self.renderer.do_export,
                                                   ("Current View", "current"),
                                                   ("Full Matrix", "full"))
 
         export_label = Div(text="Output Prefix:")
         export_label.margin = DIV_MARGIN
-        self.export_file = TextInput(value="export")
+        export_file = TextInput(value=self.renderer.export_file_d)
+        def callback(_x, _y, _z):
+            self.renderer.export_file_d = export_file.value
+        export_file.on_change("value", callback)
         
-        self.export_sele, export_sele_layout = self.multi_choice("Export Selection")
-        self.export_sele.options = [
-            ("heatmap", "Heatmap"),
-            ("col_sum", "Column Sum"),
-            ("row_sum", "Row Sum"),
-            ("anno", "Include Annotation")
-        ]
-        self.export_sele.value = ["heatmap"]
-    
-        self.export_type, export_type_layout = self.multi_choice("Export Type")
-        self.export_type.options = [
-            ("data", "Data"),
-            #("svg", "SVG-Picture"), # cannot find non buggy selenium version
-            #("png", "PNG-Picture")
-        ]
-        self.export_type.value = ["data"]
+        def callback(choice):
+            self.renderer.export_sele_d = choice.value
+        export_sele_layout = self.multi_choice("Export Selection", self.renderer.export_sele_d,
+                                                                 callback,
+                                                                 [ ("heatmap", "Heatmap"),
+                                                                    ("col_sum", "Column Sum"),
+                                                                    ("row_sum", "Row Sum"),
+                                                                    ("anno", "Include Annotation")]
+                                                    )
         
         grid_seq_config = Button(label="Grid Seq-like @todo", sizing_mode="stretch_width", 
                                  css_classes=["other_button", "tooltip", "tooltip_grid_seq"],
@@ -1011,9 +1076,8 @@ class MainLayout:
                                           filtered_annos_y_layout,
                                           x_coords, y_coords, multiple_anno_per_bin, chrom_x_layout, chrom_y_layout,
                                           multi_mapping]),
-                make_panel("Export", "tooltip_export", [export_label, self.export_file, export_sele_layout,
-                                        #export_type_layout, 
-                                      self.export_button]),
+                make_panel("Export", "tooltip_export", [export_label, export_file, export_sele_layout, 
+                                                        self.export_button]),
                 make_panel("Quick Config", "tooltip_quick_config", [grid_seq_config, radicl_seq_config]),
                 make_panel("Info", "tooltip_info", [version_info]),
             ],
@@ -1113,7 +1177,7 @@ class MainLayout:
                                                                         self.meta.chr_sizes.chr_starts,
                                                                          area[base_idx], area[base_idx+2], 
                                                                          none_for_chr_border, chr_filter,
-                                                                         self.multiple_anno_per_bin_d, is_canceld=lambda: self.cancel_render)
+                                                                         self.renderer.multiple_anno_per_bin_d, is_canceld=lambda: self.cancel_render)
             if self.cancel_render:
                 return
         for pos_1, pos_2, pos_3 in zip(*coords):
@@ -1134,19 +1198,21 @@ class MainLayout:
 
     def bin_cols(self, area, h_bin, none_for_chr_border=False, filter_l=None):
         if filter_l is None:
-            filter_l = self.filtered_annos_y.value
+            filter_l = self.renderer.filtered_annos_y_d
         anno_coords = None
-        if FigureMaker.x_coords_d != "full_genome":
-            anno_coords = FigureMaker.x_coords_d
-        return self.bin_cols_or_rows(area, h_bin, 0, none_for_chr_border, filter_l, self.chrom_x.value, anno_coords)
+        if self.renderer.x_coords_d != "full_genome":
+            anno_coords = self.renderer.x_coords_d
+        return self.bin_cols_or_rows(area, h_bin, 0, none_for_chr_border, filter_l, self.renderer.chrom_x_d, 
+                                    anno_coords)
 
     def bin_rows(self, area, h_bin, none_for_chr_border=False, filter_l=None):
         if filter_l is None:
-            filter_l = self.filtered_annos_x.value
+            filter_l = self.renderer.filtered_annos_x_d
         anno_coords = None
         if FigureMaker.y_coords_d != "full_genome":
             anno_coords = FigureMaker.y_coords_d
-        return self.bin_cols_or_rows(area, h_bin, 1, none_for_chr_border, filter_l, self.chrom_y.value, anno_coords)
+        return self.bin_cols_or_rows(area, h_bin, 1, none_for_chr_border, filter_l, self.renderer.chrom_y_d, 
+                                    anno_coords)
 
     def bin_coords(self, area, h_bin, w_bin):
         self.render_step_log("bin_coords")
@@ -1184,9 +1250,9 @@ class MainLayout:
         #self.render_step_log(name)
         self.render_step_log(name + "_ini")
         bins = []
-        min_ = self.interactions_bounds_slider.value
+        min_ = self.renderer.interactions_min_d
         map_q_value = (self.renderer.mapq_min_d, self.renderer.mapq_max_d)
-        manhatten_dist = 1000 * self.diag_dist_slider.value / self.meta.dividend
+        manhatten_dist = 1000 *  self.renderer.diag_dist_slider_d / self.meta.dividend
         bins_to_search = []
         self.render_step_log(name + "_pre")
         for x, y, w, h in bin_coords:
@@ -1227,9 +1293,10 @@ class MainLayout:
     def read_norm(self, idx):
         n = []
         for idx, dataset in sorted(list(self.meta.datasets.items())):
-            if str(idx) in (self.group_a.value if idx == 0 else self.group_b.value):
+            if str(idx) in (self.renderer.group_a_d if idx == 0 else self.renderer.group_b_d):
                 val = self.idx.count(idx, 0, self.meta.chr_sizes.chr_start_pos["end"], 0, 
-                                     self.meta.chr_sizes.chr_start_pos["end"], *self.mapq_slider.value)
+                                     self.meta.chr_sizes.chr_start_pos["end"], self.renderer.mapq_min_d, 
+                                     self.renderer.mapq_max_d)
                 n.append(val)
         if self.renderer.in_group_d == "min":
             n = min(n)
@@ -1242,13 +1309,14 @@ class MainLayout:
         return n
 
     def norm_num_reads(self, rows):
-        if len((self.norm_x.value if rows else self.norm_y.value)) == 0:
+        if len((self.renderer.norm_x_d if rows else self.renderer.norm_y_d)) == 0:
             return 1
         return self.flatten_norm([
-            [self.idx_norm.count(int(idx), 0, self.meta.chr_sizes.chr_start_pos["end"], *self.mapq_slider.value) \
+            [self.idx_norm.count(int(idx), 0, self.meta.chr_sizes.chr_start_pos["end"], self.renderer.mapq_min_d, 
+                self.renderer.mapq_max_d) \
                 if self.meta.norm_via_tree(int(idx)) \
                 else self.meta.norm[int(idx)].count(0, self.meta.chr_sizes.chr_start_pos["end"]) \
-                for idx in (self.norm_x.value if rows else self.norm_y.value)]])[0]
+                for idx in (self.renderer.norm_x_d if rows else self.renderer.norm_y_d)]])[0]
 
     def hi_c_normalization(self, bins, cols, rows):
         # max 50 iterations
@@ -1336,7 +1404,7 @@ class MainLayout:
                     row = bins[idx_2::len(rows)]
                     for idx_3, v in enumerate(radicl_seq_norm(row, ns[idx][idx_2], w_bin, 
                                                    self.meta.chr_sizes.chr_start_pos["end"],
-                                                   self.radical_seq_accept.value)):
+                                                   self.renderer.radical_seq_accept_d)):
                         ret[-1][idx_2 + idx_3 * len(rows)] = v
             elif self.renderer.normalization_d in ["tracks_abs", "tracks_rel"]:
                 n = self.read_norm(idx)
@@ -1366,9 +1434,9 @@ class MainLayout:
         group_a = []
         group_b = []
         for idx_2 in range(len(bins)):
-            if str(idx_2) in self.group_a.value:
+            if str(idx_2) in self.renderer.group_a_d:
                 group_a.append(idx_2)
-            if str(idx_2) in self.group_b.value:
+            if str(idx_2) in self.renderer.group_b_d:
                 group_b.append(idx_2)
         ret = [[], []]
         for idx, _ in enumerate(bins[0]):
@@ -1411,9 +1479,9 @@ class MainLayout:
     # copy paste into https://www.desmos.com/calculator/auubsajefh
     # y=\frac{\log\left(2^{a}\cdot\left(x\cdot\left(1-\frac{1}{2^{a}}\right)+\frac{1}{2^{a}}\right)\right)}{\log\left(2^{a}\right)}
     def log_scale(self, c):
-        if self.interactions_slider.value == 0:
+        if self.renderer.interactions_slider_d == 0:
             return c
-        a = 2**self.interactions_slider.value
+        a = 2**self.renderer.interactions_slider_d
         c = math.log(  a*( min(1,c)*( 1 - (1/a) ) + (1/a) )  ) / math.log(a)
         return c
 
@@ -1452,11 +1520,11 @@ class MainLayout:
         return Viridis256[x]
 
     def color_range(self, c):
-        if self.color_range_slider.value[1] == self.color_range_slider.value[0]:
+        if self.renderer.color_range_end_d == self.renderer.color_range_start_d:
             return 0
-        c = (c - self.color_range_slider.value[0]) / (self.color_range_slider.value[1] - self.color_range_slider.value[0])
+        c = (c - self.renderer.color_range_start_d) / \
+            (self.renderer.color_range_end_d - self.renderer.color_range_start_d)
         return max(0, min(MAP_Q_MAX-1, int((MAP_Q_MAX-1)*c)))
-        #color_range_slider
 
     def color_bins_c(self, c):
         if self.renderer.betw_group_d == "sub":
@@ -1509,7 +1577,7 @@ class MainLayout:
 
     def linear_bins_norm(self, bins, rows):
         vals = []
-        idxs = (self.norm_x.value if rows else self.norm_y.value)
+        idxs = (self.renderer.norm_x_d if rows else self.renderer.norm_y_d)
         for x in bins:
             vals.append([])
             if len(idxs) == 0:
@@ -1521,7 +1589,8 @@ class MainLayout:
                         vals[-1].append(float('NaN'))
                     else:
                         if self.meta.norm_via_tree(int(idx)):
-                            vals[-1].append(self.idx_norm.count(int(idx), x[0], x[0] + x[1], *self.mapq_slider.value))
+                            vals[-1].append(self.idx_norm.count(int(idx), x[0], x[0] + x[1], self.renderer.mapq_min_d, 
+                                                                self.renderer.mapq_max_d))
                         else:
                             vals[-1].append(self.meta.norm[int(idx)].count(x[0], x[0] + x[1]))
                     if self.cancel_render:
@@ -1547,8 +1616,8 @@ class MainLayout:
 
     def make_anno_str(self, s, e):
         anno_str = ""
-        if "anno" in self.export_sele.value:
-            for anno in self.displayed_annos.value:
+        if "anno" in self.renderer.export_sele_d:
+            for anno in self.renderer.displayed_annos_d:
                 c = self.meta.annotations[anno].count(s, e)
                 if c > 0 and c <= 10:
                     if len(anno_str) > 0:
@@ -1571,7 +1640,7 @@ class MainLayout:
                         self.curr_bin_size.text = "Waiting for Fileinput."
                     self.curdoc.add_next_tick_callback(callback)
                     self.curdoc.add_timeout_callback(
-                        lambda: self.render_callback(), self.update_frequency_slider.value*1000)
+                        lambda: self.render_callback(), self.renderer.update_frequency_slider_d*1000)
                     return False
                     
                 def callback():
@@ -1588,15 +1657,15 @@ class MainLayout:
                                 return i*10**n
                         n += 1
                 def comp_bin_size():
-                    t = self.min_max_bin_size.value
+                    t = self.renderer.min_bin_size_d
                     return max(1, math.ceil((1 + t % 9) * 10**(t // 9)) // self.meta.dividend)
                 if self.renderer.square_bins_d == "view":
-                    h_bin = power_of_ten( (area[2] - area[0]) / math.sqrt(self.num_bins.value * 1000) )
+                    h_bin = power_of_ten( (area[2] - area[0]) / math.sqrt(self.renderer.num_bins_d * 1000) )
                     h_bin = max(h_bin, comp_bin_size(), 1)
-                    w_bin = power_of_ten( (area[3] - area[1]) / math.sqrt(self.num_bins.value * 1000) )
+                    w_bin = power_of_ten( (area[3] - area[1]) / math.sqrt(self.renderer.num_bins_d * 1000) )
                     w_bin = max(w_bin, comp_bin_size(), 1)
                 elif self.renderer.square_bins_d == "coord":
-                    area_bin = (area[2] - area[0]) * (area[3] - area[1]) / (self.num_bins.value * 1000)
+                    area_bin = (area[2] - area[0]) * (area[3] - area[1]) / (self.renderer.num_bins_d * 1000)
                     h_bin = power_of_ten(math.sqrt(area_bin))
                     h_bin = max(h_bin, comp_bin_size(), 1)
                     w_bin = h_bin
@@ -1605,7 +1674,7 @@ class MainLayout:
 
                 if self.last_h_w_bin == (h_bin, w_bin) and zoom_in_render:
                     self.curdoc.add_timeout_callback(
-                        lambda: self.render_callback(), self.update_frequency_slider.value*1000)
+                        lambda: self.render_callback(), self.renderer.update_frequency_slider_d*1000)
                     return True
                 self.last_h_w_bin = (h_bin, w_bin)
                 self.last_drawing_area = area
@@ -1615,7 +1684,7 @@ class MainLayout:
                 area[2] += w_bin - (area[2] % w_bin) # align to nice and even number
                 area[3] += h_bin - (area[3] % h_bin) # align to nice and even number
 
-                if self.do_export == "full":
+                if self.renderer.do_export == "full":
                     area[0] = 0
                     area[1] = 0
                     area[2] = self.meta.chr_sizes.chr_start_pos["end"]
@@ -1771,10 +1840,10 @@ class MainLayout:
                 
                 ls_x = []
                 if len(x_ys) > 0:
-                    ls_x = [self.meta.normalizations[int(idx)][0] for idx in self.norm_x.value]
+                    ls_x = [self.meta.normalizations[int(idx)][0] for idx in self.renderer.norm_x_d]
                 ls_y = []
                 if len(y_ys) > 0:
-                    ls_y = [self.meta.normalizations[int(idx)][0] for idx in self.norm_y.value]
+                    ls_y = [self.meta.normalizations[int(idx)][0] for idx in self.renderer.norm_y_d]
 
                 raw_data_x = {
                     "xs": [x_pos for _ in range(x_num_raw)],
@@ -1825,7 +1894,7 @@ class MainLayout:
                     if self.cancel_render:
                         return
                     bin_rows_unfiltr, bin_rows_2_unfiltr, bin_rows_3_unfiltr = xx
-                    for idx, anno in enumerate(self.displayed_annos.value):
+                    for idx, anno in enumerate(self.renderer.displayed_annos_d):
                         for rb_2, (s, e), x in zip(bin_rows_2_unfiltr, bin_rows_3_unfiltr,
                                                 self.annotation_bins(bin_rows_unfiltr, self.meta.annotations[anno])):
                             if x > 0:
@@ -1858,7 +1927,7 @@ class MainLayout:
                     if self.cancel_render:
                         return
                     bin_cols_unfiltr, bin_cols_2_unfiltr, bin_cols_3_unfiltr = xx
-                    for idx, anno in enumerate(self.displayed_annos.value):
+                    for idx, anno in enumerate(self.renderer.displayed_annos_d):
                         for rb_2, (s, e), x in zip(bin_cols_2_unfiltr, bin_cols_3_unfiltr,
                                                 self.annotation_bins(bin_cols_unfiltr, self.meta.annotations[anno])):
                             if x > 0:
@@ -1899,13 +1968,13 @@ class MainLayout:
                             if not x is None and x < m:
                                 m = x
                         return m
-                    if self.do_export is None:
-                        if len(self.displayed_annos.value) == 0:
+                    if self.renderer.do_export is None:
+                        if len(self.renderer.displayed_annos_d) == 0:
                             self.anno_x.x_range.factors = [""]
                             self.anno_y.y_range.factors = [""]
                         else:
-                            self.anno_x.x_range.factors = self.displayed_annos.value
-                            self.anno_y.y_range.factors = self.displayed_annos.value
+                            self.anno_x.x_range.factors = self.renderer.displayed_annos_d
+                            self.anno_y.y_range.factors = self.renderer.displayed_annos_d
 
                     def readable_display(l):
                         l = l * self.meta.dividend
@@ -1922,7 +1991,7 @@ class MainLayout:
                                             " x " + readable_display(h_bin) + "."
 
 
-                    if self.do_export is None:
+                    if self.renderer.do_export is None:
                         self.raw_x_axis.xaxis.bounds = (mmin(*raw_x_heat, *raw_x_norm_combined), 
                                                         mmax(*raw_x_heat, *raw_x_norm_combined))
                         self.ratio_x_axis.xaxis.bounds = (0, mmax(*raw_x_ratio))
@@ -1945,8 +2014,8 @@ class MainLayout:
                         set_bounds(self.raw_y, bottom=mmin(*raw_y_heat, *raw_y_norm_combined),
                                     top=mmax(*raw_y_heat, *raw_y_norm_combined))
                         set_bounds(self.ratio_y, bottom=0, top=mmax(*raw_y_ratio))
-                        set_bounds(self.anno_x, left=0, right=len(self.displayed_annos.value))
-                        set_bounds(self.anno_y, bottom=0, top=len(self.displayed_annos.value))
+                        set_bounds(self.anno_x, left=0, right=len(self.renderer.displayed_annos_d))
+                        set_bounds(self.anno_y, bottom=0, top=len(self.renderer.displayed_annos_d))
 
                         set_bounds(self.heatmap, color=b_col)
 
@@ -1958,16 +2027,16 @@ class MainLayout:
                         self.anno_x_data.data = d_anno_x
                         self.anno_y_data.data = d_anno_y
                         self.overlay_data.data = d_overlay
-                    self.do_export = None
+                    self.renderer.do_export = None
                     self.curdoc.unhold()
                     total_time, ram_usage = self.render_done(len(bins[0]))
                     self.curr_bin_size.text = end_text + "<br>Took " + str(total_time) + " in total.<br>" + str(ram_usage) + "% RAM used.<br> " + str(len(bins[0])//1000) + "k bins rendered."
                     self.curdoc.add_timeout_callback(
-                        lambda: self.render_callback(), self.update_frequency_slider.value*1000)
+                        lambda: self.render_callback(), self.renderer.update_frequency_slider_d*1000)
 
-                if not self.do_export is None:
+                if not self.renderer.do_export is None:
                     if "data" in self.export_type.value:
-                        if "heatmap" in self.export_sele.value:
+                        if "heatmap" in self.renderer.export_sele_d:
                             with open(self.export_file.value + ".heatmap.bed", "w") as out_file:
                                 out_file.write("##Smoother Version:" + self.smoother_version +"\n##LibSps Version: " + bin.libSps.VERSION + "\n")
                                 out_file.write("##Bin width:" + str(h_bin* self.meta.dividend) + " Bin height:" +
@@ -1980,12 +2049,12 @@ class MainLayout:
                                                             str(c), 
                                                             self.make_anno_str(x, x+w), 
                                                             self.make_anno_str(y, y+h)]) + "\n")
-                        if "col_sum" in self.export_sele.value:
+                        if "col_sum" in self.renderer.export_sele_d:
                             with open(self.export_file.value + ".columns.bed", "w") as out_file:
                                 for c, x_chr_, x_2_, x_ in zip(raw_y_ratio, y_chr, y_pos1, y_pos):
                                     if not x_ is float('NaN'):
                                         out_file.write("\t".join([x_chr_, str(int(x_2_) * self.meta.dividend), str(c)]) + "\n")
-                        if "row_sum" in self.export_sele.value:
+                        if "row_sum" in self.renderer.export_sele_d:
                             with open(self.export_file.value + ".rows.bed", "w") as out_file:
                                 for c, x_chr_, x_2_, x_ in zip(raw_x_ratio, x_chr, x_pos1, x_pos):
                                     if not x_ is float('NaN'):
@@ -2009,7 +2078,7 @@ class MainLayout:
         yield executor.submit(unlocked_task)
 
     def setup_coordinates(self):
-        self.meta.setup_coordinates(self, FigureMaker.x_coords_d,  FigureMaker.y_coords_d)
+        self.meta.setup_coordinates(self, self.renderer.x_coords_d, FigureMaker.y_coords_d)
         FigureMaker().update_visibility()
 
     def setup(self):
@@ -2054,7 +2123,7 @@ class MainLayout:
                 w = curr_area[2] - curr_area[0]
                 h = curr_area[3] - curr_area[1]
                 curr_area_size = w*h
-                min_change = 1-self.redraw_slider.value/100
+                min_change = 1-self.renderer.redraw_slider_d/100
                 zoom_in_render = False
                 # print(overlap)
                 if curr_area_size / self.curr_area_size < min_change or self.force_render or \
@@ -2070,7 +2139,7 @@ class MainLayout:
                         self.new_render("program start")
                     self.force_render = False
                     self.curr_area_size = curr_area_size
-                    x = self.add_area_slider.value/100
+                    x = self.renderer.add_area_slider_d/100
                     new_area = [curr_area[0] - w*x, curr_area[1] - h*x,
                                 curr_area[2] + w*x, curr_area[3] + h*x]
 
@@ -2080,7 +2149,7 @@ class MainLayout:
                     return
 
             self.curdoc.add_timeout_callback(
-                lambda: self.render_callback(), self.update_frequency_slider.value*1000)
+                lambda: self.render_callback(), self.renderer.update_frequency_slider_d*1000)
 
     def set_root(self):
         self.curdoc.clear()

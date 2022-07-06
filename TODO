@@ -12,3 +12,5 @@
 
 - does radicl sec do normalization for rna?
 - uneven distribution between contigs in grid seq normalization
+- RNA label on y axis
+- autodetect number of columns in input data and adjust
