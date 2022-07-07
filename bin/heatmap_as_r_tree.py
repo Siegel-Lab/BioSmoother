@@ -9,8 +9,8 @@ H = 0.5
 MAP_Q_MAX = 255
 
 
-WITH_DEPENDENT_DIM = True
-UNIFORM_OVERLAYS = False
+WITH_DEPENDENT_DIM = False
+UNIFORM_OVERLAYS = True
 
 INT_TYPES = {
     "enclosed": IntersectionType.enclosed,
