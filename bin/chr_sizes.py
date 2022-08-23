@@ -150,8 +150,9 @@ class ChrSizes:
 
 
     def setup(self, main_layout):
-        main_layout.chrom_x.options = self.chr_order
-        main_layout.chrom_y.options = self.chr_order
+        #main_layout.chrom_x.options = self.chr_order
+        #main_layout.chrom_y.options = self.chr_order
+        pass
 
 
     def bin_cols_or_rows(self, h_bin, start=0, end=None, none_for_chr_border=False, chr_filter=[], 

@@ -148,7 +148,8 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test
     touch(out_prefix + ".smoother_index/repl.prefix_sums")
 
 
-def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_groups=False, without_dep_dim=True, keep_points=False):
+def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_groups=False, without_dep_dim=True,
+                  keep_points=False, only_points=False):
     meta = MetaData.load(out_prefix + ".smoother_index/meta")
     index = make_sps_index(out_prefix + ".smoother_index/repl", 3, False, True, 
                             2, "Cached" if cached else "Disk", True )
@@ -161,15 +162,18 @@ def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_
         act_pos_2_s = meta.chr_sizes.coordinate(pos_1_s // meta.dividend, chr_1)
         act_pos_2_e = meta.chr_sizes.coordinate(pos_1_e // meta.dividend, chr_1)
         index.add_point([act_pos_1_s, act_pos_2_s, 255-map_q], [act_pos_1_e, act_pos_2_e, 255-map_q], read_name)
-    print("generating index")
-    idx = index.generate(last_cnt, len(index))
-    print("done generating index")
-    meta.add_dataset(name, path, group_a, idx)
-    meta.save(out_prefix + ".smoother_index/meta")
-    if not keep_points:
-        del index
-        os.remove(out_prefix + ".smoother_index/repl.points")
-        os.remove(out_prefix + ".smoother_index/repl.desc")
+    if not only_points:
+        print("generating index")
+        idx = index.generate(last_cnt, len(index))
+        print("done generating index")
+        meta.add_dataset(name, path, group_a, idx)
+        meta.save(out_prefix + ".smoother_index/meta")
+        if not keep_points:
+            del index
+            os.remove(out_prefix + ".smoother_index/repl.points")
+            os.remove(out_prefix + ".smoother_index/repl.desc")
+    else:
+        print("Points are added to the indices:", last_cnt, "to", len(index))
 
 def add_normalization(out_prefix, path, name, for_row, test=False, cached=False, keep_points=False):
     meta = MetaData.load(out_prefix + ".smoother_index/meta")
@@ -208,7 +212,7 @@ def init(args):
 def repl(args):
     print("LibSps Version:", VERSION)
     add_replicate(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached, args.no_groups,
-                  args.without_dep_dim, args.keep_points)
+                  args.without_dep_dim, args.keep_points, args.only_points)
 
 def norm(args):
     print("LibSps Version:", VERSION)
@@ -257,6 +261,7 @@ def get_argparse():
     parser.add_argument('-v', "--verbosity", help="@todo make this do sth", default=1)
     parser.add_argument('--without_dep_dim', help=argparse.SUPPRESS, action='store_true')
     parser.add_argument('--keep_points', help=argparse.SUPPRESS, action='store_true')
+    parser.add_argument('--only_points', help=argparse.SUPPRESS, action='store_true')
 
     sub_parsers = parser.add_subparsers(help='Sub-command that shall be executed.', dest="cmd")
     sub_parsers.required=True

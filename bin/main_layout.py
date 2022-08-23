@@ -15,6 +15,7 @@ from bokeh.models import Panel, Tabs, Spacer, Slope, PreText, CustomJS, FixedTic
 from bokeh.models import Range1d, ColorBar, LinearColorMapper
 from bin.meta_data import *
 import os
+import sys
 from bin.heatmap_as_r_tree import *
 from bokeh.palettes import Viridis256, Colorblind, Plasma256, Turbo256, Greys256
 from datetime import datetime, timedelta
@@ -1033,6 +1034,10 @@ class MainLayout:
         self.settings.width = SETTINGS_WIDTH
         self.settings.width_policy = "fixed"
 
+        quit_ti = TextInput(value="keepalive", name="quit_ti", visible=False)
+        quit_ti.on_change("value", lambda x, y, z: sys.exit())
+
+
         grid_layout = [
             [self.heatmap_y_axis, self.anno_x,   self.raw_x,
                 self.ratio_x,      None,              self.heatmap,   self.settings],
@@ -1044,9 +1049,10 @@ class MainLayout:
                 self.raw_y_axis,   self.raw_y,         None],
             [None,              None,             None,            None,
                 self.anno_y_axis,  self.anno_y,        None],
-            [None,              None,             None,            None,
+            [quit_ti,       None,             None,            None,
                 None,            self.heatmap_x_axis, None],
         ]
+
 
         self.root = grid(grid_layout) # , sizing_mode="stretch_both"
         FigureMaker().update_visibility()

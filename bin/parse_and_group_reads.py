@@ -2,7 +2,7 @@
 PRINT_MODULO = 10000
 import subprocess
 
-TEST_FAC = 800000
+TEST_FAC = 80000000
 
 def simplified_filepath(path):
     if "/" in path:
