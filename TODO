@@ -6,13 +6,19 @@
     - when calling give folder where indices are located
     - restrict for public hosting
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
-- move normalization into c++?
 - mouse based ruler 
     - https://stackoverflow.com/questions/37965669/how-do-i-link-the-crosshairtool-in-bokeh-over-several-plots/54691899#54691899
 - cannot change order of multichoice...
+    - https://github.com/Choices-js/Choices#configuration-options 
+    - can i switch of the sorting?
 - input format for heatmap has unnecessary columns / does not match juicer
+- "minimap" background
 
 # verification
 
 - does radicl sec do normalization for rna?
 - uneven distribution between contigs in grid seq normalization
+
+# ====== CURRENTLY =====
+sortable multi choice
+fiddeleing with conda environment
