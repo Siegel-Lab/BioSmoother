@@ -39,6 +39,7 @@ BTN_MARGIN = (3, 3, 3, 3)
 
 executor = ThreadPoolExecutor(max_workers=1)
 
+Colorblind2 = tuple(Colorblind[8][idx] for idx in [0,1,5,3,4,2,6,7])
 
 class FigureMaker:
     _show_hide = {"grid_lines": False, "contig_borders": True, "indent_line": False}
@@ -1775,7 +1776,7 @@ class MainLayout:
                     "pos2": [x_pos2 for _ in range(x_num_raw)],
                     "ys": [double_up(raw_x_heat), double_up(raw_x_norm_combined)] + x_ys,
                     "ls": ["heatmap row sum", "combined"] + ls_x,
-                    "cs": [Colorblind[8][idx % 8] for idx in range(x_num_raw)],
+                    "cs": [Colorblind2[idx % 8] for idx in range(x_num_raw)],
                 }
                 raw_data_y = {
                     "xs": [y_pos for _ in range(y_num_raw)],
@@ -1784,7 +1785,7 @@ class MainLayout:
                     "pos2": [y_pos2 for _ in range(y_num_raw)],
                     "ys": [double_up(raw_y_heat), double_up(raw_y_norm_combined)] + y_ys,
                     "ls": ["heatmap col sum", "combined"] + ls_y,
-                    "cs": [Colorblind[8][idx % 8] for idx in range(y_num_raw)],
+                    "cs": [Colorblind2[idx % 8] for idx in range(y_num_raw)],
                 }
                 ratio_data_x = {
                     "pos": x_pos,
@@ -1828,7 +1829,7 @@ class MainLayout:
                                 d_anno_x["x"].append(anno)
                                 d_anno_x["s"].append(s)
                                 d_anno_x["e"].append(s + e)
-                                d_anno_x["c"].append(Colorblind[8][idx % 8])
+                                d_anno_x["c"].append(Colorblind2[idx % 8])
                                 if x > 10:
                                     d_anno_x["info"].append("n/a")
                                 else:
@@ -1861,7 +1862,7 @@ class MainLayout:
                                 d_anno_y["x"].append(anno)
                                 d_anno_y["s"].append(s)
                                 d_anno_y["e"].append(s + e)
-                                d_anno_y["c"].append(Colorblind[8][idx % 8])
+                                d_anno_y["c"].append(Colorblind2[idx % 8])
                                 if x > 10:
                                     d_anno_y["info"].append("n/a")
                                 else:

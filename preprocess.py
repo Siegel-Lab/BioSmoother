@@ -161,7 +161,7 @@ def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_
         act_pos_1_e = meta.chr_sizes.coordinate(pos_2_e // meta.dividend, chr_2)
         act_pos_2_s = meta.chr_sizes.coordinate(pos_1_s // meta.dividend, chr_1)
         act_pos_2_e = meta.chr_sizes.coordinate(pos_1_e // meta.dividend, chr_1)
-        index.add_point([act_pos_1_s, act_pos_2_s, 255-map_q], [act_pos_1_e, act_pos_2_e, 255-map_q], read_name)
+        index.add_point([act_pos_1_s, act_pos_2_s, 254-map_q], [act_pos_1_e, act_pos_2_e, 254-map_q], read_name)
     if not only_points:
         print("generating index")
         idx = index.generate(last_cnt, len(index))
@@ -177,7 +177,8 @@ def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_
 
 def add_normalization(out_prefix, path, name, for_row, test=False, cached=False, keep_points=False):
     meta = MetaData.load(out_prefix + ".smoother_index/meta")
-    index = make_sps_index(out_prefix + ".smoother_index/norm", 2, False, False, 1, "Cached" if cached else "Disk", True )
+    index = make_sps_index(out_prefix + ".smoother_index/norm", 2, False, True, 1, 
+                           "Cached" if cached else "Disk", True )
     last_cnt = len(index)
     if path[-4:] == ".wig":
         raise RuntimeError("disabled for now")
@@ -191,7 +192,7 @@ def add_normalization(out_prefix, path, name, for_row, test=False, cached=False,
                 continue
             act_pos_s = meta.chr_sizes.coordinate(int(pos_s) // meta.dividend, chrom)
             act_pos_e = meta.chr_sizes.coordinate(int(pos_e) // meta.dividend, chrom)
-            index.add_point([act_pos_s, 255-map_q], [act_pos_e, 255-map_q], read_name)
+            index.add_point([act_pos_s, 254-map_q], [act_pos_e, 254-map_q], read_name)
             cnt += 1
             if cnt > TEST_FAC and test:
                 break

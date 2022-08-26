@@ -73,7 +73,7 @@ class Tree_4:
 
 class Tree_3:
     def __init__(self, file_name):
-        self.index = make_sps_index(file_name + ".smoother_index/norm", 2, False, False, 1, "PickByFileSize", False )
+        self.index = make_sps_index(file_name + ".smoother_index/norm", 2, False, True, 1, "PickByFileSize", False )
         self.file_name = file_name
         self.root = {}
 

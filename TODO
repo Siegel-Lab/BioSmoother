@@ -7,6 +7,10 @@
     - restrict for public hosting
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
 - move normalization into c++?
+- mouse based ruler 
+    - https://stackoverflow.com/questions/37965669/how-do-i-link-the-crosshairtool-in-bokeh-over-several-plots/54691899#54691899
+- cannot change order of multichoice...
+- input format for heatmap has unnecessary columns / does not match juicer
 
 # verification
 
