@@ -1,6 +1,8 @@
 
 PRINT_MODULO = 10000
 import subprocess
+import errno
+import os
 
 TEST_FAC = 80000000
 
@@ -46,12 +48,12 @@ def group_heatmap(in_filename, file_size, chr_filter, no_groups=False, test=Fals
         
         if idx_2 % PRINT_MODULO == 0:
             print("loading file", file_name, ", line", idx_2+1, "of", file_size, "=", 
-                    round(100*(idx_2+1)/file_size, 2), "%", end="\033[K\r")
+                    round(100*(idx_2+1)/file_size, 2), "%", end="\033[K\r", flush=True)
 
     for idx, (read_name, group) in enumerate(groups.items()):
         if idx % PRINT_MODULO == 0:
             print("grouping ", file_name, ", read", idx+1, "of", len(groups), "=", 
-                    round(100*(idx+1)/len(groups), 2), "%", end="\033[K\r")
+                    round(100*(idx+1)/len(groups), 2), "%", end="\033[K\r", flush=True)
         chr_1 = group[0][0]
         chr_2 = group[0][2]
         do_cont = False
@@ -76,4 +78,6 @@ def group_heatmap(in_filename, file_size, chr_filter, no_groups=False, test=Fals
         yield read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q
 
 def get_filesize(path):
+    if not os.path.exists(path):
+        FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), filename)
     return int(subprocess.run(['wc', '-l', path], stdout=subprocess.PIPE).stdout.decode('utf-8').split(" ")[0])

@@ -5,8 +5,8 @@ __email__ = "Markus.Schmidt@lmu.de"
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner
-from bin.unsorted_multi_choice import UnsortedMultiChoice as MultiChoice
+from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect
+#from bin.unsorted_multi_choice import UnsortedMultiChoice as MultiChoice
 from bokeh.io import export_png, export_svg
 import math
 from datetime import datetime
@@ -337,26 +337,99 @@ class MainLayout:
         set_menu([*options])
         return ret
 
-    def multi_choice(self, label):
+    def multi_choice(self, label, callback):
         div = Div(text=label)
         #div.margin = DIV_MARGIN
-        choice = MultiChoice(value=[], options=[])
-        choice.on_change("value", lambda x, y, z: self.trigger_render())
+        sele_choice = MultiSelect(value=[], options=[])
 
-        clear_button = Button(label="none", css_classes=["other_button"], width=50, sizing_mode="fixed")
+        desele_choice = MultiSelect(value=[], options=[])
+
+        SYM_WIDTH = 20
+        SYM_CSS = ["other_button"]
+
+        clear_button = Button(label="--", css_classes=SYM_CSS, width=SYM_WIDTH, sizing_mode="fixed")
         def clear_event(e):
-            choice.value = []
+            desele_choice.options = desele_choice.options + sele_choice.options
+            sele_choice.options = []
+            callback(sele_choice.options)
         clear_button.on_click(clear_event)
-        all_button = Button(label="all", css_classes=["other_button"], width=50, sizing_mode="fixed")
+
+        all_button = Button(label="++", css_classes=SYM_CSS, width=SYM_WIDTH, sizing_mode="fixed")
         def all_event(e):
-            choice.value = [x for x, _ in choice.options]
+            sele_choice.options = sele_choice.options + desele_choice.options
+            desele_choice.options = []
+            callback(sele_choice.options)
         all_button.on_click(all_event)
 
-        layout = column([row([
-            div, clear_button, all_button
-        ], sizing_mode="stretch_width"), choice], sizing_mode="stretch_width")
+        sele_button = Button(label="+", css_classes=SYM_CSS, width=SYM_WIDTH, sizing_mode="fixed")
+        def sele_event(e):
+            sele_choice.options = sele_choice.options + [(k,v) for k,v in desele_choice.options if k in desele_choice.value]
+            desele_choice.options = [(k,v) for k,v in desele_choice.options if k not in desele_choice.value]
+            callback(sele_choice.options)
+        sele_button.on_click(sele_event)
 
-        return choice, layout
+        desele_button = Button(label="-", css_classes=SYM_CSS, width=SYM_WIDTH, sizing_mode="fixed")
+        def desele_event(e):
+            desele_choice.options = desele_choice.options + [(k,v) for k,v in sele_choice.options if k in sele_choice.value]
+            sele_choice.options = [(k,v) for k,v in sele_choice.options if k not in sele_choice.value]
+            callback(sele_choice.options)
+        desele_button.on_click(desele_event)
+
+        down_button = Button(label="↓", css_classes=SYM_CSS, width=SYM_WIDTH, sizing_mode="fixed")
+        def move_element(opt, ele, up):
+            idx = None
+            for i, (k, v) in enumerate(opt):
+                if k == ele:
+                    idx = i
+                    break
+            if not idx is None:
+                if up and idx > 0:
+                    return opt[:idx-1] + [opt[idx], opt[idx-1]] + opt[idx+1:]
+                elif not up and idx + 1 < len(opt):
+                    return opt[:idx] + [opt[idx+1], opt[idx]] + opt[idx+2:]
+            return opt
+        
+        def move_elements(opt, eles, up):
+            eles_sorted = [k for k,_ in opt if k in eles]
+            for ele in eles_sorted if up else eles_sorted[::-1]:
+                opt = move_element(opt, ele, up)
+            return opt
+
+        def down_event(e):
+            sele_choice.options = move_elements(sele_choice.options, sele_choice.value, False)
+            desele_choice.options = move_elements(desele_choice.options, desele_choice.value, False)
+            callback(sele_choice.options)
+        down_button.on_click(down_event)
+
+        up_button = Button(label="↑", css_classes=SYM_CSS, width=SYM_WIDTH, sizing_mode="fixed")
+        def up_event(e):
+            sele_choice.options = move_elements(sele_choice.options, sele_choice.value, True)
+            desele_choice.options = move_elements(desele_choice.options, desele_choice.value, True)
+            callback(sele_choice.options)
+        up_button.on_click(up_event)
+
+        reset_button = Button(label="🗘", css_classes=SYM_CSS, width=SYM_WIDTH, sizing_mode="fixed")
+        self.reset_sele_options[label] = []
+        self.reset_desele_options[label] = []
+        def reset_event(e):
+            sele_choice.options = self.reset_sele_options[label]
+            sele_choice.value = []
+            desele_choice.options = self.reset_desele_options[label]
+            desele_choice.value = []
+            callback(sele_choice.options)
+        reset_button.on_click(reset_event)
+        def set_options(sele, desele):
+            self.reset_sele_options[label] = sele
+            self.reset_desele_options[label] = desele
+            reset_event(0)
+
+        layout = column([
+                row([ div, all_button, sele_button, desele_button, clear_button, up_button, down_button, reset_button], 
+                    sizing_mode="stretch_width"), 
+                row([ sele_choice, desele_choice ], sizing_mode="stretch_width"),
+            ], sizing_mode="stretch_width")
+
+        return set_options, layout
 
     def make_slider_spinner(self, title="", value=1, start=0, end=10, step=None, width=200, 
                             on_change=lambda _a,_b,_c: None, spinner_width=80, sizing_mode="stretch_width"):
@@ -402,6 +475,8 @@ class MainLayout:
         self.idx_norm = None
         self.render_logger = Logger()
         self.smoother_version = "?"
+        self.reset_sele_options = {}
+        self.reset_desele_options = {}
 
         global SETTINGS_WIDTH
         tollbars = []
@@ -816,14 +891,33 @@ class MainLayout:
         self.meta_file = TextInput(value="smoother_out/")
         self.meta_file.on_change("value", lambda x, y, z: self.setup())
 
-        self.group_a, group_a_layout = self.multi_choice("Group A")
-        self.group_b, group_b_layout = self.multi_choice("Group B")
-        
+        self.group_a = []
+        def group_a_event(sele):
+            self.group_a = sele
+        self.set_group_a, group_a_layout = self.multi_choice("Group A", group_a_event)
 
-        self.displayed_annos, displayed_annos_layout = self.multi_choice("Displayed Annotations:")
+        self.group_b = []
+        def group_b_event(sele):
+            self.group_b = sele
+        self.set_group_b, group_b_layout = self.multi_choice("Group B", group_b_event)
+
+        self.displayed_annos = []
+        def disp_anno_event(sele):
+            self.displayed_annos = sele
+        self.set_displayed_annos, displayed_annos_layout = self.multi_choice("Displayed Annotations:", 
+                                                                disp_anno_event)
         
-        self.filtered_annos_x, filtered_annos_x_layout = self.multi_choice("Filter rows that overlap with:")
-        self.filtered_annos_y, filtered_annos_y_layout = self.multi_choice("Filter columns that overlap with:")
+        self.filtered_annos_x = []
+        def filtered_anno_x_event(sele):
+            self.filtered_annos_x = sele
+        self.set_filtered_annos_x, filtered_annos_x_layout = self.multi_choice("Filter rows that overlap with:", 
+                                                                               filtered_anno_x_event)
+
+        self.filtered_annos_y = []
+        def filtered_anno_y_event(sele):
+            self.filtered_annos_y = sele
+        self.set_filtered_annos_y, filtered_annos_y_layout = self.multi_choice("Filter columns that overlap with:", 
+                                                                                filtered_anno_y_event)
 
         power_tick = FuncTickFormatter(
             code="""
@@ -860,8 +954,15 @@ class MainLayout:
         self.info_field.min_height = 100
         self.info_field.height_policy = "fixed"
 
-        self.norm_x, norm_x_layout = self.multi_choice("Normalization Rows:")
-        self.norm_y, norm_y_layout = self.multi_choice("Normalization Columns:")
+        self.norm_x = []
+        def norm_x_event(sele):
+            self.norm_x = sele
+        self.set_norm_x, norm_x_layout = self.multi_choice("Normalization Rows:", norm_x_event)
+
+        self.norm_y = []
+        def norm_y_event(sele):
+            self.norm_y = sele
+        self.set_norm_y, norm_y_layout = self.multi_choice("Normalization Columns:", norm_y_event)
 
         def x_coords_event(e):
             FigureMaker.x_coords_d = e
@@ -877,9 +978,14 @@ class MainLayout:
         y_coords, self.y_coords_update = self.dropdown_select_h("Row Coordinates", y_coords_event,
                                                                  "tooltip_column_coordinates")
 
-        
-        self.chrom_x, chrom_x_layout = self.multi_choice("Row Chromosomes")
-        self.chrom_y, chrom_y_layout = self.multi_choice("Column Chromosomes")
+        self.chrom_x = []
+        def chrom_x_event(sele):
+            self.chrom_x = sele
+        self.set_chrom_x, chrom_x_layout = self.multi_choice("Row Chromosomes", chrom_x_event)
+        self.chrom_y = []
+        def chrom_y_event(sele):
+            self.chrom_y = sele
+        self.set_chrom_y, chrom_y_layout = self.multi_choice("Column Chromosomes", chrom_y_event)
 
         self.multiple_anno_per_bin_d = "combine"
         def multiple_anno_per_bin_event(e):
@@ -904,22 +1010,25 @@ class MainLayout:
         export_label.margin = DIV_MARGIN
         self.export_file = TextInput(value="export")
         
-        self.export_sele, export_sele_layout = self.multi_choice("Export Selection")
-        self.export_sele.options = [
-            ("heatmap", "Heatmap"),
+        self.export_sele = []
+        def export_sele_event(sele):
+            self.export_sele = sele
+        # @todo @continue_here now pass all the set... multi_choice functions to the appropriate positions
+        set_export_sele, export_sele_layout = self.multi_choice("Export Selection", export_sele_event)
+        set_export_sele([("heatmap", "Heatmap")], [
             ("col_sum", "Column Sum"),
             ("row_sum", "Row Sum"),
             ("anno", "Include Annotation")
-        ]
-        self.export_sele.value = ["heatmap"]
+        ])
     
-        self.export_type, export_type_layout = self.multi_choice("Export Type")
-        self.export_type.options = [
-            ("data", "Data"),
+        self.export_type = []
+        def export_type_event(sele):
+            self.export_type = sele
+        set_export_type, export_type_layout = self.multi_choice("Export Type", export_type_event)
+        set_export_type([("data", "Data")], [
             #("svg", "SVG-Picture"), # cannot find non buggy selenium version
             #("png", "PNG-Picture")
-        ]
-        self.export_type.value = ["data"]
+        ])
         
         grid_seq_config = Button(label="Grid Seq-like @todo", sizing_mode="stretch_width", 
                                  css_classes=["other_button", "tooltip", "tooltip_grid_seq"],

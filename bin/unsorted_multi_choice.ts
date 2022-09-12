@@ -1,5 +1,5 @@
-import Choices from "choices.js"
-import {Choices as ChoicesNS} from "choices.js"
+import Choices from "./choices.js"
+import {Choices as ChoicesNS} from "./choices.js"
 
 import {select} from "core/dom"
 import {isString} from "core/util/types"
