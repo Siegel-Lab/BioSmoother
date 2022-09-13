@@ -136,22 +136,21 @@ class MetaData:
     def setup(self, main_layout):
         self.chr_sizes.setup(main_layout)
         
-        opt = [ (str(idx), data[0]) for idx, data in self.datasets.items()]
-        main_layout.group_a.options = opt
-        main_layout.group_b.options = opt
-        main_layout.group_a.value = [ str(idx) for idx, data in self.datasets.items() if data[2] in ["a", "both"] ]
-        main_layout.group_b.value = [ str(idx) for idx, data in self.datasets.items() if data[2] in ["b", "both"] ]
-        opt = [ (str(idx), data[0]) for idx, data in self.normalizations.items()]
-        main_layout.norm_x.options = opt
-        main_layout.norm_y.options = opt
-        main_layout.norm_x.value = [ str(idx) for idx, data in self.normalizations.items() if data[2] in ["row", "both"] ]
-        main_layout.norm_y.value = [ str(idx) for idx, data in self.normalizations.items() if data[2] in ["col", "both"] ]
+        main_layout.set_group([d[0] for d in self.datasets.values()], {
+            "A": [ data[0] for idx, data in self.datasets.items() if data[2] in ["a", "both"] ],
+            "B": [ data[0] for idx, data in self.datasets.items() if data[2] in ["b", "both"] ],
+        })
 
-        opt = [(x, x) for x in self.annotations.keys()]
-        main_layout.displayed_annos.options = opt
-        main_layout.filtered_annos_x.options = opt
-        main_layout.filtered_annos_y.options = opt
-        main_layout.displayed_annos.value = [x for x in self.annotations.keys()]
+        main_layout.set_norm([d[0] for d in self.normalizations.values()], {
+            "Rows": [ data[0] for idx, data in self.normalizations.items() if data[2] in ["row", "both"] ],
+            "Columns": [ data[0] for idx, data in self.normalizations.items() if data[2] in ["col", "both"] ]
+        })
+
+        main_layout.set_annos(self.annotations.keys(), {
+            "Displayed": self.annotations.keys(),
+            "Row filter": [],
+            "Column filter": []
+        })
 
         possible_coords = [("Genomic loci", "full_genome")]
         for anno_names in self.annotations.keys():

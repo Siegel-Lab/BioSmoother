@@ -5,7 +5,7 @@ __email__ = "Markus.Schmidt@lmu.de"
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect
+from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup
 #from bin.unsorted_multi_choice import UnsortedMultiChoice as MultiChoice
 from bokeh.io import export_png, export_svg
 import math
@@ -337,45 +337,17 @@ class MainLayout:
         set_menu([*options])
         return ret
 
-    def multi_choice(self, label, callback):
+    def multi_choice(self, label, checkboxes, callback, orderable=True):
         div = Div(text=label)
-        #div.margin = DIV_MARGIN
-        sele_choice = MultiSelect(value=[], options=[])
-
-        desele_choice = MultiSelect(value=[], options=[])
-
         SYM_WIDTH = 20
         SYM_CSS = ["other_button"]
 
-        clear_button = Button(label="--", css_classes=SYM_CSS, width=SYM_WIDTH, sizing_mode="fixed")
-        def clear_event(e):
-            desele_choice.options = desele_choice.options + sele_choice.options
-            sele_choice.options = []
-            callback(sele_choice.options)
-        clear_button.on_click(clear_event)
+        col = grid([[]], sizing_mode="stretch_width")
+        col.width_policy = "max"
+        layout = column([div, col], sizing_mode="stretch_width")
 
-        all_button = Button(label="++", css_classes=SYM_CSS, width=SYM_WIDTH, sizing_mode="fixed")
-        def all_event(e):
-            sele_choice.options = sele_choice.options + desele_choice.options
-            desele_choice.options = []
-            callback(sele_choice.options)
-        all_button.on_click(all_event)
-
-        sele_button = Button(label="+", css_classes=SYM_CSS, width=SYM_WIDTH, sizing_mode="fixed")
-        def sele_event(e):
-            sele_choice.options = sele_choice.options + [(k,v) for k,v in desele_choice.options if k in desele_choice.value]
-            desele_choice.options = [(k,v) for k,v in desele_choice.options if k not in desele_choice.value]
-            callback(sele_choice.options)
-        sele_button.on_click(sele_event)
-
-        desele_button = Button(label="-", css_classes=SYM_CSS, width=SYM_WIDTH, sizing_mode="fixed")
-        def desele_event(e):
-            desele_choice.options = desele_choice.options + [(k,v) for k,v in sele_choice.options if k in sele_choice.value]
-            sele_choice.options = [(k,v) for k,v in sele_choice.options if k not in sele_choice.value]
-            callback(sele_choice.options)
-        desele_button.on_click(desele_event)
-
-        down_button = Button(label="↓", css_classes=SYM_CSS, width=SYM_WIDTH, sizing_mode="fixed")
+        self.reset_options[label] = [col, []]
+        
         def move_element(opt, ele, up):
             idx = None
             for i, (k, v) in enumerate(opt):
@@ -388,46 +360,62 @@ class MainLayout:
                 elif not up and idx + 1 < len(opt):
                     return opt[:idx] + [opt[idx+1], opt[idx]] + opt[idx+2:]
             return opt
-        
-        def move_elements(opt, eles, up):
-            eles_sorted = [k for k,_ in opt if k in eles]
-            for ele in eles_sorted if up else eles_sorted[::-1]:
-                opt = move_element(opt, ele, up)
-            return opt
 
-        def down_event(e):
-            sele_choice.options = move_elements(sele_choice.options, sele_choice.value, False)
-            desele_choice.options = move_elements(desele_choice.options, desele_choice.value, False)
-            callback(sele_choice.options)
-        down_button.on_click(down_event)
+        def trigger_callback():
+            cb = {}
+            for n in checkboxes:
+                cb[n] = []
+            for n, opts in self.reset_options[label][1]:
+                for opt in opts:
+                    cb[checkboxes[opt]].append(n)
 
-        up_button = Button(label="↑", css_classes=SYM_CSS, width=SYM_WIDTH, sizing_mode="fixed")
-        def up_event(e):
-            sele_choice.options = move_elements(sele_choice.options, sele_choice.value, True)
-            desele_choice.options = move_elements(desele_choice.options, desele_choice.value, True)
-            callback(sele_choice.options)
-        up_button.on_click(up_event)
+            callback(cb)
 
-        reset_button = Button(label="🗘", css_classes=SYM_CSS, width=SYM_WIDTH, sizing_mode="fixed")
-        self.reset_sele_options[label] = []
-        self.reset_desele_options[label] = []
         def reset_event(e):
-            sele_choice.options = self.reset_sele_options[label]
-            sele_choice.value = []
-            desele_choice.options = self.reset_desele_options[label]
-            desele_choice.value = []
-            callback(sele_choice.options)
-        reset_button.on_click(reset_event)
-        def set_options(sele, desele):
-            self.reset_sele_options[label] = sele
-            self.reset_desele_options[label] = desele
-            reset_event(0)
+            l = []
+            l.append((Div(text="<br>".join(checkboxes), css_classes=["vertical"]), 0, 3))
+            for idx, (n, opts) in enumerate(self.reset_options[label][1]):
+                if orderable:
+                    down_button = Button(label="↓", css_classes=SYM_CSS, width=SYM_WIDTH, 
+                                        height=SYM_WIDTH, sizing_mode="fixed", tags=[n])
+                    def down_event(n):
+                        self.reset_options[label][1] = move_element(self.reset_options[label][1], n, False)
+                        reset_event(0)
+                    down_button.on_click(lambda _, n=n: down_event(n))
 
-        layout = column([
-                row([ div, all_button, sele_button, desele_button, clear_button, up_button, down_button, reset_button], 
-                    sizing_mode="stretch_width"), 
-                row([ sele_choice, desele_choice ], sizing_mode="stretch_width"),
-            ], sizing_mode="stretch_width")
+                    up_button = Button(label="↑", css_classes=SYM_CSS, width=SYM_WIDTH, 
+                                        height=SYM_WIDTH, sizing_mode="fixed", tags=[n])
+                    def up_event(n):
+                        self.reset_options[label][1] = move_element(self.reset_options[label][1], n, True)
+                        reset_event(0)
+                    up_button.on_click(lambda _, n=n: up_event(n))
+
+                div = Div(text=n, sizing_mode="stretch_width")
+                div.width_policy = "max"
+                cg = CheckboxGroup(labels=[""]*len(checkboxes), active=opts, inline=True)
+                def on_change(idx, cg):
+                    self.reset_options[label][1][idx][1] = cg.active
+                    trigger_callback()
+                cg.on_change("active", lambda _1,_2,_3,idx=idx,cg=cg: on_change(idx,cg))
+
+                if orderable:
+                    l.append((up_button, idx + 1, 0))
+                    l.append((down_button, idx + 1, 1))
+                l.append((div, idx + 1, 2))
+                l.append((cg, idx + 1, 3))
+
+            self.reset_options[label][0].children = l
+
+            trigger_callback()
+
+        def set_options(labels, active_dict):
+            self.reset_options[label][1] = []
+            for jdx, n in enumerate(labels):
+                self.reset_options[label][1].append([n, []])
+                for idx, cb in enumerate(checkboxes):
+                    if n in active_dict[cb]:
+                        self.reset_options[label][1][jdx][1].append(idx)
+            reset_event(0)
 
         return set_options, layout
 
@@ -475,8 +463,7 @@ class MainLayout:
         self.idx_norm = None
         self.render_logger = Logger()
         self.smoother_version = "?"
-        self.reset_sele_options = {}
-        self.reset_desele_options = {}
+        self.reset_options = {}
 
         global SETTINGS_WIDTH
         tollbars = []
@@ -892,32 +879,24 @@ class MainLayout:
         self.meta_file.on_change("value", lambda x, y, z: self.setup())
 
         self.group_a = []
-        def group_a_event(sele):
-            self.group_a = sele
-        self.set_group_a, group_a_layout = self.multi_choice("Group A", group_a_event)
-
         self.group_b = []
-        def group_b_event(sele):
-            self.group_b = sele
-        self.set_group_b, group_b_layout = self.multi_choice("Group B", group_b_event)
+        def group_event(sele):
+            self.group_a = sele["A"]
+            self.group_b = sele["B"]
+            self.trigger_render()
+        self.set_group, group_layout = self.multi_choice("Group", ["A", "B"], group_event, False)
 
         self.displayed_annos = []
-        def disp_anno_event(sele):
-            self.displayed_annos = sele
-        self.set_displayed_annos, displayed_annos_layout = self.multi_choice("Displayed Annotations:", 
-                                                                disp_anno_event)
-        
         self.filtered_annos_x = []
-        def filtered_anno_x_event(sele):
-            self.filtered_annos_x = sele
-        self.set_filtered_annos_x, filtered_annos_x_layout = self.multi_choice("Filter rows that overlap with:", 
-                                                                               filtered_anno_x_event)
-
         self.filtered_annos_y = []
-        def filtered_anno_y_event(sele):
-            self.filtered_annos_y = sele
-        self.set_filtered_annos_y, filtered_annos_y_layout = self.multi_choice("Filter columns that overlap with:", 
-                                                                                filtered_anno_y_event)
+        def anno_event(sele):
+            self.displayed_annos = sele["Displayed"][::-1]
+            self.filtered_annos_x = sele["Row filter"]
+            self.filtered_annos_y = sele["Column filter"]
+            self.trigger_render()
+        self.set_annos, annos_layout = self.multi_choice("Annotations", 
+                                                         ["Displayed", "Row filter", "Column filter"],
+                                                         anno_event)
 
         power_tick = FuncTickFormatter(
             code="""
@@ -955,14 +934,12 @@ class MainLayout:
         self.info_field.height_policy = "fixed"
 
         self.norm_x = []
-        def norm_x_event(sele):
-            self.norm_x = sele
-        self.set_norm_x, norm_x_layout = self.multi_choice("Normalization Rows:", norm_x_event)
-
         self.norm_y = []
-        def norm_y_event(sele):
-            self.norm_y = sele
-        self.set_norm_y, norm_y_layout = self.multi_choice("Normalization Columns:", norm_y_event)
+        def norm_event(sele):
+            self.norm_x = sele["Rows"]
+            self.norm_y = sele["Columns"]
+            self.trigger_render()
+        self.set_norm, norm_layout = self.multi_choice("Normalization", ["Rows", "Columns"], norm_event)
 
         def x_coords_event(e):
             FigureMaker.x_coords_d = e
@@ -979,13 +956,12 @@ class MainLayout:
                                                                  "tooltip_column_coordinates")
 
         self.chrom_x = []
-        def chrom_x_event(sele):
-            self.chrom_x = sele
-        self.set_chrom_x, chrom_x_layout = self.multi_choice("Row Chromosomes", chrom_x_event)
         self.chrom_y = []
-        def chrom_y_event(sele):
-            self.chrom_y = sele
-        self.set_chrom_y, chrom_y_layout = self.multi_choice("Column Chromosomes", chrom_y_event)
+        def chrom_event(sele):
+            self.chrom_x = sele["Rows"]
+            self.chrom_y = sele["Columns"]
+            self.trigger_render()
+        self.set_chrom, chrom_layout = self.multi_choice("Chromosomes", ["Rows", "Columns"], chrom_event)
 
         self.multiple_anno_per_bin_d = "combine"
         def multiple_anno_per_bin_event(e):
@@ -1012,23 +988,20 @@ class MainLayout:
         
         self.export_sele = []
         def export_sele_event(sele):
-            self.export_sele = sele
-        # @todo @continue_here now pass all the set... multi_choice functions to the appropriate positions
-        set_export_sele, export_sele_layout = self.multi_choice("Export Selection", export_sele_event)
-        set_export_sele([("heatmap", "Heatmap")], [
-            ("col_sum", "Column Sum"),
-            ("row_sum", "Row Sum"),
-            ("anno", "Include Annotation")
-        ])
+            self.export_sele = sele[""]
+            self.trigger_render()
+        set_export_sele, export_sele_layout = self.multi_choice("Export Selection", [""], export_sele_event, False)
+        set_export_sele(
+            ["Heatmap", "Column Sum", "Row Sum", "Include Annotation"],
+            {"": ["Heatmap"]}
+        )
     
         self.export_type = []
         def export_type_event(sele):
-            self.export_type = sele
-        set_export_type, export_type_layout = self.multi_choice("Export Type", export_type_event)
-        set_export_type([("data", "Data")], [
-            #("svg", "SVG-Picture"), # cannot find non buggy selenium version
-            #("png", "PNG-Picture")
-        ])
+            self.export_type = sele[""]
+            self.trigger_render()
+        set_export_type, export_type_layout = self.multi_choice("Export Type", [""], export_type_event)
+        set_export_type(["Data"], {"":[]})
         
         grid_seq_config = Button(label="Grid Seq-like @todo", sizing_mode="stretch_width", 
                                  css_classes=["other_button", "tooltip", "tooltip_grid_seq"],
@@ -1061,13 +1034,11 @@ class MainLayout:
                 else:
                     p = "▸ "
                 t.label = p + title
-                def set_visible(x):
-                    if isinstance(x, Box):
-                        for c in x.children:
-                            set_visible(c)
-                    else:
-                        x.visible = t.active
-                set_visible(cx)
+                # remove and read children to force re-layout
+                tmp = cx.children
+                cx.children = []
+                cx.visible = t.active
+                cx.children = tmp
             t.on_click(callback)
             callback(None)
             return r
@@ -1101,17 +1072,14 @@ class MainLayout:
         _settings = column([
                 make_panel("General", "tooltip_general", [tool_bar, meta_file_label, self.meta_file]),
                 make_panel("Normalization", "tooltip_normalization", [self.normalization, color_figure,
-                                    ibs_l, crs_l, is_l, norm_x_layout, norm_y_layout, rsa_l, ddd]),
-                make_panel("Replicates", "tooltip_replicates", [self.in_group, self.betw_group, group_a_layout, group_b_layout]),
+                                    ibs_l, crs_l, is_l, norm_layout, rsa_l, ddd]),
+                make_panel("Replicates", "tooltip_replicates", [self.in_group, self.betw_group, group_layout]),
                 make_panel("Interface", "tooltip_interface", [nb_l,
                                     show_hide, mmbs_l,
                                     ufs_l, rs_l, aas_l, ass_l, rss1_l, rss2_l,
                                     self.stretch, square_bins, power_ten_bin, color_picker, self.overlay_dataset_id]),
-                make_panel("Filters", "tooltip_filters", [ms_l, self.symmetrie, dds_l, 
-                                          displayed_annos_layout, filtered_annos_x_layout,
-                                          filtered_annos_y_layout,
-                                          x_coords, y_coords, multiple_anno_per_bin, chrom_x_layout, chrom_y_layout,
-                                          multi_mapping]),
+                make_panel("Filters", "tooltip_filters", [ms_l, self.symmetrie, dds_l, annos_layout, 
+                                          x_coords, y_coords, multiple_anno_per_bin, chrom_layout, multi_mapping]),
                 make_panel("Export", "tooltip_export", [export_label, self.export_file, export_sele_layout,
                                         #export_type_layout, 
                                       self.export_button]),
@@ -1237,19 +1205,19 @@ class MainLayout:
 
     def bin_cols(self, area, h_bin, none_for_chr_border=False, filter_l=None):
         if filter_l is None:
-            filter_l = self.filtered_annos_y.value
+            filter_l = self.filtered_annos_y
         anno_coords = None
         if FigureMaker.x_coords_d != "full_genome":
             anno_coords = FigureMaker.x_coords_d
-        return self.bin_cols_or_rows(area, h_bin, 0, none_for_chr_border, filter_l, self.chrom_x.value, anno_coords)
+        return self.bin_cols_or_rows(area, h_bin, 0, none_for_chr_border, filter_l, self.chrom_x, anno_coords)
 
     def bin_rows(self, area, h_bin, none_for_chr_border=False, filter_l=None):
         if filter_l is None:
-            filter_l = self.filtered_annos_x.value
+            filter_l = self.filtered_annos_x
         anno_coords = None
         if FigureMaker.y_coords_d != "full_genome":
             anno_coords = FigureMaker.y_coords_d
-        return self.bin_cols_or_rows(area, h_bin, 1, none_for_chr_border, filter_l, self.chrom_y.value, anno_coords)
+        return self.bin_cols_or_rows(area, h_bin, 1, none_for_chr_border, filter_l, self.chrom_y, anno_coords)
 
     def bin_coords(self, area, h_bin, w_bin):
         self.render_step_log("bin_coords")
@@ -1330,7 +1298,7 @@ class MainLayout:
     def read_norm(self, idx):
         n = []
         for idx, dataset in sorted(list(self.meta.datasets.items())):
-            if str(idx) in (self.group_a.value if idx == 0 else self.group_b.value):
+            if str(idx) in (self.group_a if idx == 0 else self.group_b):
                 val = self.idx.count(idx, 0, self.meta.chr_sizes.chr_start_pos["end"], 0, 
                                      self.meta.chr_sizes.chr_start_pos["end"], *self.mapq_slider.value)
                 n.append(val)
@@ -1345,13 +1313,13 @@ class MainLayout:
         return n
 
     def norm_num_reads(self, rows):
-        if len((self.norm_x.value if rows else self.norm_y.value)) == 0:
+        if len((self.norm_x if rows else self.norm_y)) == 0:
             return 1
         return self.flatten_norm([
             [self.idx_norm.count(int(idx), 0, self.meta.chr_sizes.chr_start_pos["end"], *self.mapq_slider.value) \
                 if self.meta.norm_via_tree(int(idx)) \
                 else self.meta.norm[int(idx)].count(0, self.meta.chr_sizes.chr_start_pos["end"]) \
-                for idx in (self.norm_x.value if rows else self.norm_y.value)]])[0]
+                for idx in (self.norm_x if rows else self.norm_y)]])[0]
 
     def hi_c_normalization(self, bins, cols, rows):
         # max 50 iterations
@@ -1469,9 +1437,9 @@ class MainLayout:
         group_a = []
         group_b = []
         for idx_2 in range(len(bins)):
-            if str(idx_2) in self.group_a.value:
+            if list(self.meta.datasets.values())[idx_2][0] in self.group_a:
                 group_a.append(idx_2)
-            if str(idx_2) in self.group_b.value:
+            if list(self.meta.datasets.values())[idx_2][0] in self.group_b:
                 group_b.append(idx_2)
         ret = [[], []]
         for idx, _ in enumerate(bins[0]):
@@ -1612,7 +1580,7 @@ class MainLayout:
 
     def linear_bins_norm(self, bins, rows):
         vals = []
-        idxs = (self.norm_x.value if rows else self.norm_y.value)
+        idxs = (self.norm_x if rows else self.norm_y)
         for x in bins:
             vals.append([])
             if len(idxs) == 0:
@@ -1650,8 +1618,8 @@ class MainLayout:
 
     def make_anno_str(self, s, e):
         anno_str = ""
-        if "anno" in self.export_sele.value:
-            for anno in self.displayed_annos.value:
+        if "Include Annotation" in self.export_sele.value:
+            for anno in self.displayed_annos:
                 c = self.meta.annotations[anno].count(s, e)
                 if c > 0 and c <= 10:
                     if len(anno_str) > 0:
@@ -1874,10 +1842,10 @@ class MainLayout:
                 
                 ls_x = []
                 if len(x_ys) > 0:
-                    ls_x = [self.meta.normalizations[int(idx)][0] for idx in self.norm_x.value]
+                    ls_x = [self.meta.normalizations[int(idx)][0] for idx in self.norm_x]
                 ls_y = []
                 if len(y_ys) > 0:
-                    ls_y = [self.meta.normalizations[int(idx)][0] for idx in self.norm_y.value]
+                    ls_y = [self.meta.normalizations[int(idx)][0] for idx in self.norm_y]
 
                 raw_data_x = {
                     "xs": [x_pos for _ in range(x_num_raw)],
@@ -1928,7 +1896,7 @@ class MainLayout:
                     if self.cancel_render:
                         return
                     bin_rows_unfiltr, bin_rows_2_unfiltr, bin_rows_3_unfiltr = xx
-                    for idx, anno in enumerate(self.displayed_annos.value):
+                    for idx, anno in enumerate(self.displayed_annos):
                         for rb_2, (s, e), x in zip(bin_rows_2_unfiltr, bin_rows_3_unfiltr,
                                                 self.annotation_bins(bin_rows_unfiltr, self.meta.annotations[anno])):
                             if x > 0:
@@ -1961,7 +1929,7 @@ class MainLayout:
                     if self.cancel_render:
                         return
                     bin_cols_unfiltr, bin_cols_2_unfiltr, bin_cols_3_unfiltr = xx
-                    for idx, anno in enumerate(self.displayed_annos.value):
+                    for idx, anno in enumerate(self.displayed_annos):
                         for rb_2, (s, e), x in zip(bin_cols_2_unfiltr, bin_cols_3_unfiltr,
                                                 self.annotation_bins(bin_cols_unfiltr, self.meta.annotations[anno])):
                             if x > 0:
@@ -2003,12 +1971,12 @@ class MainLayout:
                                 m = x
                         return m
                     if self.do_export is None:
-                        if len(self.displayed_annos.value) == 0:
+                        if len(self.displayed_annos) == 0:
                             self.anno_x.x_range.factors = [""]
                             self.anno_y.y_range.factors = [""]
                         else:
-                            self.anno_x.x_range.factors = self.displayed_annos.value
-                            self.anno_y.y_range.factors = self.displayed_annos.value
+                            self.anno_x.x_range.factors = self.displayed_annos
+                            self.anno_y.y_range.factors = self.displayed_annos
 
                     def readable_display(l):
                         l = l * self.meta.dividend
@@ -2048,8 +2016,8 @@ class MainLayout:
                         set_bounds(self.raw_y, bottom=mmin(*raw_y_heat, *raw_y_norm_combined),
                                     top=mmax(*raw_y_heat, *raw_y_norm_combined))
                         set_bounds(self.ratio_y, bottom=0, top=mmax(*raw_y_ratio))
-                        set_bounds(self.anno_x, left=0, right=len(self.displayed_annos.value))
-                        set_bounds(self.anno_y, bottom=0, top=len(self.displayed_annos.value))
+                        set_bounds(self.anno_x, left=0, right=len(self.displayed_annos))
+                        set_bounds(self.anno_y, bottom=0, top=len(self.displayed_annos))
 
                         set_bounds(self.heatmap, color=b_col)
 
@@ -2069,8 +2037,8 @@ class MainLayout:
                         lambda: self.render_callback(), self.update_frequency_slider.value*1000)
 
                 if not self.do_export is None:
-                    if "data" in self.export_type.value:
-                        if "heatmap" in self.export_sele.value:
+                    if "Data" in self.export_type:
+                        if "Heatmap" in self.export_sele:
                             with open(self.export_file.value + ".heatmap.bed", "w") as out_file:
                                 out_file.write("##Smoother Version:" + self.smoother_version +"\n##LibSps Version: " + bin.libSps.VERSION + "\n")
                                 out_file.write("##Bin width:" + str(h_bin* self.meta.dividend) + " Bin height:" +
@@ -2083,19 +2051,19 @@ class MainLayout:
                                                             str(c), 
                                                             self.make_anno_str(x, x+w), 
                                                             self.make_anno_str(y, y+h)]) + "\n")
-                        if "col_sum" in self.export_sele.value:
+                        if "Column Sum" in self.export_sele:
                             with open(self.export_file.value + ".columns.bed", "w") as out_file:
                                 for c, x_chr_, x_2_, x_ in zip(raw_y_ratio, y_chr, y_pos1, y_pos):
                                     if not x_ is float('NaN'):
                                         out_file.write("\t".join([x_chr_, str(int(x_2_) * self.meta.dividend), str(c)]) + "\n")
-                        if "row_sum" in self.export_sele.value:
+                        if "Row Sum" in self.export_sele:
                             with open(self.export_file.value + ".rows.bed", "w") as out_file:
                                 for c, x_chr_, x_2_, x_ in zip(raw_x_ratio, x_chr, x_pos1, x_pos):
                                     if not x_ is float('NaN'):
                                         out_file.write("\t".join([x_chr_, str(int(x_2_) * self.meta.dividend), str(c)]) + "\n")
-                    if "png" in self.export_type.value:
+                    if "Png" in self.export_type:
                         export_png(self.heatmap, filename=self.export_file.value + ".heatmap.png")
-                    if "svg" in self.export_type.value:
+                    if "Svg" in self.export_type:
                         bckup = self.heatmap.output_backend
                         self.heatmap.output_backend = "svg"
                         export_svg(self.heatmap, filename=self.export_file.value + ".heatmap.svg")

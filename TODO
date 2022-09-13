@@ -8,17 +8,19 @@
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
 - mouse based ruler 
     - https://stackoverflow.com/questions/37965669/how-do-i-link-the-crosshairtool-in-bokeh-over-several-plots/54691899#54691899
-- cannot change order of multichoice...
-    - https://github.com/Choices-js/Choices#configuration-options 
-    - can i switch of the sorting?
 - input format for heatmap has unnecessary columns / does not match juicer
 - "minimap" background
+- changed order of chromosomes is ignored
+- group A & B multichoice is somewhat akward
+    - better to have 3 fields: A, B & None
+    - same for normalization
+    - better to have a radio grid?
+    - in general use different widgets for things where
+        - order matters
+        - more than 2 options
 
 # verification
 
 - does radicl sec do normalization for rna?
 - uneven distribution between contigs in grid seq normalization
 
-# ====== CURRENTLY =====
-sortable multi choice -> aborted for now
-fiddeleing with conda environment
