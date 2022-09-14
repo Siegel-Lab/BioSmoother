@@ -6,18 +6,7 @@
     - when calling give folder where indices are located
     - restrict for public hosting
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
-- mouse based ruler 
-    - https://stackoverflow.com/questions/37965669/how-do-i-link-the-crosshairtool-in-bokeh-over-several-plots/54691899#54691899
-- input format for heatmap has unnecessary columns / does not match juicer
 - "minimap" background
-- changed order of chromosomes is ignored
-- group A & B multichoice is somewhat akward
-    - better to have 3 fields: A, B & None
-    - same for normalization
-    - better to have a radio grid?
-    - in general use different widgets for things where
-        - order matters
-        - more than 2 options
 
 # verification
 

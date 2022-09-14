@@ -5,7 +5,7 @@ __email__ = "Markus.Schmidt@lmu.de"
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup
+from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup, CrosshairTool
 #from bin.unsorted_multi_choice import UnsortedMultiChoice as MultiChoice
 from bokeh.io import export_png, export_svg
 import math
@@ -464,7 +464,6 @@ class MainLayout:
         cg.on_change("active", lambda _1,_2,_3: on_change(0 in cg.active))
         return row([div, cg], width=width, margin=DIV_MARGIN)
 
-
     def __init__(self):
         self.meta = None
         self.do_render = False
@@ -686,6 +685,15 @@ class MainLayout:
         )
         self.anno_x.add_tools(anno_hover)
         self.anno_y.add_tools(anno_hover)
+        
+        
+        crosshair = CrosshairTool(dimensions="width")
+        for fig in [self.anno_x, self.raw_x, self.ratio_x, self.heatmap]:
+            fig.add_tools(crosshair)
+        crosshair = CrosshairTool(dimensions="height")
+        for fig in [self.anno_y, self.raw_y, self.ratio_y, self.heatmap]:
+            fig.add_tools(crosshair)
+
 
         tool_bar = FigureMaker.get_tools(tollbars)
         #SETTINGS_WIDTH = tool_bar.width
