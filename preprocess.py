@@ -44,18 +44,44 @@ def parse_norm_file(filename):
             continue
 
         read_name, flag, chrom, start_pos, map_q, *other = split
-        yield read_name, chrom, int(start_pos), int(map_q)
+        xa_tag = "?"
+        for s in other:
+            if s[:5] == "XA:Z:":
+                xa_tag = s
+        yield read_name, chrom, int(start_pos), int(map_q), xa_tag
 
 def group_norm_file(in_filename, file_size):
     file_name = simplified_filepath(in_filename)
-    groups = {}
-    for idx_2, (read_name, chrom, pos, map_q) in enumerate(parse_norm_file(in_filename)):
+    last_read_name = None
+    group = []
+    def deal_with_group():
+        nonlocal last_read_name
+        nonlocal group
+        chr_1 = group[0]
+        do_cont = False
+        for chr_2, _, _ in group:
+            if chr_2 != chr_1:
+                do_cont = True # no reads that come from different chromosomes
+        if do_cont:
+            pos_s = min([g[1] for g in group])
+            pos_e = max([g[1] for g in group])
+            map_q = max([g[2] for g in group])
+            if len(group) > 1:
+                map_q += 1
+            yield read_name, chr_1, pos_s, pos_e, map_q
+        group = []
+    
+    for idx_2, (read_name, chrom, pos, map_q, xa_tag) in enumerate(parse_norm_file(in_filename)):
         if idx_2 % PRINT_MODULO == 0:
             print("loading file", file_name, ", line", idx_2+1, "of", file_size, "=", 
                    round( 100*(idx_2+1)/file_size, 2), "%", end="\033[K\r")
-        if not read_name in groups:
-            groups[read_name] = []
+        if not last_read_name == read_name:
+            yield from deal_with_group()
+        last_read_name = read_name
         groups[read_name].append((chrom, int(pos), int(map_q)))
+        for chr_1, pos_1 in read_xa_tag(xa_tag):
+            group_1.append((chr_1, int(pos_1), 0))
+    yield from deal_with_group()
 
     for idx, (read_name, group) in enumerate(groups.items()):
         if idx % PRINT_MODULO == 0:
@@ -161,7 +187,7 @@ def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_
         act_pos_1_e = meta.chr_sizes.coordinate(pos_2_e // meta.dividend, chr_2)
         act_pos_2_s = meta.chr_sizes.coordinate(pos_1_s // meta.dividend, chr_1)
         act_pos_2_e = meta.chr_sizes.coordinate(pos_1_e // meta.dividend, chr_1)
-        index.add_point([act_pos_1_s, act_pos_2_s, 254-map_q], [act_pos_1_e, act_pos_2_e, 254-map_q], read_name)
+        index.add_point([act_pos_1_s, act_pos_2_s, 255-map_q], [act_pos_1_e, act_pos_2_e, 255-map_q], read_name)
     if not only_points:
         print("generating index")
         idx = index.generate(last_cnt, len(index))
@@ -192,7 +218,7 @@ def add_normalization(out_prefix, path, name, for_row, test=False, cached=False,
                 continue
             act_pos_s = meta.chr_sizes.coordinate(int(pos_s) // meta.dividend, chrom)
             act_pos_e = meta.chr_sizes.coordinate(int(pos_e) // meta.dividend, chrom)
-            index.add_point([act_pos_s, 254-map_q], [act_pos_e, 254-map_q], read_name)
+            index.add_point([act_pos_s, 255-map_q], [act_pos_e, 255-map_q], read_name)
             cnt += 1
             if cnt > TEST_FAC and test:
                 break

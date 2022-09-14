@@ -278,7 +278,7 @@ class FigureMaker:
                 (("☑ " if FigureMaker._show_hide["contig_borders"] else "☐ ") + "Contig Borders", "contig_borders"))
             return menu
         ret = Dropdown(label="Show/Hide", menu=make_menu(),
-                       width=SETTINGS_WIDTH, sizing_mode="fixed", css_classes=["other_button", "tooltip", "tooltip_show_hide"], height=DROPDOWN_HEIGHT)
+                       width=350, sizing_mode="fixed", css_classes=["other_button", "tooltip", "tooltip_show_hide"], height=DROPDOWN_HEIGHT)
 
         def event(e):
             FigureMaker.toggle_hide(e.item)
@@ -457,6 +457,12 @@ class MainLayout:
         spinner_start.on_change("value_throttled", on_change)
 
         return slider, row([slider, spinner_start, spinner_end], width=width, margin=DIV_MARGIN)
+
+    def make_checkbox(self, title, on_change, active=True, width=200):
+        div = Div(text=title, sizing_mode="stretch_width")
+        cg = CheckboxGroup(labels=[""], active=[0] if active else [], sizing_mode="fixed", width=20)
+        cg.on_change("active", lambda _1,_2,_3: on_change(0 in cg.active))
+        return row([div, cg], width=width, margin=DIV_MARGIN)
 
 
     def __init__(self):
@@ -742,6 +748,13 @@ class MainLayout:
 
         self.ddd_d = "no"
 
+        self.incomplete_alignments = False
+        def incomp_align_event(e):
+            self.incomplete_alignments = e
+            self.trigger_render()
+        incomp_align_layout = self.make_checkbox("Show reads with incomplete alignments", 
+                                                      incomp_align_event, False)
+
         def ddd_event(e):
             self.ddd_d = e
             self.trigger_render()
@@ -792,6 +805,16 @@ class MainLayout:
                                                 ("Count read if first mapping loci is within a bin", "first"),
                                                 ("Count read if last mapping loci is within a bin", "last"),
                                                 ("Count read if there is only one mapping loci", "points_only"),
+                                                  )
+
+                                                  
+        def axis_labels_event(e):
+            self.heatmap_y_axis.yaxis.axis_label = e.split("_")[0]
+            self.heatmap_x_axis.xaxis.axis_label = e.split("_")[1]
+        axis_lables = self.dropdown_select("Axis Labels", axis_labels_event, "tooltip_y_axis_label",
+                                                  ("RNA / DNA", "RNA_DNA"),
+                                                  ("DNA / RNA", "DNA_RNA"),
+                                                  ("DNA / DNA", "DNA_DNA"), 
                                                   )
 
         def stretch_event(e):
@@ -1087,8 +1110,10 @@ class MainLayout:
                 make_panel("Interface", "tooltip_interface", [nb_l,
                                     show_hide, mmbs_l,
                                     ufs_l, rs_l, aas_l, ass_l, rss1_l, rss2_l,
-                                    self.stretch, square_bins, power_ten_bin, color_picker, self.overlay_dataset_id]),
-                make_panel("Filters", "tooltip_filters", [ms_l, self.symmetrie, dds_l, annos_layout, 
+                                    self.stretch, square_bins, power_ten_bin, color_picker, axis_lables, 
+                                    self.overlay_dataset_id]),
+                make_panel("Filters", "tooltip_filters", [ms_l, incomp_align_layout, 
+                                          self.symmetrie, dds_l, annos_layout, 
                                           x_coords, y_coords, multiple_anno_per_bin, chrom_layout, multi_mapping]),
                 make_panel("Export", "tooltip_export", [export_label, self.export_file, export_sele_layout,
                                         #export_type_layout, 
@@ -1266,14 +1291,16 @@ class MainLayout:
         self.render_step_log(name + "_ini")
         bins = []
         min_ = self.interactions_bounds_slider.value
-        map_q_value = self.mapq_slider.value
+        map_q_min, map_q_max = self.mapq_slider.value
+        if not (map_q_min == 0 and self.incomplete_alignments):
+            map_q_min += 1
         manhatten_dist = 1000 * self.diag_dist_slider.value / self.meta.dividend
         bins_to_search = []
         self.render_step_log(name + "_pre")
         for x, y, w, h in bin_coords:
             if abs(x - y) >= manhatten_dist:
                 x, y, w, h = self.adjust_bin_pos_for_symmetrie(x, y, w, h)
-                bins_to_search.append(self.idx.to_query(y, y+h, x, x+w, *map_q_value))
+                bins_to_search.append(self.idx.to_query(y, y+h, x, x+w, map_q_min, map_q_max))
             else:
                 bins_to_search.append(self.idx.to_query(0, 0, 0, 0, 0, 0))
             if self.cancel_render:
