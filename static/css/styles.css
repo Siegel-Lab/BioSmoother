@@ -10,6 +10,14 @@
     top: 15% !important;
     border-top: 1px solid #D3D3D3 !important;
 }
+.scroll_y2 {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+.outlnie_border {
+    border: 1px solid #ccc  !important;
+    border-radius: 4px  !important;
+}
 .twenty_percent {
     overflow-y: auto !important;
     overflow-x: hidden !important;
@@ -36,6 +44,7 @@ body {
 
 .vertical {
     writing-mode: vertical-lr;
+    white-space: nowrap;
 }
 
 button {

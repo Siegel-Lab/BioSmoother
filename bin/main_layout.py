@@ -37,6 +37,7 @@ RAW_PLOT_NAME = "Cov"
 
 DIV_MARGIN = (5, 5, 0, 5)
 BTN_MARGIN = (3, 3, 3, 3)
+BTN_MARGIN_2 = (0, 3, 3, 3)
 
 executor = ThreadPoolExecutor(max_workers=1)
 
@@ -300,7 +301,7 @@ class FigureMaker:
 class MainLayout:
     def dropdown_select_h(self, title, event, tooltip):
 
-        ret = Dropdown(label=title, menu=[], width=SETTINGS_WIDTH, sizing_mode="fixed", 
+        ret = Dropdown(label=title, menu=[], width=350, sizing_mode="fixed", 
                         css_classes=["other_button", "tooltip", tooltip], height=DROPDOWN_HEIGHT)
 
         options = []
@@ -309,7 +310,7 @@ class MainLayout:
         def make_menu():
             menu = []
             for name, key in options:
-                menu.append((("☑ " if d[key] else "☐ ") + name, key))
+                menu.append((("● " if d[key] else "○ ") + name, key))
             ret.menu = menu
 
         def set_menu(op):
@@ -339,12 +340,20 @@ class MainLayout:
 
     def multi_choice(self, label, checkboxes, callback, orderable=True):
         div = Div(text=label)
-        SYM_WIDTH = 20
+        SYM_WIDTH = 10
         SYM_CSS = ["other_button"]
+        CHECK_WIDTH = 20*len(checkboxes)
 
-        col = grid([[]], sizing_mode="stretch_width")
-        col.width_policy = "max"
-        layout = column([div, col], sizing_mode="stretch_width")
+        col = column([], sizing_mode="stretch_width", css_classes=["scroll_y2"])
+        col.max_height=150
+        empty = Div(text="", sizing_mode="fixed", width=30)
+        layout = column([div, row([
+            Div(text="", sizing_mode="stretch_width"),
+            Div(text="<br>".join(checkboxes), css_classes=["vertical"], sizing_mode="fixed", 
+                width=CHECK_WIDTH),
+            empty
+        ], sizing_mode="stretch_width"), col], sizing_mode="stretch_width", css_classes=["outlnie_border"],
+        margin=DIV_MARGIN)
 
         self.reset_options[label] = [col, []]
         
@@ -373,36 +382,36 @@ class MainLayout:
 
         def reset_event(e):
             l = []
-            l.append((Div(text="<br>".join(checkboxes), css_classes=["vertical"]), 0, 3))
             for idx, (n, opts) in enumerate(self.reset_options[label][1]):
                 if orderable:
-                    down_button = Button(label="↓", css_classes=SYM_CSS, width=SYM_WIDTH, 
-                                        height=SYM_WIDTH, sizing_mode="fixed", tags=[n])
+                    down_button = Button(label="˅", css_classes=SYM_CSS, width=SYM_WIDTH, 
+                                        height=SYM_WIDTH, sizing_mode="fixed", tags=[n], button_type="light",
+                                         margin=BTN_MARGIN_2)
                     def down_event(n):
                         self.reset_options[label][1] = move_element(self.reset_options[label][1], n, False)
                         reset_event(0)
                     down_button.on_click(lambda _, n=n: down_event(n))
 
-                    up_button = Button(label="↑", css_classes=SYM_CSS, width=SYM_WIDTH, 
-                                        height=SYM_WIDTH, sizing_mode="fixed", tags=[n])
+                    up_button = Button(label="˄", css_classes=SYM_CSS, width=SYM_WIDTH, 
+                                        height=SYM_WIDTH, sizing_mode="fixed", tags=[n], button_type="light",
+                                         margin=BTN_MARGIN_2)
                     def up_event(n):
                         self.reset_options[label][1] = move_element(self.reset_options[label][1], n, True)
                         reset_event(0)
                     up_button.on_click(lambda _, n=n: up_event(n))
 
                 div = Div(text=n, sizing_mode="stretch_width")
-                div.width_policy = "max"
-                cg = CheckboxGroup(labels=[""]*len(checkboxes), active=opts, inline=True)
+                cg = CheckboxGroup(labels=[""]*len(checkboxes), active=opts, inline=True, sizing_mode="fixed",
+                                   width=CHECK_WIDTH)
                 def on_change(idx, cg):
                     self.reset_options[label][1][idx][1] = cg.active
                     trigger_callback()
                 cg.on_change("active", lambda _1,_2,_3,idx=idx,cg=cg: on_change(idx,cg))
 
                 if orderable:
-                    l.append((up_button, idx + 1, 0))
-                    l.append((down_button, idx + 1, 1))
-                l.append((div, idx + 1, 2))
-                l.append((cg, idx + 1, 3))
+                    l.append(row([up_button, down_button, div, cg, empty], sizing_mode="stretch_width"))
+                else:
+                    l.append(row([div, cg, empty], sizing_mode="stretch_width"))
 
             self.reset_options[label][0].children = l
 
@@ -429,7 +438,7 @@ class MainLayout:
         slider.on_change("value_throttled", on_change)
         spinner.on_change("value_throttled", on_change)
 
-        return slider, row([slider, spinner], width=width)
+        return slider, row([slider, spinner], width=width, margin=DIV_MARGIN)
 
     def make_range_slider_spinner(self, title="", value=(1, 2), start=0, end=10, step=None, width=200, 
                             on_change=lambda _a,_b,_c: None, spinner_width=80, sizing_mode="stretch_width"):
@@ -447,7 +456,7 @@ class MainLayout:
         spinner_end.on_change("value_throttled", on_change)
         spinner_start.on_change("value_throttled", on_change)
 
-        return slider, row([slider, spinner_start, spinner_end], width=width)
+        return slider, row([slider, spinner_start, spinner_end], width=width, margin=DIV_MARGIN)
 
 
     def __init__(self):
@@ -920,7 +929,7 @@ class MainLayout:
         button_s_down = Button(label="▼", button_type="light", width=15, height=15, margin=BTN_MARGIN)
         button_s_down.on_click(lambda _: callback(-1))
 
-        mmbs_l = row([self.min_max_bin_size, column([button_s_up, button_s_down])])
+        mmbs_l = row([self.min_max_bin_size, column([button_s_up, button_s_down])], margin=DIV_MARGIN)
 
         self.curr_bin_size = Div(text="Current Bin Size: n/a", sizing_mode="stretch_width")
         
@@ -1896,7 +1905,7 @@ class MainLayout:
                     if self.cancel_render:
                         return
                     bin_rows_unfiltr, bin_rows_2_unfiltr, bin_rows_3_unfiltr = xx
-                    for idx, anno in enumerate(self.displayed_annos):
+                    for idx, anno in enumerate(self.displayed_annos[::-1]):
                         for rb_2, (s, e), x in zip(bin_rows_2_unfiltr, bin_rows_3_unfiltr,
                                                 self.annotation_bins(bin_rows_unfiltr, self.meta.annotations[anno])):
                             if x > 0:
@@ -1929,7 +1938,7 @@ class MainLayout:
                     if self.cancel_render:
                         return
                     bin_cols_unfiltr, bin_cols_2_unfiltr, bin_cols_3_unfiltr = xx
-                    for idx, anno in enumerate(self.displayed_annos):
+                    for idx, anno in enumerate(self.displayed_annos[::-1]):
                         for rb_2, (s, e), x in zip(bin_cols_2_unfiltr, bin_cols_3_unfiltr,
                                                 self.annotation_bins(bin_cols_unfiltr, self.meta.annotations[anno])):
                             if x > 0:
