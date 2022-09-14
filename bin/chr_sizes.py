@@ -92,12 +92,12 @@ class ChrSizes:
     def coordinate(self, x, chr):
         return self.chr_start_pos[chr] + x
 
-    def get_formatter(self, dividend):
+    def get_formatter(self, dividend, ticks, chroms):
         return FuncTickFormatter(
-            args={"contig_starts": [self.chr_start_pos[chr_x] for chr_x in self.chr_order],
-                  "genome_end": self.chr_start_pos["end"],
+            args={"contig_starts": ticks[:-1],
+                  "genome_end": ticks[-1],
                   "dividend": dividend,
-                  "contig_names": [x[:-len(self.lcs)] for x in self.chr_order]},
+                  "contig_names": [x[:-len(self.lcs)] for x in chroms]},
             code="""
                             if(tick < 0 || tick >= genome_end)
                                 return "n/a";
@@ -108,33 +108,47 @@ class ChrSizes:
                         """)
 
     def setup_coordinates(self, main_layout, x_coords_d, y_coords_d):
-        formater = self.get_formatter(main_layout.meta.dividend)
+        ticks_x = []
+        pos = 0
+        for chr_name in main_layout.chrom_x:
+            ticks_x.append(pos)
+            pos += self.chr_sizes[chr_name]
+        ticks_x.append(pos)
+        ticker_border_x = ExtraTicksTicker(extra_ticks=ticks_x)
+        ticker_border_x.min_interval = 1
+
+        ticks_y = []
+        pos = 0
+        for chr_name in main_layout.chrom_y:
+            ticks_y.append(pos)
+            pos += self.chr_sizes[chr_name]
+        ticks_y.append(pos)
+        ticker_border_y = ExtraTicksTicker(extra_ticks=ticks_y)
+        ticker_border_y.min_interval = 1
+
         if x_coords_d == "full_genome":
             main_layout.heatmap.x_range.start = 0
             main_layout.heatmap.x_range.end = self.chr_start_pos["end"]
             main_layout.heatmap.x_range.reset_start = 0
             main_layout.heatmap.x_range.reset_end = self.chr_start_pos["end"]
-            main_layout.heatmap_x_axis.xaxis[0].formatter = formater
+            main_layout.heatmap_x_axis.xaxis[0].formatter = self.get_formatter(main_layout.meta.dividend, 
+                                                                               ticks_x, main_layout.chrom_x)
         if y_coords_d == "full_genome":
             main_layout.heatmap.y_range.start = 0
             main_layout.heatmap.y_range.end = self.chr_start_pos["end"]
             main_layout.heatmap.y_range.reset_start = 0
             main_layout.heatmap.y_range.reset_end = self.chr_start_pos["end"]
-            main_layout.heatmap_y_axis.yaxis[0].formatter = formater
+            main_layout.heatmap_y_axis.yaxis[0].formatter = self.get_formatter(main_layout.meta.dividend, 
+                                                                               ticks_y, main_layout.chrom_y)
         
 
-        ticker_border = ExtraTicksTicker(
-            extra_ticks=[self.chr_start_pos[chr_x]
-                         for chr_x in self.chr_order] + [self.chr_start_pos["end"]],
-        )
-        ticker_border.min_interval = 1
         # ticker_center = ExtraTicksTicker(
         #    extra_ticks=[self.chr_start_pos[chr_x] + self.chr_sizes[chr_x]/2 for chr_x in self.chr_order])
 
         if x_coords_d == "full_genome":
             for plot in [main_layout.heatmap, main_layout.ratio_y, main_layout.raw_y, main_layout.anno_y,
                         main_layout.heatmap_x_axis]:
-                plot.xgrid.ticker = ticker_border
+                plot.xgrid.ticker = ticker_border_x
                 plot.xgrid.bounds = (0, self.chr_start_pos["end"])
                 plot.xaxis.bounds = (0, self.chr_start_pos["end"])
                 plot.xaxis.major_label_text_align = "left"
@@ -142,7 +156,7 @@ class ChrSizes:
         if y_coords_d == "full_genome":
             for plot in [main_layout.heatmap, main_layout.ratio_x, main_layout.raw_x, main_layout.anno_x,
                         main_layout.heatmap_y_axis]:
-                plot.ygrid.ticker = ticker_border
+                plot.ygrid.ticker = ticker_border_y
                 plot.ygrid.bounds = (0, self.chr_start_pos["end"])
                 plot.yaxis.bounds = (0, self.chr_start_pos["end"])
                 plot.yaxis.major_label_text_align = "right"
@@ -150,7 +164,7 @@ class ChrSizes:
 
 
     def setup(self, main_layout):
-        main_layout.set_chrom(self.chr_order, {"Rows": self.chr_order, "Columns": self.chr_order})
+        main_layout.set_chrom(self.chr_order[::-1], {"Rows": self.chr_order, "Columns": self.chr_order})
 
     def bin_cols_or_rows(self, h_bin, start=0, end=None, none_for_chr_border=False, chr_filter=[], 
                          produce_smaller_bins=True, is_canceld=lambda: False):
@@ -161,29 +175,24 @@ class ChrSizes:
         ret_2 = []
         ret_3 = []
         x_chrs = []
-        subs = 0
-        for idx, (c_start, c_size, n) in enumerate(zip(self.chr_starts, self.chr_sizes_l, self.chr_order)):
-            if len(chr_filter) > 0 and n not in chr_filter:
-                subs += c_size
-            elif c_start-subs <= end and c_start-subs + c_size >= start and c_size*10 >= h_bin:
-                x_chrs.append((idx, subs))
+        bin_start = max(0, int(start))
         if none_for_chr_border:
             ret.append(None)
             ret_2.append(None)
             ret_3.append(None)
-        for x_chr, sub in x_chrs:
-            x_start = self.chr_starts[x_chr]
-            x_end = self.chr_starts[x_chr] + self.chr_sizes_l[x_chr]
+        for chr_name in chr_filter:
+            x_start = self.chr_start_pos[chr_name]
+            x_end = x_start + self.chr_sizes[chr_name]
             x = max(int(start), x_start)
             while x <= min(end, x_end):
                 if produce_smaller_bins or x + h_bin <= x_end:
                     ret.append([x, min(h_bin, x_end - x)])
-                    ret_2.append([self.chr_order[x_chr], x - x_start])
-                    ret_3.append([x-sub, min(h_bin, x_end - x)])
+                    ret_2.append([chr_name, x - x_start])
+                    ret_3.append([bin_start, min(h_bin, x_end - x)])
+                    bin_start += min(h_bin, x_end - x)
                 if is_canceld():
                     return
                 x += h_bin
-            
             if none_for_chr_border:
                 ret.append(None)
                 ret_2.append(None)

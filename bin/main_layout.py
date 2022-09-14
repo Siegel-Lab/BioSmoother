@@ -967,8 +967,9 @@ class MainLayout:
         self.chrom_x = []
         self.chrom_y = []
         def chrom_event(sele):
-            self.chrom_x = sele["Rows"]
-            self.chrom_y = sele["Columns"]
+            self.chrom_x = sele["Rows"][::-1]
+            self.chrom_y = sele["Columns"][::-1]
+            self.setup_coordinates()
             self.trigger_render()
         self.set_chrom, chrom_layout = self.multi_choice("Chromosomes", ["Rows", "Columns"], chrom_event)
 
