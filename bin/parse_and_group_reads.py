@@ -17,7 +17,7 @@ def read_xa_tag(tags):
     if tags == "notag" or len(tags) < 5:
         return []
     l = []
-    for tag in tag[5:].split(";"):
+    for tag in tags[5:].split(";"):
         chrom,str_pos,_CIGAR,_NM = tag.split(",")
         #strand = str_pos[0]
         pos = int(str_pos[1:])
