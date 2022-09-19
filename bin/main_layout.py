@@ -344,10 +344,19 @@ class MainLayout:
         SYM_CSS = ["other_button"]
         CHECK_WIDTH = 20*len(checkboxes)
 
-        col = column([], sizing_mode="stretch_width", css_classes=["scroll_y2"])
+        col = column([], sizing_mode="stretch_width")
         col.max_height=150
         empty = Div(text="", sizing_mode="fixed", width=30)
-        layout = column([div, row([
+        
+        spinner = TextInput(value="1", width=50, sizing_mode="fixed", visible=False)
+        next_page = Button(label="⮞", css_classes=SYM_CSS, width=SYM_WIDTH, 
+                                      sizing_mode="fixed", button_type="light",
+                                         margin=BTN_MARGIN_2, visible=False)
+        prev_page = Button(label="⮜", css_classes=SYM_CSS, width=SYM_WIDTH, 
+                                        sizing_mode="fixed", button_type="light",
+                                         margin=BTN_MARGIN_2, visible=False)
+        page_div = Div(text="Page:", width=30, sizing_mode="fixed", visible=False)
+        layout = column([row([div, prev_page, page_div, spinner, next_page, empty], sizing_mode="stretch_width"), row([
             Div(text="", sizing_mode="stretch_width"),
             Div(text="<br>".join(checkboxes), css_classes=["vertical"], sizing_mode="fixed", 
                 width=CHECK_WIDTH),
@@ -355,7 +364,7 @@ class MainLayout:
         ], sizing_mode="stretch_width"), col], sizing_mode="stretch_width", css_classes=["outlnie_border"],
         margin=DIV_MARGIN)
 
-        self.reset_options[label] = [col, []]
+        self.reset_options[label] = [col, [], 1, [spinner, next_page, prev_page, page_div]]
         
         def move_element(opt, ele, up):
             idx = None
@@ -382,7 +391,8 @@ class MainLayout:
 
         def reset_event(e):
             l = []
-            for idx, (n, opts) in enumerate(self.reset_options[label][1]):
+            pos = self.reset_options[label][2] - 1
+            for idx, (n, opts) in list(enumerate(self.reset_options[label][1]))[pos*5:(pos+1)*5]:
                 if orderable:
                     down_button = Button(label="˅", css_classes=SYM_CSS, width=SYM_WIDTH, 
                                         height=SYM_WIDTH, sizing_mode="fixed", tags=[n], button_type="light",
@@ -415,16 +425,42 @@ class MainLayout:
 
             self.reset_options[label][0].children = l
 
-            trigger_callback()
+        
+        
+        def spinner_event(x, y, z):
+            if spinner.value.isdigit() and int(spinner.value) > 0 and int(spinner.value) <= len(self.reset_options[label][1]) // 5 + 1:
+                self.reset_options[label][2] = int(spinner.value)
+                reset_event(0)
+            else:
+                spinner.value = str(self.reset_options[label][2])
+
+        spinner.on_change("value", spinner_event)
+
+        
+        def next_page_event():
+            if self.reset_options[label][2] < len(self.reset_options[label][1]) // 5 + 1:
+                self.reset_options[label][2] += 1
+                spinner.value = str(self.reset_options[label][2])
+                reset_event(0)
+        next_page.on_click(lambda _, : next_page_event())
+        def prev_page_event():
+            if self.reset_options[label][2] > 1:
+                self.reset_options[label][2] -= 1
+                spinner.value = str(self.reset_options[label][2])
+                reset_event(0)
+        prev_page.on_click(lambda _, : prev_page_event())
 
         def set_options(labels, active_dict):
             self.reset_options[label][1] = []
+            for x in self.reset_options[label][3]:
+                x.visible = len(labels) > 5
             for jdx, n in enumerate(labels):
                 self.reset_options[label][1].append([n, []])
                 for idx, cb in enumerate(checkboxes):
                     if n in active_dict[cb]:
                         self.reset_options[label][1][jdx][1].append(idx)
             reset_event(0)
+            trigger_callback()
 
         return set_options, layout
 

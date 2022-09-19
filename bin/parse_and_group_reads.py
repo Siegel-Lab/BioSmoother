@@ -18,10 +18,12 @@ def read_xa_tag(tags):
         return []
     l = []
     for tag in tags[5:].split(";"):
-        chrom,str_pos,_CIGAR,_NM = tag.split(",")
-        #strand = str_pos[0]
-        pos = int(str_pos[1:])
-        l.append([chrom, pos])
+        split = tag.split(",")
+        if len(split) == 5:
+            chrom,str_pos,_CIGAR,_NM = split
+            #strand = str_pos[0]
+            pos = int(str_pos[1:])
+            l.append([chrom, pos])
     return l
 
 def parse_heatmap(in_filename, test, chr_filter):
