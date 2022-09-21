@@ -59,7 +59,7 @@ class MetaData:
 
     def add_wig_normalization(self, name, path, x_axis, xs, ys):
         idx = -len(self.normalizations)-1
-        self.normalizations[idx] = ([name, path, x_axis, 0, False])
+        self.normalizations[idx] = ([name, path, x_axis, False])
         self.norm_id_by_path[path] = idx
         self.norm[idx] = Coverage().set_x_y(xs, ys)
 

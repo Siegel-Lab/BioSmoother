@@ -71,15 +71,15 @@ def group_heatmap(in_filename, file_size, chr_filter, no_groups=False, test=Fals
     def deal_with_group():
         nonlocal group_1
         nonlocal group_2
-        do_cont = False
-        chr_1_cmp = group_1[0]
+        do_cont = True
+        chr_1_cmp = group_1[0][0]
         for chr_1, _1, _2 in group_1:
             if chr_1_cmp != chr_1:
-                do_cont = True # no reads that come from different chromosomes
-        chr_2_cmp = group_2[0]
+                do_cont = False # no reads that come from different chromosomes
+        chr_2_cmp = group_2[0][0]
         for chr_2, _1, _2 in group_2:
             if chr_2_cmp != chr_2:
-                do_cont = True # no reads that come from different chromosomes
+                do_cont = False # no reads that come from different chromosomes
         if do_cont:
             if no_groups:
                 pos_1_s = group_1[1]
@@ -94,7 +94,7 @@ def group_heatmap(in_filename, file_size, chr_filter, no_groups=False, test=Fals
             map_q = min(max(x for _1, _2, x in group_1), max(x for _1, _2, x in group_2))
             if len(group_1) > 1 and len(group_2) > 1:
                 map_q += 1
-            yield read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q
+            yield curr_read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q
         group_1 = []
         group_2 = []
     for idx_2, (read_name, chr_1, pos_1, chr_2, pos_2, mapq_1, mapq_2, tag_1, tag_2) in enumerate(
@@ -122,5 +122,5 @@ def group_heatmap(in_filename, file_size, chr_filter, no_groups=False, test=Fals
 
 def get_filesize(path):
     if not os.path.exists(path):
-        FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), filename)
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
     return int(subprocess.run(['wc', '-l', path], stdout=subprocess.PIPE).stdout.decode('utf-8').split(" ")[0])

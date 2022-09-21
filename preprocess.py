@@ -39,7 +39,7 @@ def parse_norm_file(filename):
         if len(line) == 0:
             continue
         split = line.split("\t")
-        if len(split) < 4:
+        if len(split) < 5:
             print("weird line in bam file: '", line, "'")
             continue
 
@@ -57,30 +57,30 @@ def group_norm_file(in_filename, file_size):
     def deal_with_group():
         nonlocal last_read_name
         nonlocal group
-        chr_1 = group[0]
-        do_cont = False
+        chr_1 = group[0][0]
+        do_cont = True
         for chr_2, _, _ in group:
             if chr_2 != chr_1:
-                do_cont = True # no reads that come from different chromosomes
+                do_cont = False # no reads that come from different chromosomes
         if do_cont:
             pos_s = min([g[1] for g in group])
             pos_e = max([g[1] for g in group])
             map_q = max([g[2] for g in group])
             if len(group) > 1:
                 map_q += 1
-            yield read_name, chr_1, pos_s, pos_e, map_q
+            yield last_read_name, chr_1, pos_s, pos_e, map_q
         group = []
     
     for idx_2, (read_name, chrom, pos, map_q, xa_tag) in enumerate(parse_norm_file(in_filename)):
         if idx_2 % PRINT_MODULO == 0:
             print("loading file", file_name, ", line", idx_2+1, "of", file_size, "=", 
                    round( 100*(idx_2+1)/file_size, 2), "%", end="\033[K\r")
-        if not last_read_name == read_name and len(group) > 0:
+        if last_read_name != read_name and len(group) > 0:
             yield from deal_with_group()
         last_read_name = read_name
-        groups[read_name].append((chrom, int(pos), int(map_q)))
+        group.append((chrom, int(pos), int(map_q)))
         for chr_1, pos_1 in read_xa_tag(xa_tag):
-            group_1.append((chr_1, int(pos_1), 0))
+            group.append((chr_1, int(pos_1), 0))
     yield from deal_with_group()
 
 

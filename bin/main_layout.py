@@ -425,8 +425,6 @@ class MainLayout:
 
             self.reset_options[label][0].children = l
 
-        
-        
         def spinner_event(x, y, z):
             if spinner.value.isdigit() and int(spinner.value) > 0 and int(spinner.value) <= len(self.reset_options[label][1]) // 5 + 1:
                 self.reset_options[label][2] = int(spinner.value)
@@ -1378,10 +1376,13 @@ class MainLayout:
 
     def read_norm(self, idx):
         n = []
+        map_q_min, map_q_max = self.mapq_slider.value
+        if not (map_q_min == 0 and self.incomplete_alignments):
+            map_q_min += 1
         for idx, dataset in sorted(list(self.meta.datasets.items())):
             if str(idx) in (self.group_a if idx == 0 else self.group_b):
                 val = self.idx.count(idx, 0, self.meta.chr_sizes.chr_start_pos["end"], 0, 
-                                     self.meta.chr_sizes.chr_start_pos["end"], *self.mapq_slider.value)
+                                     self.meta.chr_sizes.chr_start_pos["end"], map_q_min, map_q_max)
                 n.append(val)
         if self.in_group_d == "min":
             n = min(n)
@@ -1396,8 +1397,11 @@ class MainLayout:
     def norm_num_reads(self, rows):
         if len((self.norm_x if rows else self.norm_y)) == 0:
             return 1
+        map_q_min, map_q_max = self.mapq_slider.value
+        if not (map_q_min == 0 and self.incomplete_alignments):
+            map_q_min += 1
         return self.flatten_norm([
-            [self.idx_norm.count(int(idx), 0, self.meta.chr_sizes.chr_start_pos["end"], *self.mapq_slider.value) \
+            [self.idx_norm.count(int(idx), 0, self.meta.chr_sizes.chr_start_pos["end"], map_q_min, map_q_max) \
                 if self.meta.norm_via_tree(int(idx)) \
                 else self.meta.norm[int(idx)].count(0, self.meta.chr_sizes.chr_start_pos["end"]) \
                 for idx in (self.norm_x if rows else self.norm_y)]])[0]
@@ -1661,7 +1665,10 @@ class MainLayout:
 
     def linear_bins_norm(self, bins, rows):
         vals = []
-        idxs = (self.norm_x if rows else self.norm_y)
+        idxs = [idx for idx, name in self.meta.normalizations.items() if name[0] in (self.norm_x if rows else self.norm_y)]
+        map_q_min, map_q_max = self.mapq_slider.value
+        if not (map_q_min == 0 and self.incomplete_alignments):
+            map_q_min += 1
         for x in bins:
             vals.append([])
             if len(idxs) == 0:
@@ -1673,7 +1680,7 @@ class MainLayout:
                         vals[-1].append(float('NaN'))
                     else:
                         if self.meta.norm_via_tree(int(idx)):
-                            vals[-1].append(self.idx_norm.count(int(idx), x[0], x[0] + x[1], *self.mapq_slider.value))
+                            vals[-1].append(self.idx_norm.count(int(idx), x[0], x[0] + x[1], map_q_min, map_q_max))
                         else:
                             vals[-1].append(self.meta.norm[int(idx)].count(x[0], x[0] + x[1]))
                     if self.cancel_render:
@@ -1920,13 +1927,6 @@ class MainLayout:
                     for x in raw_y_norms:
                         for _ in [0,1]:
                             y_ys[-1].append(x[idx])
-                
-                ls_x = []
-                if len(x_ys) > 0:
-                    ls_x = [self.meta.normalizations[int(idx)][0] for idx in self.norm_x]
-                ls_y = []
-                if len(y_ys) > 0:
-                    ls_y = [self.meta.normalizations[int(idx)][0] for idx in self.norm_y]
 
                 raw_data_x = {
                     "xs": [x_pos for _ in range(x_num_raw)],
@@ -1934,7 +1934,7 @@ class MainLayout:
                     "pos1": [x_pos1 for _ in range(x_num_raw)],
                     "pos2": [x_pos2 for _ in range(x_num_raw)],
                     "ys": [double_up(raw_x_heat), double_up(raw_x_norm_combined)] + x_ys,
-                    "ls": ["heatmap row sum", "combined"] + ls_x,
+                    "ls": ["heatmap row sum", "combined"] + self.norm_x,
                     "cs": [Colorblind2[idx % 8] for idx in range(x_num_raw)],
                 }
                 raw_data_y = {
@@ -1943,7 +1943,7 @@ class MainLayout:
                     "pos1": [y_pos1 for _ in range(y_num_raw)],
                     "pos2": [y_pos2 for _ in range(y_num_raw)],
                     "ys": [double_up(raw_y_heat), double_up(raw_y_norm_combined)] + y_ys,
-                    "ls": ["heatmap col sum", "combined"] + ls_y,
+                    "ls": ["heatmap col sum", "combined"] + self.norm_y,
                     "cs": [Colorblind2[idx % 8] for idx in range(y_num_raw)],
                 }
                 ratio_data_x = {
