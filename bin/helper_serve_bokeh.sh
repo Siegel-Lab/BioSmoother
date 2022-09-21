@@ -4,7 +4,7 @@ source activate $(pwd)/conda_env/smoother
 
 ./bin/conf_version.sh
 
-port=5008
+port=5010
 
 
 # setup port forwarding
