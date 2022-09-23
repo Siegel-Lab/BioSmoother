@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Datastructure (Markus) &mdash; smoother 0.0.1 documentation</title>
+  <title>The Datastructure &mdash; smoother 0.0.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -15,6 +15,7 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -56,7 +57,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>The Datastructure (<em>Markus</em>)</li>
+      <li>The Datastructure</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/Algorithmics.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -66,12 +67,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="the-datastructure-markus">
-<h1>The Datastructure (<em>Markus</em>)<a class="headerlink" href="#the-datastructure-markus" title="Permalink to this headline"></a></h1>
+  <section id="the-datastructure">
+<h1>The Datastructure<a class="headerlink" href="#the-datastructure" title="Permalink to this heading"></a></h1>
 <p>Smoother uses a datastructure called libSps implemented in C++ for querying the interactions as effectiveley as possible.
 You can find the <span class="raw-html-md"><a href="https://github.com/MarkusRainerSchmidt/libSps" title="Go to the libSps GitHub">GitHub of libSps here</a></span>.</p>
 <section id="algorithmic-description">
-<h2>Algorithmic Description<a class="headerlink" href="#algorithmic-description" title="Permalink to this headline"></a></h2>
+<h2>Algorithmic Description<a class="headerlink" href="#algorithmic-description" title="Permalink to this heading"></a></h2>
 <p>libSps provides several features that make it possible to bin, normalize and visualize nucleic acid interaction data on-the-fly.
 In brief, these are:</p>
 <ul class="simple">
@@ -81,7 +82,7 @@ In brief, these are:</p>
 <li><p>F4: The memory requirements for libSps are optimized</p></li>
 </ul>
 <section id="f1-constant-lookup-times">
-<h3>F1: Constant lookup times<a class="headerlink" href="#f1-constant-lookup-times" title="Permalink to this headline"></a></h3>
+<h3>F1: Constant lookup times<a class="headerlink" href="#f1-constant-lookup-times" title="Permalink to this heading"></a></h3>
 <p>libSps uses a technique called prefix sums [1] for storing interaction counts.
 With prefix sums, each cell in a matrix stores the number of interactions that can be found to its bottom-left.</p>
 <img src="../static/algorithmics_desc/2d-prefix-sum.png" /><p><em>Example prefix sum matrix.</em> The left picture shows the positions of individual points. The middle picture shows the matrix entries after prefix sums have been computed for the y-dimension. The right picture shows the matrix entries after prefix sums have been computed for the x and y dimension.</p>
@@ -93,7 +94,7 @@ This lookup is extremely fast, as it is independent of the total number of inter
 In turn, this makes it possible to have varying bin-sizes and normalizations.</p>
 </section>
 <section id="f2-filtering-for-mapping-quality">
-<h3>F2: Filtering for mapping quality<a class="headerlink" href="#f2-filtering-for-mapping-quality" title="Permalink to this headline"></a></h3>
+<h3>F2: Filtering for mapping quality<a class="headerlink" href="#f2-filtering-for-mapping-quality" title="Permalink to this heading"></a></h3>
 <p>Smoother has a slider to dynamically filter out reads with too low or high mapping qualities.
 Mapping qualities are scores that express an aligners confidence that the read was mapped correctly.
 For each interaction (i.e. read-pair with a mapping quality), we place the point at a height according to the mapping quality of the reads.
@@ -102,7 +103,7 @@ If both reads have different mapping qualities, we use the lower value.</p>
 <img src="../static/algorithmics_desc/mapq-filter.png" width="50%" /><p><em>Filtering mapping qualities using a 3rd dimension.</em></p>
 </section>
 <section id="f3-interactions-that-map-to-multiple-consecutive-loci">
-<h3>F3: Interactions that map to multiple consecutive loci<a class="headerlink" href="#f3-interactions-that-map-to-multiple-consecutive-loci" title="Permalink to this headline"></a></h3>
+<h3>F3: Interactions that map to multiple consecutive loci<a class="headerlink" href="#f3-interactions-that-map-to-multiple-consecutive-loci" title="Permalink to this heading"></a></h3>
 <p>Genomes have many forms of repetition.
 For example, In <em>Trypanosome brucei</em>, the organism we study, genes are often placed in arrays.
 I.e. there are many immediateley consecutive copies of the same gene on the genome.
@@ -128,7 +129,7 @@ Again, we can then use the bottom and top positions of our 5d-orthotope queries 
 <img src="../static/algorithmics_desc/rectangle-width.png" width="50%" /><p><em>Adding two more dimensions to filter rectangle width and height.</em></p>
 </section>
 <section id="f4-optimizing-memory-requirements">
-<h3>F4: Optimizing memory requirements<a class="headerlink" href="#f4-optimizing-memory-requirements" title="Permalink to this headline"></a></h3>
+<h3>F4: Optimizing memory requirements<a class="headerlink" href="#f4-optimizing-memory-requirements" title="Permalink to this heading"></a></h3>
 <p>The strategy, as described above, would not be feasible as the required matrices are simply too large to be stored or computed.
 For example, we work with a genome assembly of <em>Trypanosome brucei</em> that contains 50,081,021 nucleotides.
 Rather small considering e.g. the size of the human genome.
@@ -136,7 +137,7 @@ Even so, a genome x genome x mapping confidence matrix is of size 50,081,021^2 *
 This is obviously completely unrealistic and will fit on any hard drive.</p>
 <p>We hence use a customized version of a strategy called “sparse prefix sums” by Shekelyan et al. [1] to reduce the index size. We give a quick summary of the part of their method that is relevant to us:</p>
 <p>They remove empty rows and columns from point matrices using lookup tables:</p>
-<img src="../static/algorithmics_desc/sparse-matrices.png" /><p><em>Removing slices.</em></p>
+<img src="../static/algorithmics_desc/sparse-matrices.png" /><p><em>Removing slices. Image taken from [1]</em></p>
 <p>However, this strategy breaks down for large datasets.
 To split too large datasets down into smaller ones they use overlays.</p>
 <img src="../static/algorithmics_desc/sparse-matrices-in-large-datasets.png" /><p><em>Left: eventhough the matrix is sparse, there are no empty columns and rows. Right: by splitting the matrix into four submatrices, empty columns and rows can be removed again.</em></p>
@@ -171,7 +172,7 @@ This finally gives us a position in the materialized overlay grid.</p>
 </section>
 </section>
 <section id="fileformat-specification">
-<h2>Fileformat specification<a class="headerlink" href="#fileformat-specification" title="Permalink to this headline"></a></h2>
+<h2>Fileformat specification<a class="headerlink" href="#fileformat-specification" title="Permalink to this heading"></a></h2>
 <p>Smoothers preprocessing creates several files.
 In brief, these files contain the following information:</p>
 <table class="docutils align-default">
@@ -212,9 +213,9 @@ In brief, these files contain the following information:</p>
 <p>The exact content of these files is described <span class="raw-html-md"><a href="https://github.com/MarkusRainerSchmidt/libSps" title="Go to the libSps GitHub">here</a></span>.</p>
 </section>
 <section id="implementation-details">
-<h2>Implementation Details<a class="headerlink" href="#implementation-details" title="Permalink to this headline"></a></h2>
+<h2>Implementation Details<a class="headerlink" href="#implementation-details" title="Permalink to this heading"></a></h2>
 <section id="libraries">
-<h3>Libraries<a class="headerlink" href="#libraries" title="Permalink to this headline"></a></h3>
+<h3>Libraries<a class="headerlink" href="#libraries" title="Permalink to this heading"></a></h3>
 <p>Smoother is implemented in two separate parts:</p>
 <ul class="simple">
 <li><p>A Python 3 project that handles data visualization and normalization.</p></li>
@@ -224,10 +225,10 @@ In brief, these files contain the following information:</p>
 The C++ library uses pybind 11 [6] to create an interface for the python project and stxxl [7] for having access to a cached vector implementation.</p>
 </section>
 <section id="runtime-benchmarking">
-<h3>Runtime benchmarking<a class="headerlink" href="#runtime-benchmarking" title="Permalink to this headline"></a></h3>
+<h3>Runtime benchmarking<a class="headerlink" href="#runtime-benchmarking" title="Permalink to this heading"></a></h3>
 </section>
 <section id="verification-of-normalizations">
-<h3>Verification of Normalizations<a class="headerlink" href="#verification-of-normalizations" title="Permalink to this headline"></a></h3>
+<h3>Verification of Normalizations<a class="headerlink" href="#verification-of-normalizations" title="Permalink to this heading"></a></h3>
 </section>
 </section>
 </section>

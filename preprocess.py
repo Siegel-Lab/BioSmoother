@@ -231,30 +231,37 @@ def norm(args):
 
 def grid_seq_norm(args):
     print("LibSps Version:", VERSION)
-    meta = MetaData.load(args.index_prefix + ".smoother_index/meta")
-    bin_size = max(args.bin_size // meta.dividend, 1)
-    index = Tree_4(args.index_prefix)
-    datasets = args.datasets
-    if datasets is None or len(datasets) == 0:
-        datasets = list(range(len(meta.datasets)))
-    ranked_regions = make_grid_seq_ranked_regions(index, datasets, args.mapping_q, meta.chr_sizes,
-                                                  meta.annotations, args.annotation, bin_size)
-    if args.visualize:
-        make_grid_seq_plots(ranked_regions, args.filter_rna, args.filter_dna)
-    filtered_rr = filter_r_r(ranked_regions, args.filter_rna, args.filter_dna)[:100]
-    if args.add_annotation:
-        do_add_annotation(filtered_rr, meta, args.name)
-    if args.add_normalization_track:
-        index_arr = make_sps_index(args.index_prefix + ".smoother_index/norm", 2, False, 1, 
-                                   "Cached" if not args.uncached else "Disk", True )
-        add_as_normalization(filtered_rr, datasets, meta, index_arr, args.name, 
-                             "GRID-seq normalization created with " + str(sys.argv))
+    if not args.visualize and not args.add_annotation and not args.add_normalization_track:
+        print("grid-seq-norm requires one of -a -v or -n.")
+    else:
+        meta = MetaData.load(args.index_prefix + ".smoother_index/meta")
+        bin_size = max(args.bin_size // meta.dividend, 1)
+        index = Tree_4(args.index_prefix)
+        datasets = args.datasets
+        if datasets is None or len(datasets) == 0:
+            datasets = list(range(len(meta.datasets)))
+        ranked_regions = make_grid_seq_ranked_regions(index, datasets, args.mapping_q, meta.chr_sizes,
+                                                    meta.annotations, args.annotation, bin_size)
+        if args.visualize:
+            make_grid_seq_plots(ranked_regions, args.filter_rna, args.filter_dna)
+        filtered_rr = filter_r_r(ranked_regions, args.filter_rna, args.filter_dna)[:100]
+        if args.add_annotation:
+            do_add_annotation(filtered_rr, meta, args.name)
+        if args.add_normalization_track:
+            index_arr = make_sps_index(args.index_prefix + ".smoother_index/norm", 2, False, 1, 
+                                    "Cached" if not args.uncached else "Disk", True )
+            add_as_normalization(filtered_rr, datasets, meta, index_arr, args.name, 
+                                "GRID-seq normalization created with " + str(sys.argv))
 
-    meta.save(args.index_prefix + ".smoother_index/meta")
+        meta.save(args.index_prefix + ".smoother_index/meta")
 
 def ddd_sample(args):
     print("LibSps Version:", VERSION)
     sample_dist_dep_dec(args.in_path, args.out_path)
+
+def list_content(args):
+    print("LibSps Version:", VERSION)
+    print(MetaData.load(args.index_prefix + ".smoother_index/meta"))
 
 def ddd_load(args):
     print("LibSps Version:", VERSION)
@@ -292,47 +299,72 @@ def get_argparse():
     repl_parser.add_argument('index_prefix', 
         help="Prefix that was used to create the index (see the init subcommand).")
     repl_parser.add_argument('path', 
-        help="Path to the .pre1.bed file that contains the aligned reads.")
-    repl_parser.add_argument('name')
+        help="Path to the file that contains the aligned reads.")
+    repl_parser.add_argument('name', 
+        help="Name for the new replicate.")
     repl_parser.add_argument('-g', '--group', default="neither", choices=["a", "b", "both", "neither"], 
-                            help="(default: %(default)s)")
+        help="Which analysis group to place the new replicate in when opening the interface. (default: %(default)s)")
     repl_parser.set_defaults(func=repl)
 
-    norm_parser = sub_parsers.add_parser("norm")
-    norm_parser.add_argument('index_prefix')
-    norm_parser.add_argument('path')
-    norm_parser.add_argument('name')
+    norm_parser = sub_parsers.add_parser("norm", help="Add a normalization track to an index, using external sequencing data.")
+    norm_parser.add_argument('index_prefix', 
+        help="Prefix that was used to create the index (see the init subcommand).")
+    norm_parser.add_argument('path', 
+        help="Path to the file that contains the aligned reads.")
+    norm_parser.add_argument('name', 
+        help="Name for the new normalization track.")
     norm_parser.add_argument('-g', '--group', default="neither", 
-                             choices=["row", "col", "both", "neither"], help="(default: %(default)s)")
+                             choices=["row", "col", "both", "neither"], 
+        help="Where to to place the new normalization track when opening the interface. (default: %(default)s)")
     norm_parser.set_defaults(func=norm)
 
-    grid_seq_norm_parser = sub_parsers.add_parser("grid-seq-norm")
-    grid_seq_norm_parser.add_argument('index_prefix')
-    grid_seq_norm_parser.add_argument('name')
+    grid_seq_norm_parser = sub_parsers.add_parser("grid-seq-norm", help="Add a normalization track to an index, using the datasets already in the index. This follows the approach used in the GRID-seq paper. This function does nothing if neither -v -a or -n is given. We suggest using -v first to visualize what is then added to the index.")
+    grid_seq_norm_parser.add_argument('index_prefix', 
+        help="Prefix that was used to create the index (see the init subcommand).")
+    grid_seq_norm_parser.add_argument('name', 
+        help="Name for the new normalization track.")
     grid_seq_norm_parser.add_argument('-d', '--datasets', metavar="VAL", nargs='*', type=int,
-        help="datasets to include in the normalization, given by their Id's use the <list> command to find the ids.")
-    grid_seq_norm_parser.add_argument('-m', '--mapping_q', metavar="VAL", type=int, default=0)
-    grid_seq_norm_parser.add_argument('-b', '--bin_size', metavar="VAL", type=int, default=1000)
-    grid_seq_norm_parser.add_argument('-R', '--filter_rna', metavar="VAL", type=float, default=100)
-    grid_seq_norm_parser.add_argument('-D', '--filter_dna', metavar="VAL", type=float, default=10)
+        help="Datasets to include in the normalization, given by their Id's use the <list> command to find the ids. (default: all datasets)")
+    grid_seq_norm_parser.add_argument('-m', '--mapping_q', metavar="VAL", type=int, default=0, 
+        help="Consider only reads with this mapping quality or higher. (default: %(default)s)")
+    grid_seq_norm_parser.add_argument('-b', '--bin_size', metavar="VAL", type=int, default=1000, 
+        help="Use this bin size. (default: %(default)s)")
+    grid_seq_norm_parser.add_argument('-R', '--filter_rna', metavar="VAL", type=float, default=100, 
+        help="Only keep rows with an average RNA density of VAL reads per kb. (default: %(default)s)")
+    grid_seq_norm_parser.add_argument('-D', '--filter_dna', metavar="VAL", type=float, default=10, 
+        help="Only keep columns with a maximal DNA density of VAL reads per kb. (default: %(default)s)")
     grid_seq_norm_parser.add_argument('-A', '--annotation',
-            help="name of the annotation to use as bins for the RNA or 'bins' to use --bin_size sized bins over the full genome", 
-            metavar="VAL", default="gene")
-    grid_seq_norm_parser.add_argument('-v', '--visualize', action='store_true')
-    grid_seq_norm_parser.add_argument('-a', '--add_annotation', action='store_true')
-    grid_seq_norm_parser.add_argument('-n', '--add_normalization_track', action='store_true')
+        help="name of the annotation to use as bins for the RNA or 'bins' to use --bin_size sized bins over the full genome.", metavar="VAL", default="gene")
+    grid_seq_norm_parser.add_argument('-v', '--visualize', action='store_true', 
+        help="Visualize the RNA and DNA densities as well as the picked filters.")
+    grid_seq_norm_parser.add_argument('-a', '--add_annotation', action='store_true', 
+        help="Turn the picked genes into an annotation track.")
+    grid_seq_norm_parser.add_argument('-n', '--add_normalization_track', action='store_true', 
+        help="Add the picked genes as an normalization track.")
     grid_seq_norm_parser.set_defaults(func=grid_seq_norm)
     
-    ddd_sample_parser = sub_parsers.add_parser("ddd-sample")
-    ddd_sample_parser.add_argument('in_path')
-    ddd_sample_parser.add_argument('out_path')
+    ddd_sample_parser = sub_parsers.add_parser("ddd-sample", 
+        help="Sample distance dependant decay from a replicate input file.")
+    ddd_sample_parser.add_argument('in_path', 
+        help="Path to the file that contains the aligned reads.")
+    ddd_sample_parser.add_argument('out_path',
+        help="Where to store the distance dependant decay file output.")
     ddd_sample_parser.set_defaults(func=ddd_sample)
 
-    ddd_load_parser = sub_parsers.add_parser("ddd-load")
-    ddd_load_parser.add_argument('index_prefix')
-    ddd_load_parser.add_argument('in_path')
-    ddd_load_parser.add_argument('chr_list', nargs='+')
+    ddd_load_parser = sub_parsers.add_parser("ddd-load", 
+        help="Load a distance dependant decay file into the index.")
+    ddd_load_parser.add_argument('index_prefix', 
+        help="Prefix that was used to create the index (see the init subcommand).")
+    ddd_load_parser.add_argument('in_path', 
+        help="Path to the file that contains distance dependant decay.")
+    ddd_load_parser.add_argument('chr_list', nargs='+', 
+        help="List of chromosomes which to normalize with this distance dependant decay.")
     ddd_load_parser.set_defaults(func=ddd_load)
+
+    list_parser = sub_parsers.add_parser("list", help="List the content (datasets and normalizations) of an index.")
+    list_parser.add_argument('index_prefix', 
+        help="Prefix that was used to create the index (see the init subcommand).")
+    list_parser.set_defaults(func=list_content)
 
     return parser
 

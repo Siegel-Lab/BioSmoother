@@ -45,6 +45,16 @@ class MetaData:
         r = lo * (1-fac) + hi * fac
         return r
 
+    def __str__(self):
+        datasets_str = "Datasets:\n"
+        datasets_str += "id\tname\tgroup\tinput path\n"
+        for idx, (name, path, group_a, _1) in self.datasets.items():
+            datasets_str += str(idx) + "\t" + name + "\t" + group_a + "\t" + path + "\n"
+        norms_str = "Normalizations:\n"
+        norms_str += "id\tname\twhere\tinput path\n"
+        for idx, (name, path, x_axis, _1) in self.normalizations.items():
+            norms_str += str(idx) + "\t" + name + "\t" + x_axis + "\t" + path + "\n"
+        return datasets_str + "\n" + norms_str
 
     def set_chr_sizes(self, chr_sizes):
         self.chr_sizes = chr_sizes
