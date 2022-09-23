@@ -309,7 +309,8 @@ def get_argparse():
     grid_seq_norm_parser = sub_parsers.add_parser("grid-seq-norm")
     grid_seq_norm_parser.add_argument('index_prefix')
     grid_seq_norm_parser.add_argument('name')
-    grid_seq_norm_parser.add_argument('-d', '--datasets', metavar="VAL", nargs='*', type=int)
+    grid_seq_norm_parser.add_argument('-d', '--datasets', metavar="VAL", nargs='*', type=int,
+        help="datasets to include in the normalization, given by their Id's use the <list> command to find the ids.")
     grid_seq_norm_parser.add_argument('-m', '--mapping_q', metavar="VAL", type=int, default=0)
     grid_seq_norm_parser.add_argument('-b', '--bin_size', metavar="VAL", type=int, default=1000)
     grid_seq_norm_parser.add_argument('-R', '--filter_rna', metavar="VAL", type=float, default=100)

@@ -37,7 +37,7 @@ RAW_PLOT_NAME = "Cov"
 
 DIV_MARGIN = (5, 5, 0, 5)
 BTN_MARGIN = (3, 3, 3, 3)
-BTN_MARGIN_2 = (0, 3, 3, 3)
+BTN_MARGIN_2 = (3, 3, 3, 3)
 
 executor = ThreadPoolExecutor(max_workers=1)
 
@@ -148,6 +148,16 @@ class FigureMaker:
         self.no_border_v = True
         return self
 
+    def scale(self):
+        self.args["sizing_mode"] = "scale_height"
+        #self.args["width_policy"] = "fit"
+        #self.args["height_policy"] = "max"
+        self.args["height"] = 10
+        self.args["width"] = 10
+        self.no_border_h = True
+        self.no_border_v = True
+        return self
+
     def _axis_of(self, other):
         self.hide_on("axis")
         for plot, _hide_on in FigureMaker._hidable_plots:
@@ -155,13 +165,13 @@ class FigureMaker:
                 for key in _hide_on:
                     self.hide_on(key)
 
-    def x_axis_of(self, other, label=""):
+    def x_axis_of(self, other, label="", stretch=False):
         self._axis_of(other)
 
         self.x_axis_visible = True
         self.args["x_range"] = other.x_range
         self.args["frame_height"] = 1
-        if other.sizing_mode in ["stretch_both", "stretch_width"] or other.width_policy in ["fit", "max"]:
+        if stretch:
             #self.args["sizing_mode"] = "stretch_width"
             self.args["width_policy"] = "fit"
             self.w(None)
@@ -174,13 +184,13 @@ class FigureMaker:
         self.no_border_v = True
         return self
 
-    def y_axis_of(self, other, label=""):
+    def y_axis_of(self, other, label="", stretch=False):
         self._axis_of(other)
 
         self.y_axis_visible = True
         self.args["y_range"] = other.y_range
         self.args["frame_width"] = 1
-        if other.sizing_mode in ["stretch_both", "stretch_height"] or other.height_policy in ["fit", "max"]:
+        if stretch:
             self.args["sizing_mode"] = "stretch_height"
             #self.args["height_policy"] = "max"
             self.h(10)
@@ -343,18 +353,17 @@ class MainLayout:
         SYM_WIDTH = 10
         SYM_CSS = ["other_button"]
         CHECK_WIDTH = 20*len(checkboxes)
+        ELEMENTS_PER_PAGE = 10
 
         col = column([], sizing_mode="stretch_width")
-        col.max_height=150
+        #col.max_height=150
         empty = Div(text="", sizing_mode="fixed", width=30)
         
         spinner = TextInput(value="1", width=50, sizing_mode="fixed", visible=False)
-        next_page = Button(label="⮞", css_classes=SYM_CSS, width=SYM_WIDTH, 
-                                      sizing_mode="fixed", button_type="light",
-                                         margin=BTN_MARGIN_2, visible=False)
-        prev_page = Button(label="⮜", css_classes=SYM_CSS, width=SYM_WIDTH, 
-                                        sizing_mode="fixed", button_type="light",
-                                         margin=BTN_MARGIN_2, visible=False)
+        next_page = Button(label="", css_classes=SYM_CSS + ["fa_page_next_solid"], width=SYM_WIDTH, 
+                                      sizing_mode="fixed", button_type="light", visible=False)
+        prev_page = Button(label="", css_classes=SYM_CSS + ["fa_page_previous_solid"], width=SYM_WIDTH, 
+                                        sizing_mode="fixed", button_type="light", visible=False)
         page_div = Div(text="Page:", width=30, sizing_mode="fixed", visible=False)
         layout = column([row([div, prev_page, page_div, spinner, next_page, empty], sizing_mode="stretch_width"), row([
             Div(text="", sizing_mode="stretch_width"),
@@ -392,22 +401,22 @@ class MainLayout:
         def reset_event(e):
             l = []
             pos = self.reset_options[label][2] - 1
-            for idx, (n, opts) in list(enumerate(self.reset_options[label][1]))[pos*5:(pos+1)*5]:
+            for idx, (n, opts) in list(enumerate(self.reset_options[label][1]))[pos*ELEMENTS_PER_PAGE:(pos+1)*ELEMENTS_PER_PAGE]:
                 if orderable:
-                    down_button = Button(label="˅", css_classes=SYM_CSS, width=SYM_WIDTH, 
-                                        height=SYM_WIDTH, sizing_mode="fixed", tags=[n], button_type="light",
-                                         margin=BTN_MARGIN_2)
+                    down_button = Button(label="", css_classes=SYM_CSS + ["fa_sort_down_solid"], width=SYM_WIDTH, 
+                                        height=SYM_WIDTH, sizing_mode="fixed", tags=[n], button_type="light")
                     def down_event(n):
                         self.reset_options[label][1] = move_element(self.reset_options[label][1], n, False)
                         reset_event(0)
+                        trigger_callback()
                     down_button.on_click(lambda _, n=n: down_event(n))
 
-                    up_button = Button(label="˄", css_classes=SYM_CSS, width=SYM_WIDTH, 
-                                        height=SYM_WIDTH, sizing_mode="fixed", tags=[n], button_type="light",
-                                         margin=BTN_MARGIN_2)
+                    up_button = Button(label="", css_classes=SYM_CSS + ["fa_sort_up_solid"], width=SYM_WIDTH, 
+                                        height=SYM_WIDTH, sizing_mode="fixed", tags=[n], button_type="light")
                     def up_event(n):
                         self.reset_options[label][1] = move_element(self.reset_options[label][1], n, True)
                         reset_event(0)
+                        trigger_callback()
                     up_button.on_click(lambda _, n=n: up_event(n))
 
                 div = Div(text=n, sizing_mode="stretch_width")
@@ -426,7 +435,7 @@ class MainLayout:
             self.reset_options[label][0].children = l
 
         def spinner_event(x, y, z):
-            if spinner.value.isdigit() and int(spinner.value) > 0 and int(spinner.value) <= len(self.reset_options[label][1]) // 5 + 1:
+            if spinner.value.isdigit() and int(spinner.value) > 0 and int(spinner.value) <= len(self.reset_options[label][1]) // ELEMENTS_PER_PAGE + 1:
                 self.reset_options[label][2] = int(spinner.value)
                 reset_event(0)
             else:
@@ -436,7 +445,7 @@ class MainLayout:
 
         
         def next_page_event():
-            if self.reset_options[label][2] < len(self.reset_options[label][1]) // 5 + 1:
+            if self.reset_options[label][2] < len(self.reset_options[label][1]) // ELEMENTS_PER_PAGE + 1:
                 self.reset_options[label][2] += 1
                 spinner.value = str(self.reset_options[label][2])
                 reset_event(0)
@@ -451,7 +460,7 @@ class MainLayout:
         def set_options(labels, active_dict):
             self.reset_options[label][1] = []
             for x in self.reset_options[label][3]:
-                x.visible = len(labels) > 5
+                x.visible = len(labels) > ELEMENTS_PER_PAGE
             for jdx, n in enumerate(labels):
                 self.reset_options[label][1].append([n, []])
                 for idx, cb in enumerate(checkboxes):
@@ -515,7 +524,7 @@ class MainLayout:
 
         global SETTINGS_WIDTH
         tollbars = []
-        self.heatmap = FigureMaker().range1d().stretch().combine_tools(tollbars).get()
+        self.heatmap = FigureMaker().range1d().scale().combine_tools(tollbars).get()
 
         d = {"b": [], "l": [], "t": [], "r": [], "c": [], "chr_x": [], "chr_y": [], "x1": [], "x2": [],
              "y1": [], "y2": [], "s": [], "d_a": [], "d_b": []}
@@ -546,9 +555,9 @@ class MainLayout:
         ))
 
         self.heatmap_x_axis = FigureMaker().x_axis_of(
-            self.heatmap, "DNA").combine_tools(tollbars).get()
+            self.heatmap, "DNA", True).combine_tools(tollbars).get()
         self.heatmap_y_axis = FigureMaker().y_axis_of(
-            self.heatmap, "RNA").combine_tools(tollbars).get()
+            self.heatmap, "RNA", True).combine_tools(tollbars).get()
 
         FigureMaker._slope = Slope(gradient=1, y_intercept=0, line_color=None)
         self.heatmap.add_layout(FigureMaker._slope)
@@ -721,10 +730,10 @@ class MainLayout:
         self.anno_y.add_tools(anno_hover)
         
         
-        crosshair = CrosshairTool(dimensions="width")
+        crosshair = CrosshairTool(dimensions="width", line_color="lightgrey")
         for fig in [self.anno_x, self.raw_x, self.ratio_x, self.heatmap]:
             fig.add_tools(crosshair)
-        crosshair = CrosshairTool(dimensions="height")
+        crosshair = CrosshairTool(dimensions="height", line_color="lightgrey")
         for fig in [self.anno_y, self.raw_y, self.ratio_y, self.heatmap]:
             fig.add_tools(crosshair)
 
@@ -817,13 +826,13 @@ class MainLayout:
                                                   ("Squared relative to coordinates",
                                                    "coord")
                                                    )
-        self.power_ten_bin_d = "p10"
+        self.power_ten_bin_d = "no"
         def power_ten_bin_event(e):
             self.power_ten_bin_d = e
             self.trigger_render()
         power_ten_bin = self.dropdown_select("Snap Bin Size", power_ten_bin_event, "tooltip_snap_bin_size",
-                                                ("To Even Power of Ten", "p10"),
-                                                ("Do not snap", "no")
+                                                ("Do not snap", "no"),
+                                                ("To Even Power of Ten", "p10")
                                             )
 
         self.color_d = "Viridis256"
@@ -866,8 +875,8 @@ class MainLayout:
             else:
                 self.settings.width_policy = "max"
         self.stretch = self.dropdown_select("Stretch/Scale", stretch_event, "tooltip_stretch_scale",
-                                                  ("Stretch", "stretch_both"),
-                                                  ("Scale", "scale_height"))
+                                                  ("Scale", "scale_height"),
+                                                  ("Stretch", "stretch_both"))
 
         self.mapq_slider, ms_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, start=0, end=MAP_Q_MAX, 
                                         value=(0, MAP_Q_MAX), step=1,
@@ -958,7 +967,7 @@ class MainLayout:
             self.group_a = sele["A"]
             self.group_b = sele["B"]
             self.trigger_render()
-        self.set_group, group_layout = self.multi_choice("Group", ["A", "B"], group_event, False)
+        self.set_group, group_layout = self.multi_choice("Group", ["A", "B"], group_event, True)
 
         self.displayed_annos = []
         self.filtered_annos_x = []
@@ -989,14 +998,16 @@ class MainLayout:
             self.min_max_bin_size.value = \
                 min(max(self.min_max_bin_size.value + a, self.min_max_bin_size.start), self.min_max_bin_size.end)
             self.trigger_render()
-        button_s_up = Button(label="▲", button_type="light", width=15, height=15, margin=BTN_MARGIN)
+        button_s_up = Button(label="", css_classes=["other_button", "fa_sort_up_solid"], 
+                                button_type="light", width=10, height=10)
         button_s_up.on_click(lambda _: callback(1))
-        button_s_down = Button(label="▼", button_type="light", width=15, height=15, margin=BTN_MARGIN)
+        button_s_down = Button(label="", css_classes=["other_button", "fa_sort_down_solid"],
+                                button_type="light", width=10, height=10)
         button_s_down.on_click(lambda _: callback(-1))
 
         mmbs_l = row([self.min_max_bin_size, column([button_s_up, button_s_down])], margin=DIV_MARGIN)
 
-        self.curr_bin_size = Div(text="Current Bin Size: n/a", sizing_mode="stretch_width")
+        self.curr_bin_size = Div(text="Waiting for Fileinput.", sizing_mode="stretch_width")
         
         self.spinner = Div(text="<div class=\"lds-spinner\"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>")
         #self.spinner = Div(text="<div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>", css_classes=["lds-spinner"])
@@ -1726,9 +1737,6 @@ class MainLayout:
             def cancelable_task():
                 self.cancel_render = False
                 if self.meta is None or self.idx is None:
-                    def callback():
-                        self.curr_bin_size.text = "Waiting for Fileinput."
-                    self.curdoc.add_next_tick_callback(callback)
                     self.curdoc.add_timeout_callback(
                         lambda: self.render_callback(), self.update_frequency_slider.value*1000)
                     return False
@@ -1934,7 +1942,7 @@ class MainLayout:
                     "pos1": [x_pos1 for _ in range(x_num_raw)],
                     "pos2": [x_pos2 for _ in range(x_num_raw)],
                     "ys": [double_up(raw_x_heat), double_up(raw_x_norm_combined)] + x_ys,
-                    "ls": ["heatmap row sum", "combined"] + self.norm_x,
+                    "ls": ["heatmap row sum", "combined normalization"] + self.norm_x,
                     "cs": [Colorblind2[idx % 8] for idx in range(x_num_raw)],
                 }
                 raw_data_y = {
@@ -1943,7 +1951,7 @@ class MainLayout:
                     "pos1": [y_pos1 for _ in range(y_num_raw)],
                     "pos2": [y_pos2 for _ in range(y_num_raw)],
                     "ys": [double_up(raw_y_heat), double_up(raw_y_norm_combined)] + y_ys,
-                    "ls": ["heatmap col sum", "combined"] + self.norm_y,
+                    "ls": ["heatmap col sum", "combined normalization"] + self.norm_y,
                     "cs": [Colorblind2[idx % 8] for idx in range(y_num_raw)],
                 }
                 ratio_data_x = {
@@ -2039,6 +2047,8 @@ class MainLayout:
                     self.color_mapper.palette = self.color_bins_b(palette)
                     self.color_info.formatter.args = {"ticksx": color_bar_ticks, "labelsx": color_bar_tick_labels}
                     self.color_info.ticker.ticks = color_bar_ticks
+                    self.color_info.visible = False
+                    self.color_info.visible = True # trigger re-render
                     def mmax(*args):
                         m = 0
                         for x in args:
@@ -2189,7 +2199,7 @@ class MainLayout:
                     self.curr_bin_size.text = "done loading"
                 else:
                     print("File not found")
-                    self.curr_bin_size.text = "File not found"
+                    self.curr_bin_size.text = "File not found. <br>Waiting for Fileinput."
             self.curdoc.add_next_tick_callback(callback2)
         self.curdoc.add_next_tick_callback(callback)
 
