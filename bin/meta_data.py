@@ -47,29 +47,35 @@ class MetaData:
 
     def __str__(self):
         datasets_str = "Datasets:\n"
-        datasets_str += "id\tname\tgroup\tinput path\n"
-        for idx, (name, path, group_a, _1) in self.datasets.items():
-            datasets_str += str(idx) + "\t" + name + "\t" + group_a + "\t" + path + "\n"
+        datasets_str += "id\tname\tgroup\tinput path\twith mapping quality\twith multi mapping\n"
+        for idx, (name, path, group_a, map_q, multi_map) in self.datasets.items():
+            datasets_str += str(idx) + "\t" + name + "\t" + group_a + "\t" + path + "\t" + map_q + "\t" + multi_map + "\n"
         norms_str = "Normalizations:\n"
-        norms_str += "id\tname\twhere\tinput path\n"
-        for idx, (name, path, x_axis, _1) in self.normalizations.items():
-            norms_str += str(idx) + "\t" + name + "\t" + x_axis + "\t" + path + "\n"
+        norms_str += "id\tname\twhere\tinput path\twith mapping quality\twith multi mapping\n"
+        for idx, (name, path, x_axis, map_q, multi_map) in self.normalizations.items():
+            norms_str += str(idx) + "\t" + name + "\t" + x_axis + "\t" + path + "\t" + map_q + "\t" + multi_map + "\n"
         return datasets_str + "\n" + norms_str
 
     def set_chr_sizes(self, chr_sizes):
         self.chr_sizes = chr_sizes
 
-    def add_dataset(self, name, path, group_a, idx, idx_end=None):
-        self.datasets[idx] = ([name, path, group_a, idx_end])
+    def add_dataset(self, name, path, group_a, idx, map_q, multi_map):
+        self.datasets[name] = [idx, path, group_a, map_q, multi_map]
         self.data_id_by_path[path] = idx
 
-    def add_normalization(self, name, path, x_axis, idx):
-        self.normalizations[idx] = ([name, path, x_axis, True])
+    def dataset_name_unique(self, name):
+        return name in self.dataset
+
+    def add_normalization(self, name, path, x_axis, idx, map_q, multi_map):
+        self.normalizations[name] = [idx, path, x_axis, True, map_q, multi_map]
         self.norm_id_by_path[path] = idx
+
+    def normalization_name_unique(self, name):
+        return name in self.normalizations
 
     def add_wig_normalization(self, name, path, x_axis, xs, ys):
         idx = -len(self.normalizations)-1
-        self.normalizations[idx] = ([name, path, x_axis, False])
+        self.normalizations[name] = [idx, path, x_axis, False, False, False]
         self.norm_id_by_path[path] = idx
         self.norm[idx] = Coverage().set_x_y(xs, ys)
 

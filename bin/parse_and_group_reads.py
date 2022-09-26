@@ -52,6 +52,10 @@ def parse_heatmap(in_filename, test, chr_filter):
                 continue
             if not chr_2 in chr_filter:
                 continue
+            if mapq_1 == "" or mapq_1 == "nomapq":
+                mapq_1 = 0
+            if mapq_2 == "" or mapq_2 == "nomapq":
+                mapq_2 = 0
             # convert number values to ints
             pos_1, pos_2, mapq_1, mapq_2 = (int(x) for x in (pos_1, pos_2, mapq_1, mapq_2))
             pos_1 -= 1
@@ -62,6 +66,35 @@ def parse_heatmap(in_filename, test, chr_filter):
             cnt += 1
 
             yield read_name, chr_1, int(pos_1), chr_2, int(pos_2), mapq_1, mapq_2, tag_a, tag_b
+
+def has_map_q_and_multi_map(in_filename, test, chr_filter):
+    map_q = False
+    multi_map = False
+    last_map_q = None
+    last_read_name = None
+    for read_name, _, _, _, _, mapq_1, mapq_2, tag_a, tag_b in parse_heatmap(in_filename, test, chr_filter):
+        if last_read_name is None:
+            last_read_name = read_name
+        elif last_read_name == read_name:
+            multi_map = True
+        if len(tag_a) >= 5 and tag_b != "notag":
+            multi_map = True
+        if len(tag_b) >= 5 and tag_b != "notag":
+            multi_map = True
+        
+        if last_map_q is None:
+            last_map_q = mapq_1
+            if mapq_1 != mapq_2:
+                map_q = True
+        elif last_map_q != mapq_1:
+            map_q = True
+        elif last_map_q != mapq_2:
+            map_q = True
+
+        if map_q and multi_map:
+            break
+    return map_q, multi_map
+
 
 def group_heatmap(in_filename, file_size, chr_filter, no_groups=False, test=False):
     file_name = simplified_filepath(in_filename)

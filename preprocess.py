@@ -152,17 +152,32 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test
     touch(out_prefix + ".smoother_index/norm.datsets")
     touch(out_prefix + ".smoother_index/norm.overlays")
     touch(out_prefix + ".smoother_index/norm.prefix_sums")
-    touch(out_prefix + ".smoother_index/repl.coords")
-    touch(out_prefix + ".smoother_index/repl.datsets")
-    touch(out_prefix + ".smoother_index/repl.overlays")
-    touch(out_prefix + ".smoother_index/repl.prefix_sums")
+    for map_q in [True, False]:
+        for multi_map in [True, False]:
+            idx_suff = (".3" if map_q else ".2") + (".2" if multi_map else ".0")
+            touch(out_prefix + ".smoother_index/repl" + idx_suff + ".coords")
+            touch(out_prefix + ".smoother_index/repl" + idx_suff + ".datsets")
+            touch(out_prefix + ".smoother_index/repl" + idx_suff + ".overlays")
+            touch(out_prefix + ".smoother_index/repl" + idx_suff + ".prefix_sums")
 
 
 def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_groups=False, without_dep_dim=True,
-                  keep_points=False, only_points=False):
+                  keep_points=False, only_points=False, no_map_q=False, no_multi_map=False):
     meta = MetaData.load(out_prefix + ".smoother_index/meta")
-    index = make_sps_index(out_prefix + ".smoother_index/repl", 3, False, True, 
-                            2, "Cached" if cached else "Disk", True )
+    if not meta.dataset_name_unique(name):
+        raise RuntimeError("The dataset name you provide must be unique but is not. Use the <list> command to see all datasets.")
+    if not (no_map_q and no_multi_map):
+        print("pre-scanning file for index parameters...")
+        map_q, multi_map = has_map_q_and_multi_map(path, test, meta.chr_sizes.chr_sizes)
+    if no_map_q:
+        map_q = False
+    if no_multi_map:
+        multi_map = False
+    print("generating index", "with" if map_q else "without", "mapping quality and", 
+          "with" if multi_map else "without", "multi mapping.")
+    idx_suff = (".3" if map_q else ".2") + (".2" if multi_map else ".0")
+    index = make_sps_index(out_prefix + idx_suff + ".smoother_index/repl", 3 if map_q else 2, False, True, 
+                            2 if multi_map else 0, "Cached" if cached else "Disk", True )
     last_cnt = len(index)
     for read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q in group_heatmap(path, get_filesize(path),
                                                                                             meta.chr_sizes.chr_sizes,
@@ -176,19 +191,21 @@ def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_
         print("generating index")
         idx = index.generate(last_cnt, len(index))
         print("done generating index")
-        meta.add_dataset(name, path, group_a, idx)
+        meta.add_dataset(name, path, group_a, idx, map_q, multi_map)
         meta.save(out_prefix + ".smoother_index/meta")
         if not keep_points:
             del index
-            os.remove(out_prefix + ".smoother_index/repl.points")
-            os.remove(out_prefix + ".smoother_index/repl.desc")
+            os.remove(out_prefix + idx_suff + ".smoother_index/repl.points")
+            os.remove(out_prefix + idx_suff + ".smoother_index/repl.desc")
     else:
         print("Points are added to the indices:", last_cnt, "to", len(index))
 
 def add_normalization(out_prefix, path, name, for_row, test=False, cached=False, keep_points=False):
     meta = MetaData.load(out_prefix + ".smoother_index/meta")
+    if not meta.normalization_name_unique(name):
+        raise RuntimeError("The normalization name you provide must be unique but is not. Use the <list> command to see all normalization.")
     index = make_sps_index(out_prefix + ".smoother_index/norm", 2, False, True, 1, 
-                           "Cached" if cached else "Disk", True )
+                            "Cached" if cached else "Disk", True )
     last_cnt = len(index)
     if path[-4:] == ".wig":
         raise RuntimeError("disabled for now")
@@ -304,6 +321,10 @@ def get_argparse():
         help="Name for the new replicate.")
     repl_parser.add_argument('-g', '--group', default="neither", choices=["a", "b", "both", "neither"], 
         help="Which analysis group to place the new replicate in when opening the interface. (default: %(default)s)")
+    repl_parser.add_argument('-q', '--no_map_q', action='store_true', 
+        help="Do not store mapping quality information. This will make the index faster and smaller. (default: off)")
+    repl_parser.add_argument('-m', '--no_multi_map', action='store_true', 
+        help="Do not multi mapping information (reads that map to multiple loci). This will make the index faster and smaller. (default: off)")
     repl_parser.set_defaults(func=repl)
 
     norm_parser = sub_parsers.add_parser("norm", help="Add a normalization track to an index, using external sequencing data.")
@@ -344,7 +365,7 @@ def get_argparse():
     grid_seq_norm_parser.set_defaults(func=grid_seq_norm)
     
     ddd_sample_parser = sub_parsers.add_parser("ddd-sample", 
-        help="Sample distance dependant decay from a replicate input file.")
+        help="Sample distance dependant decay from a replicate input file.") #@todo dataset-id
     ddd_sample_parser.add_argument('in_path', 
         help="Path to the file that contains the aligned reads.")
     ddd_sample_parser.add_argument('out_path',

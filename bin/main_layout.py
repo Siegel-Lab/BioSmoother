@@ -1360,6 +1360,7 @@ class MainLayout:
                 return
         self.render_step_log(name + "_main")
         ns = []
+        # @todo @continue_here datasets and normalizations reorganized!
         for idx in sorted(list(self.meta.datasets.keys())):
             ns.append(self.idx.count_multiple(idx, bins_to_search, self.multi_mapping_d))
         self.render_step_log(name + "_post")

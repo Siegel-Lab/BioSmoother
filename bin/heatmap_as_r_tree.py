@@ -24,8 +24,14 @@ INT_TYPES = {
 class Tree_4:
     def __init__(self, file_name):
         self.file_name = file_name
-        self.index = make_sps_index(file_name + ".smoother_index/repl", 3, WITH_DEPENDENT_DIM, UNIFORM_OVERLAYS, 2, 
-                                    "PickByFileSize", False )
+        self.index = {}
+        for map_q in [True, False]:
+            self.index[map_q] = {}
+            for multi_map in [True, False]:
+                self.index[map_q][multi_map] = make_sps_index(file_name + ".smoother_index/repl", 3 if map_q else 2, 
+                                                              WITH_DEPENDENT_DIM, UNIFORM_OVERLAYS, 
+                                                              2 if multi_map else 0, 
+                                                              "PickByFileSize", False )
 
     def setup(self, data, bins, cache_size, threads):
         return self
@@ -40,12 +46,13 @@ class Tree_4:
 
 
     def count(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX,
-              intersection_type="enclosed"):
-        return self.index.count(id, *self.to_query(rna_from, rna_to, dna_from, dna_to, map_q_min, map_q_max),
+              intersection_type="enclosed", map_q=True, multi_map=True):
+        return self.index[map_q][multi_map].count(id, 
+                                *self.to_query(rna_from, rna_to, dna_from, dna_to, map_q_min, map_q_max),
                                 INT_TYPES[intersection_type])
 
-    def count_multiple(self, id, queries, intersection_type="enclosed"):
-        return self.index.count_multiple(id, queries, INT_TYPES[intersection_type])
+    def count_multiple(self, id, queries, intersection_type="enclosed", map_q=True, multi_map=True):
+        return self.index[map_q][multi_map].count_multiple(id, queries, INT_TYPES[intersection_type])
 
     def save(self):
         pass
