@@ -150,7 +150,7 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test
 
 def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_groups=False, without_dep_dim=True, keep_points=False):
     meta = MetaData.load(out_prefix + ".smoother_index/meta")
-    index = make_sps_index(out_prefix + ".smoother_index/repl", 3, False, True, 
+    index = make_sps_index(out_prefix + ".smoother_index/repl", 3, WITH_DEPENDENT_DIM, UNIFORM_OVERLAYS, 
                             2, "Cached" if cached else "Disk", True )
     last_cnt = len(index)
     for read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q in group_heatmap(path, get_filesize(path),
