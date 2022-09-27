@@ -4,7 +4,7 @@ source activate $(pwd)/conda_env/smoother
 
 ./bin/conf_version.sh
 
-port=5009
+port=5010
 
 
 # setup port forwarding
@@ -25,7 +25,7 @@ cd ..
 
 #gdb python3 -ex "run /home/mschmidt/.conda/envs/main/bin/bokeh serve smoother/ --allow-websocket-origin=localhost:${port} --port ${port}"
 
-bokeh serve smoother --allow-websocket-origin=localhost:${port} --log-level error --port ${port} #--check-unused-sessions 1000 --unused-session-lifetime 5000
+bokeh serve smoother --allow-websocket-origin=localhost:${port} --log-level error --port ${port}
 
 
 # kill port forwarding process

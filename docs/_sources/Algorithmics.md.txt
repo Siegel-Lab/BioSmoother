@@ -1,4 +1,4 @@
-## The Datastructure (_Markus_)
+## The Datastructure
 
 Smoother uses a datastructure called libSps implemented in C++ for querying the interactions as effectiveley as possible.
 You can find the [GitHub of libSps here](https://github.com/MarkusRainerSchmidt/libSps "Go to the libSps GitHub").
@@ -104,7 +104,7 @@ They remove empty rows and columns from point matrices using lookup tables:
 
 <img src="../static/algorithmics_desc/sparse-matrices.png" />
 
-*Removing slices.*
+*Removing slices. Image taken from [1]*
 
 However, this strategy breaks down for large datasets. 
 To split too large datasets down into smaller ones they use overlays.

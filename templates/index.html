@@ -4,6 +4,12 @@
     <meta charset="utf-8">
     {{ bokeh_css }}
     {{ bokeh_js }}
+    <script> // type="module"
+        //import {ButtonClick} from "core/bokeh_events"
+        window.onbeforeunload = function(){
+            Bokeh.documents[0].get_model_by_name('quit_ti').value = "shutdown";
+        };
+    </script>
     <link rel="stylesheet" href="smoother/static/css/styles.css"/>
     <link rel="stylesheet" href="smoother/static/css/tooltips.css"/>
     <link rel="icon" type="image/x-icon" href="smoother/static/favicon.ico">

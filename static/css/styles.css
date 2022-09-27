@@ -10,6 +10,14 @@
     top: 15% !important;
     border-top: 1px solid #D3D3D3 !important;
 }
+.scroll_y2 {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+.outlnie_border {
+    border: 1px solid #ccc  !important;
+    border-radius: 4px  !important;
+}
 .twenty_percent {
     overflow-y: auto !important;
     overflow-x: hidden !important;
@@ -30,8 +38,33 @@
     box-shadow: inset 0 3px 5px rgb(0 0 0 / 13%);
 }
 
+.fa_sort_up_solid {
+    background-image: url(sort-up-solid.svg) !important;
+    background-size: cover;
+}
+
+.fa_sort_down_solid {
+    background-image: url(sort-down-solid.svg) !important;
+    background-size: cover;
+}
+
+.fa_page_next_solid {
+    background-image: url(page-next-solid.svg) !important;
+    background-size: cover;
+}
+
+.fa_page_previous_solid {
+    background-image: url(page-previous-solid.svg) !important;
+    background-size: cover;
+}
+
 body {
     margin: 0
+}
+
+.vertical {
+    writing-mode: vertical-lr;
+    white-space: nowrap;
 }
 
 button {
@@ -51,8 +84,14 @@ button {
 }
 
 .bk-root .bk-btn-light.bk-active {
-    background-color: inherit;
-    border-color: white;
+    background-color: transparent !important;
+    border-color: transparent;
+    font-weight: inherit;
+}
+
+.bk-root .bk-btn-light {
+    background-color: transparent !important;
+    border-color: transparent;
     font-weight: inherit;
 }
 

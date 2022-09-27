@@ -45,21 +45,37 @@ class MetaData:
         r = lo * (1-fac) + hi * fac
         return r
 
+    def __str__(self):
+        datasets_str = "Datasets:\n"
+        datasets_str += "id\tname\tgroup\tinput path\twith mapping quality\twith multi mapping\n"
+        for idx, (name, path, group_a, map_q, multi_map) in self.datasets.items():
+            datasets_str += str(idx) + "\t" + name + "\t" + group_a + "\t" + path + "\t" + map_q + "\t" + multi_map + "\n"
+        norms_str = "Normalizations:\n"
+        norms_str += "id\tname\twhere\tinput path\twith mapping quality\twith multi mapping\n"
+        for idx, (name, path, x_axis, map_q, multi_map) in self.normalizations.items():
+            norms_str += str(idx) + "\t" + name + "\t" + x_axis + "\t" + path + "\t" + map_q + "\t" + multi_map + "\n"
+        return datasets_str + "\n" + norms_str
 
     def set_chr_sizes(self, chr_sizes):
         self.chr_sizes = chr_sizes
 
-    def add_dataset(self, name, path, group_a, idx, idx_end=None):
-        self.datasets[idx] = ([name, path, group_a, idx_end])
+    def add_dataset(self, name, path, group_a, idx, map_q, multi_map):
+        self.datasets[name] = [idx, path, group_a, map_q, multi_map]
         self.data_id_by_path[path] = idx
 
-    def add_normalization(self, name, path, x_axis, idx):
-        self.normalizations[idx] = ([name, path, x_axis, True])
+    def dataset_name_unique(self, name):
+        return name in self.dataset
+
+    def add_normalization(self, name, path, x_axis, idx, map_q, multi_map):
+        self.normalizations[name] = [idx, path, x_axis, True, map_q, multi_map]
         self.norm_id_by_path[path] = idx
+
+    def normalization_name_unique(self, name):
+        return name in self.normalizations
 
     def add_wig_normalization(self, name, path, x_axis, xs, ys):
         idx = -len(self.normalizations)-1
-        self.normalizations[idx] = ([name, path, x_axis, 0, False])
+        self.normalizations[name] = [idx, path, x_axis, False, False, False]
         self.norm_id_by_path[path] = idx
         self.norm[idx] = Coverage().set_x_y(xs, ys)
 
@@ -136,22 +152,21 @@ class MetaData:
     def setup(self, main_layout):
         self.chr_sizes.setup(main_layout)
         
-        opt = [ (str(idx), data[0]) for idx, data in self.datasets.items()]
-        main_layout.group_a.options = opt
-        main_layout.group_b.options = opt
-        main_layout.group_a.value = [ str(idx) for idx, data in self.datasets.items() if data[2] in ["a", "both"] ]
-        main_layout.group_b.value = [ str(idx) for idx, data in self.datasets.items() if data[2] in ["b", "both"] ]
-        opt = [ (str(idx), data[0]) for idx, data in self.normalizations.items()]
-        main_layout.norm_x.options = opt
-        main_layout.norm_y.options = opt
-        main_layout.norm_x.value = [ str(idx) for idx, data in self.normalizations.items() if data[2] in ["row", "both"] ]
-        main_layout.norm_y.value = [ str(idx) for idx, data in self.normalizations.items() if data[2] in ["col", "both"] ]
+        main_layout.set_group([d[0] for d in self.datasets.values()], {
+            "A": [ data[0] for idx, data in self.datasets.items() if data[2] in ["a", "both"] ],
+            "B": [ data[0] for idx, data in self.datasets.items() if data[2] in ["b", "both"] ],
+        })
 
-        opt = [(x, x) for x in self.annotations.keys()]
-        main_layout.displayed_annos.options = opt
-        main_layout.filtered_annos_x.options = opt
-        main_layout.filtered_annos_y.options = opt
-        main_layout.displayed_annos.value = [x for x in self.annotations.keys()]
+        main_layout.set_norm([d[0] for d in self.normalizations.values()], {
+            "Rows": [ data[0] for idx, data in self.normalizations.items() if data[2] in ["row", "both"] ],
+            "Columns": [ data[0] for idx, data in self.normalizations.items() if data[2] in ["col", "both"] ]
+        })
+
+        main_layout.set_annos(self.annotations.keys(), {
+            "Displayed": self.annotations.keys(),
+            "Row filter": [],
+            "Column filter": []
+        })
 
         possible_coords = [("Genomic loci", "full_genome")]
         for anno_names in self.annotations.keys():
