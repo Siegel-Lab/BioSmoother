@@ -5,7 +5,7 @@ __email__ = "Markus.Schmidt@lmu.de"
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup, CrosshairTool
+from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup, CrosshairTool, ColorPicker
 #from bin.unsorted_multi_choice import UnsortedMultiChoice as MultiChoice
 from bokeh.io import export_png, export_svg
 import math
@@ -18,7 +18,7 @@ from bin.meta_data import *
 import os
 import sys
 from bin.heatmap_as_r_tree import *
-from bokeh.palettes import Viridis256, Colorblind, Plasma256, Turbo256, Greys256
+from bokeh.palettes import Viridis256, Colorblind, Plasma256, Turbo256
 from datetime import datetime, timedelta
 import psutil
 from concurrent.futures import ThreadPoolExecutor
@@ -843,7 +843,7 @@ class MainLayout:
                                                 ("Viridis", "Viridis256"),
                                                 ("Plasma", "Plasma256"),
                                                 ("Turbo", "Turbo256"),
-                                                ("Greys", "Greys256"),
+                                                ("Low to High", "LowToHigh"),
                                                   )
 
         self.multi_mapping_d = "enclosed"
@@ -889,7 +889,8 @@ class MainLayout:
                                                  on_change=lambda x, y, z: self.trigger_render(), sizing_mode="stretch_width")
         
 
-        self.color_range_slider, crs_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, start=0, end=1, value=(0, 1), 
+        self.color_range_slider, crs_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, start=0, 
+                                                end=1, value=(0, 1), 
                                                 step=0.01,
                                                  title="Color Scale Range", sizing_mode="stretch_width",
                                                  on_change=lambda x, y, z: self.trigger_render())
@@ -961,11 +962,11 @@ class MainLayout:
         self.meta_file = TextInput(value="smoother_out/")
         self.meta_file.on_change("value", lambda x, y, z: self.setup())
 
-        self.group_a = []
-        self.group_b = []
+        self.group_a = set()
+        self.group_b = set()
         def group_event(sele):
-            self.group_a = sele["A"]
-            self.group_b = sele["B"]
+            self.group_a = set(sele["A"])
+            self.group_b = set(sele["B"])
             self.trigger_render()
         self.set_group, group_layout = self.multi_choice("Group", ["A", "B"], group_event, True)
 
@@ -1106,6 +1107,13 @@ class MainLayout:
             self.trigger_render()
         radicl_seq_config.on_click(radicl_seq_event)
 
+        self.low_color = ColorPicker(title="Color Low", color="#ffffff")
+        self.high_color = ColorPicker(title="Color High")
+        def color_event(_1, _2, _3):
+            self.trigger_render()
+        self.low_color.on_change("color", color_event)
+        self.high_color.on_change("color", color_event)
+
         def make_panel(title, tooltip, children):
             t = Toggle(active=title == "General", button_type="light", css_classes=["menu_group", "tooltip", tooltip],
                        height=DROPDOWN_HEIGHT)
@@ -1163,8 +1171,8 @@ class MainLayout:
                 make_panel("Interface", "tooltip_interface", [nb_l,
                                     show_hide, mmbs_l,
                                     ufs_l, rs_l, aas_l, ass_l, rss1_l, rss2_l,
-                                    self.stretch, square_bins, power_ten_bin, color_picker, axis_lables, 
-                                    self.overlay_dataset_id]),
+                                    self.stretch, square_bins, power_ten_bin, color_picker, 
+                                    self.low_color, self.high_color, axis_lables, self.overlay_dataset_id]),
                 make_panel("Filters", "tooltip_filters", [ms_l, incomp_align_layout, 
                                           self.symmetrie, dds_l, annos_layout, 
                                           x_coords, y_coords, multiple_anno_per_bin, chrom_layout, multi_mapping]),
@@ -1256,6 +1264,8 @@ class MainLayout:
         if anno_coords is None:
             coords = self.meta.chr_sizes.bin_cols_or_rows(h_bin, area[base_idx], area[base_idx+2], none_for_chr_border, 
                                                             chr_filter, is_canceld=lambda: self.cancel_render)
+            if self.cancel_render:
+                return
             if self.normalization_d == "hi-c":
                 # move start of first bin to start of genome
                 coords[0][1 if none_for_chr_border else 0][1] += coords[0][1 if none_for_chr_border else 0][0]
@@ -1342,35 +1352,42 @@ class MainLayout:
     def make_bins(self, bin_coords, name="make_bins"):
         #self.render_step_log(name)
         self.render_step_log(name + "_ini")
-        bins = []
         min_ = self.interactions_bounds_slider.value
         map_q_min, map_q_max = self.mapq_slider.value
         if not (map_q_min == 0 and self.incomplete_alignments):
             map_q_min += 1
         manhatten_dist = 1000 * self.diag_dist_slider.value / self.meta.dividend
-        bins_to_search = []
+        bins_to_search_map_q = []
+        bins_to_search_no_map_q = []
         self.render_step_log(name + "_pre")
         for x, y, w, h in bin_coords:
             if abs(x - y) >= manhatten_dist:
                 x, y, w, h = self.adjust_bin_pos_for_symmetrie(x, y, w, h)
-                bins_to_search.append(self.idx.to_query(y, y+h, x, x+w, map_q_min, map_q_max))
+                bins_to_search_map_q.append(self.idx.to_query(y, y+h, x, x+w, map_q_min, map_q_max, True, True))
+                bins_to_search_no_map_q.append(self.idx.to_query(y, y+h, x, x+w, map_q_min, map_q_max, False, True))
             else:
-                bins_to_search.append(self.idx.to_query(0, 0, 0, 0, 0, 0))
+                bins_to_search_map_q.append(self.idx.to_query(0, 0, 0, 0, 0, 0, True, True))
+                bins_to_search_no_map_q.append(self.idx.to_query(0, 0, 0, 0, 0, 0, False, True))
             if self.cancel_render:
                 return
         self.render_step_log(name + "_main")
         ns = []
-        # @todo @continue_here datasets and normalizations reorganized!
-        for idx in sorted(list(self.meta.datasets.keys())):
-            ns.append(self.idx.count_multiple(idx, bins_to_search, self.multi_mapping_d))
+        for name in list(self.group_a) + list(self.group_b):
+            idx, _1, _2, map_q, multi_map = self.meta.datasets[name]
+            ns.append(self.idx.count_multiple(idx, bins_to_search_map_q if map_q else bins_to_search_no_map_q, 
+                                              self.multi_mapping_d, map_q, multi_map))
+            if self.cancel_render:
+                return
+
         self.render_step_log(name + "_post")
-        for idx in sorted(list(self.meta.datasets.keys())):
-            bins.append([])
-            for n in ns[idx]:
-                bins[-1].append(max(n-min_, 0))
-                if self.cancel_render:
-                    return
-        return bins
+
+        for idx in range(len(ns)):
+            for jdx in range(len(ns[idx])):
+                ns[idx][jdx] = max(ns[idx][jdx] - min_, 0)
+            if self.cancel_render:
+                return
+
+        return ns
 
     def col_norm(self, cols):
         x = self.make_bins([(c[0], 0, c[1], self.meta.chr_sizes.chr_start_pos["end"])
@@ -1386,16 +1403,17 @@ class MainLayout:
             return
         return self.flatten_bins(x)
 
-    def read_norm(self, idx):
+    def read_norm(self, in_group_a):
         n = []
         map_q_min, map_q_max = self.mapq_slider.value
         if not (map_q_min == 0 and self.incomplete_alignments):
             map_q_min += 1
-        for idx, dataset in sorted(list(self.meta.datasets.items())):
-            if str(idx) in (self.group_a if idx == 0 else self.group_b):
-                val = self.idx.count(idx, 0, self.meta.chr_sizes.chr_start_pos["end"], 0, 
-                                     self.meta.chr_sizes.chr_start_pos["end"], map_q_min, map_q_max)
-                n.append(val)
+        for name in self.group_a if in_group_a else self.group_b:
+            idx, _1, _2, map_q, multi_map = self.meta.datasets[name]
+            val = self.idx.count(idx, 0, self.meta.chr_sizes.chr_start_pos["end"], 0, 
+                                    self.meta.chr_sizes.chr_start_pos["end"], map_q_min, map_q_max, 
+                                    self.multi_mapping_d, map_q, multi_map)
+            n.append(val)
         if self.in_group_d == "min":
             n = min(n)
         elif self.in_group_d == "sum":
@@ -1486,13 +1504,13 @@ class MainLayout:
             return
         for idx, bins in enumerate(bins_l):
             if self.normalization_d == "max_bin_visible":
-                n = max(max(bins), 1)
+                n = max(max(bins), 1) if len(bins) > 0 else 1
                 ret.append([x/n for x in bins])
             elif self.normalization_d == "rpm":
-                n = self.read_norm(idx)
+                n = max(self.read_norm(idx == 0), 1)
                 ret.append([1000000 * x/n for x in bins])
             elif self.normalization_d == "rpk":
-                n = self.read_norm(idx)
+                n = max(self.read_norm(idx == 0), 1)
                 ret.append([1000 * x/n for x in bins])
             elif self.normalization_d == "column":
                 ret.append([x / max(ns[idx][idx_2 // len(rows)], 1) for idx_2, x in enumerate(bins)])
@@ -1530,37 +1548,34 @@ class MainLayout:
         return ret
 
     def flatten_bins(self, bins):
-        self.render_step_log("flatten_bins", 0, len(bins[0]))
-        group_a = []
-        group_b = []
-        for idx_2 in range(len(bins)):
-            if list(self.meta.datasets.values())[idx_2][0] in self.group_a:
-                group_a.append(idx_2)
-            if list(self.meta.datasets.values())[idx_2][0] in self.group_b:
-                group_b.append(idx_2)
-        ret = [[], []]
-        for idx, _ in enumerate(bins[0]):
-            self.render_step_log("flatten_bins", idx, len(bins[0]))
-            a = []
-            b = []
-            for idx_2 in group_a:
-                a.append(bins[idx_2][idx])
-            for idx_2 in group_b:
-                b.append(bins[idx_2][idx])
-            if self.in_group_d == "min":
-                aa = min(a) if len(a) > 0 else 0
-                bb = min(b) if len(b) > 0 else 0
-            elif self.in_group_d == "sum":
-                aa = sum(a)
-                bb = sum(b)
-            elif self.in_group_d == "dif":
-                aa = sum(abs(x-y) for x in a for y in a)
-                bb = sum(abs(x-y) for x in b for y in b)
-            else:
-                raise RuntimeError("Unknown in group value")
-            ret[0].append(aa)
-            ret[1].append(bb)
-        return ret
+        if len(bins) > 0:
+            self.render_step_log("flatten_bins", 0, len(bins[0]))
+            group_a = range(len(self.group_a))
+            group_b = range(len(self.group_a), len(self.group_a) + len(self.group_b))
+            ret = [[], []]
+            for idx, _ in enumerate(bins[0]):
+                self.render_step_log("flatten_bins", idx, len(bins[0]))
+                a = []
+                b = []
+                for idx_2 in group_a:
+                    a.append(bins[idx_2][idx])
+                for idx_2 in group_b:
+                    b.append(bins[idx_2][idx])
+                if self.in_group_d == "min":
+                    aa = min(a) if len(a) > 0 else 0
+                    bb = min(b) if len(b) > 0 else 0
+                elif self.in_group_d == "sum":
+                    aa = sum(a)
+                    bb = sum(b)
+                elif self.in_group_d == "dif":
+                    aa = sum(abs(x-y) for x in a for y in a)
+                    bb = sum(abs(x-y) for x in b for y in b)
+                else:
+                    raise RuntimeError("Unknown in group value")
+                ret[0].append(aa)
+                ret[1].append(bb)
+            return ret
+        return [[], []]
 
     def flatten_norm(self, bins):
         ret = []
@@ -1608,6 +1623,16 @@ class MainLayout:
             ret.append(c)
         return ret
 
+    def combine_hex_values(self, d):
+        ## taken from: https://stackoverflow.com/questions/61488790/how-can-i-proportionally-mix-colors-in-python
+        d_items = sorted(d.items())
+        tot_weight = sum(d.values())
+        red = int(sum([int(k[:2], 16)*v for k, v in d_items])/tot_weight)
+        green = int(sum([int(k[2:4], 16)*v for k, v in d_items])/tot_weight)
+        blue = int(sum([int(k[4:6], 16)*v for k, v in d_items])/tot_weight)
+        zpad = lambda x: x if len(x)==2 else '0' + x
+        return zpad(hex(red)[2:]) + zpad(hex(green)[2:]) + zpad(hex(blue)[2:])
+
     def color(self, x):
         if self.color_d == "Viridis256":
             return Viridis256[x]
@@ -1615,8 +1640,8 @@ class MainLayout:
             return Plasma256[x]
         if self.color_d == "Turbo256":
             return Turbo256[x]
-        if self.color_d == "Greys256":
-            return Greys256[x]
+        if self.color_d == "LowToHigh":
+            return "#" + self.combine_hex_values({self.low_color.color[1:]: 1-x/255, self.high_color.color[1:]: x/255})
         return Viridis256[x]
 
     def color_range(self, c):
@@ -2123,8 +2148,8 @@ class MainLayout:
                         self.overlay_data.data = d_overlay
                     self.do_export = None
                     self.curdoc.unhold()
-                    total_time, ram_usage = self.render_done(len(bins[0]))
-                    self.curr_bin_size.text = end_text + "<br>Took " + str(total_time) + " in total.<br>" + str(ram_usage) + "% RAM used.<br> " + str(len(bins[0])//1000) + "k bins rendered."
+                    total_time, ram_usage = self.render_done(len(bins[0]) if len(bins) > 0 else 0)
+                    self.curr_bin_size.text = end_text + "<br>Took " + str(total_time) + " in total.<br>" + str(ram_usage) + "% RAM used.<br> " + str(len(bins[0])//1000) if len(bins) > 0 else "0" + "k bins rendered."
                     self.curdoc.add_timeout_callback(
                         lambda: self.render_callback(), self.update_frequency_slider.value*1000)
 
@@ -2193,7 +2218,6 @@ class MainLayout:
                     self.min_max_bin_size.value = max(9*2, to_idx(self.meta.dividend))
                     self.setup_coordinates()
                     self.idx = Tree_4(self.meta_file.value)
-                    print("number of points in index: ", len(self.idx.index))
                     self.idx_norm = Tree_3(self.meta_file.value)
                     print("done loading\033[K")
                     self.trigger_render()

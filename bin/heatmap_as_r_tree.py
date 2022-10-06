@@ -28,7 +28,9 @@ class Tree_4:
         for map_q in [True, False]:
             self.index[map_q] = {}
             for multi_map in [True, False]:
-                self.index[map_q][multi_map] = make_sps_index(file_name + ".smoother_index/repl", 3 if map_q else 2, 
+                idx_suff = (".3" if map_q else ".2") + (".2" if multi_map else ".0")
+                self.index[map_q][multi_map] = make_sps_index(file_name + ".smoother_index/repl" + idx_suff, 
+                                                              3 if map_q else 2, 
                                                               WITH_DEPENDENT_DIM, UNIFORM_OVERLAYS, 
                                                               2 if multi_map else 0, 
                                                               "PickByFileSize", False )
@@ -39,34 +41,40 @@ class Tree_4:
     def load(self, num_data, cache_size, threads):
         return self
 
-    def to_query(self, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX):
+    def to_query(self, rna_from, rna_to, dna_from, dna_to, map_q_min, map_q_max, 
+                 has_map_q, multi_map):
         dna_to = max(dna_from+1, dna_to)
         rna_to = max(rna_from+1, rna_to)
-        return ([int(dna_from), int(rna_from), MAP_Q_MAX-map_q_max], [int(dna_to), int(rna_to), MAP_Q_MAX-map_q_min])
+        if has_map_q:
+            return ([int(dna_from), int(rna_from), MAP_Q_MAX-map_q_max], 
+                    [int(dna_to), int(rna_to), MAP_Q_MAX-map_q_min])
+        else: #if not has_map_q
+            return ([int(dna_from), int(rna_from)], [int(dna_to), int(rna_to)])
 
 
-    def count(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX,
-              intersection_type="enclosed", map_q=True, multi_map=True):
+    def count(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min, map_q_max,
+              intersection_type, map_q, multi_map):
         return self.index[map_q][multi_map].count(id, 
-                                *self.to_query(rna_from, rna_to, dna_from, dna_to, map_q_min, map_q_max),
+                                *self.to_query(rna_from, rna_to, dna_from, dna_to, map_q_min, map_q_max,
+                                               map_q, multi_map),
                                 INT_TYPES[intersection_type])
 
-    def count_multiple(self, id, queries, intersection_type="enclosed", map_q=True, multi_map=True):
-        return self.index[map_q][multi_map].count_multiple(id, queries, INT_TYPES[intersection_type])
+    def count_multiple(self, idx, queries, intersection_type, map_q, multi_map):
+        return self.index[map_q][multi_map].count_multiple(idx, queries, INT_TYPES[intersection_type])
 
     def save(self):
         pass
 
-    def get_overlay_grid(self, id):
-        return self.index.get_overlay_grid(id)
+    def get_overlay_grid(self, idx):
+        return self.index.get_overlay_grid(idx)
 
-    def get(self, id, rna_from, rna_to, dna_from, dna_to):
-        return self.index.get(id, [int(dna_from), int(rna_from)], [int(dna_to), int(rna_to)])
+    def get(self, idx, rna_from, rna_to, dna_from, dna_to):
+        return self.index.get(idx, [int(dna_from), int(rna_from)], [int(dna_to), int(rna_to)])
 
-    def info(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX):
+    def info(self, idx, rna_from, rna_to, dna_from, dna_to, map_q_min=0, map_q_max=MAP_Q_MAX):
         ret = ""
         return ret
-        for layer, d in enumerate(self.get(id, rna_from, rna_to, dna_from, dna_to)):
+        for layer, d in enumerate(self.get(idx, rna_from, rna_to, dna_from, dna_to)):
             if layer >= map_q_min and layer < map_q_max:
                 for _, read_name in d:
                     if not len(ret) == 0:

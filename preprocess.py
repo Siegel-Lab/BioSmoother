@@ -168,15 +168,15 @@ def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_
         raise RuntimeError("The dataset name you provide must be unique but is not. Use the <list> command to see all datasets.")
     if not (no_map_q and no_multi_map):
         print("pre-scanning file for index parameters...")
-        map_q, multi_map = has_map_q_and_multi_map(path, test, meta.chr_sizes.chr_sizes)
+        has_map_q, multi_map = has_map_q_and_multi_map(path, test, meta.chr_sizes.chr_sizes)
     if no_map_q:
-        map_q = False
+        has_map_q = False
     if no_multi_map:
         multi_map = False
-    print("generating index", "with" if map_q else "without", "mapping quality and", 
+    print("generating index", "with" if has_map_q else "without", "mapping quality and", 
           "with" if multi_map else "without", "multi mapping.")
-    idx_suff = (".3" if map_q else ".2") + (".2" if multi_map else ".0")
-    index = make_sps_index(out_prefix + idx_suff + ".smoother_index/repl", 3 if map_q else 2, False, True, 
+    idx_suff = (".3" if has_map_q else ".2") + (".2" if multi_map else ".0")
+    index = make_sps_index(out_prefix + ".smoother_index/repl" + idx_suff, 3 if has_map_q else 2, False, True, 
                             2 if multi_map else 0, "Cached" if cached else "Disk", True )
     last_cnt = len(index)
     for read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q in group_heatmap(path, get_filesize(path),
@@ -186,17 +186,28 @@ def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_
         act_pos_1_e = meta.chr_sizes.coordinate(pos_2_e // meta.dividend, chr_2)
         act_pos_2_s = meta.chr_sizes.coordinate(pos_1_s // meta.dividend, chr_1)
         act_pos_2_e = meta.chr_sizes.coordinate(pos_1_e // meta.dividend, chr_1)
-        index.add_point([act_pos_1_s, act_pos_2_s, 255-map_q], [act_pos_1_e, act_pos_2_e, 255-map_q], read_name)
+        if has_map_q and multi_map:
+            index.add_point([act_pos_1_s, act_pos_2_s, 255-map_q], [act_pos_1_e, act_pos_2_e, 255-map_q], read_name)
+        elif has_map_q and not multi_map:
+            index.add_point([act_pos_1_s, act_pos_2_s, 255-map_q], read_name)
+        elif not has_map_q and multi_map:
+            index.add_point([act_pos_1_s, act_pos_2_s], [act_pos_1_e, act_pos_2_e], read_name)
+        elif not has_map_q and not multi_map:
+            index.add_point([act_pos_1_s, act_pos_2_s], read_name)
+        else:
+            raise RuntimeError("this statement should never be reached")
     if not only_points:
+        print()
         print("generating index")
         idx = index.generate(last_cnt, len(index))
         print("done generating index")
-        meta.add_dataset(name, path, group_a, idx, map_q, multi_map)
+        #print("max value is:", index.get_max_prefix_sum())
+        meta.add_dataset(name, path, group_a, idx, has_map_q, multi_map)
         meta.save(out_prefix + ".smoother_index/meta")
         if not keep_points:
             del index
-            os.remove(out_prefix + idx_suff + ".smoother_index/repl.points")
-            os.remove(out_prefix + idx_suff + ".smoother_index/repl.desc")
+            os.remove(out_prefix + ".smoother_index/repl" + idx_suff + ".points")
+            os.remove(out_prefix + ".smoother_index/repl" + idx_suff + ".desc")
     else:
         print("Points are added to the indices:", last_cnt, "to", len(index))
 
@@ -223,9 +234,10 @@ def add_normalization(out_prefix, path, name, for_row, test=False, cached=False,
             cnt += 1
             if cnt > TEST_FAC and test:
                 break
+        print()
         print("generating index")
         idx = index.generate(last_cnt, len(index))
-        meta.add_normalization(name, path, for_row, idx)
+        meta.add_normalization(name, path, for_row, idx, True, True)
     meta.save(out_prefix + ".smoother_index/meta")
     if not keep_points:
         del index
@@ -240,7 +252,7 @@ def init(args):
 def repl(args):
     print("LibSps Version:", VERSION)
     add_replicate(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached, args.no_groups,
-                  args.without_dep_dim, args.keep_points, args.only_points)
+                  args.without_dep_dim, args.keep_points, args.only_points, args.no_map_q, args.no_multi_map)
 
 def norm(args):
     print("LibSps Version:", VERSION)

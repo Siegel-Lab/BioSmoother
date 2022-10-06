@@ -48,12 +48,12 @@ class MetaData:
     def __str__(self):
         datasets_str = "Datasets:\n"
         datasets_str += "id\tname\tgroup\tinput path\twith mapping quality\twith multi mapping\n"
-        for idx, (name, path, group_a, map_q, multi_map) in self.datasets.items():
-            datasets_str += str(idx) + "\t" + name + "\t" + group_a + "\t" + path + "\t" + map_q + "\t" + multi_map + "\n"
+        for name, (idx, path, group_a, map_q, multi_map) in self.datasets.items():
+            datasets_str += str(idx) + "\t" + name + "\t" + group_a + "\t" + path + "\t" + str(map_q) + "\t" + str(multi_map) + "\n"
         norms_str = "Normalizations:\n"
-        norms_str += "id\tname\twhere\tinput path\twith mapping quality\twith multi mapping\n"
-        for idx, (name, path, x_axis, map_q, multi_map) in self.normalizations.items():
-            norms_str += str(idx) + "\t" + name + "\t" + x_axis + "\t" + path + "\t" + map_q + "\t" + multi_map + "\n"
+        norms_str += "id\tname\twhere\tinput path\treads\twith mapping quality\twith multi mapping\n"
+        for name, (idx, path, x_axis, reads, map_q, multi_map) in self.normalizations.items():
+            norms_str += str(idx) + "\t" + name + "\t" + x_axis + "\t" + path + "\t" + str(reads) + "\t" + str(map_q) + "\t" + str(multi_map) + "\n"
         return datasets_str + "\n" + norms_str
 
     def set_chr_sizes(self, chr_sizes):
@@ -64,14 +64,14 @@ class MetaData:
         self.data_id_by_path[path] = idx
 
     def dataset_name_unique(self, name):
-        return name in self.dataset
+        return not name in self.datasets
 
     def add_normalization(self, name, path, x_axis, idx, map_q, multi_map):
         self.normalizations[name] = [idx, path, x_axis, True, map_q, multi_map]
         self.norm_id_by_path[path] = idx
 
     def normalization_name_unique(self, name):
-        return name in self.normalizations
+        return not name in self.normalizations
 
     def add_wig_normalization(self, name, path, x_axis, xs, ys):
         idx = -len(self.normalizations)-1
@@ -152,14 +152,14 @@ class MetaData:
     def setup(self, main_layout):
         self.chr_sizes.setup(main_layout)
         
-        main_layout.set_group([d[0] for d in self.datasets.values()], {
-            "A": [ data[0] for idx, data in self.datasets.items() if data[2] in ["a", "both"] ],
-            "B": [ data[0] for idx, data in self.datasets.items() if data[2] in ["b", "both"] ],
+        main_layout.set_group(list(self.datasets.keys()), {
+            "A": [ idx for idx, data in self.datasets.items() if data[2] in ["a", "both"] ],
+            "B": [ idx for idx, data in self.datasets.items() if data[2] in ["b", "both"] ],
         })
 
-        main_layout.set_norm([d[0] for d in self.normalizations.values()], {
-            "Rows": [ data[0] for idx, data in self.normalizations.items() if data[2] in ["row", "both"] ],
-            "Columns": [ data[0] for idx, data in self.normalizations.items() if data[2] in ["col", "both"] ]
+        main_layout.set_norm(list(self.normalizations.keys()), {
+            "Rows": [ idx for idx, data in self.normalizations.items() if data[2] in ["row", "both"] ],
+            "Columns": [ idx for idx, data in self.normalizations.items() if data[2] in ["col", "both"] ]
         })
 
         main_layout.set_annos(self.annotations.keys(), {
