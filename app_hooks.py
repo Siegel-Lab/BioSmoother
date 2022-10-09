@@ -7,8 +7,9 @@ def on_server_loaded(server_context):
     print("starting smoother server at: http://localhost:", os.environ["smoother_port"], "/smoother", sep="")
     print("")
     print("For Clusters:")
-    print("\tYou need to forward Smoothers port from your local machine.")
-    print("\tIf you log in via SSH, ports can be forwarded using -L.")
+    print("\tIf you log in via SSH into your cluster and want to run smoother there,")
+    print("\tyou need to forward Smoothers port from your local machine.")
+    print("\tPorts can be forwarded using the SSH command option -L.")
     print("\tI.e. log in to your cluster with another terminal using this command: ssh -L ", os.environ["smoother_port"], ":localhost:", os.environ["smoother_port"], " <your_server_addr>", sep="")
     pass
 
