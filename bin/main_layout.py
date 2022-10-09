@@ -40,6 +40,8 @@ DIV_MARGIN = (5, 5, 0, 5)
 BTN_MARGIN = (3, 3, 3, 3)
 BTN_MARGIN_2 = (3, 3, 3, 3)
 
+CONFIG_FILE_VERSION = 0.1
+
 executor = ThreadPoolExecutor(max_workers=1)
 
 Colorblind2 = tuple(Colorblind[8][idx] for idx in [0,1,5,3,4,2,6,7])
@@ -476,6 +478,43 @@ class MainLayout:
 
         return set_options, layout
 
+    def config_row(self, file_nr, callback=None, lock_name=False):
+        SYM_WIDTH = 10
+        SYM_CSS = ["other_button"]
+        with open('smoother/static/conf/' + str(file_nr) + '.json', 'r') as f:
+            settings = json.load(f)
+
+        if CONFIG_FILE_VERSION != settings["smoother_config_file_version"]:
+            print("Config file version does not match: expected", CONFIG_FILE_VERSION, 
+                  "but got", settings["smoother_config_file_version"])
+        
+        name = TextInput(value=settings["display_name"], sizing_mode="stretch_width", disabled=lock_name)
+        apply_button = Button(label="", css_classes=SYM_CSS + ["fa_apply"], width=SYM_WIDTH, 
+                            height=SYM_WIDTH, sizing_mode="fixed", button_type="light")
+        save_button = Button(label="", css_classes=SYM_CSS + ["fa_save"], width=SYM_WIDTH, 
+                            height=SYM_WIDTH, sizing_mode="fixed", button_type="light")
+        def save_event():
+            def dict_diff(a, b):
+                r = {}
+                for k in a.keys():
+                    if isinstance(a[k], dict):
+                        d = dict_diff(a[k], b[k])
+                        if len(d) > 0:
+                            r[k] = d
+                    elif a[k] != b[k]:
+                        r[k] = a[k]
+                return r
+            print("saving...")
+            settings = dict_diff(self.settings, self.settings_default)
+            settings["display_name"] = name.value
+            settings["smoother_config_file_version"] = CONFIG_FILE_VERSION
+            with open('smoother/static/conf/' + str(file_nr) + '.json', 'w') as f:
+                json.dump(settings, f)
+            print("saved")
+
+        save_button.on_click(lambda _: save_event())
+        return row([name, apply_button, save_button], sizing_mode="stretch_width")
+
     def make_slider_spinner(self, title, settings, width=200, 
                             on_change=lambda _v: None, spinner_width=80, sizing_mode="stretch_width"):
         value = settings["val"]
@@ -534,6 +573,8 @@ class MainLayout:
         self.render_logger = Logger()
         self.smoother_version = "?"
         self.reset_options = {}
+        with open('smoother/static/conf/default.json', 'r') as f:
+            self.settings_default = json.load(f)
         with open('smoother/static/conf/default.json', 'r') as f:
             self.settings = json.load(f)
 
@@ -1002,10 +1043,10 @@ class MainLayout:
                                title="Max number of Bins (in thousands)", sizing_mode="stretch_width")
 
         def radicl_seq_accept_event(val):
-            self.settings["normalization"]["min_interactions"]["val"] = val
+            self.settings["normalization"]["p_accept"]["val"] = val
             self.trigger_render()
         rsa_l = self.make_slider_spinner(width=SETTINGS_WIDTH, 
-                               settings=self.settings["normalization"]["min_interactions"],
+                               settings=self.settings["normalization"]["p_accept"],
                                title="pAccept for binominal test", sizing_mode="stretch_width",
                                on_change=radicl_seq_accept_event)
             
@@ -1226,6 +1267,10 @@ class MainLayout:
         color_figure.border_fill_alpha = 0
         color_figure.outline_line_alpha = 0
 
+        quick_configs = [self.config_row("default", lock_name=True)]
+        for idx in range(1,6):
+            quick_configs.append(self.config_row(idx))
+
         _settings = column([
                 make_panel("General", "tooltip_general", [tool_bar, meta_file_label, self.meta_file]),
                 make_panel("Normalization", "tooltip_normalization", [normalization, color_figure,
@@ -1242,7 +1287,8 @@ class MainLayout:
                 make_panel("Export", "tooltip_export", [export_label, export_file, export_sele_layout,
                                         #export_type_layout, 
                                       self.export_button]),
-                make_panel("Quick Config", "tooltip_quick_config", [grid_seq_config, radicl_seq_config]),
+                make_panel("Quick Config", "tooltip_quick_config", [grid_seq_config, radicl_seq_config, 
+                                                                    *quick_configs]),
                 make_panel("Info", "tooltip_info", [version_info]),
             ],
             sizing_mode="stretch_both",
