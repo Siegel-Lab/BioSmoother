@@ -1,1 +1,4 @@
-{"display_name": "test-config", "normalization": {"normalize_by": "rpm", "min_interactions": {"val": 17}, "color_range": {"val_min": 0.1, "val_max": 0.58}, "log_base": {"val": 17.700000000000003}, "p_accept": {"val": 0.04}, "ddd": "yes"}, "replicates": {"in_group": "min", "between_group": "2nd"}, "interface": {"max_num_bins": {"val": 360}, "show_hide": {"ratio": true}, "min_bin_size": {"val": 60}, "update_freq": {"val": 1.6}, "zoom_redraw": {"val": 14}, "add_draw_area": {"val": 380}, "anno_size": {"val": 227}, "ratio_size": {"val": 147}, "raw_size": {"val": 91}, "stretch_or_scale": "stretch_both", "bin_aspect_ratio": "coord", "snap_bin_size": "p10", "color_palette": "LowToHigh", "color_low": "#bf2222", "color_high": "#8d448b", "axis_lables": "DNA_RNA"}, "filters": {"mapping_q": {"val_min": 48, "val_max": 216}, "incomplete_alignments": true, "symmetry": "sym", "min_diag_dist": {"val": 270}, "multiple_annos_in_bin": "first", "ambiguous_mapping": "first"}, "export": {"selection": ["Column Sum", "Row Sum", "Include Annotation"]}, "smoother_config_file_version": 0.1}
+{
+    "smoother_config_file_version": 0.1,
+    "display_name": "unnamed 1"
+}

@@ -367,6 +367,8 @@ class MainLayout:
         ret, set_menu = self.dropdown_select_h(title, event, tooltip)
         if not active_item is None:
             self.dropdown_select_config.append((lambda x: set_menu([*options], x), *active_item))
+        else:
+            set_menu(options)
         return ret
 
     def multi_choice(self, label, checkboxes, callback, orderable=True):
@@ -672,7 +674,6 @@ class MainLayout:
         self.config_dropdown()
         self.config_checkbox()
 
-        self.min_max_bin_size.start = self.settings["interface"]["min_bin_size"]["min"]
         self.min_max_bin_size.end = self.settings["interface"]["min_bin_size"]["max"]
         self.min_max_bin_size.value = self.settings["interface"]["min_bin_size"]["val"]
         self.min_max_bin_size.step = self.settings["interface"]["min_bin_size"]["step"]
@@ -1248,6 +1249,7 @@ class MainLayout:
             else
                 return Math.ceil((1 + tick % 9) * Math.pow(10, Math.floor(tick / 9))) + "bp"; """)
         self.min_max_bin_size = Slider( 
+                start = 0,
                 title="Minimum Bin Size",
                 format=power_tick, 
                 sizing_mode="stretch_width")
@@ -1477,8 +1479,9 @@ class MainLayout:
                 None,            self.heatmap_x_axis, None],
         ]
 
-
-        self.root = grid(grid_layout) # , sizing_mode="stretch_both"
+        root_min_one = grid(grid_layout, sizing_mode="stretch_both")
+        root_min_one.align = "center"
+        self.root = grid([[root_min_one]])
         FigureMaker().update_visibility()
 
     # overlap of the given areas relative to the larger area

@@ -52,7 +52,6 @@
             "contig_borders": true
         },
         "min_bin_size": {
-            "min": 0,
             "max": 135,
             "val": 18,
             "step": 1
