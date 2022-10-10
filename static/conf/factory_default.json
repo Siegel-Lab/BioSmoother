@@ -103,9 +103,9 @@
     "filters": {
         "mapping_q": {
             "min": 0,
-            "max": 255,
+            "max": 254,
             "val_min": 0,
-            "val_max": 255,
+            "val_max": 254,
             "step": 1
         },
         "incomplete_alignments": false,

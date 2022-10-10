@@ -1,4 +1,1 @@
-{
-    "smoother_config_file_version": 0.1,
-    "display_name": "Hi-C"
-}
+{"display_name": "Hi-C", "normalization": {"normalize_by": "hi-c"}, "interface": {"color_low": "#ffffff", "axis_lables": "DNA_DNA"}, "filters": {"symmetry": "topToBot"}, "smoother_config_file_version": 0.1}

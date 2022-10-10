@@ -48,6 +48,8 @@ def parse_norm_file(filename):
         for s in other:
             if s[:5] == "XA:Z:":
                 xa_tag = s
+        if map_q == "" or map_q == "nomapq" or map_q == "255" or map_q == "*":
+            map_q = 0
         yield read_name, chrom, int(start_pos), int(map_q), xa_tag
 
 def group_norm_file(in_filename, file_size):
@@ -187,9 +189,9 @@ def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_
         act_pos_2_s = meta.chr_sizes.coordinate(pos_1_s // meta.dividend, chr_1)
         act_pos_2_e = meta.chr_sizes.coordinate(pos_1_e // meta.dividend, chr_1)
         if has_map_q and multi_map:
-            index.add_point([act_pos_1_s, act_pos_2_s, 255-map_q], [act_pos_1_e, act_pos_2_e, 255-map_q], read_name)
+            index.add_point([act_pos_1_s, act_pos_2_s, MAP_Q_MAX-map_q-1], [act_pos_1_e, act_pos_2_e, MAP_Q_MAX-map_q-1], read_name)
         elif has_map_q and not multi_map:
-            index.add_point([act_pos_1_s, act_pos_2_s, 255-map_q], read_name)
+            index.add_point([act_pos_1_s, act_pos_2_s, MAP_Q_MAX-map_q-1], read_name)
         elif not has_map_q and multi_map:
             index.add_point([act_pos_1_s, act_pos_2_s], [act_pos_1_e, act_pos_2_e], read_name)
         elif not has_map_q and not multi_map:
@@ -230,7 +232,7 @@ def add_normalization(out_prefix, path, name, for_row, test=False, cached=False,
                 continue
             act_pos_s = meta.chr_sizes.coordinate(int(pos_s) // meta.dividend, chrom)
             act_pos_e = meta.chr_sizes.coordinate(int(pos_e) // meta.dividend, chrom)
-            index.add_point([act_pos_s, 255-map_q], [act_pos_e, 255-map_q], read_name)
+            index.add_point([act_pos_s, MAP_Q_MAX-map_q-1], [act_pos_e, MAP_Q_MAX-map_q-1], read_name)
             cnt += 1
             if cnt > TEST_FAC and test:
                 break

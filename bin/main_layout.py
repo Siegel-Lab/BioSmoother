@@ -565,7 +565,9 @@ class MainLayout:
                         r[k] = b[k]
                 return r
             self.settings = combine_dict(settings, self.settings)
+            self.curdoc.hold()
             self.do_config()
+            self.curdoc.unhold()
             self.trigger_render()
             print("applied")
         apply_button.on_click(lambda _: apply_event())
@@ -1610,6 +1612,7 @@ class MainLayout:
         map_q_max = self.settings["filters"]["mapping_q"]["val_max"]
         if not (map_q_min == 0 and self.settings['filters']['incomplete_alignments']):
             map_q_min += 1
+        map_q_max += 1
         manhatten_dist = 1000 * self.settings["filters"]["min_diag_dist"]["val"] / self.meta.dividend
         bins_to_search_map_q = []
         bins_to_search_no_map_q = []
@@ -1663,6 +1666,7 @@ class MainLayout:
         map_q_max = self.settings["filters"]["mapping_q"]["val_max"]
         if not (map_q_min == 0 and self.settings['filters']['incomplete_alignments']):
             map_q_min += 1
+        map_q_max += 1
         for name in self.group_a if in_group_a else self.group_b:
             idx, _1, _2, map_q, multi_map = self.meta.datasets[name]
             val = self.idx.count(idx, 0, self.meta.chr_sizes.chr_start_pos["end"], 0, 
@@ -1689,6 +1693,7 @@ class MainLayout:
         map_q_max = self.settings["filters"]["mapping_q"]["val_max"]
         if not (map_q_min == 0 and self.settings['filters']['incomplete_alignments']):
             map_q_min += 1
+        map_q_max += 1
         return self.flatten_norm([
             [self.idx_norm.count(int(idx), 0, self.meta.chr_sizes.chr_start_pos["end"], map_q_min, map_q_max) \
                 if self.meta.norm_via_tree(int(idx)) \
@@ -1969,6 +1974,7 @@ class MainLayout:
         map_q_max = self.settings["filters"]["mapping_q"]["val_max"]
         if not (map_q_min == 0 and self.settings['filters']['incomplete_alignments']):
             map_q_min += 1
+        map_q_max += 1
         for x in bins:
             vals.append([])
             if len(idxs) == 0:

@@ -1,12 +1,12 @@
 # smoother todo
 
 - grid seq norm progress print
-- quick config buttons
 - AutocompleteInput for filepath
     - when calling give folder where indices are located
     - restrict for public hosting
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
-- "minimap" background
+- presetting load and save -> status print
+-0 coverage hover
 
 # verification
 
