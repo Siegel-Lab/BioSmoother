@@ -1,4 +1,1 @@
-{
-    "smoother_config_file_version": 0.1,
-    "display_name": "3"
-}
+{"interface": {"axis_lables": "DNA_DNA"}, "display_name": "Hi-C", "smoother_config_file_version": 0.1}

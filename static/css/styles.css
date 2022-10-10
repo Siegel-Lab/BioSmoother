@@ -69,6 +69,16 @@
     background-size: cover;
 }
 
+.fa_reset {
+    background-image: url(repeat-solid.svg) !important;
+    background-size: cover;
+}
+
+.fa_reset_disabled {
+    background-image: url(repeat-solid-disabled.svg) !important;
+    background-size: cover;
+}
+
 .fa_save {
     background-image: url(floppy-disk-solid.svg) !important;
     background-size: cover;

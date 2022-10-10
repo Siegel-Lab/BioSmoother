@@ -28,6 +28,7 @@ from bokeh.models.tickers import AdaptiveTicker
 import bin.libSps
 from bin.render_step_logger import *
 import json
+import shutil
 
 SETTINGS_WIDTH = 400
 DEFAULT_SIZE = 50
@@ -298,6 +299,7 @@ class FigureMaker:
 
         def event(e):
             FigureMaker.toggle_hide(e.item)
+            settings[e.item] = not settings[e.item]
             ret.menu = make_menu()
         ret.on_click(event)
         return ret
@@ -483,6 +485,8 @@ class MainLayout:
         SYM_CSS = ["other_button"]
         with open('smoother/static/conf/' + str(file_nr) + '.json', 'r') as f:
             settings = json.load(f)
+        with open('smoother/static/conf/factory_' + str(file_nr) + '.json', 'r') as f:
+            factory_default = json.load(f)
 
         if CONFIG_FILE_VERSION != settings["smoother_config_file_version"]:
             print("Config file version does not match: expected", CONFIG_FILE_VERSION, 
@@ -490,9 +494,14 @@ class MainLayout:
         
         name = TextInput(value=settings["display_name"], sizing_mode="stretch_width", disabled=lock_name)
         apply_button = Button(label="", css_classes=SYM_CSS + ["fa_apply"], width=SYM_WIDTH, 
-                            height=SYM_WIDTH, sizing_mode="fixed", button_type="light")
+                            height=SYM_WIDTH, sizing_mode="fixed", button_type="light", align="center")
         save_button = Button(label="", css_classes=SYM_CSS + ["fa_save"], width=SYM_WIDTH, 
-                            height=SYM_WIDTH, sizing_mode="fixed", button_type="light")
+                            height=SYM_WIDTH, sizing_mode="fixed", button_type="light", align="center")
+        reset_button = Button(label="", 
+                        css_classes=SYM_CSS + ["fa_reset"] if settings != factory_default else ["fa_reset_disabled"], 
+                            width=SYM_WIDTH, 
+                            height=SYM_WIDTH, sizing_mode="fixed", button_type="light", align="center",
+                            disabled=settings == factory_default)
         def save_event():
             def dict_diff(a, b):
                 r = {}
@@ -510,10 +519,46 @@ class MainLayout:
             settings["smoother_config_file_version"] = CONFIG_FILE_VERSION
             with open('smoother/static/conf/' + str(file_nr) + '.json', 'w') as f:
                 json.dump(settings, f)
+            reset_button.disabled = settings == factory_default
+            reset_button.css_classes = SYM_CSS + ["fa_reset"] if settings != factory_default else ["fa_reset_disabled"]
             print("saved")
-
         save_button.on_click(lambda _: save_event())
-        return row([name, apply_button, save_button], sizing_mode="stretch_width")
+
+        def reset_event():
+            shutil.copyfile('smoother/static/conf/factory_' + str(file_nr) + '.json', 
+                            'smoother/static/conf/' + str(file_nr) + '.json')
+            reset_button.disabled = True
+            reset_button.css_classes = SYM_CSS + ["fa_reset_disabled"]
+            with open('smoother/static/conf/' + str(file_nr) + '.json', 'r') as f:
+                settings = json.load(f)
+            name.value = settings["display_name"]
+        reset_button.on_click(lambda _: reset_event())
+
+        def apply_event():
+            print("applying...")
+            with open('smoother/static/conf/' + str(file_nr) + '.json', 'r') as f:
+                settings = json.load(f)
+            def combine_dict(a, b):
+                r = {}
+                for k in b.keys():
+                    if isinstance(b[k], dict) and k in a:
+                        r[k] = combine_dict(a[k], b[k])
+                    elif isinstance(b[k], dict):
+                        r[k] = b[k]
+                    elif k in a:
+                        r[k] = a[k]
+                    else:
+                        r[k] = b[k]
+                return r
+            self.settings = combine_dict(settings, self.settings)
+            self.do_layout()
+            self.curdoc.clear()
+            self.curdoc.add_root(self.root)
+            self.trigger_render()
+            print("applied")
+        apply_button.on_click(lambda _: apply_event())
+
+        return row([name, apply_button, save_button, reset_button], sizing_mode="stretch_width")
 
     def make_slider_spinner(self, title, settings, width=200, 
                             on_change=lambda _v: None, spinner_width=80, sizing_mode="stretch_width"):
@@ -578,13 +623,101 @@ class MainLayout:
         with open('smoother/static/conf/default.json', 'r') as f:
             self.settings = json.load(f)
 
+        self.heatmap = None
+        d = {"b": [], "l": [], "t": [], "r": [], "c": [], "chr_x": [], "chr_y": [], "x1": [], "x2": [],
+             "y1": [], "y2": [], "s": [], "d_a": [], "d_b": []}
+        self.heatmap_data = ColumnDataSource(data=d)
+        d = {"b": [], "l": [], "t": [], "r": []}
+        self.overlay_data = ColumnDataSource(data=d)
+        self.overlay_dataset_id = None
+        self.heatmap_x_axis = None
+        self.heatmap_y_axis = None
+        self.ratio_x = None
+        self.ratio_x_axis = None
+        self.ratio_y = None
+        self.ratio_y_axis = None
+        d_x = {
+            "chr": [],
+            "pos1": [],
+            "pos2": [],
+            "pos": [],
+            "ratio": [],
+        }
+        d_y = {
+            "chr": [],
+            "pos1": [],
+            "pos2": [],
+            "pos": [],
+            "ratio": [],
+        }
+        self.ratio_data_x = ColumnDataSource(data=d_x)
+        self.ratio_data_y = ColumnDataSource(data=d_y)
+        self.raw_x = None
+        self.raw_x_axis = None
+        self.raw_y = None
+        self.raw_y_axis = None
+        d_x = {
+            "chr": [],
+            "pos1": [],
+            "pos2": [],
+            "xs": [],
+            "ys": [],
+            "cs": [],
+            "ls": [],
+        }
+        d_y = {
+            "chr": [],
+            "pos1": [],
+            "pos2": [],
+            "xs": [],
+            "ys": [],
+            "cs": [],
+            "ls": [],
+        }
+        self.raw_data_x = ColumnDataSource(data=d_x)
+        self.raw_data_y = ColumnDataSource(data=d_y)
+        self.anno_x = None
+        self.anno_x_axis = None
+        self.anno_y = None
+        self.anno_y_axis = None
+        d = {"x": [], "s": [], "e": [], "c": [], "chr": [],
+             "pos1": [], "pos2": [], "info": [], "n": []}
+        self.anno_x_data = ColumnDataSource(data=d)
+        self.anno_y_data = ColumnDataSource(data=d)
+        self.meta_file = None
+        self.group_a = set()
+        self.group_b = set()
+        self.set_group = None
+        self.displayed_annos = []
+        self.filtered_annos_x = []
+        self.filtered_annos_y = []
+        self.set_annos = None
+        self.min_max_bin_size = None
+        self.curr_bin_size = None
+        self.spinner = None
+        self.info_field = None
+        self.norm_x = []
+        self.norm_y = []
+        self.set_norm = None
+        self.x_coords_update = None
+        self.y_coords_update = None
+        self.chrom_x = []
+        self.chrom_y = []
+        self.set_chrom = None
+        self.do_export = None
+        self.export_type = []
+        self.color_mapper = None
+        self.color_info = None
+        self.settings_row = None
+
+        self.do_layout()
+
+    def do_layout(self):
+
         global SETTINGS_WIDTH
         tollbars = []
         self.heatmap = FigureMaker().range1d().scale().combine_tools(tollbars).get()
 
-        d = {"b": [], "l": [], "t": [], "r": [], "c": [], "chr_x": [], "chr_y": [], "x1": [], "x2": [],
-             "y1": [], "y2": [], "s": [], "d_a": [], "d_b": []}
-        self.heatmap_data = ColumnDataSource(data=d)
         self.heatmap.quad(left="l", bottom="b", right="r", top="t", fill_color="c", line_color=None,
                           source=self.heatmap_data, level="underlay")
         #self.heatmap.xgrid.minor_grid_line_dash = [2, 8]
@@ -592,8 +725,6 @@ class MainLayout:
         self.heatmap.xgrid.minor_grid_line_alpha = 0.5
         self.heatmap.ygrid.minor_grid_line_alpha = 0.5
 
-        d = {"b": [], "l": [], "t": [], "r": []}
-        self.overlay_data = ColumnDataSource(data=d)
         self.heatmap.quad(left="l", bottom="b", right="r", top="t", fill_color=None, line_color="red", 
                             source=self.overlay_data, level="underlay")
 
@@ -703,46 +834,10 @@ class MainLayout:
         self.raw_y.ygrid.minor_grid_line_alpha = 0.5
         self.raw_y.xgrid.minor_grid_line_alpha = 0.5
 
-        d_x = {
-            "chr": [],
-            "pos1": [],
-            "pos2": [],
-            "xs": [],
-            "ys": [],
-            "cs": [],
-            "ls": [],
-        }
-        d_y = {
-            "chr": [],
-            "pos1": [],
-            "pos2": [],
-            "xs": [],
-            "ys": [],
-            "cs": [],
-            "ls": [],
-        }
-        self.raw_data_x = ColumnDataSource(data=d_x)
-        self.raw_data_y = ColumnDataSource(data=d_y)
         self.raw_x.multi_line(xs="ys", ys="xs", source=self.raw_data_x,
                         line_color="cs")  # , level="image"
         self.raw_y.multi_line(xs="xs", ys="ys", source=self.raw_data_y,
                         line_color="cs")  # , level="image"
-        d_x = {
-            "chr": [],
-            "pos1": [],
-            "pos2": [],
-            "pos": [],
-            "ratio": [],
-        }
-        d_y = {
-            "chr": [],
-            "pos1": [],
-            "pos2": [],
-            "pos": [],
-            "ratio": [],
-        }
-        self.ratio_data_x = ColumnDataSource(data=d_x)
-        self.ratio_data_y = ColumnDataSource(data=d_y)
         self.ratio_x.line(x="ratio", y="pos", source=self.ratio_data_x,
                           line_color="black")  # , level="image"
         self.ratio_y.line(x="pos", y="ratio", source=self.ratio_data_y,
@@ -766,12 +861,8 @@ class MainLayout:
         self.anno_y.ygrid.grid_line_alpha = 0
         self.anno_y.xgrid.minor_grid_line_alpha = 0.5
 
-        d = {"x": [], "s": [], "e": [], "c": [], "chr": [],
-             "pos1": [], "pos2": [], "info": [], "n": []}
-        self.anno_x_data = ColumnDataSource(data=d)
         self.anno_x.vbar(x="x", top="e", bottom="s", width=0.9, fill_color="c", line_color=None,
                          source=self.anno_x_data)
-        self.anno_y_data = ColumnDataSource(data=d)
         self.anno_y.hbar(y="x", right="e", left="s", height=0.9, fill_color="c", line_color=None,
                          source=self.anno_y_data)
 
@@ -784,8 +875,7 @@ class MainLayout:
         )
         self.anno_x.add_tools(anno_hover)
         self.anno_y.add_tools(anno_hover)
-        
-        
+
         crosshair = CrosshairTool(dimensions="width", line_color="lightgrey")
         for fig in [self.anno_x, self.raw_x, self.ratio_x, self.heatmap]:
             fig.add_tools(crosshair)
@@ -912,6 +1002,7 @@ class MainLayout:
             self.settings["interface"]["axis_lables"] = e
             self.heatmap_y_axis.yaxis.axis_label = e.split("_")[0]
             self.heatmap_x_axis.xaxis.axis_label = e.split("_")[1]
+        axis_labels_event(self.settings["interface"]["axis_lables"])
         axis_lables = self.dropdown_select("Axis Labels", axis_labels_event, "tooltip_y_axis_label",
                                                   ("RNA / DNA", "RNA_DNA"),
                                                   ("DNA / RNA", "DNA_RNA"),
@@ -923,7 +1014,7 @@ class MainLayout:
             self.settings["interface"]["stretch_or_scale"] = val
             self.heatmap.sizing_mode = val
         stretch_event(self.settings["interface"]["stretch_or_scale"])
-        self.stretch = self.dropdown_select("Stretch/Scale", stretch_event, "tooltip_stretch_scale",
+        stretch = self.dropdown_select("Stretch/Scale", stretch_event, "tooltip_stretch_scale",
                                                   ("Scale", "scale_height"),
                                                   ("Stretch", "stretch_both"),
                                             active_item=self.settings["interface"]["stretch_or_scale"])
@@ -1055,17 +1146,12 @@ class MainLayout:
         self.meta_file = TextInput(value="smoother_out/")
         self.meta_file.on_change("value", lambda x, y, z: self.setup())
 
-        self.group_a = set()
-        self.group_b = set()
         def group_event(sele):
             self.group_a = set(sele["A"])
             self.group_b = set(sele["B"])
             self.trigger_render()
         self.set_group, group_layout = self.multi_choice("Group", ["A", "B"], group_event, True)
 
-        self.displayed_annos = []
-        self.filtered_annos_x = []
-        self.filtered_annos_y = []
         def anno_event(sele):
             self.displayed_annos = sele["Displayed"][::-1]
             self.filtered_annos_x = sele["Row filter"]
@@ -1120,8 +1206,6 @@ class MainLayout:
         self.info_field.min_height = 100
         self.info_field.height_policy = "fixed"
 
-        self.norm_x = []
-        self.norm_y = []
         def norm_event(sele):
             self.norm_x = sele["Rows"]
             self.norm_y = sele["Columns"]
@@ -1142,8 +1226,6 @@ class MainLayout:
         y_coords, self.y_coords_update = self.dropdown_select_h("Row Coordinates", y_coords_event,
                                                                  "tooltip_column_coordinates")
 
-        self.chrom_x = []
-        self.chrom_y = []
         def chrom_event(sele):
             self.chrom_x = sele["Rows"][::-1]
             self.chrom_y = sele["Columns"][::-1]
@@ -1162,7 +1244,6 @@ class MainLayout:
                 ("Increase number of bins to match number of annotations (might be slow)", "force_separate"),
                 active_item=self.settings["filters"]["multiple_annos_in_bin"])
 
-        self.do_export = None
         def export_event(e):
             self.do_export = e
             self.trigger_render()
@@ -1187,27 +1268,11 @@ class MainLayout:
             {"": self.settings["export"]["selection"]}
         )
     
-        self.export_type = []
         def export_type_event(sele):
             self.export_type = sele[""]
             self.trigger_render()
         set_export_type, export_type_layout = self.multi_choice("Export Type", [""], export_type_event)
         set_export_type(["Data"], {"":[]})
-        
-        grid_seq_config = Button(label="Grid Seq-like @todo", sizing_mode="stretch_width", 
-                                 css_classes=["other_button", "tooltip", "tooltip_grid_seq"],
-                                 height=DROPDOWN_HEIGHT)
-        def grid_seq_event(e):
-            # @todo 
-            self.trigger_render()
-        grid_seq_config.on_click(grid_seq_event)
-        radicl_seq_config = Button(label="Radicl Seq-like", sizing_mode="stretch_width", 
-                                   css_classes=["other_button", "tooltip", "tooltip_radicl_seq"],
-                                   height=DROPDOWN_HEIGHT)
-        def radicl_seq_event(e):
-            # @todo 
-            self.trigger_render()
-        radicl_seq_config.on_click(radicl_seq_event)
 
         low_color = ColorPicker(title="Color Low", color=self.settings["interface"]["color_low"])
         high_color = ColorPicker(title="Color High", color=self.settings["interface"]["color_high"])
@@ -1268,7 +1333,7 @@ class MainLayout:
         color_figure.outline_line_alpha = 0
 
         quick_configs = [self.config_row("default", lock_name=True)]
-        for idx in range(1,6):
+        for idx in range(1,7):
             quick_configs.append(self.config_row(idx))
 
         _settings = column([
@@ -1279,7 +1344,7 @@ class MainLayout:
                 make_panel("Interface", "tooltip_interface", [nb_l,
                                     show_hide, mmbs_l,
                                     ufs_l, rs_l, aas_l, ass_l, rss1_l, rss2_l,
-                                    self.stretch, square_bins, power_ten_bin, color_picker, 
+                                    stretch, square_bins, power_ten_bin, color_picker, 
                                     low_color, high_color, axis_lables, self.overlay_dataset_id]),
                 make_panel("Filters", "tooltip_filters", [ms_l, incomp_align_layout, 
                                           symmetrie, dds_l, annos_layout, 
@@ -1287,8 +1352,7 @@ class MainLayout:
                 make_panel("Export", "tooltip_export", [export_label, export_file, export_sele_layout,
                                         #export_type_layout, 
                                       self.export_button]),
-                make_panel("Quick Config", "tooltip_quick_config", [grid_seq_config, radicl_seq_config, 
-                                                                    *quick_configs]),
+                make_panel("Quick Config", "tooltip_quick_config", quick_configs),
                 make_panel("Info", "tooltip_info", [version_info]),
             ],
             sizing_mode="stretch_both",
