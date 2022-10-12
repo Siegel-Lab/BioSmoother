@@ -6,7 +6,8 @@
     - restrict for public hosting
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
 - presetting load and save -> status print
--0 coverage hover
+- coverage hover
+- categorical axis for labels chromosome & number
 
 # verification
 

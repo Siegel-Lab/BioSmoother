@@ -41,6 +41,7 @@
             "val": 50,
             "step": 10
         },
+        "max_num_bins_factor": 1000,
         "show_hide": {
             "axis": true,
             "ratio": false,
@@ -95,6 +96,12 @@
         "stretch_or_scale": "scale_height",
         "bin_aspect_ratio": "view",
         "snap_bin_size": "no",
+        "snap_factors": [
+            1,
+            1.25,
+            2.5,
+            5
+        ],
         "color_palette": "Viridis256",
         "color_low": "#FFFFFF",
         "color_high": "#000000",
@@ -117,12 +124,14 @@
             "step": 1
         },
         "multiple_annos_in_bin": "combine",
-        "ambiguous_mapping": "enclosed"
+        "ambiguous_mapping": "enclosed",
+        "cut_off_bin": "smaller_if_fullsized_exists"
     },
     "export": {
         "prefix": "export",
         "selection": [
             "Heatmap"
-        ]
+        ],
+        "do_export_full": false
     }
 }

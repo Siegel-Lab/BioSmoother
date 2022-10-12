@@ -172,29 +172,20 @@ class ChrSizes:
             end = self.chr_start_pos["end"]
         h_bin = max(1, h_bin)
         ret = []
-        ret_2 = []
-        ret_3 = []
-        x_chrs = []
         bin_start = max(0, int(start))
         if none_for_chr_border:
             ret.append(None)
-            ret_2.append(None)
-            ret_3.append(None)
         for chr_name in chr_filter:
             x_start = self.chr_start_pos[chr_name]
             x_end = x_start + self.chr_sizes[chr_name]
             x = max(int(start), x_start)
             while x <= min(end, x_end):
                 if produce_smaller_bins or x + h_bin <= x_end:
-                    ret.append([x, min(h_bin, x_end - x)])
-                    ret_2.append([chr_name, x - x_start])
-                    ret_3.append([bin_start, min(h_bin, x_end - x)])
+                    ret.append([chr_name, x - x_start, bin_start, min(h_bin, x_end - x)])
                     bin_start += min(h_bin, x_end - x)
                 if is_canceld():
                     return
                 x += h_bin
             if none_for_chr_border:
                 ret.append(None)
-                ret_2.append(None)
-                ret_3.append(None)
-        return ret, ret_2, ret_3
+        return ret

@@ -41,26 +41,26 @@ class Tree_4:
     def load(self, num_data, cache_size, threads):
         return self
 
-    def to_query(self, rna_from, rna_to, dna_from, dna_to, map_q_min, map_q_max, 
+    def to_query(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min, map_q_max, 
                  has_map_q, multi_map):
         dna_to = max(dna_from+1, dna_to)
         rna_to = max(rna_from+1, rna_to)
         if has_map_q:
-            return ([int(dna_from), int(rna_from), MAP_Q_MAX-map_q_max], 
+            return (id, [int(dna_from), int(rna_from), MAP_Q_MAX-map_q_max], 
                     [int(dna_to), int(rna_to), MAP_Q_MAX-map_q_min])
         else: #if not has_map_q
-            return ([int(dna_from), int(rna_from)], [int(dna_to), int(rna_to)])
+            return (id, [int(dna_from), int(rna_from)], [int(dna_to), int(rna_to)])
 
 
     def count(self, id, rna_from, rna_to, dna_from, dna_to, map_q_min, map_q_max,
               intersection_type, map_q, multi_map):
-        return self.index[map_q][multi_map].count(id, 
-                                *self.to_query(rna_from, rna_to, dna_from, dna_to, map_q_min, map_q_max,
+        return self.index[map_q][multi_map].count(
+                                *self.to_query(id, rna_from, rna_to, dna_from, dna_to, map_q_min, map_q_max,
                                                map_q, multi_map),
                                 INT_TYPES[intersection_type])
 
-    def count_multiple(self, idx, queries, intersection_type, map_q, multi_map):
-        return self.index[map_q][multi_map].count_multiple(idx, queries, INT_TYPES[intersection_type])
+    def count_multiple(self, queries, intersection_type, map_q, multi_map):
+        return self.index[map_q][multi_map].count_multiple(queries, INT_TYPES[intersection_type])
 
     def save(self):
         pass

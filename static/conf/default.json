@@ -95,6 +95,12 @@
         "stretch_or_scale": "scale_height",
         "bin_aspect_ratio": "view",
         "snap_bin_size": "no",
+        "snap_factors": [
+            1,
+            1.25,
+            2.5,
+            5
+        ],
         "color_palette": "Viridis256",
         "color_low": "#FFFFFF",
         "color_high": "#000000",

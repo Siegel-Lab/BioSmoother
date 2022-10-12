@@ -4,7 +4,7 @@ import subprocess
 import errno
 import os
 
-TEST_FAC = 10000
+TEST_FAC = 1000000
 
 def simplified_filepath(path):
     if "/" in path:

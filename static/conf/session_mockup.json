@@ -1,0 +1,68 @@
+{
+    "dividend": 1000,
+    "contigs": {
+        "list": [
+            "chr_1",
+            "chr_2"
+        ],
+        "by_name": {
+            "chr_1": {
+                "length": 10,
+                "displayed_on_x": true,
+                "displayed_on_y": true
+            },
+            "chr_2": {
+                "length": 50,
+                "displayed_on_x": true,
+                "displayed_on_y": true
+            }
+        },
+        "genome_size": 60
+    },
+    "area": {
+        "x_start": 0,
+        "y_start": 5,
+        "x_end": 10,
+        "y_end": 15
+    },
+    "replicates": {
+        "list": [
+            "rep_1",
+            "rep_2"
+        ],
+        "by_name": {
+            "rep_1": {
+                "ids": {
+                    "chr_1": {
+                        "chr_1": 0,
+                        "chr_2": 1
+                    },
+                    "chr_2": {
+                        "chr_1": 2,
+                        "chr_2": 3
+                    }
+                },
+                "has_map_q": true,
+                "has_multimapping": false,
+                "in_group_a": true,
+                "in_group_b": false
+            },
+            "rep_2": {
+                "ids": {
+                    "chr_1": {
+                        "chr_1": 4,
+                        "chr_2": 5
+                    },
+                    "chr_2": {
+                        "chr_1": 6,
+                        "chr_2": 7
+                    }
+                },
+                "has_map_q": false,
+                "has_multimapping": false,
+                "in_group_a": true,
+                "in_group_b": false
+            }
+        }
+    }
+}

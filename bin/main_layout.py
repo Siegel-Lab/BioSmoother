@@ -983,6 +983,7 @@ class MainLayout:
         in_group = self.dropdown_select("In Group", in_group_event, "tooltip_in_group",
                                              ("Sum [a+b+c+...]", "sum"), 
                                              ("Minimium [min(a,b,c,...)]", "min"),
+                                             ("Maximum [max(a,b,c,...)]", "max"),
                                              ("Difference [|a-b|+|a-c|+|b-c|+...]", "dif"),
                                              active_item=['replicates', 'in_group'])
 
@@ -1521,6 +1522,7 @@ class MainLayout:
             if self.cancel_render:
                 return
             if self.settings['normalization']['normalize_by'] == "hi-c":
+                raise RuntimeError("currently not implemented")
                 # move start of first bin to start of genome
                 coords[0][1 if none_for_chr_border else 0][1] += coords[0][1 if none_for_chr_border else 0][0]
                 coords[0][1 if none_for_chr_border else 0][0] = 0
@@ -1540,7 +1542,7 @@ class MainLayout:
                                                                 is_canceld=lambda: self.cancel_render)
             if self.cancel_render:
                 return
-        for pos_1, pos_2, pos_3 in zip(*coords):
+        for pos_1 in coords:
             not_filtered = True
             if not pos_1 is None and len(filter_annos) > 0:
                 p, s = pos_1
@@ -1614,24 +1616,26 @@ class MainLayout:
             map_q_min += 1
         map_q_max += 1
         manhatten_dist = 1000 * self.settings["filters"]["min_diag_dist"]["val"] / self.meta.dividend
-        bins_to_search_map_q = []
-        bins_to_search_no_map_q = []
-        self.render_step_log(name + "_pre")
-        for x, y, w, h in bin_coords:
-            if abs(x - y) >= manhatten_dist:
-                x, y, w, h = self.adjust_bin_pos_for_symmetrie(x, y, w, h)
-                bins_to_search_map_q.append(self.idx.to_query(y, y+h, x, x+w, map_q_min, map_q_max, True, True))
-                bins_to_search_no_map_q.append(self.idx.to_query(y, y+h, x, x+w, map_q_min, map_q_max, False, True))
-            else:
-                bins_to_search_map_q.append(self.idx.to_query(0, 0, 0, 0, 0, 0, True, True))
-                bins_to_search_no_map_q.append(self.idx.to_query(0, 0, 0, 0, 0, 0, False, True))
-            if self.cancel_render:
-                return
         self.render_step_log(name + "_main")
         ns = []
         for name in list(self.group_a) + list(self.group_b):
             idx, _1, _2, map_q, multi_map = self.meta.datasets[name]
-            ns.append(self.idx.count_multiple(idx, bins_to_search_map_q if map_q else bins_to_search_no_map_q, 
+            bins_to_search = []
+            for x, y, w, h in bin_coords:
+                if abs(x - y) >= manhatten_dist:
+                    x, y, w, h = self.adjust_bin_pos_for_symmetrie(x, y, w, h)
+                    if map_q:
+                        bins_to_search.append(self.idx.to_query(y, y+h, x, x+w, map_q_min, map_q_max, True, True))
+                    else:
+                        bins_to_search.append(self.idx.to_query(y, y+h, x, x+w, map_q_min, map_q_max, False, True))
+                else:
+                    if map_q:
+                        bins_to_search.append(self.idx.to_query(0, 0, 0, 0, 0, 0, True, True))
+                    else:
+                        bins_to_search.append(self.idx.to_query(0, 0, 0, 0, 0, 0, False, True))
+                if self.cancel_render:
+                    return
+            ns.append(self.idx.count_multiple(idx, bins_to_search, 
                                               self.settings["filters"]["ambiguous_mapping"], map_q, multi_map))
             if self.cancel_render:
                 return
