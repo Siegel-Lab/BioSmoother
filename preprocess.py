@@ -86,24 +86,6 @@ def group_norm_file(in_filename, file_size):
     yield from deal_with_group()
 
 
-def parse_annotations(annotation_file, axis_start_pos_offset, dividend):
-    annos = []
-
-    annotation_types = set()
-    with open(annotation_file, "r") as in_file_1:
-        for line in in_file_1:
-            if line[0] == "#":
-                continue
-            # parse file colum
-            chrom, db_name, annotation_type, from_pos, to_pos, _, strand, _, extras, *opt = line.split()
-            
-            if not chrom in axis_start_pos_offset:
-                continue
-            annotation_types.add(annotation_type)
-            s = axis_start_pos_offset[chrom] + int(from_pos) // dividend
-            e = axis_start_pos_offset[chrom] + int(to_pos) // dividend
-            annos.append((annotation_type, s, max(s+1, e), extras.replace(";", "\n")))
-    return annos
 
 
 def parse_wig_file(filename, chr_start_idx, dividend):

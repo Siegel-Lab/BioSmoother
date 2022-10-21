@@ -14,3 +14,20 @@
 - does radicl sec do normalization for rna?
 - uneven distribution between contigs in grid seq normalization
 - mapping quality and uneven alignments
+- check if lines coincide with rRNA / ncRNA / snoRNA / tRNA
+
+
+
+# presentation
+
+- published data, that's not tryps (cancer, human)
+    - hi-c & radicl-seq
+- structure also for other purposes
+    - in databases (plain computer science)
+    - for a chip seq viewer
+    - other live sciences?
+    - e.g. google maps / other heatmaps
+- one main figure about the algorithmmics
+- why is this needed (as a figure)
+    - advantages of the tool
+- 

@@ -25,7 +25,7 @@ from concurrent.futures import ThreadPoolExecutor
 from bokeh.models import BoxAnnotation
 from bin.stats import *
 from bokeh.models.tickers import AdaptiveTicker
-import bin.libSps
+from bin.libContactMapping import Quarry
 from bin.render_step_logger import *
 import json
 import shutil
@@ -695,7 +695,6 @@ class MainLayout:
         self.last_h_w_bin = (0, 0)
         self.curr_area_size = 1
         self.idx = None
-        self.idx_norm = None
         self.render_logger = Logger()
         self.smoother_version = "?"
         self.reset_options = {}
