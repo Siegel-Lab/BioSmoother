@@ -283,7 +283,7 @@ class MainLayout:
                         r[k] = a[k]
                 return r
             print("saving...")
-            settings = dict_diff(self.settings, self.settings_default)
+            settings = dict_diff(self.session.get_value(["settings"]), self.settings_default)
             settings["display_name"] = name.value
             settings["smoother_config_file_version"] = CONFIG_FILE_VERSION
             with open('smoother/static/conf/' + str(file_nr) + '.json', 'w') as f:
@@ -319,7 +319,7 @@ class MainLayout:
                     else:
                         r[k] = b[k]
                 return r
-            self.settings = combine_dict(settings, self.settings)
+            self.session.set_value(["settings"], combine_dict(settings, self.session.get_value(["settings"])))
             self.curdoc.hold()
             self.do_config()
             self.curdoc.unhold()
@@ -385,11 +385,10 @@ class MainLayout:
 
     def config_slider_spinner(self):
         for slider, spinner, on_change, session_key in self.slider_spinner_config:
-            settings_dict = self.settings[a][b]
-            value = settings_dict["val"]
-            start = settings_dict["min"]
-            end = settings_dict["max"]
-            step = settings_dict["step"]
+            value = self.session.get_value(session_key + ["val"])
+            start = self.session.get_value(session_key + ["min"])
+            end = self.session.get_value(session_key + ["max"])
+            step = self.session.get_value(session_key + ["step"])
             spinner.low = start
             spinner.high = end
             spinner.value = value
@@ -574,8 +573,6 @@ class MainLayout:
         self.session = None
         with open('smoother/static/conf/default.json', 'r') as f:
             self.settings_default = json.load(f)
-        with open('smoother/static/conf/default.json', 'r') as f:
-            self.settings = json.load(f)
 
         self.heatmap = None
         d = {"b": [], "l": [], "t": [], "r": [], "c": [], "chr_x": [], "chr_y": [], "x1": [], "x2": [],
@@ -1314,7 +1311,7 @@ class MainLayout:
 
     def make_anno_str(self, s, e):
         anno_str = ""
-        if "Include Annotation" in self.settings["export"]["selection"]:
+        if "Include Annotation" in self.session.get_value(["settings", "export", "selection"]):
             for anno in self.displayed_annos:
                 c = self.meta.annotations[anno].count(s, e)
                 if c > 0 and c <= 10:
@@ -1781,19 +1778,31 @@ class MainLayout:
             self.curr_bin_size.text = "loading index..."
             def callback2():
                 if os.path.exists(self.meta_file.value + ".smoother_index"):
-                    self.meta = MetaData.load(self.meta_file.value + ".smoother_index/meta")
-                    self.meta.setup(self)
+                    self.session = Quarry(self.meta_file.value + ".smoother_index")
+
                     def to_idx(x):
                         if x <= 0:
                             return 0
                         power = int(math.log10(x))
                         return 9*power+math.ceil(x / 10**power)-1
-                    self.min_max_bin_size.start = to_idx(self.meta.dividend)
-                    self.settings["interface"]["min_bin_size"]["val"] = self.min_max_bin_size.value
-                    self.min_max_bin_size.value = max(9*2, to_idx(self.meta.dividend))
+
+                    if self.session.get_value(["settings"]) is None:
+                        with open('smoother/static/conf/default.json', 'r') as f:
+                            settings = json.load(f)
+                        self.session.set_value(["settings"], settings)
+
+                        min_ = max(to_idx(self.session.get_value(["dividend"])), 
+                                       self.session.get_value(["settings", "interface", "min_bin_size", "min"]))
+                        val_ = max(to_idx(self.session.get_value(["dividend"])), 
+                                       self.session.get_value(["settings", "interface", "min_bin_size", "val"]))
+                        
+                        self.session.set_value(["settings", "interface", "min_bin_size", "min"], min_)
+                        self.session.set_value(["settings", "interface", "min_bin_size", "val"], val_)
+
+
+                    self.meta = MetaData.load(self.meta_file.value + ".smoother_index/meta")
+                    self.meta.setup(self)
                     self.setup_coordinates()
-                    self.idx = Tree_4(self.meta_file.value)
-                    self.idx_norm = Tree_3(self.meta_file.value)
                     print("done loading\033[K")
                     self.trigger_render()
                     self.curr_bin_size.text = "done loading"
