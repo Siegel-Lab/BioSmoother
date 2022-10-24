@@ -138,6 +138,12 @@
         "selection": [
             "Heatmap"
         ],
+        "list": [
+            "Heatmap", 
+            "Column Sum", 
+            "Row Sum", 
+            "Include Annotation"
+        ],
         "do_export_full": false
     }
 }
