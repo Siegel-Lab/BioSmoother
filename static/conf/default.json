@@ -41,6 +41,7 @@
             "val": 50,
             "step": 10
         },
+        "max_num_bins_factor": 1000,
         "show_hide": {
             "axis": true,
             "ratio": false,
@@ -54,6 +55,12 @@
         "min_bin_size": {
             "max": 135,
             "val": 18,
+            "step": 1
+        },
+        "max_undo": {
+            "min": 0,
+            "max": 100,
+            "val": 25,
             "step": 1
         },
         "update_freq": {
@@ -102,8 +109,9 @@
             5
         ],
         "color_palette": "Viridis256",
-        "color_low": "#FFFFFF",
-        "color_high": "#000000",
+        "annotation_color_palette": ["#0072B2", "#E69F00", "#D55E00", "#009E73", "#56B4E9", "#F0E442", "#CC79A7", "#000000"],
+        "color_low": "#000000",
+        "color_high": "#FFFFFF",
         "axis_lables": "RNA_DNA"
     },
     "filters": {
@@ -123,12 +131,20 @@
             "step": 1
         },
         "multiple_annos_in_bin": "combine",
-        "ambiguous_mapping": "enclosed"
+        "ambiguous_mapping": "enclosed",
+        "cut_off_bin": "smaller_if_fullsized_exists"
     },
     "export": {
         "prefix": "export",
         "selection": [
             "Heatmap"
-        ]
+        ],
+        "list": [
+            "Heatmap", 
+            "Column Sum", 
+            "Row Sum", 
+            "Include Annotation"
+        ],
+        "do_export_full": false
     }
 }

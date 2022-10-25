@@ -1,5 +1,6 @@
 from bokeh.plotting import figure
-from bokeh.models import BoxAnnotation
+from bokeh.models import BoxAnnotation, Range1d
+from bokeh.models.tools import ToolbarBox, ProxyToolbar
 import math
 
 DROPDOWN_HEIGHT=30
@@ -107,10 +108,10 @@ class FigureMaker:
 
     def _axis_of(self, other, register):
         self.hide_on("axis", register)
-        for plot, _hide_on in register._hidable_plots:
+        for plot, _hide_on in register.hidable_plots:
             if plot == other:
                 for key in _hide_on:
-                    self.hide_on(key)
+                    self.hide_on(key, register)
 
     def x_axis_of(self, other, register, label="", stretch=False):
         self._axis_of(other, register)
@@ -131,7 +132,7 @@ class FigureMaker:
         self.no_border_v = True
         return self
 
-    def y_axis_of(self, other, label="", stretch=False):
+    def y_axis_of(self, other, register, label="", stretch=False):
         self._axis_of(other, register)
 
         self.y_axis_visible = True

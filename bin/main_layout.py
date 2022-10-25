@@ -45,7 +45,6 @@ CONFIG_FILE_VERSION = 0.1
 
 executor = ThreadPoolExecutor(max_workers=1)
 
-Colorblind2 = tuple(Colorblind[8][idx] for idx in [0,1,5,3,4,2,6,7])
 
 ## @todo use multi-inheritance to split this class into smaller ones
 
@@ -89,7 +88,7 @@ class MainLayout:
     def dropdown_select(self, title, tooltip, *options, active_item=None, event=None):
         if event is None:
             def default_event(e):
-                self.session.set_value(active_item) = e
+                self.session.set_value(active_item, e)
                 self.trigger_render()
             event = default_event
         ret, set_menu = self.dropdown_select_h(title, event, tooltip)
@@ -102,7 +101,7 @@ class MainLayout:
     def dropdown_select_session(self, title, tooltip, session_key, active_item, add_keys=[], event=None):
         if event is None:
             def default_event(e):
-                self.session.set_value(active_item) = e
+                self.session.set_value(active_item, e)
                 self.trigger_render()
             event = default_event
         ret, set_menu = self.dropdown_select_h(title, event, tooltip)
@@ -335,9 +334,10 @@ class MainLayout:
             def default_on_change(val):
                 self.session.set_value(settings + ["val"], val)
                 self.trigger_render()
-            on_change = default_on_change()
+            on_change = default_on_change
         spinner = Spinner(width=spinner_width)
-        slider = Slider(title=title, show_value=False, width=width-spinner_width, sizing_mode=sizing_mode)
+        slider = Slider(title=title, show_value=False, width=width-spinner_width, sizing_mode=sizing_mode,
+                        start=0, end=1, value=0)
 
         spinner.js_link("value", slider, "value")
         slider.js_link("value", spinner, "value")
@@ -355,8 +355,9 @@ class MainLayout:
                 self.session.set_value(settings + ["val_min"], val[0])
                 self.session.set_value(settings + ["val_max"], val[1])
                 self.trigger_render()
-            on_change = default_on_change()
-        slider = RangeSlider(title=title, show_value=False, width=width-spinner_width*2, sizing_mode=sizing_mode)
+            on_change = default_on_change
+        slider = RangeSlider(title=title, show_value=False, width=width-spinner_width*2, sizing_mode=sizing_mode,
+                        start=0, end=1, value=(0,1))
         spinner_start = Spinner(width=spinner_width)
         spinner_end = Spinner(width=spinner_width)
 
@@ -374,9 +375,14 @@ class MainLayout:
 
         return row([slider, spinner_start, spinner_end], width=width, margin=DIV_MARGIN)
 
-    def make_checkbox(self, title, on_change, settings, width=200):
+    def make_checkbox(self, title, settings, on_change=None, width=200):
         div = Div(text=title, sizing_mode="stretch_width")
         cg = CheckboxGroup(labels=[""], sizing_mode="fixed", width=20)
+        if on_change is None:
+            def default_event(active):
+                self.session.set_value(settings, active)
+                self.trigger_render()
+            on_change = default_event
         cg.on_change("active", lambda _1,_2,_3: on_change(0 in cg.active))
 
         self.checkbox_config.append((cg, settings))
@@ -439,7 +445,7 @@ class MainLayout:
             ele_list = self.session.get_value(session_key)
             d = {}
             for key, name in checkboxes:
-                d[name] = [for ele in ele_list if ele in self.session.get_value(key)] 
+                d[name] = [ele for ele in ele_list if ele in self.session.get_value(key)] 
             set_options(ele_list, d)
 
     def do_config(self):
@@ -456,7 +462,7 @@ class MainLayout:
         self.low_color.color = self.session.get_value(["settings", "interface", "color_low"])
         self.high_color.color = self.session.get_value(["settings", "interface", "color_high"])
 
-        self.config_show_hide(self.session.get_value(["interface". "show_hide"])
+        self.config_show_hide(self.session.get_value(["interface", "show_hide"]))
 
         self.export_file.value = self.session.get_value(["export_prefix"])
 
@@ -517,7 +523,7 @@ class MainLayout:
                 self.show_hide[key] = False
         self.names = names
 
-        self.show_hide_dropdown = Dropdown(label="Show/Hide", menu=self.make_menu(),
+        self.show_hide_dropdown = Dropdown(label="Show/Hide", menu=self.make_show_hide_menu(),
                        width=350, sizing_mode="fixed", css_classes=["other_button", "tooltip", "tooltip_show_hide"], height=DROPDOWN_HEIGHT)
 
         def event(e):
@@ -534,7 +540,7 @@ class MainLayout:
         self.update_visibility()
 
 
-    def reshow_settings():
+    def reshow_settings(self):
         self.unhide_button = Button(label="<", width=40, height=40, css_classes=["other_button"])
         self.unhide_button.sizing_mode = "fixed"
         self.unhide_button.visible = False
@@ -558,15 +564,12 @@ class MainLayout:
         self.x_coords_d = "full_genome"
         self.y_coords_d = "full_genome"
 
-        self.meta = None
         self.do_render = False
         self.cancel_render = False
         self.force_render = True
         self.curdoc = curdoc()
         self.last_drawing_area = (0, 0, 0, 0)
-        self.last_h_w_bin = (0, 0)
         self.curr_area_size = 1
-        self.idx = None
         self.render_logger = Logger()
         self.smoother_version = "?"
         self.reset_options = {}
@@ -636,25 +639,11 @@ class MainLayout:
         self.anno_x_data = ColumnDataSource(data=d)
         self.anno_y_data = ColumnDataSource(data=d)
         self.meta_file = None
-        self.set_group = None
-        self.displayed_annos = []
-        self.filtered_annos_x = []
-        self.filtered_annos_y = []
-        self.set_annos = None
         self.min_max_bin_size = None
         self.curr_bin_size = None
         self.spinner = None
         self.info_field = None
-        self.norm_x = []
-        self.norm_y = []
-        self.set_norm = None
-        self.x_coords_update = None
-        self.y_coords_update = None
-        self.chrom_x = []
-        self.chrom_y = []
-        self.set_chrom = None
         self.do_export = None
-        self.export_type = []
         self.color_mapper = None
         self.color_info = None
         self.settings_row = None
@@ -666,7 +655,6 @@ class MainLayout:
         self.export_file = None
 
         self.do_layout()
-        self.do_config()
 
     def do_layout(self):
 
@@ -698,9 +686,9 @@ class MainLayout:
         ))
 
         self.heatmap_x_axis = FigureMaker().x_axis_of(
-            self.heatmap, "DNA", True).combine_tools(tollbars).get(self)
+            self.heatmap, self, "DNA", True).combine_tools(tollbars).get(self)
         self.heatmap_y_axis = FigureMaker().y_axis_of(
-            self.heatmap, "RNA", True).combine_tools(tollbars).get(self)
+            self.heatmap, self, "RNA", True).combine_tools(tollbars).get(self)
 
         self.slope = Slope(gradient=1, y_intercept=0, line_color=None)
         self.heatmap.add_layout(self.slope)
@@ -725,7 +713,7 @@ class MainLayout:
         )
 
         self.ratio_x = FigureMaker().w(DEFAULT_SIZE).link_y(
-            self.heatmap).hidden().hide_on("ratio").combine_tools(tollbars).get(self)
+            self.heatmap).hidden().hide_on("ratio", self).combine_tools(tollbars).get(self)
         self.ratio_x.add_tools(ratio_hover_x)
         self.ratio_x_axis = FigureMaker().x_axis_of(
             self.ratio_x, self).combine_tools(tollbars).get(self)
@@ -737,10 +725,10 @@ class MainLayout:
         self.ratio_x.ygrid.minor_grid_line_alpha = 0.5
 
         self.ratio_y = FigureMaker().h(DEFAULT_SIZE).link_x(
-            self.heatmap).hidden().hide_on("ratio").combine_tools(tollbars).get(self)
+            self.heatmap).hidden().hide_on("ratio", self).combine_tools(tollbars).get(self)
         self.ratio_y.add_tools(ratio_hover_y)
         self.ratio_y_axis = FigureMaker().y_axis_of(
-            self.ratio_y).combine_tools(tollbars).get(self)
+            self.ratio_y, self).combine_tools(tollbars).get(self)
         self.ratio_y_axis.yaxis.axis_label = "Ratio"
         self.ratio_y_axis.yaxis.ticker = AdaptiveTicker(desired_num_ticks=3)
         self.ratio_y.ygrid.ticker = AdaptiveTicker(desired_num_ticks=3, num_minor_ticks=1)
@@ -767,7 +755,7 @@ class MainLayout:
         )
 
         self.raw_x = FigureMaker().w(DEFAULT_SIZE).link_y(
-            self.heatmap).hide_on("raw").combine_tools(tollbars).get(self)
+            self.heatmap).hide_on("raw", self).combine_tools(tollbars).get(self)
         self.raw_x.add_tools(raw_hover_x)
         self.raw_x_axis = FigureMaker().x_axis_of(
             self.raw_x, self).combine_tools(tollbars).get(self)
@@ -779,7 +767,7 @@ class MainLayout:
         self.raw_x.ygrid.minor_grid_line_alpha = 0.5
 
         self.raw_y = FigureMaker().h(DEFAULT_SIZE).link_x(
-            self.heatmap).hide_on("raw").combine_tools(tollbars).get(self)
+            self.heatmap).hide_on("raw", self).combine_tools(tollbars).get(self)
         self.raw_y.add_tools(raw_hover_y)
         self.raw_y_axis = FigureMaker().y_axis_of(
             self.raw_y, self).combine_tools(tollbars).get(self)
@@ -800,7 +788,7 @@ class MainLayout:
                           line_color="black")  # , level="image"
 
         self.anno_x = FigureMaker().w(DEFAULT_SIZE).link_y(self.heatmap).hide_on(
-            "annotation").combine_tools(tollbars).categorical_x().get(self)
+            "annotation", self).combine_tools(tollbars).categorical_x().get(self)
         self.anno_x_axis = FigureMaker().x_axis_of(
             self.anno_x, self).combine_tools(tollbars).get(self)
         self.anno_x_axis.xaxis.axis_label = "Anno"
@@ -809,7 +797,7 @@ class MainLayout:
         self.anno_x.ygrid.minor_grid_line_alpha = 0.5
 
         self.anno_y = FigureMaker().h(DEFAULT_SIZE).link_x(self.heatmap).hide_on(
-            "annotation").combine_tools(tollbars).categorical_y().get(self)
+            "annotation", self).combine_tools(tollbars).categorical_y().get(self)
         self.anno_y_axis = FigureMaker().y_axis_of(
             self.anno_y, self).combine_tools(tollbars).get(self)
         self.anno_y_axis.yaxis.axis_label = "Anno"
@@ -889,7 +877,7 @@ class MainLayout:
                                                   )
 
         incomp_align_layout = self.make_checkbox("Show reads with incomplete alignments", 
-                                                    active_item=['settings', 'filters', 'incomplete_alignments'])
+                                                    settings=['settings', 'filters', 'incomplete_alignments'])
 
         ddd = self.dropdown_select("Distance Dependent Decay", "tooltip_ddd",
                                         ("Keep decay", "no"), ("Normalize decay away", "yes"),
@@ -1054,6 +1042,8 @@ class MainLayout:
                 return Math.ceil((1 + tick % 9) * Math.pow(10, Math.floor(tick / 9))) + "bp"; """)
         self.min_max_bin_size = Slider( 
                 start = 0,
+                end = 1,
+                value=0,
                 title="Minimum Bin Size",
                 format=power_tick, 
                 sizing_mode="stretch_width")
@@ -1095,11 +1085,11 @@ class MainLayout:
                                                         [["coverage", "cov_row_b"], "row B"]],
                                                         ["coverage", "list"])
 
-        x_coords, self.x_coords_update = self.dropdown_select_session("Column Coordinates", "tooltip_row_coordinates",
+        x_coords = self.dropdown_select_session("Column Coordinates", "tooltip_row_coordinates",
                                                 ["contigs", "list"], ["contigs", "column_coordinates"], 
                                                 [("Genomic loci", "full_genome")])
 
-        y_coords, self.y_coords_update = self.dropdown_select_session("Row Coordinates", "tooltip_column_coordinates",
+        y_coords = self.dropdown_select_session("Row Coordinates", "tooltip_column_coordinates",
                                                 ["contigs", "list"], ["contigs", "row_coordinates"], 
                                                 [("Genomic loci", "full_genome")])
 
@@ -1116,12 +1106,10 @@ class MainLayout:
                 ("Increase number of bins to match number of annotations (might be slow)", "force_separate"),
                 active_item=["settings", "filters", "multiple_annos_in_bin"])
 
-        def export_event(e):
-            self.do_export = e
-            self.trigger_render()
-        self.export_button = self.dropdown_select("Export", export_event, "tooltip_export",
+        self.export_button = self.dropdown_select("Export", "tooltip_export",
                                                   ("Current View", "current"),
-                                                  ("Full Matrix", "full"))
+                                                  ("Full Matrix", "full"),
+                                                  active_item=["settings", "export", "area"])
 
         export_label = Div(text="Output Prefix:")
         export_label.margin = DIV_MARGIN
@@ -1171,7 +1159,7 @@ class MainLayout:
         with open("smoother/VERSION", "r") as in_file:
             self.smoother_version = in_file.readlines()[0][:-1]
 
-        version_info = Div(text="Smoother "+ self.smoother_version +"<br>LibSps Version: " + bin.libSps.VERSION)
+        version_info = Div(text="Smoother "+ self.smoother_version +"<br>LibSps Version: " + Quarry.get_libSps_version())
 
         self.color_mapper = LinearColorMapper(palette=["black"], low=0, high=1)
         color_figure = figure(tools='', height=0)
@@ -1236,8 +1224,8 @@ class MainLayout:
         _settings_n_info.width_policy = "fixed"
         
 
-        FigureMaker._hidable_plots.append((_settings_n_info, ["tools"]))
-        self.settings_row = row([Spacer(sizing_mode="stretch_both"), _settings_n_info, FigureMaker.reshow_settings()], css_classes=["full_height"])
+        self.hidable_plots.append((_settings_n_info, ["tools"]))
+        self.settings_row = row([Spacer(sizing_mode="stretch_both"), _settings_n_info, self.reshow_settings()], css_classes=["full_height"])
         self.settings_row.height = 100
         self.settings_row.min_height = 100
         self.settings_row.height_policy = "fixed"
@@ -1266,7 +1254,7 @@ class MainLayout:
         root_min_one = grid(grid_layout, sizing_mode="stretch_both")
         root_min_one.align = "center"
         self.root = grid([[root_min_one]])
-        FigureMaker().update_visibility()
+        self.update_visibility()
 
     # overlap of the given areas relative to the larger area
     @staticmethod
@@ -1330,322 +1318,80 @@ class MainLayout:
         def unlocked_task():
             def cancelable_task():
                 self.cancel_render = False
-                if self.meta is None or self.idx is None:
-                    self.curdoc.add_timeout_callback(
-                        lambda: self.render_callback(), self.settings["interface"]["update_freq"]["val"]*1000)
-                    return False
                     
                 def callback():
                     self.spinner.css_classes = ["fade-in"]
                 self.curdoc.add_next_tick_callback(callback)
 
-                def power_of_ten(x):
-                    if self.settings["interface"]["snap_bin_size"] == "no":
-                        return math.ceil(x)
-                    n = 0
-                    while True:
-                        for i in [1, 1.25, 2.5, 5]:
-                            if i*10**n > x:
-                                return i*10**n
-                        n += 1
-                def comp_bin_size():
-                    t = self.settings["interface"]["min_bin_size"]["val"]
-                    return max(1, math.ceil((1 + t % 9) * 10**(t // 9)) // self.meta.dividend)
-                if self.settings["interface"]["bin_aspect_ratio"] == "view":
-                    h_bin = power_of_ten( (area[2] - area[0]) / \
-                                            math.sqrt(self.settings["interface"]["max_num_bins"]["val"] * 1000) )
-                    h_bin = max(h_bin, comp_bin_size(), 1)
-                    w_bin = power_of_ten( (area[3] - area[1]) / \
-                                            math.sqrt(self.settings["interface"]["max_num_bins"]["val"] * 1000) )
-                    w_bin = max(w_bin, comp_bin_size(), 1)
-                elif self.settings["interface"]["bin_aspect_ratio"] == "coord":
-                    area_bin = (area[2] - area[0]) * (area[3] - area[1]) / \
-                                            (self.settings["interface"]["max_num_bins"]["val"] * 1000)
-                    h_bin = power_of_ten(math.sqrt(area_bin))
-                    h_bin = max(h_bin, comp_bin_size(), 1)
-                    w_bin = h_bin
-                else:
-                    raise RuntimeError("invlaid square_bins_d value")
-
-                if self.last_h_w_bin == (h_bin, w_bin) and zoom_in_render:
-                    self.curdoc.add_timeout_callback(
-                        lambda: self.render_callback(), self.settings["interface"]["update_freq"]["val"]*1000)
-                    return True
-                self.last_h_w_bin = (h_bin, w_bin)
-                self.last_drawing_area = area
-
-                area[0] -= area[0] % w_bin # align to nice and even number
-                area[1] -= area[1] % h_bin # align to nice and even number
-                area[2] += w_bin - (area[2] % w_bin) # align to nice and even number
-                area[3] += h_bin - (area[3] % h_bin) # align to nice and even number
-
-                if self.do_export == "full":
-                    area[0] = 0
-                    area[1] = 0
-                    area[2] = self.meta.chr_sizes.chr_start_pos["end"]
-                    area[3] = self.meta.chr_sizes.chr_start_pos["end"]
-
-                print("bin_size", int(h_bin), "x", int(w_bin), "\033[K")
-                xx = self.bin_coords(area, h_bin, w_bin)
-                if self.cancel_render:
-                    return
-                bin_coords, bin_cols, bin_rows, bin_coords_2, _, _, bin_coords_3, _, _ = xx
-                bins = self.make_bins(bin_coords)
-                if self.cancel_render:
-                    return
-                flat = self.flatten_bins(bins)
-                norm_ddd_out = self.norm_ddd(flat, bin_coords_2)
-                norm = self.norm_bins(w_bin, norm_ddd_out, bin_cols, bin_rows)
-                if self.cancel_render:
-                    return
-                sym = self.bin_symmentry(h_bin, norm, bin_coords, bin_cols, bin_rows)
-                if self.cancel_render:
-                    return
-                c = self.color_bins(sym)
-                b_col = self.color((MAP_Q_MAX-1) //
-                                2) if self.settings['replicates']['between_group'] == "sub" else self.color(0)
-                purged, purged_coords, purged_coords_2, purged_sym, purged_flat_a, purged_flat_b = \
-                    self.purge(b_col, c, bin_coords_3, bin_coords_2,
-                            self.color_bins_a(sym), *flat)
-
-                norm_visible = FigureMaker.is_visible("raw") or FigureMaker.is_visible("ratio")
-
-                if norm_visible:
-                    xx = self.bin_rows(area, w_bin, False)
-                    if self.cancel_render:
-                        return
-                    raw_bin_rows, raw_bin_rows_2, raw_bin_rows_3 = xx
-                    xx = self.bin_cols(area, h_bin, False)
-                    if self.cancel_render:
-                        return
-                    raw_bin_cols, raw_bin_cols_2, raw_bin_cols_3 = xx
-
-                    xx = self.linear_bins_norm(raw_bin_rows, True)
-                    if self.cancel_render:
-                        return
-                    raw_x_norm_combined, raw_x_norms = xx
-
-                    xx = self.linear_bins_norm(raw_bin_cols, False)
-                    if self.cancel_render:
-                        return
-                    raw_y_norm_combined, raw_y_norms = xx
-
-                    xx_raw_x_heat = self.row_norm(raw_bin_rows)
-                    if self.cancel_render:
-                        return
-                    xx_raw_y_heat = self.col_norm(raw_bin_cols)
-                    if self.cancel_render:
-                        return
-                    raw_x_heat = self.color_bins_a(xx_raw_x_heat)
-                    raw_y_heat = self.color_bins_a(xx_raw_y_heat)
-                    raw_x_ratio = [a/b if not b == 0 else 0 for a,
-                                b in zip(raw_x_heat, raw_x_norm_combined)]
-                    raw_y_ratio = [a/b if not b == 0 else 0 for a,
-                                b in zip(raw_y_heat, raw_y_norm_combined)]
-                else:
-                    raw_bin_rows, raw_bin_rows_2, raw_bin_rows_3 = ([], [], [])
-                    raw_bin_cols, raw_bin_cols_2, raw_bin_cols_3 = ([], [], [])
-
-                    raw_x_norm_combined = []
-                    raw_x_norms = [[]]
-                    raw_y_norm_combined = []
-                    raw_y_norms = [[]]
-                    raw_x_heat = []
-                    raw_y_heat = []
-                    raw_x_ratio = []
-                    raw_y_ratio = []
-                    
-                self.render_step_log("render_overlays")
-                d_overlay = {"b": [], "l": [], "t": [], "r": []}
-                if self.overlay_dataset_id.value >= 0:
-                    for grid_pos, blf, trb in self.idx.get_overlay_grid(self.overlay_dataset_id.value):
-                        if grid_pos[2] != 0:
-                            continue
-                        if grid_pos[3] != 0:
-                            continue
-                        if grid_pos[4] != 0:
-                            continue
-                        d_overlay["l"].append(min(blf[0], self.meta.chr_sizes.chr_start_pos["end"]))
-                        d_overlay["b"].append(min(blf[1], self.meta.chr_sizes.chr_start_pos["end"]))
-                        d_overlay["r"].append(min(trb[0], self.meta.chr_sizes.chr_start_pos["end"]))
-                        d_overlay["t"].append(min(trb[1], self.meta.chr_sizes.chr_start_pos["end"]))
 
                 self.render_step_log("setup_col_data_sources")
                 d_heatmap = {
-                    "b": [x[1] for x in purged_coords],
-                    "l": [x[0] for x in purged_coords],
-                    "t": [x[1] + x[3] for x in purged_coords],
-                    "r": [x[0] + x[2] for x in purged_coords],
-                    "c": purged,
-                    "chr_x": [x[0] for x in purged_coords_2],
-                    "chr_y": [x[2] for x in purged_coords_2],
-                    "x1": [x[1] * self.meta.dividend for x in purged_coords_2],
-                    "x2": [(x[1] + y[2]) * self.meta.dividend for x, y in zip(purged_coords_2, purged_coords)],
-                    "y1": [x[3] * self.meta.dividend for x in purged_coords_2],
-                    "y2": [(x[3] + y[3]) * self.meta.dividend for x, y in zip(purged_coords_2, purged_coords)],
-                    "s": purged_sym,
-                    "d_a": purged_flat_a,
-                    "d_b": purged_flat_b,
+                    "b": [],
+                    "l": [],
+                    "t": [],
+                    "r": [],
+                    "c": [],
+                    "chr_x": [],
+                    "chr_y": [],
+                    "x1": [],
+                    "x2": [],
+                    "y1": [],
+                    "y2": [],
+                    "s": [],
+                    "d_a": [],
+                    "d_b": [],
                 }
-                
-                best_bins = [(None,0,0)]*3
-                for cc, a, b in zip(d_heatmap["s"], d_heatmap["d_a"], d_heatmap["d_b"]):
-                    c = self.color_bins_c(cc)/255
-                    for idx, x in enumerate([0.1, 0.5, 0.9]):
-                        if best_bins[idx][0] is None or abs(c-x) < abs(best_bins[idx][0]-x):
-                            best_bins[idx] = (c, a, b)
-
-                color_bar_ticks = []
-                color_bar_tick_labels = []
-                for c, a, b in best_bins:
-                    if not c is None:
-                        color_bar_ticks.append(c)
-                        color_bar_tick_labels.append(str(round(c, 2)) + ": " + str(round(a, 2)) + "/" + 
-                                                     str(round(b, 2)))
-
-                def double_up(l):
-                    return [x for x in l for _ in [0, 1]]
-
-                x_pos = [p for x in raw_bin_rows_3 for p in [x[0], x[0] + x[1]]]
-                x_chr = [x[0] for x in raw_bin_rows_2 for _ in [0, 1]]
-                x_pos1 = [x[1] * self.meta.dividend for x in raw_bin_rows_2 for _ in [0, 1]]
-                x_pos2 = [(x[1] + y[1]) * self.meta.dividend for x, y in zip(raw_bin_rows_2, raw_bin_rows) for _ in [0, 1]]
-
-                x_num_raw = 2 + (0 if len(raw_x_norms) == 0 else len(raw_x_norms[0]))
-
-                y_pos = [p for x in raw_bin_cols_3 for p in [x[0], x[0] + x[1]]]
-                y_chr = [x[0] for x in raw_bin_cols_2 for _ in [0, 1]]
-                y_pos1 = [x[1] * self.meta.dividend for x in raw_bin_cols_2 for _ in [0, 1]]
-                y_pos2 = [(x[1] + y[1]) * self.meta.dividend for x, y in zip(raw_bin_cols_2, raw_bin_cols) for _ in [0, 1]]
-
-                y_num_raw = 2 + (0 if len(raw_y_norms) == 0 else len(raw_y_norms[0]))
-
-                x_ys = []
-                for idx in range(x_num_raw-2):
-                    x_ys.append([])
-                    for x in raw_x_norms:
-                        for _ in [0,1]:
-                            x_ys[-1].append(x[idx])
-                y_ys = []
-                for idx in range(y_num_raw-2):
-                    y_ys.append([])
-                    for x in raw_y_norms:
-                        for _ in [0,1]:
-                            y_ys[-1].append(x[idx])
 
                 raw_data_x = {
-                    "xs": [x_pos for _ in range(x_num_raw)],
-                    "chr": [x_chr for _ in range(x_num_raw)],
-                    "pos1": [x_pos1 for _ in range(x_num_raw)],
-                    "pos2": [x_pos2 for _ in range(x_num_raw)],
-                    "ys": [double_up(raw_x_heat), double_up(raw_x_norm_combined)] + x_ys,
-                    "ls": ["heatmap row sum", "combined normalization"] + self.norm_x,
-                    "cs": [Colorblind2[idx % 8] for idx in range(x_num_raw)],
+                    "xs": [],
+                    "chr": [],
+                    "pos1": [],
+                    "pos2": [],
+                    "ys": [],
+                    "ls": [],
+                    "cs": [],
                 }
                 raw_data_y = {
-                    "xs": [y_pos for _ in range(y_num_raw)],
-                    "chr": [y_chr for _ in range(y_num_raw)],
-                    "pos1": [y_pos1 for _ in range(y_num_raw)],
-                    "pos2": [y_pos2 for _ in range(y_num_raw)],
-                    "ys": [double_up(raw_y_heat), double_up(raw_y_norm_combined)] + y_ys,
-                    "ls": ["heatmap col sum", "combined normalization"] + self.norm_y,
-                    "cs": [Colorblind2[idx % 8] for idx in range(y_num_raw)],
+                    "xs": [],
+                    "chr": [],
+                    "pos1": [],
+                    "pos2": [],
+                    "ys": [],
+                    "ls": [],
+                    "cs": [],
                 }
                 ratio_data_x = {
-                    "pos": x_pos,
-                    "chr": x_chr,
-                    "pos1": x_pos1,
-                    "pos2": x_pos2,
-                    "ratio": [x for x in raw_x_ratio for _ in [0, 1]],
+                    "pos": [],
+                    "chr": [],
+                    "pos1": [],
+                    "pos2": [],
+                    "ratio": [],
                 }
                 ratio_data_y = {
-                    "pos": y_pos,
-                    "chr": y_chr,
-                    "pos1": y_pos1,
-                    "pos2": y_pos2,
-                    "ratio": [x for x in raw_y_ratio for _ in [0, 1]],
-                }
-
-                d_anno_x = {
+                    "pos": [],
                     "chr": [],
                     "pos1": [],
                     "pos2": [],
-                    "x": [],
-                    "s": [],
-                    "e": [],
-                    "c": [],
-                    "n": [],
-                    "info": [],
+                    "ratio": [],
                 }
-                if FigureMaker.is_visible("annotation"):
-                    xx = self.bin_rows(area, w_bin, filter_l=[])
-                    if self.cancel_render:
-                        return
-                    bin_rows_unfiltr, bin_rows_2_unfiltr, bin_rows_3_unfiltr = xx
-                    for idx, anno in enumerate(self.displayed_annos[::-1]):
-                        for rb_2, (s, e), x in zip(bin_rows_2_unfiltr, bin_rows_3_unfiltr,
-                                                self.annotation_bins(bin_rows_unfiltr, self.meta.annotations[anno])):
-                            if x > 0:
-                                d_anno_x["chr"].append(rb_2[0])
-                                d_anno_x["pos1"].append(rb_2[1] * self.meta.dividend)
-                                d_anno_x["pos2"].append((rb_2[1] + e) * self.meta.dividend)
-                                d_anno_x["n"].append(x)
-                                d_anno_x["x"].append(anno)
-                                d_anno_x["s"].append(s)
-                                d_anno_x["e"].append(s + e)
-                                d_anno_x["c"].append(Colorblind2[idx % 8])
-                                if x > 10:
-                                    d_anno_x["info"].append("n/a")
-                                else:
-                                    d_anno_x["info"].append(self.meta.annotations[anno].info(s, s+e))
 
-                d_anno_y = {
-                    "chr": [],
-                    "pos1": [],
-                    "pos2": [],
-                    "x": [],
-                    "s": [],
-                    "e": [],
-                    "c": [],
-                    "n": [],
-                    "info": [],
-                }
-                if FigureMaker.is_visible("annotation"):
-                    xx = self.bin_cols(area, h_bin, filter_l=[])
-                    if self.cancel_render:
-                        return
-                    bin_cols_unfiltr, bin_cols_2_unfiltr, bin_cols_3_unfiltr = xx
-                    for idx, anno in enumerate(self.displayed_annos[::-1]):
-                        for rb_2, (s, e), x in zip(bin_cols_2_unfiltr, bin_cols_3_unfiltr,
-                                                self.annotation_bins(bin_cols_unfiltr, self.meta.annotations[anno])):
-                            if x > 0:
-                                d_anno_y["chr"].append(rb_2[0])
-                                d_anno_y["pos1"].append(rb_2[1] * self.meta.dividend)
-                                d_anno_y["pos2"].append((rb_2[1] + e) * self.meta.dividend)
-                                d_anno_y["n"].append(x)
-                                d_anno_y["x"].append(anno)
-                                d_anno_y["s"].append(s)
-                                d_anno_y["e"].append(s + e)
-                                d_anno_y["c"].append(Colorblind2[idx % 8])
-                                if x > 10:
-                                    d_anno_y["info"].append("n/a")
-                                else:
-                                    d_anno_y["info"].append(self.meta.annotations[anno].info(s, s+e))
+                d_anno_x = self.session.get_annotation(True)
+                d_anno_y = self.session.get_annotation(False)
 
                 self.render_step_log("transfer_data")
 
                 @gen.coroutine
                 def callback():
                     self.curdoc.hold()
-                    if self.settings['replicates']['between_group'] == "sub":
-                        palette = [xxx/50 - 1 for xxx in range(100)]
-                    else:
-                        palette = [xxx/100 for xxx in range(100)]
-                    self.color_mapper.palette = self.color_bins_b(palette)
-                    self.color_info.formatter.args = {"ticksx": color_bar_ticks, "labelsx": color_bar_tick_labels}
-                    self.color_info.ticker.ticks = color_bar_ticks
-                    self.color_info.visible = False
-                    self.color_info.visible = True # trigger re-render
+                    #if self.settings['replicates']['between_group'] == "sub":
+                    #    palette = [xxx/50 - 1 for xxx in range(100)]
+                    #else:
+                    #    palette = [xxx/100 for xxx in range(100)]
+                    #self.color_mapper.palette = self.color_bins_b(palette)
+                    #self.color_info.formatter.args = {"ticksx": color_bar_ticks, "labelsx": color_bar_tick_labels}
+                    #self.color_info.ticker.ticks = color_bar_ticks
+                    #self.color_info.visible = False
+                    #self.color_info.visible = True # trigger re-render
                     def mmax(*args):
                         m = 0
                         for x in args:
@@ -1658,16 +1404,16 @@ class MainLayout:
                             if not x is None and x < m:
                                 m = x
                         return m
-                    if self.do_export is None:
-                        if len(self.displayed_annos) == 0:
-                            self.anno_x.x_range.factors = [""]
-                            self.anno_y.y_range.factors = [""]
-                        else:
-                            self.anno_x.x_range.factors = self.displayed_annos
-                            self.anno_y.y_range.factors = self.displayed_annos
+                    #if self.do_export is None:
+                    #    if len(self.displayed_annos) == 0:
+                    #        self.anno_x.x_range.factors = [""]
+                    #        self.anno_y.y_range.factors = [""]
+                    #    else:
+                    #        self.anno_x.x_range.factors = self.displayed_annos
+                    #        self.anno_y.y_range.factors = self.displayed_annos
 
                     def readable_display(l):
-                        l = l * self.meta.dividend
+                        l = l * self.session.get_value(["dividend"])
                         exp = int(math.log10(l)-1)
                         x = max(1, int(l / (10**exp)))
                         if exp >= 7:
@@ -1682,12 +1428,12 @@ class MainLayout:
 
 
                     if self.do_export is None:
-                        self.raw_x_axis.xaxis.bounds = (mmin(*raw_x_heat, *raw_x_norm_combined), 
-                                                        mmax(*raw_x_heat, *raw_x_norm_combined))
-                        self.ratio_x_axis.xaxis.bounds = (0, mmax(*raw_x_ratio))
-                        self.raw_y_axis.yaxis.bounds = (mmin(*raw_y_heat, *raw_y_norm_combined), 
-                                                        mmax(*raw_y_heat, *raw_y_norm_combined))
-                        self.ratio_y_axis.yaxis.bounds = (0, mmax(*raw_y_ratio))
+                        #self.raw_x_axis.xaxis.bounds = (mmin(*raw_x_heat, *raw_x_norm_combined), 
+                        #                                mmax(*raw_x_heat, *raw_x_norm_combined))
+                        #self.ratio_x_axis.xaxis.bounds = (0, mmax(*raw_x_ratio))
+                        #self.raw_y_axis.yaxis.bounds = (mmin(*raw_y_heat, *raw_y_norm_combined), 
+                        #                                mmax(*raw_y_heat, *raw_y_norm_combined))
+                        #self.ratio_y_axis.yaxis.bounds = (0, mmax(*raw_y_ratio))
 
                         def set_bounds(plot, left=None, right=None, top=None, bottom=None, color=None):
                             ra = FigureMaker.plot_render_area(plot)
@@ -1698,33 +1444,34 @@ class MainLayout:
                             if not color is None:
                                 ra.fill_color = color
 
-                        set_bounds(self.raw_x, left=mmin(*raw_x_heat, *raw_x_norm_combined), 
-                                    right=mmax(*raw_x_heat, *raw_x_norm_combined))
-                        set_bounds(self.ratio_x, left=0, right=mmax(*raw_x_ratio))
-                        set_bounds(self.raw_y, bottom=mmin(*raw_y_heat, *raw_y_norm_combined),
-                                    top=mmax(*raw_y_heat, *raw_y_norm_combined))
-                        set_bounds(self.ratio_y, bottom=0, top=mmax(*raw_y_ratio))
-                        set_bounds(self.anno_x, left=0, right=len(self.displayed_annos))
-                        set_bounds(self.anno_y, bottom=0, top=len(self.displayed_annos))
+                        #set_bounds(self.raw_x, left=mmin(*raw_x_heat, *raw_x_norm_combined), 
+                        #            right=mmax(*raw_x_heat, *raw_x_norm_combined))
+                        #set_bounds(self.ratio_x, left=0, right=mmax(*raw_x_ratio))
+                        #set_bounds(self.raw_y, bottom=mmin(*raw_y_heat, *raw_y_norm_combined),
+                        #            top=mmax(*raw_y_heat, *raw_y_norm_combined))
+                        #set_bounds(self.ratio_y, bottom=0, top=mmax(*raw_y_ratio))
+                        #set_bounds(self.anno_x, left=0, right=len(self.displayed_annos))
+                        #set_bounds(self.anno_y, bottom=0, top=len(self.displayed_annos))
 
-                        set_bounds(self.heatmap, color=b_col)
+                        #set_bounds(self.heatmap, color=b_col)
 
-                        self.heatmap_data.data = d_heatmap
-                        self.raw_data_x.data = raw_data_x
-                        self.raw_data_y.data = raw_data_y
-                        self.ratio_data_x.data = ratio_data_x
-                        self.ratio_data_y.data = ratio_data_y
+                        #self.heatmap_data.data = d_heatmap
+                        #self.raw_data_x.data = raw_data_x
+                        #self.raw_data_y.data = raw_data_y
+                        #self.ratio_data_x.data = ratio_data_x
+                        #self.ratio_data_y.data = ratio_data_y
                         self.anno_x_data.data = d_anno_x
                         self.anno_y_data.data = d_anno_y
-                        self.overlay_data.data = d_overlay
+                        #self.overlay_data.data = d_overlay
                     self.do_export = None
                     self.curdoc.unhold()
-                    total_time, ram_usage = self.render_done(len(bins[0]) if len(bins) > 0 else 0)
-                    self.curr_bin_size.text = end_text + "<br>Took " + str(total_time) + " in total.<br>" + str(ram_usage) + "% RAM used.<br> " + str(len(bins[0])//1000) if len(bins) > 0 else "0" + "k bins rendered."
+                    total_time, ram_usage = self.render_done(0)#len(bins[0]) if len(bins) > 0 else 0)
+                    self.curr_bin_size.text = end_text + "<br>Took " + str(total_time) + " in total.<br>" + str(ram_usage) + "% RAM used.<br> " #+ str(len(bins[0])//1000) if len(bins) > 0 else "0" + "k bins rendered."
                     self.curdoc.add_timeout_callback(
-                        lambda: self.render_callback(), self.settings["interface"]["update_freq"]["val"]*1000)
+                        lambda: self.render_callback(),
+                            self.session.get_value(["settings", "interface", "update_freq", "val"])*1000)
 
-                if not self.do_export is None:
+                if not self.do_export is None and False:
                     if "Data" in self.export_type:
                         if "Heatmap" in self.settings["export"]["selection"]:
                             with open(self.settings["export"]["prefix"] + ".heatmap.bed", "w") as out_file:
@@ -1767,10 +1514,6 @@ class MainLayout:
 
         yield executor.submit(unlocked_task)
 
-    def setup_coordinates(self):
-        self.meta.setup_coordinates(self, FigureMaker.x_coords_d,  FigureMaker.y_coords_d)
-        FigureMaker().update_visibility()
-
     def setup(self):
         print("loading index...\033[K")
         self.spinner.css_classes = ["fade-in"]
@@ -1779,6 +1522,7 @@ class MainLayout:
             def callback2():
                 if os.path.exists(self.meta_file.value + ".smoother_index"):
                     self.session = Quarry(self.meta_file.value + ".smoother_index")
+                    print(self.session.get_dot())
 
                     def to_idx(x):
                         if x <= 0:
@@ -1802,10 +1546,10 @@ class MainLayout:
 
                     self.meta = MetaData.load(self.meta_file.value + ".smoother_index/meta")
                     self.meta.setup(self)
-                    self.setup_coordinates()
                     print("done loading\033[K")
                     self.trigger_render()
                     self.curr_bin_size.text = "done loading"
+                    self.render_callback() # @todo this is not good here!!!!
                 else:
                     print("File not found")
                     self.curr_bin_size.text = "File not found. <br>Waiting for Fileinput."
@@ -1820,12 +1564,18 @@ class MainLayout:
         if self.do_render:
             if not None in (self.heatmap.x_range.start, self.heatmap.x_range.end, self.heatmap.y_range.start,
                             self.heatmap.y_range.end):
+                self.session.set_value(["visible", "x_start"], self.heatmap.x_range.start)
+                self.session.set_value(["visible", "x_end"], self.heatmap.x_range.end)
+
+                self.session.set_value(["visible", "y_start"], self.heatmap.y_range.start)
+                self.session.set_value(["visible", "y_end"], self.heatmap.y_range.end)
+
                 curr_area = (self.heatmap.x_range.start, self.heatmap.y_range.start,
                              self.heatmap.x_range.end, self.heatmap.y_range.end)
                 w = curr_area[2] - curr_area[0]
                 h = curr_area[3] - curr_area[1]
                 curr_area_size = w*h
-                min_change = 1-self.settings["interface"]["zoom_redraw"]["val"]/100
+                min_change = 1-self.session.get_value(["settings", "interface", "zoom_redraw", "val"])/100
                 zoom_in_render = False
                 # print(overlap)
                 if curr_area_size / self.curr_area_size < min_change or self.force_render or \
@@ -1841,17 +1591,24 @@ class MainLayout:
                         self.new_render("program start")
                     self.force_render = False
                     self.curr_area_size = curr_area_size
-                    x = self.settings["interface"]["add_draw_area"]["val"]/100
+                    x = self.session.get_value(["settings", "interface", "add_draw_area", "val"])/100
                     new_area = [curr_area[0] - w*x, curr_area[1] - h*x,
                                 curr_area[2] + w*x, curr_area[3] + h*x]
+                    
+                    self.session.set_value(["area", "x_start"], curr_area[0] - w*x)
+                    self.session.set_value(["area", "x_end"], curr_area[2] + w*x)
+
+                    self.session.set_value(["area", "y_start"], curr_area[1] - h*x)
+                    self.session.set_value(["area", "y_end"], curr_area[3] + h*x)
 
                     def callback():
+                        self.last_drawing_area = self.session.get_drawing_area()
                         self.render(new_area, zoom_in_render)
                     self.curdoc.add_next_tick_callback(callback)
                     return
 
             self.curdoc.add_timeout_callback(
-                lambda: self.render_callback(), self.settings["interface"]["update_freq"]["val"]*1000)
+                lambda: self.render_callback(), self.session.get_value(["settings", "interface", "update_freq", "val"])*1000)
 
     def set_root(self):
         self.curdoc.clear()
@@ -1860,4 +1617,4 @@ class MainLayout:
         self.do_render = True
         self.force_render = True
 
-        self.render_callback()
+

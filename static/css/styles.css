@@ -89,7 +89,8 @@ body {
 }
 
 .vertical {
-    writing-mode: vertical-lr;
+    transform: rotate(-180deg);
+    writing-mode: tb-rl;
     white-space: nowrap;
 }
 
