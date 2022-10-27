@@ -23,9 +23,9 @@ ssh -fNR ${port}:localhost:${port} -i .id_smoother_rsa ${SLURM_JOB_USER}@${SLURM
 # serve bokeh
 cd ..
 
-#gdb python3 -ex "run /home/mschmidt/workspace/anna/smoother/conda_env/smoother/bin/bokeh serve smoother/ --allow-websocket-origin=localhost:${port} --port ${port}"
+gdb python3 -ex "run /home/mschmidt/workspace/anna/smoother/conda_env/smoother/bin/bokeh serve smoother/ --allow-websocket-origin=localhost:${port} --port ${port}"
 
-bokeh serve smoother --allow-websocket-origin=localhost:${port} --log-level error --port ${port}
+#bokeh serve smoother --allow-websocket-origin=localhost:${port} --log-level error --port ${port}
 
 
 # kill port forwarding process

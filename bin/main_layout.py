@@ -93,7 +93,7 @@ class MainLayout:
             event = default_event
         ret, set_menu = self.dropdown_select_h(title, event, tooltip)
         if not active_item is None:
-            self.dropdown_select_config.append((lambda x: set_menu([*options], x), *active_item))
+            self.dropdown_select_config.append((lambda x: set_menu([*options], x), active_item))
         else:
             set_menu(options)
         return ret
@@ -107,7 +107,7 @@ class MainLayout:
         ret, set_menu = self.dropdown_select_h(title, event, tooltip)
         def set_menu_2(x):
             set_menu(add_keys + [(x,x) for x in self.session.get_value(session_key)], x)
-        self.dropdown_select_config.append((set_menu_2, *active_item))
+        self.dropdown_select_config.append((set_menu_2, active_item))
         return ret
 
     def multi_choice(self, label, checkboxes, session_key=None, callback=None, orderable=True):
@@ -235,7 +235,7 @@ class MainLayout:
             for jdx, n in enumerate(labels):
                 self.reset_options[label][1].append([n, []])
                 for idx, cb in enumerate(checkboxes):
-                    if n in active_dict[cb]:
+                    if n in active_dict[cb[1]]:
                         self.reset_options[label][1][jdx][1].append(idx)
             reset_event(0)
             trigger_callback()
@@ -462,9 +462,9 @@ class MainLayout:
         self.low_color.color = self.session.get_value(["settings", "interface", "color_low"])
         self.high_color.color = self.session.get_value(["settings", "interface", "color_high"])
 
-        self.config_show_hide(self.session.get_value(["interface", "show_hide"]))
+        self.config_show_hide(self.session.get_value(["settings", "interface", "show_hide"]))
 
-        self.export_file.value = self.session.get_value(["export_prefix"])
+        self.export_file.value = self.session.get_value(["settings", "export", "prefix"])
 
 
     def plot_render_area(self, plot):
@@ -517,7 +517,7 @@ class MainLayout:
             (("☑ " if self.show_hide["contig_borders"] else "☐ ") + "Contig Borders", "contig_borders"))
         return menu
 
-    def make_show_hide_dropdown(self, key, *names):
+    def make_show_hide_dropdown(self, session_key, *names):
         for _, key in names:
             if key not in self.show_hide:
                 self.show_hide[key] = False
@@ -528,7 +528,7 @@ class MainLayout:
 
         def event(e):
             self.toggle_hide(e.item)
-            layout.session.set_value(key + [e.item], not layout.session.get_value(key + [e.item]))
+            layout.session.set_value(session_key + [e.item], not layout.session.get_value(session_key + [e.item]))
             self.show_hide_dropdown.menu = self.make_show_hide_menu()
         self.show_hide_dropdown.on_click(event)
         return self.show_hide_dropdown
@@ -578,8 +578,11 @@ class MainLayout:
             self.settings_default = json.load(f)
 
         self.heatmap = None
-        d = {"b": [], "l": [], "t": [], "r": [], "c": [], "chr_x": [], "chr_y": [], "x1": [], "x2": [],
-             "y1": [], "y2": [], "s": [], "d_a": [], "d_b": []}
+        d = {"screen_bottom": [], "screen_left": [], "screen_top": [], "screen_right": [], "color": [], 
+             "chr_x": [], "chr_y": [], "index_left": [], "index_right": [],
+             "index_bottom": [], "index_top": [], "score_total": [], "score_a": [], "score_b": [],
+             "chr_x_symmetry" : [], "chr_y_symmetry" : [], "index_symmetry_left" : [], 
+             "index_symmetry_right" : [], "index_symmetry_bottom" : [], "index_symmetry_top" : []}
         self.heatmap_data = ColumnDataSource(data=d)
         d = {"b": [], "l": [], "t": [], "r": []}
         self.overlay_data = ColumnDataSource(data=d)
@@ -634,8 +637,8 @@ class MainLayout:
         self.anno_x_axis = None
         self.anno_y = None
         self.anno_y_axis = None
-        d = {"x": [], "s": [], "e": [], "c": [], "chr": [],
-             "pos1": [], "pos2": [], "info": [], "n": []}
+        d = {"anno_name": [], "screen_start": [], "screen_end": [], "color": [], "chr": [],
+             "index_start": [], "index_end": [], "info": [], "num_anno": []}
         self.anno_x_data = ColumnDataSource(data=d)
         self.anno_y_data = ColumnDataSource(data=d)
         self.meta_file = None
@@ -662,10 +665,8 @@ class MainLayout:
         tollbars = []
         self.heatmap = FigureMaker().range1d().scale().combine_tools(tollbars).get(self)
 
-        self.heatmap.quad(left="l", bottom="b", right="r", top="t", fill_color="c", line_color=None,
-                          source=self.heatmap_data, level="underlay")
-        #self.heatmap.xgrid.minor_grid_line_dash = [2, 8]
-        #self.heatmap.ygrid.minor_grid_line_dash = [2, 8]
+        self.heatmap.quad(left="screen_left", bottom="screen_bottom", right="screen_right", top="screen_top", 
+                          fill_color="color", line_color=None, source=self.heatmap_data, level="underlay")
         self.heatmap.xgrid.minor_grid_line_alpha = 0.5
         self.heatmap.ygrid.minor_grid_line_alpha = 0.5
 
@@ -679,9 +680,10 @@ class MainLayout:
 
         self.heatmap.add_tools(HoverTool(
             tooltips=[
-                ('(x, y)', "(@chr_x @x1 - @x2, @chr_y @y1 - @y2)"),
-                ('score', "@s"),
-                ('reads by group', "A: @d_a, B: @d_b")
+                ('(x, y)', "(@chr_x @index_left - @index_right, @chr_y @index_bottom - @index_top)"),
+                ('sym(x, y)', "(@chr_x_symmetry @index_symmetry_left - @index_symmetry_right, @chr_y_symmetry @index_symmetry_bottom - @index_symmetry_top)"),
+                ('score', "@score_total"),
+                ('reads by group', "A: @score_a, B: @score_b")
             ]
         ))
 
@@ -805,15 +807,15 @@ class MainLayout:
         self.anno_y.ygrid.grid_line_alpha = 0
         self.anno_y.xgrid.minor_grid_line_alpha = 0.5
 
-        self.anno_x.vbar(x="x", top="e", bottom="s", width=0.9, fill_color="c", line_color=None,
+        self.anno_x.vbar(x="anno_name", top="screen_end", bottom="screen_start", width=0.9, fill_color="color", line_color=None,
                          source=self.anno_x_data)
-        self.anno_y.hbar(y="x", right="e", left="s", height=0.9, fill_color="c", line_color=None,
+        self.anno_y.hbar(y="anno_name", right="screen_end", left="screen_start", height=0.9, fill_color="color", line_color=None,
                          source=self.anno_y_data)
 
         anno_hover = HoverTool(
             tooltips=[
-                ('bin pos', "@chr @pos1 - @pos2"),
-                ('num_annotations', "@n"),
+                ('bin pos', "@chr @index_start - @index_end"),
+                ('num_annotations', "@num_anno"),
                 ('info', "@info"),
             ]
         )
@@ -1115,7 +1117,7 @@ class MainLayout:
         export_label.margin = DIV_MARGIN
         self.export_file = TextInput()
         def export_file_event(_1, _2, _3):
-            self.session.set_value(["export_prefix"], self.export_file.value)
+            self.session.set_value(["settings", "export", "prefix"], self.export_file.value)
             self.trigger_render()
         self.export_file.on_change("value", export_file_event)
         
@@ -1325,22 +1327,7 @@ class MainLayout:
 
 
                 self.render_step_log("setup_col_data_sources")
-                d_heatmap = {
-                    "b": [],
-                    "l": [],
-                    "t": [],
-                    "r": [],
-                    "c": [],
-                    "chr_x": [],
-                    "chr_y": [],
-                    "x1": [],
-                    "x2": [],
-                    "y1": [],
-                    "y2": [],
-                    "s": [],
-                    "d_a": [],
-                    "d_b": [],
-                }
+                d_heatmap = self.session.get_heatmap()
 
                 raw_data_x = {
                     "xs": [],
@@ -1375,8 +1362,20 @@ class MainLayout:
                     "ratio": [],
                 }
 
-                d_anno_x = self.session.get_annotation(True)
-                d_anno_y = self.session.get_annotation(False)
+                print("d_anno_x = self.session.get_annotation(False)")
+                d_anno_x = self.session.get_annotation(False)
+                print("d_anno_x = self.session.get_annotation(True)")
+                d_anno_y = self.session.get_annotation(True)
+                print("d_anno_x = self.session.get_displayed_annos(False)")
+                displayed_annos_x = self.session.get_displayed_annos(False)
+                if len(displayed_annos_x) == 0:
+                    displayed_annos_x.append("")
+                print("d_anno_x = self.session.get_displayed_annos(True)")
+                displayed_annos_y = self.session.get_displayed_annos(True)
+                if len(displayed_annos_y) == 0:
+                    displayed_annos_y.append("")
+
+                render_area = self.session.get_drawing_area()
 
                 self.render_step_log("transfer_data")
 
@@ -1423,8 +1422,8 @@ class MainLayout:
                         else:
                             return str(x * int(10**exp)) + "bp"
 
-                    end_text = "Rendering Done.<br>Current Bin Size: " + readable_display(w_bin) + \
-                                            " x " + readable_display(h_bin) + "."
+                    end_text = "Rendering Done.<br>Current Bin Size: " #+ readable_display(w_bin) + \
+                    #" x " + readable_display(h_bin) + "."
 
 
                     if self.do_export is None:
@@ -1436,11 +1435,11 @@ class MainLayout:
                         #self.ratio_y_axis.yaxis.bounds = (0, mmax(*raw_y_ratio))
 
                         def set_bounds(plot, left=None, right=None, top=None, bottom=None, color=None):
-                            ra = FigureMaker.plot_render_area(plot)
-                            ra.left = area[0] if left is None else left
-                            ra.bottom = area[1] if bottom is None else bottom
-                            ra.right = area[2] if right is None else right
-                            ra.top = area[3] if top is None else top
+                            ra = self.plot_render_area(plot)
+                            ra.left = render_area[0] if left is None else left
+                            ra.bottom = render_area[1] if bottom is None else bottom
+                            ra.right = render_area[2] if right is None else right
+                            ra.top = render_area[3] if top is None else top
                             if not color is None:
                                 ra.fill_color = color
 
@@ -1450,16 +1449,24 @@ class MainLayout:
                         #set_bounds(self.raw_y, bottom=mmin(*raw_y_heat, *raw_y_norm_combined),
                         #            top=mmax(*raw_y_heat, *raw_y_norm_combined))
                         #set_bounds(self.ratio_y, bottom=0, top=mmax(*raw_y_ratio))
-                        #set_bounds(self.anno_x, left=0, right=len(self.displayed_annos))
-                        #set_bounds(self.anno_y, bottom=0, top=len(self.displayed_annos))
+                        set_bounds(self.anno_x, left=0, right=len(displayed_annos_x))
+                        set_bounds(self.anno_y, bottom=0, top=len(displayed_annos_y))
 
-                        #set_bounds(self.heatmap, color=b_col)
+                        set_bounds(self.heatmap, color="white")#b_col)
 
-                        #self.heatmap_data.data = d_heatmap
+                        self.heatmap_data.data = d_heatmap
                         #self.raw_data_x.data = raw_data_x
                         #self.raw_data_y.data = raw_data_y
                         #self.ratio_data_x.data = ratio_data_x
                         #self.ratio_data_y.data = ratio_data_y
+                        
+                        #self.anno_x.x_range.factors = []
+                        #self.anno_y.y_range.factors = []
+                        self.anno_x.x_range.factors = displayed_annos_x
+                        self.anno_y.y_range.factors = displayed_annos_y[::-1]
+
+                        #self.anno_x_data.data = {}
+                        #self.anno_y_data.data = {}
                         self.anno_x_data.data = d_anno_x
                         self.anno_y_data.data = d_anno_y
                         #self.overlay_data.data = d_overlay
@@ -1522,7 +1529,6 @@ class MainLayout:
             def callback2():
                 if os.path.exists(self.meta_file.value + ".smoother_index"):
                     self.session = Quarry(self.meta_file.value + ".smoother_index")
-                    print(self.session.get_dot())
 
                     def to_idx(x):
                         if x <= 0:
@@ -1533,20 +1539,19 @@ class MainLayout:
                     if self.session.get_value(["settings"]) is None:
                         with open('smoother/static/conf/default.json', 'r') as f:
                             settings = json.load(f)
+                        #print(settings)
                         self.session.set_value(["settings"], settings)
 
-                        min_ = max(to_idx(self.session.get_value(["dividend"])), 
-                                       self.session.get_value(["settings", "interface", "min_bin_size", "min"]))
-                        val_ = max(to_idx(self.session.get_value(["dividend"])), 
-                                       self.session.get_value(["settings", "interface", "min_bin_size", "val"]))
-                        
-                        self.session.set_value(["settings", "interface", "min_bin_size", "min"], min_)
-                        self.session.set_value(["settings", "interface", "min_bin_size", "val"], val_)
+                    min_ = max(to_idx(self.session.get_value(["dividend"])), 
+                                    self.session.get_value(["settings", "interface", "min_bin_size", "min"]))
+                    val_ = max(to_idx(self.session.get_value(["dividend"])), 
+                                    self.session.get_value(["settings", "interface", "min_bin_size", "val"]))
+                    
+                    self.session.set_value(["settings", "interface", "min_bin_size", "min"], min_)
+                    self.session.set_value(["settings", "interface", "min_bin_size", "val"], val_)
 
-
-                    self.meta = MetaData.load(self.meta_file.value + ".smoother_index/meta")
-                    self.meta.setup(self)
                     print("done loading\033[K")
+                    self.do_config()
                     self.trigger_render()
                     self.curr_bin_size.text = "done loading"
                     self.render_callback() # @todo this is not good here!!!!

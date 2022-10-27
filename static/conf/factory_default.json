@@ -2,7 +2,7 @@
     "smoother_config_file_version": 0.1,
     "display_name": "Default",
     "normalization": {
-        "normalize_by": "max_bin_visible",
+        "normalize_by": "dont",
         "min_interactions": {
             "min": 0,
             "max": 100,
@@ -54,6 +54,7 @@
         },
         "min_bin_size": {
             "max": 135,
+            "min": 1,
             "val": 18,
             "step": 1
         },

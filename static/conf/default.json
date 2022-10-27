@@ -2,7 +2,7 @@
     "smoother_config_file_version": 0.1,
     "display_name": "Default",
     "normalization": {
-        "normalize_by": "max_bin_visible",
+        "normalize_by": "dont",
         "min_interactions": {
             "min": 0,
             "max": 100,
@@ -54,6 +54,7 @@
         },
         "min_bin_size": {
             "max": 135,
+            "min": 1,
             "val": 18,
             "step": 1
         },
@@ -109,7 +110,15 @@
             5
         ],
         "color_palette": "Viridis256",
-        "annotation_color_palette": ["#0072B2", "#E69F00", "#D55E00", "#009E73", "#56B4E9", "#F0E442", "#CC79A7", "#000000"],
+        "annotation_color_palette": [
+            "#0072B2",
+            "#E69F00",
+            "#D55E00",
+            "#009E73",
+            "#56B4E9",
+            "#F0E442",
+            "#CC79A7"
+        ],
         "color_low": "#000000",
         "color_high": "#FFFFFF",
         "axis_lables": "RNA_DNA"
@@ -140,11 +149,12 @@
             "Heatmap"
         ],
         "list": [
-            "Heatmap", 
-            "Column Sum", 
-            "Row Sum", 
+            "Heatmap",
+            "Column Sum",
+            "Row Sum",
             "Include Annotation"
         ],
+        "area": "current",
         "do_export_full": false
     }
 }
