@@ -28,7 +28,8 @@
             "val": 0.05,
             "step": 0.01
         },
-        "ddd": "no"
+        "ddd": "no",
+        "scale": "max"
     },
     "replicates": {
         "in_group": "sum",

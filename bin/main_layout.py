@@ -1375,6 +1375,8 @@ class MainLayout:
                 if len(displayed_annos_y) == 0:
                     displayed_annos_y.append("")
 
+                b_col = self.session.get_background_color()
+
                 render_area = self.session.get_drawing_area()
 
                 self.render_step_log("transfer_data")
@@ -1452,7 +1454,7 @@ class MainLayout:
                         set_bounds(self.anno_x, left=0, right=len(displayed_annos_x))
                         set_bounds(self.anno_y, bottom=0, top=len(displayed_annos_y))
 
-                        set_bounds(self.heatmap, color="white")#b_col)
+                        set_bounds(self.heatmap, color=b_col)
 
                         self.heatmap_data.data = d_heatmap
                         #self.raw_data_x.data = raw_data_x
