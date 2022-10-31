@@ -30,6 +30,7 @@ from bin.render_step_logger import *
 import json
 import shutil
 from bin.figure_maker import FigureMaker, DROPDOWN_HEIGHT
+from bin.extra_ticks_ticker import *
 
 SETTINGS_WIDTH = 400
 DEFAULT_SIZE = 50
@@ -487,7 +488,7 @@ class MainLayout:
         cy = "lightgrey" if self.show_hide["contig_borders"] else None
         cy2 = "lightgrey" if self.show_hide["grid_lines"] else None
         self.slope.line_color = "darkgrey" if self.show_hide["indent_line"] else None
-        for plot in self.plots:
+        for plot in self.grid_line_plots:
             if plot.xgrid.grid_line_color != cx:
                 plot.xgrid.grid_line_color = cx
             if plot.xgrid.minor_grid_line_color != cx2:
@@ -528,7 +529,7 @@ class MainLayout:
 
         def event(e):
             self.toggle_hide(e.item)
-            layout.session.set_value(session_key + [e.item], not layout.session.get_value(session_key + [e.item]))
+            self.session.set_value(session_key + [e.item], not self.session.get_value(session_key + [e.item]))
             self.show_hide_dropdown.menu = self.make_show_hide_menu()
         self.show_hide_dropdown.on_click(event)
         return self.show_hide_dropdown
@@ -554,7 +555,7 @@ class MainLayout:
     def __init__(self):
         self.show_hide = {"grid_lines": False, "contig_borders": True, "indent_line": False}
         self.hidable_plots = []
-        self.plots = []
+        self.grid_line_plots = []
         self.unhide_button = None
         self.render_areas = {}
         self.slope = None
@@ -656,6 +657,10 @@ class MainLayout:
         self.checkbox_config = []
         self.multi_choice_config = []
         self.export_file = None
+        self.ticker_x = None
+        self.ticker_y = None
+        self.tick_formatter_x = None
+        self.tick_formatter_y = None
 
         self.do_layout()
 
@@ -1188,6 +1193,36 @@ class MainLayout:
         for idx in range(1,7):
             quick_configs.append(self.config_row(idx))
 
+        self.ticker_x = ExtraTicksTicker(extra_ticks=[])
+        self.ticker_y = ExtraTicksTicker(extra_ticks=[])
+
+        def get_formatter():
+            return FuncTickFormatter(
+                    args={"contig_starts": [], "genome_end": 0, "dividend": 1, "contig_names": []},
+                    code="""
+                            if(tick < 0 || tick >= genome_end)
+                                return "n/a";
+                            var idx = 0;
+                            while(contig_starts[idx + 1] <= tick)
+                                idx += 1;
+                            return contig_names[idx] + ": " + dividend * (tick - contig_starts[idx]);
+                        """)
+        
+        self.tick_formatter_x = get_formatter()
+        self.tick_formatter_y = get_formatter()
+
+        self.heatmap_x_axis.xaxis[0].formatter = self.tick_formatter_x
+        self.heatmap_y_axis.yaxis[0].formatter = self.tick_formatter_y
+        
+        for plot in [self.heatmap, self.ratio_y, self.raw_y, self.anno_y, self.heatmap_x_axis]:
+            plot.xgrid.ticker = self.ticker_x
+            plot.xaxis.major_label_text_align = "left"
+            plot.xaxis.ticker.min_interval = 1
+        for plot in [self.heatmap, self.ratio_x, self.raw_x, self.anno_x, self.heatmap_y_axis]:
+            plot.ygrid.ticker = self.ticker_y
+            plot.yaxis.major_label_text_align = "right"
+            plot.yaxis.ticker.min_interval = 1
+
         _settings = column([
                 make_panel("General", "tooltip_general", [tool_bar, meta_file_label, self.meta_file]),
                 make_panel("Normalization", "tooltip_normalization", [normalization, color_figure,
@@ -1379,6 +1414,12 @@ class MainLayout:
 
                 render_area = self.session.get_drawing_area()
 
+                canvas_size_x, canvas_size_y = self.session.get_canvas_size()
+                tick_list_x = self.session.get_tick_list(True)
+                tick_list_y = self.session.get_tick_list(False)
+                ticks_x = self.session.get_ticks(True)
+                ticks_y = self.session.get_ticks(False)
+
                 self.render_step_log("transfer_data")
 
                 @gen.coroutine
@@ -1472,6 +1513,26 @@ class MainLayout:
                         self.anno_x_data.data = d_anno_x
                         self.anno_y_data.data = d_anno_y
                         #self.overlay_data.data = d_overlay
+
+                        self.heatmap.x_range.reset_start = 0
+                        self.heatmap.x_range.reset_end = canvas_size_x
+                        self.heatmap.y_range.reset_start = 0
+                        self.heatmap.y_range.reset_end = canvas_size_y
+
+                        self.ticker_x.extra_ticks = tick_list_x
+                        self.ticker_y.extra_ticks = tick_list_y
+
+                        self.tick_formatter_x.args = ticks_x
+                        self.tick_formatter_y.args = ticks_y
+
+                        
+                        for plot in [self.heatmap, self.ratio_y, self.raw_y, self.anno_y, self.heatmap_x_axis]:
+                            plot.xgrid.bounds = (0, canvas_size_x)
+                            plot.xaxis.bounds = (0, canvas_size_x)
+                        for plot in [self.heatmap, self.ratio_x, self.raw_x, self.anno_x, self.heatmap_y_axis]:
+                            plot.ygrid.bounds = (0, canvas_size_y)
+                            plot.yaxis.bounds = (0, canvas_size_y)
+
                     self.do_export = None
                     self.curdoc.unhold()
                     total_time, ram_usage = self.render_done(0)#len(bins[0]) if len(bins) > 0 else 0)
@@ -1551,6 +1612,12 @@ class MainLayout:
                     
                     self.session.set_value(["settings", "interface", "min_bin_size", "min"], min_)
                     self.session.set_value(["settings", "interface", "min_bin_size", "val"], val_)
+
+                    
+                    self.heatmap.x_range.start = self.session.get_value(["visible", "x_start"])
+                    self.heatmap.x_range.end = self.session.get_value(["visible", "x_end"])
+                    self.heatmap.y_range.start = self.session.get_value(["visible", "y_start"])
+                    self.heatmap.y_range.end = self.session.get_value(["visible", "y_end"])
 
                     print("done loading\033[K")
                     self.do_config()

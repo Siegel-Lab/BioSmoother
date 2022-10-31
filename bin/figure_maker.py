@@ -55,7 +55,7 @@ class FigureMaker:
         if self.is_hidden:
             ret.visible = False
         register.render_areas[ret] = render_area
-        register.plots.append(ret)
+        register.grid_line_plots.append(ret)
         return ret
 
     def range1d(self):
