@@ -598,15 +598,15 @@ class MainLayout:
             "chr": [],
             "pos1": [],
             "pos2": [],
-            "pos": [],
-            "ratio": [],
+            "xs": [],
+            "ys": [],
         }
         d_y = {
             "chr": [],
             "pos1": [],
             "pos2": [],
-            "pos": [],
-            "ratio": [],
+            "xs": [],
+            "ys": [],
         }
         self.ratio_data_x = ColumnDataSource(data=d_x)
         self.ratio_data_y = ColumnDataSource(data=d_y)
@@ -615,22 +615,22 @@ class MainLayout:
         self.raw_y = None
         self.raw_y_axis = None
         d_x = {
-            "chr": [],
-            "pos1": [],
-            "pos2": [],
-            "xs": [],
-            "ys": [],
-            "cs": [],
-            "ls": [],
+            "chrs": [],
+            "index_start": [],
+            "index_end": [],
+            "screen_pos": [],
+            "values": [],
+            "colors": [],
+            "names": [],
         }
         d_y = {
-            "chr": [],
-            "pos1": [],
-            "pos2": [],
-            "xs": [],
-            "ys": [],
-            "cs": [],
-            "ls": [],
+            "chrs": [],
+            "index_start": [],
+            "index_end": [],
+            "screen_pos": [],
+            "values": [],
+            "colors": [],
+            "names": [],
         }
         self.raw_data_x = ColumnDataSource(data=d_x)
         self.raw_data_y = ColumnDataSource(data=d_y)
@@ -747,7 +747,7 @@ class MainLayout:
         raw_hover_x = HoverTool(
             tooltips="""
                 <div>
-                    <span style="color: @cs">@ls: $data_x</span>
+                    <span style="color: @colors">@names: $data_x</span>
                 </div>
             """,
             mode='hline'
@@ -755,7 +755,7 @@ class MainLayout:
         raw_hover_y = HoverTool(
             tooltips="""
                 <div>
-                    <span style="color: @cs">@ls: $data_y</span>
+                    <span style="color: @colors">@names: $data_y</span>
                 </div>
             """,
             mode='vline'
@@ -785,10 +785,10 @@ class MainLayout:
         self.raw_y.ygrid.minor_grid_line_alpha = 0.5
         self.raw_y.xgrid.minor_grid_line_alpha = 0.5
 
-        self.raw_x.multi_line(xs="ys", ys="xs", source=self.raw_data_x,
-                        line_color="cs")  # , level="image"
-        self.raw_y.multi_line(xs="xs", ys="ys", source=self.raw_data_y,
-                        line_color="cs")  # , level="image"
+        self.raw_x.multi_line(xs="values", ys="screen_pos", source=self.raw_data_x,
+                        line_color="colors")  # , level="image"
+        self.raw_y.multi_line(xs="screen_pos", ys="values", source=self.raw_data_y,
+                        line_color="colors")  # , level="image"
         self.ratio_x.line(x="ratio", y="pos", source=self.ratio_data_x,
                           line_color="black")  # , level="image"
         self.ratio_y.line(x="pos", y="ratio", source=self.ratio_data_y,
@@ -1364,24 +1364,10 @@ class MainLayout:
                 self.render_step_log("setup_col_data_sources")
                 d_heatmap = self.session.get_heatmap()
 
-                raw_data_x = {
-                    "xs": [],
-                    "chr": [],
-                    "pos1": [],
-                    "pos2": [],
-                    "ys": [],
-                    "ls": [],
-                    "cs": [],
-                }
-                raw_data_y = {
-                    "xs": [],
-                    "chr": [],
-                    "pos1": [],
-                    "pos2": [],
-                    "ys": [],
-                    "ls": [],
-                    "cs": [],
-                }
+                raw_data_x = self.session.get_tracks(True)
+                raw_data_y = self.session.get_tracks(False)
+                min_max_tracks_x = self.session.get_min_max_tracks(True)
+                min_max_tracks_y = self.session.get_min_max_tracks(False)
                 ratio_data_x = {
                     "pos": [],
                     "chr": [],
@@ -1486,11 +1472,9 @@ class MainLayout:
                             if not color is None:
                                 ra.fill_color = color
 
-                        #set_bounds(self.raw_x, left=mmin(*raw_x_heat, *raw_x_norm_combined), 
-                        #            right=mmax(*raw_x_heat, *raw_x_norm_combined))
+                        set_bounds(self.raw_x, left=min_max_tracks_x[0], right=min_max_tracks_x[1])
                         #set_bounds(self.ratio_x, left=0, right=mmax(*raw_x_ratio))
-                        #set_bounds(self.raw_y, bottom=mmin(*raw_y_heat, *raw_y_norm_combined),
-                        #            top=mmax(*raw_y_heat, *raw_y_norm_combined))
+                        set_bounds(self.raw_y, bottom=min_max_tracks_y[0], top=min_max_tracks_y[1])
                         #set_bounds(self.ratio_y, bottom=0, top=mmax(*raw_y_ratio))
                         set_bounds(self.anno_x, left=0, right=len(displayed_annos_x))
                         set_bounds(self.anno_y, bottom=0, top=len(displayed_annos_y))
@@ -1498,8 +1482,8 @@ class MainLayout:
                         set_bounds(self.heatmap, color=b_col)
 
                         self.heatmap_data.data = d_heatmap
-                        #self.raw_data_x.data = raw_data_x
-                        #self.raw_data_y.data = raw_data_y
+                        self.raw_data_x.data = raw_data_x
+                        self.raw_data_y.data = raw_data_y
                         #self.ratio_data_x.data = ratio_data_x
                         #self.ratio_data_y.data = ratio_data_y
                         
