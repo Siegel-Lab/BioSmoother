@@ -566,7 +566,6 @@ class MainLayout:
         self.y_coords_d = "full_genome"
 
         self.do_render = False
-        self.cancel_render = False
         self.force_render = True
         self.curdoc = curdoc()
         self.last_drawing_area = (0, 0, 0, 0)
@@ -590,26 +589,6 @@ class MainLayout:
         self.overlay_dataset_id = None
         self.heatmap_x_axis = None
         self.heatmap_y_axis = None
-        self.ratio_x = None
-        self.ratio_x_axis = None
-        self.ratio_y = None
-        self.ratio_y_axis = None
-        d_x = {
-            "chr": [],
-            "pos1": [],
-            "pos2": [],
-            "xs": [],
-            "ys": [],
-        }
-        d_y = {
-            "chr": [],
-            "pos1": [],
-            "pos2": [],
-            "xs": [],
-            "ys": [],
-        }
-        self.ratio_data_x = ColumnDataSource(data=d_x)
-        self.ratio_data_y = ColumnDataSource(data=d_y)
         self.raw_x = None
         self.raw_x_axis = None
         self.raw_y = None
@@ -700,49 +679,6 @@ class MainLayout:
         self.slope = Slope(gradient=1, y_intercept=0, line_color=None)
         self.heatmap.add_layout(self.slope)
 
-        ratio_hover_x = HoverTool(
-            tooltips=[
-                ('pos', "@chr @pos1 - @pos2"),
-                ('row sum', '@heat'),
-                ('normalization', '@norm'),
-                ('ratio', '@ratio'),
-            ],
-            mode='hline'
-        )
-        ratio_hover_y = HoverTool(
-            tooltips=[
-                ('pos', "@chr @pos1 - @pos2"),
-                ('col sum', '@heat'),
-                ('normalization', '@norm'),
-                ('ratio', '@ratio'),
-            ],
-            mode='vline'
-        )
-
-        self.ratio_x = FigureMaker().w(DEFAULT_SIZE).link_y(
-            self.heatmap).hidden().hide_on("ratio", self).combine_tools(tollbars).get(self)
-        self.ratio_x.add_tools(ratio_hover_x)
-        self.ratio_x_axis = FigureMaker().x_axis_of(
-            self.ratio_x, self).combine_tools(tollbars).get(self)
-        self.ratio_x_axis.xaxis.axis_label = "Ratio"
-        self.ratio_x_axis.xaxis.ticker = AdaptiveTicker(desired_num_ticks=3)
-        self.ratio_x.xgrid.ticker = AdaptiveTicker(desired_num_ticks=3, num_minor_ticks=1)
-        self.ratio_x.xgrid.grid_line_alpha = 0
-        self.ratio_x.xgrid.minor_grid_line_alpha = 0.5
-        self.ratio_x.ygrid.minor_grid_line_alpha = 0.5
-
-        self.ratio_y = FigureMaker().h(DEFAULT_SIZE).link_x(
-            self.heatmap).hidden().hide_on("ratio", self).combine_tools(tollbars).get(self)
-        self.ratio_y.add_tools(ratio_hover_y)
-        self.ratio_y_axis = FigureMaker().y_axis_of(
-            self.ratio_y, self).combine_tools(tollbars).get(self)
-        self.ratio_y_axis.yaxis.axis_label = "Ratio"
-        self.ratio_y_axis.yaxis.ticker = AdaptiveTicker(desired_num_ticks=3)
-        self.ratio_y.ygrid.ticker = AdaptiveTicker(desired_num_ticks=3, num_minor_ticks=1)
-        self.ratio_y.ygrid.grid_line_alpha = 0
-        self.ratio_y.ygrid.minor_grid_line_alpha = 0.5
-        self.ratio_y.xgrid.minor_grid_line_alpha = 0.5
-
 
         raw_hover_x = HoverTool(
             tooltips="""
@@ -766,7 +702,7 @@ class MainLayout:
         self.raw_x.add_tools(raw_hover_x)
         self.raw_x_axis = FigureMaker().x_axis_of(
             self.raw_x, self).combine_tools(tollbars).get(self)
-        self.raw_x_axis.xaxis.axis_label = "Cov"
+        self.raw_x_axis.xaxis.axis_label = "Cov."
         self.raw_x_axis.xaxis.ticker = AdaptiveTicker(desired_num_ticks=3)
         self.raw_x.xgrid.ticker = AdaptiveTicker(desired_num_ticks=3, num_minor_ticks=1)
         self.raw_x.xgrid.grid_line_alpha = 0
@@ -778,7 +714,7 @@ class MainLayout:
         self.raw_y.add_tools(raw_hover_y)
         self.raw_y_axis = FigureMaker().y_axis_of(
             self.raw_y, self).combine_tools(tollbars).get(self)
-        self.raw_y_axis.yaxis.axis_label = "Cov"
+        self.raw_y_axis.yaxis.axis_label = "Cov."
         self.raw_y_axis.yaxis.ticker = AdaptiveTicker(desired_num_ticks=3)
         self.raw_y.ygrid.ticker = AdaptiveTicker(desired_num_ticks=3, num_minor_ticks=1)
         self.raw_y.ygrid.grid_line_alpha = 0
@@ -789,16 +725,12 @@ class MainLayout:
                         line_color="colors")  # , level="image"
         self.raw_y.multi_line(xs="screen_pos", ys="values", source=self.raw_data_y,
                         line_color="colors")  # , level="image"
-        self.ratio_x.line(x="ratio", y="pos", source=self.ratio_data_x,
-                          line_color="black")  # , level="image"
-        self.ratio_y.line(x="pos", y="ratio", source=self.ratio_data_y,
-                          line_color="black")  # , level="image"
 
         self.anno_x = FigureMaker().w(DEFAULT_SIZE).link_y(self.heatmap).hide_on(
             "annotation", self).combine_tools(tollbars).categorical_x().get(self)
         self.anno_x_axis = FigureMaker().x_axis_of(
             self.anno_x, self).combine_tools(tollbars).get(self)
-        self.anno_x_axis.xaxis.axis_label = "Anno"
+        self.anno_x_axis.xaxis.axis_label = "Anno."
         self.anno_x.xgrid.minor_grid_line_alpha = 0
         self.anno_x.xgrid.grid_line_alpha = 0
         self.anno_x.ygrid.minor_grid_line_alpha = 0.5
@@ -807,7 +739,7 @@ class MainLayout:
             "annotation", self).combine_tools(tollbars).categorical_y().get(self)
         self.anno_y_axis = FigureMaker().y_axis_of(
             self.anno_y, self).combine_tools(tollbars).get(self)
-        self.anno_y_axis.yaxis.axis_label = "Anno"
+        self.anno_y_axis.yaxis.axis_label = "Anno."
         self.anno_y.ygrid.minor_grid_line_alpha = 0
         self.anno_y.ygrid.grid_line_alpha = 0
         self.anno_y.xgrid.minor_grid_line_alpha = 0.5
@@ -828,10 +760,10 @@ class MainLayout:
         self.anno_y.add_tools(anno_hover)
 
         crosshair = CrosshairTool(dimensions="width", line_color="lightgrey")
-        for fig in [self.anno_x, self.raw_x, self.ratio_x, self.heatmap]:
+        for fig in [self.anno_x, self.raw_x, self.heatmap]:
             fig.add_tools(crosshair)
         crosshair = CrosshairTool(dimensions="height", line_color="lightgrey")
-        for fig in [self.anno_y, self.raw_y, self.ratio_y, self.heatmap]:
+        for fig in [self.anno_y, self.raw_y, self.heatmap]:
             fig.add_tools(crosshair)
 
 
@@ -839,7 +771,7 @@ class MainLayout:
         #SETTINGS_WIDTH = tool_bar.width
         show_hide = self.make_show_hide_dropdown(
             ["settings", "interface", "show_hide"],
-                ("Axes", "axis"), (RATIO_PLOT_NAME, "ratio"), (RAW_PLOT_NAME, "raw"),
+                ("Axes", "axis"), (RAW_PLOT_NAME, "raw"),
                                                    (ANNOTATION_PLOT_NAME, "annotation"), ("Tools", "tools"))
 
         in_group = self.dropdown_select("In Group", "tooltip_in_group",
@@ -866,25 +798,28 @@ class MainLayout:
                                               active_item=['settings', 'filters', 'symmetry'])
 
         normalization = self.dropdown_select("Normalize by", "tooltip_normalize_by",
-                                                  ("Largest Rendered Bin",
-                                                   "max_bin_visible"),
                                                   ("Reads per Million",
                                                    "rpm"), 
                                                   ("Reads per Thousand",
                                                    "rpk"), 
-                                                   ("Column Sum", "column"),
-                                                   ("Row Sum", "row"),
-                                                  ("Coverage Track (Absolute)",
-                                                   "tracks_abs"),
-                                                  ("Coverage Track (Scaled)", "tracks_rel"),
+                                                  ("Coverage Tracks",
+                                                   "tracks"),
                                                   ("Binominal Test", "radicl-seq"),
                                                   ("Iterative Correction", "hi-c"),
                                                   ("No Normalization", "dont"),
                                                   active_item=['settings', 'normalization', 'normalize_by']
                                                   )
 
+        color_scale = self.dropdown_select("Scale Color Range", "tooltip_scale_color_range",
+                                                  ("zero to max-value", "max"), 
+                                                  ("min- to max-value", "minmax"), 
+                                                  ("do not scale", "dont"),
+                                                  active_item=['settings', 'normalization', 'scale']
+                                                  )
+
         incomp_align_layout = self.make_checkbox("Show reads with incomplete alignments", 
                                                     settings=['settings', 'filters', 'incomplete_alignments'])
+
 
         ddd = self.dropdown_select("Distance Dependent Decay", "tooltip_ddd",
                                         ("Keep decay", "no"), ("Normalize decay away", "yes"),
@@ -989,17 +924,6 @@ class MainLayout:
                                       settings=["settings", "interface", "anno_size"],
                                        title=ANNOTATION_PLOT_NAME + " Plot Size", sizing_mode="stretch_width",
                                        on_change=anno_size_slider_event)
-
-        def ratio_size_slider_event(val):
-            self.session.set_value(["settings", "interface", "ratio_size", "val"], val)
-            self.ratio_x.width = val
-            self.ratio_x_axis.width = val
-            self.ratio_y.height = val
-            self.ratio_y_axis.height = val
-        rss1_l = self.make_slider_spinner(width=SETTINGS_WIDTH,
-                                      settings=["settings", "interface", "ratio_size"],
-                                        title=RATIO_PLOT_NAME + " Plot Size", sizing_mode="stretch_width",
-                                        on_change=ratio_size_slider_event)
 
         def raw_size_slider_event(val):
             self.session.set_value(["settings", "interface", "raw_size", "val"], val)
@@ -1214,11 +1138,11 @@ class MainLayout:
         self.heatmap_x_axis.xaxis[0].formatter = self.tick_formatter_x
         self.heatmap_y_axis.yaxis[0].formatter = self.tick_formatter_y
         
-        for plot in [self.heatmap, self.ratio_y, self.raw_y, self.anno_y, self.heatmap_x_axis]:
+        for plot in [self.heatmap, self.raw_y, self.anno_y, self.heatmap_x_axis]:
             plot.xgrid.ticker = self.ticker_x
             plot.xaxis.major_label_text_align = "left"
             plot.xaxis.ticker.min_interval = 1
-        for plot in [self.heatmap, self.ratio_x, self.raw_x, self.anno_x, self.heatmap_y_axis]:
+        for plot in [self.heatmap, self.raw_x, self.anno_x, self.heatmap_y_axis]:
             plot.ygrid.ticker = self.ticker_y
             plot.yaxis.major_label_text_align = "right"
             plot.yaxis.ticker.min_interval = 1
@@ -1226,11 +1150,11 @@ class MainLayout:
         _settings = column([
                 make_panel("General", "tooltip_general", [tool_bar, meta_file_label, self.meta_file]),
                 make_panel("Normalization", "tooltip_normalization", [normalization, color_figure,
-                                    ibs_l, crs_l, is_l, norm_layout, rsa_l, ddd]),
+                                    ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd]),
                 make_panel("Replicates", "tooltip_replicates", [in_group, betw_group, group_layout]),
                 make_panel("Interface", "tooltip_interface", [nb_l,
                                     show_hide, mmbs_l,
-                                    ufs_l, rs_l, aas_l, ass_l, rss1_l, rss2_l,
+                                    ufs_l, rs_l, aas_l, ass_l, rss2_l,
                                     stretch, square_bins, power_ten_bin, color_picker, 
                                     self.low_color, self.high_color, axis_lables, self.overlay_dataset_id]),
                 make_panel("Filters", "tooltip_filters", [ms_l, incomp_align_layout, 
@@ -1275,16 +1199,14 @@ class MainLayout:
 
         grid_layout = [
             [self.heatmap_y_axis, self.anno_x,   self.raw_x,
-                self.ratio_x,      None,              self.heatmap,   self.settings_row],
+                      None,              self.heatmap,   self.settings_row],
             [None,              self.anno_x_axis, self.raw_x_axis,
-                self.ratio_x_axis, None,              None,               None],
-            [None,              None,             None,            None,
-                self.ratio_y_axis, self.ratio_y,       None],
-            [None,              None,             None,            None,
+                      None,              None,               None],
+            [None,              None,             None,           
                 self.raw_y_axis,   self.raw_y,         None],
-            [None,              None,             None,            None,
+            [None,              None,             None,       
                 self.anno_y_axis,  self.anno_y,        None],
-            [quit_ti,       None,             None,            None,
+            [quit_ti,       None,             None,           
                 None,            self.heatmap_x_axis, None],
         ]
 
@@ -1354,7 +1276,6 @@ class MainLayout:
     def render(self, area, zoom_in_render):
         def unlocked_task():
             def cancelable_task():
-                self.cancel_render = False
                     
                 def callback():
                     self.spinner.css_classes = ["fade-in"]
@@ -1362,36 +1283,20 @@ class MainLayout:
 
 
                 self.render_step_log("setup_col_data_sources")
+                self.session.update_cds()
+
                 d_heatmap = self.session.get_heatmap()
 
                 raw_data_x = self.session.get_tracks(True)
                 raw_data_y = self.session.get_tracks(False)
                 min_max_tracks_x = self.session.get_min_max_tracks(True)
                 min_max_tracks_y = self.session.get_min_max_tracks(False)
-                ratio_data_x = {
-                    "pos": [],
-                    "chr": [],
-                    "pos1": [],
-                    "pos2": [],
-                    "ratio": [],
-                }
-                ratio_data_y = {
-                    "pos": [],
-                    "chr": [],
-                    "pos1": [],
-                    "pos2": [],
-                    "ratio": [],
-                }
 
-                print("d_anno_x = self.session.get_annotation(False)")
                 d_anno_x = self.session.get_annotation(False)
-                print("d_anno_x = self.session.get_annotation(True)")
                 d_anno_y = self.session.get_annotation(True)
-                print("d_anno_x = self.session.get_displayed_annos(False)")
                 displayed_annos_x = self.session.get_displayed_annos(False)
                 if len(displayed_annos_x) == 0:
                     displayed_annos_x.append("")
-                print("d_anno_x = self.session.get_displayed_annos(True)")
                 displayed_annos_y = self.session.get_displayed_annos(True)
                 if len(displayed_annos_y) == 0:
                     displayed_annos_y.append("")
@@ -1456,12 +1361,8 @@ class MainLayout:
 
 
                     if self.do_export is None:
-                        #self.raw_x_axis.xaxis.bounds = (mmin(*raw_x_heat, *raw_x_norm_combined), 
-                        #                                mmax(*raw_x_heat, *raw_x_norm_combined))
-                        #self.ratio_x_axis.xaxis.bounds = (0, mmax(*raw_x_ratio))
-                        #self.raw_y_axis.yaxis.bounds = (mmin(*raw_y_heat, *raw_y_norm_combined), 
-                        #                                mmax(*raw_y_heat, *raw_y_norm_combined))
-                        #self.ratio_y_axis.yaxis.bounds = (0, mmax(*raw_y_ratio))
+                        self.raw_x_axis.xaxis.bounds = (min_max_tracks_x[0], min_max_tracks_x[1])
+                        self.raw_y_axis.yaxis.bounds = (min_max_tracks_y[0], min_max_tracks_y[1])
 
                         def set_bounds(plot, left=None, right=None, top=None, bottom=None, color=None):
                             ra = self.plot_render_area(plot)
@@ -1473,9 +1374,7 @@ class MainLayout:
                                 ra.fill_color = color
 
                         set_bounds(self.raw_x, left=min_max_tracks_x[0], right=min_max_tracks_x[1])
-                        #set_bounds(self.ratio_x, left=0, right=mmax(*raw_x_ratio))
                         set_bounds(self.raw_y, bottom=min_max_tracks_y[0], top=min_max_tracks_y[1])
-                        #set_bounds(self.ratio_y, bottom=0, top=mmax(*raw_y_ratio))
                         set_bounds(self.anno_x, left=0, right=len(displayed_annos_x))
                         set_bounds(self.anno_y, bottom=0, top=len(displayed_annos_y))
 
@@ -1510,10 +1409,10 @@ class MainLayout:
                         self.tick_formatter_y.args = ticks_y
 
                         
-                        for plot in [self.heatmap, self.ratio_y, self.raw_y, self.anno_y, self.heatmap_x_axis]:
+                        for plot in [self.heatmap, self.raw_y, self.anno_y, self.heatmap_x_axis]:
                             plot.xgrid.bounds = (0, canvas_size_x)
                             plot.xaxis.bounds = (0, canvas_size_x)
-                        for plot in [self.heatmap, self.ratio_x, self.raw_x, self.anno_x, self.heatmap_y_axis]:
+                        for plot in [self.heatmap, self.raw_x, self.anno_x, self.heatmap_y_axis]:
                             plot.ygrid.bounds = (0, canvas_size_y)
                             plot.yaxis.bounds = (0, canvas_size_y)
 
@@ -1597,7 +1496,6 @@ class MainLayout:
                     self.session.set_value(["settings", "interface", "min_bin_size", "min"], min_)
                     self.session.set_value(["settings", "interface", "min_bin_size", "val"], val_)
 
-                    
                     self.heatmap.x_range.start = self.session.get_value(["visible", "x_start"])
                     self.heatmap.x_range.end = self.session.get_value(["visible", "x_end"])
                     self.heatmap.y_range.start = self.session.get_value(["visible", "y_start"])
@@ -1615,7 +1513,7 @@ class MainLayout:
         self.curdoc.add_next_tick_callback(callback)
 
     def trigger_render(self):
-        self.cancel_render = True
+        self.session.cancel()
         self.force_render = True
 
     def render_callback(self):
@@ -1658,6 +1556,8 @@ class MainLayout:
 
                     self.session.set_value(["area", "y_start"], curr_area[1] - h*x)
                     self.session.set_value(["area", "y_end"], curr_area[3] + h*x)
+
+                    self.session.cancel()
 
                     def callback():
                         self.last_drawing_area = self.session.get_drawing_area()
