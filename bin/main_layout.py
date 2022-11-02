@@ -448,6 +448,27 @@ class MainLayout:
             set_options(ele_list, d)
 
     def do_config(self):
+        
+        def to_idx(x):
+            if x <= 0:
+                return 0
+            power = int(math.log10(x))
+            return 9*power+math.ceil(x / 10**power)-1
+
+        min_ = max(to_idx(self.session.get_value(["dividend"])), 
+                        self.session.get_value(["settings", "interface", "min_bin_size", "min"]))
+        val_ = max(to_idx(self.session.get_value(["dividend"])), 
+                        self.session.get_value(["settings", "interface", "min_bin_size", "val"]))
+        
+        self.session.set_value(["settings", "interface", "min_bin_size", "min"], min_)
+        self.session.set_value(["settings", "interface", "min_bin_size", "val"], val_)
+
+        self.heatmap.x_range.start = self.session.get_value(["visible", "x_start"])
+        self.heatmap.x_range.end = self.session.get_value(["visible", "x_end"])
+        self.heatmap.y_range.start = self.session.get_value(["visible", "y_start"])
+        self.heatmap.y_range.end = self.session.get_value(["visible", "y_end"])
+
+
         self.config_slider_spinner()
         self.config_range_slider_spinner()
         self.config_dropdown()
@@ -1142,6 +1163,19 @@ class MainLayout:
 
         self.heatmap_x_axis.xaxis[0].formatter = self.tick_formatter_x
         self.heatmap_y_axis.yaxis[0].formatter = self.tick_formatter_y
+
+        undo_button = Button(label="undo")
+        def undo_event():
+            self.session.undo()
+            self.do_config()
+            self.trigger_render()
+        undo_button.on_click(undo_event)
+        redo_button = Button(label="redo")
+        def redo_event():
+            self.session.redo()
+            self.do_config()
+            self.trigger_render()
+        redo_button.on_click(redo_event)
         
         for plot in [self.heatmap, self.raw_y, self.anno_y, self.heatmap_x_axis]:
             plot.xgrid.ticker = self.ticker_x
@@ -1153,7 +1187,8 @@ class MainLayout:
             plot.yaxis.ticker.min_interval = 1
 
         _settings = column([
-                make_panel("General", "tooltip_general", [tool_bar, meta_file_label, self.meta_file]),
+                make_panel("General", "tooltip_general", [tool_bar, undo_button, redo_button, 
+                                                          meta_file_label, self.meta_file]),
                 make_panel("Normalization", "tooltip_normalization", [normalization, divide_column, divide_row,
                                     color_figure, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd]),
                 make_panel("Replicates", "tooltip_replicates", [in_group, betw_group, group_layout]),
@@ -1481,30 +1516,12 @@ class MainLayout:
                 if os.path.exists(self.meta_file.value + ".smoother_index"):
                     self.session = Quarry(self.meta_file.value + ".smoother_index")
 
-                    def to_idx(x):
-                        if x <= 0:
-                            return 0
-                        power = int(math.log10(x))
-                        return 9*power+math.ceil(x / 10**power)-1
-
                     if self.session.get_value(["settings"]) is None:
                         with open('smoother/static/conf/default.json', 'r') as f:
                             settings = json.load(f)
                         #print(settings)
                         self.session.set_value(["settings"], settings)
 
-                    min_ = max(to_idx(self.session.get_value(["dividend"])), 
-                                    self.session.get_value(["settings", "interface", "min_bin_size", "min"]))
-                    val_ = max(to_idx(self.session.get_value(["dividend"])), 
-                                    self.session.get_value(["settings", "interface", "min_bin_size", "val"]))
-                    
-                    self.session.set_value(["settings", "interface", "min_bin_size", "min"], min_)
-                    self.session.set_value(["settings", "interface", "min_bin_size", "val"], val_)
-
-                    self.heatmap.x_range.start = self.session.get_value(["visible", "x_start"])
-                    self.heatmap.x_range.end = self.session.get_value(["visible", "x_end"])
-                    self.heatmap.y_range.start = self.session.get_value(["visible", "y_start"])
-                    self.heatmap.y_range.end = self.session.get_value(["visible", "y_end"])
 
                     print("done loading\033[K")
                     self.do_config()
@@ -1525,11 +1542,6 @@ class MainLayout:
         if self.do_render:
             if not None in (self.heatmap.x_range.start, self.heatmap.x_range.end, self.heatmap.y_range.start,
                             self.heatmap.y_range.end):
-                self.session.set_value(["visible", "x_start"], self.heatmap.x_range.start)
-                self.session.set_value(["visible", "x_end"], self.heatmap.x_range.end)
-
-                self.session.set_value(["visible", "y_start"], self.heatmap.y_range.start)
-                self.session.set_value(["visible", "y_end"], self.heatmap.y_range.end)
 
                 curr_area = (self.heatmap.x_range.start, self.heatmap.y_range.start,
                              self.heatmap.x_range.end, self.heatmap.y_range.end)
@@ -1555,12 +1567,21 @@ class MainLayout:
                     x = self.session.get_value(["settings", "interface", "add_draw_area", "val"])/100
                     new_area = [curr_area[0] - w*x, curr_area[1] - h*x,
                                 curr_area[2] + w*x, curr_area[3] + h*x]
-                    
-                    self.session.set_value(["area", "x_start"], curr_area[0] - w*x)
-                    self.session.set_value(["area", "x_end"], curr_area[2] + w*x)
 
-                    self.session.set_value(["area", "y_start"], curr_area[1] - h*x)
-                    self.session.set_value(["area", "y_end"], curr_area[3] + h*x)
+                    area_dict = {
+                        "x_start": curr_area[0] - w*x,
+                        "x_end": curr_area[2] + w*x,
+                        "y_start": curr_area[1] - h*x,
+                        "y_end": curr_area[3] + h*x,
+                    }
+                    self.session.set_value(["area"], area_dict)
+                    visible_dict = {
+                        "x_start": self.heatmap.x_range.start,
+                        "x_end": self.heatmap.x_range.end,
+                        "y_start": self.heatmap.y_range.start,
+                        "y_end": self.heatmap.y_range.end,
+                    }
+                    self.session.set_value(["visible"], visible_dict)
 
                     self.session.cancel()
 
