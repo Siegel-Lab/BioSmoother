@@ -781,7 +781,7 @@ class MainLayout:
                                              active_item=['settings', 'replicates', 'in_group'])
 
         betw_group = self.dropdown_select("Between Group", "tooltip_between_groups",
-                                               ("Sum [(a+b)/2]", "sum"), ("Show First Group [a]", "1st"), 
+                                               ("Sum [a+b]", "sum"), ("Show First Group [a]", "1st"), 
                                                ("Show Second Group [b]", "2nd"), ("Substract [a-b]", "sub"),
                                                ("Difference [|a-b|]", "dif"), ("Divide [a/b]", "div"),
                                                ("Minimum [min(a,b)]", "min"),  ("Maximum [max(a,b)]", "max"),
