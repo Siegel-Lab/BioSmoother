@@ -114,8 +114,8 @@ class MainLayout:
     def multi_choice(self, label, checkboxes, session_key=None, callback=None, orderable=True):
         if callback is None:
             def default_callback(n, cb):
-                for x, y in checkboxes:
-                    self.session.set_value(x, cb[y])
+                for v in cb.values():
+                    self.session.set_value(v[0], v[1])
                 if not session_key is None:
                     self.session.set_value(session_key, n)
                 self.trigger_render()
@@ -161,14 +161,14 @@ class MainLayout:
 
         def trigger_callback():
             cb = {}
-            for _, n in checkboxes:
-                cb[n] = []
+            for k, n in checkboxes:
+                cb[n] = (k, [])
             order = []
             for n, opts in self.reset_options[label][1]:
                 order.append(n)
                 for opt in opts:
-                    cb[checkboxes[opt][1]].append(n)
-            callback(n, cb)
+                    cb[checkboxes[opt][1]][1].append(n)
+            callback(order, cb)
 
         def reset_event(e):
             l = []
