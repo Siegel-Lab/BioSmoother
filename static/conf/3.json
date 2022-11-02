@@ -1,0 +1,13 @@
+{
+    "display_name": "Hi-C",
+    "normalization": {
+        "normalize_by": "hi-c"
+    },
+    "interface": {
+        "axis_lables": "DNA_DNA"
+    },
+    "filters": {
+        "symmetry": "topToBot"
+    },
+    "smoother_config_file_version": 0.1
+}

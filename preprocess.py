@@ -14,6 +14,7 @@ from bin.libSps import *
 from bin.grid_seq_norm import *
 from bin.parse_and_group_reads import *
 from bin.dist_dep_decay_norm import *
+from bin.libContactMapping import Indexer
 
 
 # parses file & sets up axis and matrix to have the appropriate size
@@ -48,6 +49,8 @@ def parse_norm_file(filename):
         for s in other:
             if s[:5] == "XA:Z:":
                 xa_tag = s
+        if map_q == "" or map_q == "nomapq" or map_q == "255" or map_q == "*":
+            map_q = 0
         yield read_name, chrom, int(start_pos), int(map_q), xa_tag
 
 def group_norm_file(in_filename, file_size):
@@ -84,24 +87,6 @@ def group_norm_file(in_filename, file_size):
     yield from deal_with_group()
 
 
-def parse_annotations(annotation_file, axis_start_pos_offset, dividend):
-    annos = []
-
-    annotation_types = set()
-    with open(annotation_file, "r") as in_file_1:
-        for line in in_file_1:
-            if line[0] == "#":
-                continue
-            # parse file colum
-            chrom, db_name, annotation_type, from_pos, to_pos, _, strand, _, extras, *opt = line.split()
-            
-            if not chrom in axis_start_pos_offset:
-                continue
-            annotation_types.add(annotation_type)
-            s = axis_start_pos_offset[chrom] + int(from_pos) // dividend
-            e = axis_start_pos_offset[chrom] + int(to_pos) // dividend
-            annos.append((annotation_type, s, max(s+1, e), extras.replace(";", "\n")))
-    return annos
 
 
 def parse_wig_file(filename, chr_start_idx, dividend):
@@ -142,7 +127,7 @@ def make_meta(out_prefix, chr_len_file_name, annotation_filename, dividend, test
     #os.chmod(out_prefix + ".smoother_index", # would make it look more like a file but do i really want that?
     #         stat_perm.S_IWUSR | stat_perm.S_IXUSR | stat_perm.S_IXGRP | stat_perm.S_IXOTH )
     meta = MetaData(dividend)
-    meta.set_chr_sizes(ChrSizes(chr_len_file_name, dividend, filter=lambda x: ("Chr1_" in x) or not test))
+    meta.set_chr_sizes(ChrSizes(chr_len_file_name, dividend, filter=lambda x: ("Chr1_3A" in x) or not test))
 
     if not annotation_filename is None:
         meta.add_annotations(parse_annotations(annotation_filename, meta.chr_sizes.chr_start_pos, dividend))
@@ -168,37 +153,52 @@ def add_replicate(out_prefix, path, name, group_a, test=False, cached=False, no_
         raise RuntimeError("The dataset name you provide must be unique but is not. Use the <list> command to see all datasets.")
     if not (no_map_q and no_multi_map):
         print("pre-scanning file for index parameters...")
-        map_q, multi_map = has_map_q_and_multi_map(path, test, meta.chr_sizes.chr_sizes)
+        has_map_q, multi_map = has_map_q_and_multi_map(path, test, meta.chr_sizes.chr_sizes)
     if no_map_q:
-        map_q = False
+        has_map_q = False
     if no_multi_map:
         multi_map = False
-    print("generating index", "with" if map_q else "without", "mapping quality and", 
+    print("generating index", "with" if has_map_q else "without", "mapping quality and", 
           "with" if multi_map else "without", "multi mapping.")
-    idx_suff = (".3" if map_q else ".2") + (".2" if multi_map else ".0")
-    index = make_sps_index(out_prefix + idx_suff + ".smoother_index/repl", 3 if map_q else 2, False, True, 
+    idx_suff = (".3" if has_map_q else ".2") + (".2" if multi_map else ".0")
+    index = make_sps_index(out_prefix + ".smoother_index/repl" + idx_suff, 3 if has_map_q else 2, False, True, 
                             2 if multi_map else 0, "Cached" if cached else "Disk", True )
     last_cnt = len(index)
+    last_chr = None
+    idx_dict = {}
     for read_name, chr_1, pos_1_s, pos_1_e, chr_2, pos_2_s, pos_2_e, map_q in group_heatmap(path, get_filesize(path),
                                                                                             meta.chr_sizes.chr_sizes,
                                                                                             no_groups, test):
-        act_pos_1_s = meta.chr_sizes.coordinate(pos_2_s // meta.dividend, chr_2)
-        act_pos_1_e = meta.chr_sizes.coordinate(pos_2_e // meta.dividend, chr_2)
-        act_pos_2_s = meta.chr_sizes.coordinate(pos_1_s // meta.dividend, chr_1)
-        act_pos_2_e = meta.chr_sizes.coordinate(pos_1_e // meta.dividend, chr_1)
-        index.add_point([act_pos_1_s, act_pos_2_s, 255-map_q], [act_pos_1_e, act_pos_2_e, 255-map_q], read_name)
-    if not only_points:
-        print("generating index")
-        idx = index.generate(last_cnt, len(index))
-        print("done generating index")
-        meta.add_dataset(name, path, group_a, idx, map_q, multi_map)
-        meta.save(out_prefix + ".smoother_index/meta")
-        if not keep_points:
-            del index
-            os.remove(out_prefix + idx_suff + ".smoother_index/repl.points")
-            os.remove(out_prefix + idx_suff + ".smoother_index/repl.desc")
-    else:
-        print("Points are added to the indices:", last_cnt, "to", len(index))
+        if (chr_1, chr_2) != last_chr:
+            if not last_chr is None:
+                idx_dict[last_chr] = index.generate(last_cnt, len(index))
+            last_cnt = len(index)
+            last_chr = (chr_1, chr_2)
+        act_pos_1_s = pos_2_s // meta.dividend
+        act_pos_1_e = pos_2_e // meta.dividend
+        act_pos_2_s = pos_1_s // meta.dividend
+        act_pos_2_e = pos_1_e // meta.dividend
+        if has_map_q and multi_map:
+            index.add_point([act_pos_1_s, act_pos_2_s, MAP_Q_MAX-map_q-1], [act_pos_1_e, act_pos_2_e, MAP_Q_MAX-map_q-1], read_name)
+        elif has_map_q and not multi_map:
+            index.add_point([act_pos_1_s, act_pos_2_s, MAP_Q_MAX-map_q-1], read_name)
+        elif not has_map_q and multi_map:
+            index.add_point([act_pos_1_s, act_pos_2_s], [act_pos_1_e, act_pos_2_e], read_name)
+        elif not has_map_q and not multi_map:
+            index.add_point([act_pos_1_s, act_pos_2_s], read_name)
+        else:
+            raise RuntimeError("this statement should never be reached")
+
+    if not last_chr is None:
+        idx_dict[last_chr] = index.generate(last_cnt, len(index))
+    print("done generating index")
+    #print("max value is:", index.get_max_prefix_sum())
+    meta.add_dataset(name, path, group_a, idx_dict, has_map_q, multi_map)
+    meta.save(out_prefix + ".smoother_index/meta")
+    if not keep_points:
+        del index
+        os.remove(out_prefix + ".smoother_index/repl" + idx_suff + ".points")
+        os.remove(out_prefix + ".smoother_index/repl" + idx_suff + ".desc")
 
 def add_normalization(out_prefix, path, name, for_row, test=False, cached=False, keep_points=False):
     meta = MetaData.load(out_prefix + ".smoother_index/meta")
@@ -206,26 +206,35 @@ def add_normalization(out_prefix, path, name, for_row, test=False, cached=False,
         raise RuntimeError("The normalization name you provide must be unique but is not. Use the <list> command to see all normalization.")
     index = make_sps_index(out_prefix + ".smoother_index/norm", 2, False, True, 1, 
                             "Cached" if cached else "Disk", True )
-    last_cnt = len(index)
     if path[-4:] == ".wig":
         raise RuntimeError("disabled for now")
         for xs, ys, n in parse_wig_file(path, meta.chr_sizes.chr_start_pos, meta.dividend):
             meta.add_wig_normalization(name + ": " + n, path, for_row, xs, ys)
     else:
+        last_cnt = len(index)
+        idx_dict = {}
         cnt = 0
+        last_chr = None
         file_size = int(subprocess.run(['samtools', 'view', '-c', path], stdout=subprocess.PIPE).stdout.decode('utf-8'))
         for read_name, chrom, pos_s, pos_e, map_q in group_norm_file(path, file_size):
             if not chrom in meta.chr_sizes.chr_sizes:
                 continue
-            act_pos_s = meta.chr_sizes.coordinate(int(pos_s) // meta.dividend, chrom)
-            act_pos_e = meta.chr_sizes.coordinate(int(pos_e) // meta.dividend, chrom)
-            index.add_point([act_pos_s, 255-map_q], [act_pos_e, 255-map_q], read_name)
+            if chrom != last_chr:
+                if not last_chr is None:
+                    idx_dict[last_chr] = index.generate(last_cnt, len(index))
+                last_cnt = len(index)
+                last_chr = chrom
+            act_pos_s = int(pos_s) // meta.dividend
+            act_pos_e = int(pos_e) // meta.dividend
+            index.add_point([act_pos_s, MAP_Q_MAX-map_q-1], [act_pos_e, MAP_Q_MAX-map_q-1], read_name)
             cnt += 1
             if cnt > TEST_FAC and test:
                 break
+        print()
         print("generating index")
-        idx = index.generate(last_cnt, len(index))
-        meta.add_normalization(name, path, for_row, idx)
+        if not last_chr is None:
+            idx_dict[last_chr] = index.generate(last_cnt, len(index))
+        meta.add_normalization(name, path, for_row, idx_dict, True, True)
     meta.save(out_prefix + ".smoother_index/meta")
     if not keep_points:
         del index
@@ -240,7 +249,7 @@ def init(args):
 def repl(args):
     print("LibSps Version:", VERSION)
     add_replicate(args.index_prefix, args.path, args.name, args.group, args.test, not args.uncached, args.no_groups,
-                  args.without_dep_dim, args.keep_points, args.only_points)
+                  args.without_dep_dim, args.keep_points, args.only_points, args.no_map_q, args.no_multi_map)
 
 def norm(args):
     print("LibSps Version:", VERSION)

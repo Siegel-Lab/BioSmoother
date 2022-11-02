@@ -4,7 +4,7 @@ import subprocess
 import errno
 import os
 
-TEST_FAC = 10000
+TEST_FAC = 1000000
 
 def simplified_filepath(path):
     if "/" in path:
@@ -52,9 +52,9 @@ def parse_heatmap(in_filename, test, chr_filter):
                 continue
             if not chr_2 in chr_filter:
                 continue
-            if mapq_1 == "" or mapq_1 == "nomapq":
+            if mapq_1 == "" or mapq_1 == "nomapq" or mapq_1 == "255" or mapq_1 == "*":
                 mapq_1 = 0
-            if mapq_2 == "" or mapq_2 == "nomapq":
+            if mapq_2 == "" or mapq_2 == "nomapq" or mapq_2 == "255" or mapq_2 == "*":
                 mapq_2 = 0
             # convert number values to ints
             pos_1, pos_2, mapq_1, mapq_2 = (int(x) for x in (pos_1, pos_2, mapq_1, mapq_2))

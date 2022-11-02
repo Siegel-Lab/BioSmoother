@@ -5,47 +5,6 @@ from bokeh.util.compiler import TypeScript
 from bokeh.models import AdaptiveTicker
 import bisect
 
-TS_CODE = """
-import * as p from "core/properties"
-import {TickSpec} from "models/tickers/ticker"
-import {AdaptiveTicker } from "models/tickers/adaptive_ticker"
-
-export namespace ExtraTicksTicker {
-  export type Attrs = p.AttrsOf<Props>
-  export type Props = AdaptiveTicker.Props & {
-    extra_ticks: p.Property<Array<number>>
-  }
-}
-
-export interface ExtraTicksTicker extends ExtraTicksTicker.Attrs {}
-
-export class ExtraTicksTicker extends AdaptiveTicker {
-  properties: ExtraTicksTicker.Props
-
-  constructor(attrs?: Partial<ExtraTicksTicker.Attrs>) {
-    super(attrs)
-  }
-
-  static init_ExtraTicksTicker(): void {
-    this.define<ExtraTicksTicker.Props>(({Number, Array}) => ({
-      extra_ticks: [ Array(Number), [] ],
-    }))
-  }
-
-  get_ticks_no_defaults(data_low: number, data_high: number, cross_loc: any, desired_n_ticks: number): TickSpec<number> {
-    return {
-        major: this.extra_ticks,
-        minor: super.get_ticks_no_defaults(data_low, data_high, cross_loc, desired_n_ticks).major,
-    }
-  }
-
-}
-"""
-
-
-class ExtraTicksTicker(AdaptiveTicker):
-    __implementation__ = TypeScript(TS_CODE)
-    extra_ticks = List(Float)
 
 
 class ChrSizes:
@@ -172,29 +131,20 @@ class ChrSizes:
             end = self.chr_start_pos["end"]
         h_bin = max(1, h_bin)
         ret = []
-        ret_2 = []
-        ret_3 = []
-        x_chrs = []
         bin_start = max(0, int(start))
         if none_for_chr_border:
             ret.append(None)
-            ret_2.append(None)
-            ret_3.append(None)
         for chr_name in chr_filter:
             x_start = self.chr_start_pos[chr_name]
             x_end = x_start + self.chr_sizes[chr_name]
             x = max(int(start), x_start)
             while x <= min(end, x_end):
                 if produce_smaller_bins or x + h_bin <= x_end:
-                    ret.append([x, min(h_bin, x_end - x)])
-                    ret_2.append([chr_name, x - x_start])
-                    ret_3.append([bin_start, min(h_bin, x_end - x)])
+                    ret.append([chr_name, x - x_start, bin_start, min(h_bin, x_end - x)])
                     bin_start += min(h_bin, x_end - x)
                 if is_canceld():
                     return
                 x += h_bin
             if none_for_chr_border:
                 ret.append(None)
-                ret_2.append(None)
-                ret_3.append(None)
-        return ret, ret_2, ret_3
+        return ret
