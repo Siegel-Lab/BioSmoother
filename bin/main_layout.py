@@ -17,7 +17,7 @@ from bokeh.models import Range1d, ColorBar, LinearColorMapper
 from bin.meta_data import *
 import os
 import sys
-from bin.heatmap_as_r_tree import *
+#from bin.heatmap_as_r_tree import *
 from bokeh.palettes import Viridis256, Colorblind, Plasma256, Turbo256
 from datetime import datetime, timedelta
 import psutil
@@ -121,9 +121,10 @@ class MainLayout:
                 self.trigger_render()
             callback = default_callback
         div = Div(text=label)
-        #div.margin = DIV_MARGIN
-        choice = MultiChoice(value=[], options=[])
-        choice.on_change("value", lambda x, y, z: self.trigger_render())
+        SYM_WIDTH = 10
+        SYM_CSS = ["other_button"]
+        CHECK_WIDTH = 20*len(checkboxes)
+        ELEMENTS_PER_PAGE = 10
 
         col = column([], sizing_mode="stretch_width")
         #col.max_height=150
