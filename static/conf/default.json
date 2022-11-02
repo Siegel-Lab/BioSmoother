@@ -29,7 +29,9 @@
             "step": 0.01
         },
         "ddd": "no",
-        "scale": "max"
+        "scale": "max",
+        "divide_by_column_coverage": false,
+        "divide_by_row_coverage": false
     },
     "replicates": {
         "in_group": "sum",

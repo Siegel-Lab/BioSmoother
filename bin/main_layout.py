@@ -14,7 +14,6 @@ from tornado import gen
 from bokeh.document import without_document_lock
 from bokeh.models import Panel, Tabs, Spacer, Slope, PreText, CustomJS, FixedTicker
 from bokeh.models import Range1d, ColorBar, LinearColorMapper
-from bin.meta_data import *
 import os
 import sys
 #from bin.heatmap_as_r_tree import *
@@ -23,7 +22,6 @@ from datetime import datetime, timedelta
 import psutil
 from concurrent.futures import ThreadPoolExecutor
 from bokeh.models import BoxAnnotation
-from bin.stats import *
 from bokeh.models.tickers import AdaptiveTicker
 from bin.libContactMapping import Quarry
 from bin.render_step_logger import *
@@ -802,8 +800,6 @@ class MainLayout:
                                                    "rpm"), 
                                                   ("Reads per Thousand",
                                                    "rpk"), 
-                                                  ("Coverage Tracks",
-                                                   "tracks"),
                                                   ("Binominal Test", "radicl-seq"),
                                                   ("Iterative Correction", "hi-c"),
                                                   ("No Normalization", "dont"),
@@ -819,6 +815,11 @@ class MainLayout:
 
         incomp_align_layout = self.make_checkbox("Show reads with incomplete alignments", 
                                                     settings=['settings', 'filters', 'incomplete_alignments'])
+
+        divide_column = self.make_checkbox("Divide heatmap columns by track", 
+                                                    settings=['settings', 'normalization', 'divide_by_column_coverage'])
+        divide_row = self.make_checkbox("Divide heatmap rows by track", 
+                                                    settings=['settings', 'normalization', 'divide_by_row_coverage'])
 
 
         ddd = self.dropdown_select("Distance Dependent Decay", "tooltip_ddd",
@@ -953,7 +954,11 @@ class MainLayout:
                                                 [[["replicates", "in_group_a"], "group A"], 
                                                 [["replicates", "in_group_b"], "group B"], 
                                                 [["replicates", "in_row"], "track row"], 
-                                                [["replicates", "in_column"], "track col"]],
+                                                [["replicates", "in_column"], "track col"],
+                                                [["replicates", "cov_column_a"], "column A"], 
+                                                [["replicates", "cov_column_b"], "column B"], 
+                                                [["replicates", "cov_row_a"], "row A"], 
+                                                [["replicates", "cov_row_b"], "row B"]],
                                                 ["replicates", "list"])
 
         annos_layout = self.multi_choice_auto("Annotations", 
@@ -1149,14 +1154,14 @@ class MainLayout:
 
         _settings = column([
                 make_panel("General", "tooltip_general", [tool_bar, meta_file_label, self.meta_file]),
-                make_panel("Normalization", "tooltip_normalization", [normalization, color_figure,
-                                    ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd]),
+                make_panel("Normalization", "tooltip_normalization", [normalization, divide_column, divide_row,
+                                    color_figure, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd]),
                 make_panel("Replicates", "tooltip_replicates", [in_group, betw_group, group_layout]),
                 make_panel("Interface", "tooltip_interface", [nb_l,
                                     show_hide, mmbs_l,
                                     ufs_l, rs_l, aas_l, ass_l, rss2_l,
                                     stretch, square_bins, power_ten_bin, color_picker, 
-                                    self.low_color, self.high_color, axis_lables, self.overlay_dataset_id]),
+                                    self.low_color, self.high_color, axis_lables]),
                 make_panel("Filters", "tooltip_filters", [ms_l, incomp_align_layout, 
                                           symmetrie, dds_l, annos_layout, 
                                           x_coords, y_coords, multiple_anno_per_bin, chrom_layout, multi_mapping]),
