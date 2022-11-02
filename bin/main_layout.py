@@ -456,17 +456,27 @@ class MainLayout:
             return 9*power+math.ceil(x / 10**power)-1
 
         min_ = max(to_idx(self.session.get_value(["dividend"])), 
-                        self.session.get_value(["settings", "interface", "min_bin_size", "min"]))
+                          self.session.get_value(["settings", "interface", "min_bin_size", "min"]))
         val_ = max(to_idx(self.session.get_value(["dividend"])), 
-                        self.session.get_value(["settings", "interface", "min_bin_size", "val"]))
-        
+                          self.session.get_value(["settings", "interface", "min_bin_size", "val"]))
+
         self.session.set_value(["settings", "interface", "min_bin_size", "min"], min_)
         self.session.set_value(["settings", "interface", "min_bin_size", "val"], val_)
 
-        self.heatmap.x_range.start = self.session.get_value(["visible", "x_start"])
-        self.heatmap.x_range.end = self.session.get_value(["visible", "x_end"])
-        self.heatmap.y_range.start = self.session.get_value(["visible", "y_start"])
-        self.heatmap.y_range.end = self.session.get_value(["visible", "y_end"])
+        self.min_max_bin_size.start = self.session.get_value(["settings", "interface", "min_bin_size", "min"])
+        self.min_max_bin_size.end = self.session.get_value(["settings", "interface", "min_bin_size", "max"])
+        self.min_max_bin_size.value = self.session.get_value(["settings", "interface", "min_bin_size", "val"])
+        self.min_max_bin_size.step = self.session.get_value(["settings", "interface", "min_bin_size", "step"])
+
+        self.undo_button.disabled = not self.session.has_undo()
+        self.undo_button.css_classes = ["other_button", "fa_page_previous" if self.undo_button.disabled else "fa_page_previous_solid"]
+        self.redo_button.disabled = not self.session.has_redo()
+        self.redo_button.css_classes = ["other_button", "fa_page_next" if self.redo_button.disabled else "fa_page_next_solid"]
+
+        self.heatmap.x_range.start = self.session.get_value(["area", "x_start"])
+        self.heatmap.x_range.end = self.session.get_value(["area", "x_end"])
+        self.heatmap.y_range.start = self.session.get_value(["area", "y_start"])
+        self.heatmap.y_range.end = self.session.get_value(["area", "y_end"])
 
 
         self.config_slider_spinner()
@@ -475,10 +485,6 @@ class MainLayout:
         self.config_checkbox()
         self.config_multi_choice()
 
-        self.min_max_bin_size.end = self.session.get_value(["settings", "interface", "min_bin_size", "max"])
-        self.min_max_bin_size.value = self.session.get_value(["settings", "interface", "min_bin_size", "val"])
-        self.min_max_bin_size.step = self.session.get_value(["settings", "interface", "min_bin_size", "step"])
-        
         self.low_color.color = self.session.get_value(["settings", "interface", "color_low"])
         self.high_color.color = self.session.get_value(["settings", "interface", "color_high"])
 
@@ -659,6 +665,8 @@ class MainLayout:
         self.ticker_y = None
         self.tick_formatter_x = None
         self.tick_formatter_y = None
+        self.undo_button = None
+        self.redo_button = None
 
         self.do_layout()
 
@@ -1164,18 +1172,23 @@ class MainLayout:
         self.heatmap_x_axis.xaxis[0].formatter = self.tick_formatter_x
         self.heatmap_y_axis.yaxis[0].formatter = self.tick_formatter_y
 
-        undo_button = Button(label="undo")
+        SYM_WIDTH = 10
+        SYM_CSS = ["other_button"]
+
+        self.undo_button = Button(label="", css_classes=SYM_CSS + ["fa_page_previous_solid"], width=SYM_WIDTH, 
+                                  height=SYM_WIDTH, sizing_mode="fixed", button_type="light", align="center")
         def undo_event():
             self.session.undo()
             self.do_config()
             self.trigger_render()
-        undo_button.on_click(undo_event)
-        redo_button = Button(label="redo")
+        self.undo_button.on_click(undo_event)
+        self.redo_button = Button(label="", css_classes=SYM_CSS + ["fa_page_next_solid"], width=SYM_WIDTH, 
+                                  height=SYM_WIDTH, sizing_mode="fixed", button_type="light", align="center")
         def redo_event():
             self.session.redo()
             self.do_config()
             self.trigger_render()
-        redo_button.on_click(redo_event)
+        self.redo_button.on_click(redo_event)
         
         for plot in [self.heatmap, self.raw_y, self.anno_y, self.heatmap_x_axis]:
             plot.xgrid.ticker = self.ticker_x
@@ -1187,7 +1200,7 @@ class MainLayout:
             plot.yaxis.ticker.min_interval = 1
 
         _settings = column([
-                make_panel("General", "tooltip_general", [tool_bar, undo_button, redo_button, 
+                make_panel("General", "tooltip_general", [row([self.undo_button, self.redo_button, tool_bar]), 
                                                           meta_file_label, self.meta_file]),
                 make_panel("Normalization", "tooltip_normalization", [normalization, divide_column, divide_row,
                                     color_figure, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd]),
@@ -1313,7 +1326,7 @@ class MainLayout:
 
     @gen.coroutine
     @without_document_lock
-    def render(self, area, zoom_in_render):
+    def render(self, zoom_in_render):
         def unlocked_task():
             def cancelable_task():
                     
@@ -1505,6 +1518,10 @@ class MainLayout:
                 self.spinner.css_classes = ["fade-out"]
             self.curdoc.add_next_tick_callback(callback)
 
+        self.undo_button.disabled = not self.session.has_undo()
+        self.undo_button.css_classes = ["other_button", "fa_page_previous" if self.undo_button.disabled else "fa_page_previous_solid"]
+        self.redo_button.disabled = not self.session.has_redo()
+        self.redo_button.css_classes = ["other_button", "fa_page_next" if self.redo_button.disabled else "fa_page_next_solid"]
         yield executor.submit(unlocked_task)
 
     def setup(self):
@@ -1545,12 +1562,9 @@ class MainLayout:
 
                 curr_area = (self.heatmap.x_range.start, self.heatmap.y_range.start,
                              self.heatmap.x_range.end, self.heatmap.y_range.end)
-                w = curr_area[2] - curr_area[0]
-                h = curr_area[3] - curr_area[1]
-                curr_area_size = w*h
+                curr_area_size = (curr_area[2] - curr_area[0]) * (curr_area[3] - curr_area[1])
                 min_change = 1-self.session.get_value(["settings", "interface", "zoom_redraw", "val"])/100
                 zoom_in_render = False
-                # print(overlap)
                 if curr_area_size / self.curr_area_size < min_change or self.force_render or \
                         MainLayout.area_outside(self.last_drawing_area, curr_area):
                     if curr_area_size / self.curr_area_size < min_change:
@@ -1564,30 +1578,20 @@ class MainLayout:
                         self.new_render("program start")
                     self.force_render = False
                     self.curr_area_size = curr_area_size
-                    x = self.session.get_value(["settings", "interface", "add_draw_area", "val"])/100
-                    new_area = [curr_area[0] - w*x, curr_area[1] - h*x,
-                                curr_area[2] + w*x, curr_area[3] + h*x]
 
                     area_dict = {
-                        "x_start": curr_area[0] - w*x,
-                        "x_end": curr_area[2] + w*x,
-                        "y_start": curr_area[1] - h*x,
-                        "y_end": curr_area[3] + h*x,
+                        "x_start": curr_area[0],
+                        "x_end": curr_area[2],
+                        "y_start": curr_area[1],
+                        "y_end": curr_area[3],
                     }
                     self.session.set_value(["area"], area_dict)
-                    visible_dict = {
-                        "x_start": self.heatmap.x_range.start,
-                        "x_end": self.heatmap.x_range.end,
-                        "y_start": self.heatmap.y_range.start,
-                        "y_end": self.heatmap.y_range.end,
-                    }
-                    self.session.set_value(["visible"], visible_dict)
 
                     self.session.cancel()
 
                     def callback():
                         self.last_drawing_area = self.session.get_drawing_area()
-                        self.render(new_area, zoom_in_render)
+                        self.render(zoom_in_render)
                     self.curdoc.add_next_tick_callback(callback)
                     return
 

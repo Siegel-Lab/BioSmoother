@@ -64,6 +64,16 @@
     background-size: cover;
 }
 
+.fa_page_next {
+    background-image: url(page-next.svg) !important;
+    background-size: cover;
+}
+
+.fa_page_previous {
+    background-image: url(page-previous.svg) !important;
+    background-size: cover;
+}
+
 .fa_apply {
     background-image: url(gear-solid.svg) !important;
     background-size: cover;

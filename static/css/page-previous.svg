@@ -3,7 +3,7 @@
    viewBox="0 0 320 320"
    version="1.1"
    id="svg1310"
-   sodipodi:docname="page-previous-solid.svg"
+   sodipodi:docname="page-previous.svg"
    width="320"
    height="320"
    inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
@@ -36,5 +36,5 @@
   <path
      d="m 73.337502,182.61105 c -12.5,-12.5 -12.5,-32.8 0,-45.3 L 201.3375,9.311052 c 9.2,-9.19999996 22.9,-11.9 34.9,-6.9 12,5 19.8,16.6 19.8,29.6 l -0.1,256.000008 c 0,12.9 -7.8,24.6 -19.8,29.6 -12,5 -25.7,2.2 -34.9,-6.9 L 73.237502,182.71105 Z"
      id="path1308"
-     style="fill:#000000;fill-opacity:1" />
+     style="fill:#666666;fill-opacity:1" />
 </svg>

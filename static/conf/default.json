@@ -58,7 +58,7 @@
         "min_bin_size": {
             "max": 135,
             "min": 1,
-            "val": 18,
+            "val": 27,
             "step": 1
         },
         "max_undo": {
@@ -123,7 +123,7 @@
             "#CC79A7"
         ],
         "color_low": "#000000",
-        "color_high": "#FFFFFF",
+        "color_high": "#ffffff",
         "axis_lables": "RNA_DNA"
     },
     "filters": {
