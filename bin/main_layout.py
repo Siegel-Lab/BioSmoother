@@ -599,6 +599,8 @@ class MainLayout:
         self.unhide_button.visible = False
 
         def event(e):
+            if self.session is not None:
+                self.session.set_value(["settings", "interface", "show_hide", "tools"], True)
             self.toggle_hide("tools")
         self.unhide_button.on_click(event)
         return self.unhide_button
@@ -1064,7 +1066,7 @@ class MainLayout:
                 format=power_tick, 
                 sizing_mode="stretch_width")
         def min_bin_size_event():
-            self.session.set_value(["interface", "min_bin_size", "val"], self.min_max_bin_size.value)
+            self.session.set_value(["settings", "interface", "min_bin_size", "val"], self.min_max_bin_size.value)
             self.trigger_render()
         self.min_max_bin_size.on_change("value_throttled", lambda x, y, z: min_bin_size_event())
 
