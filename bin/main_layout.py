@@ -376,7 +376,7 @@ class MainLayout:
 
         return row([slider, spinner_start, spinner_end], width=width, margin=DIV_MARGIN)
 
-    def make_checkbox(self, title, settings, on_change=None, width=200):
+    def make_checkbox(self, title, tooltip="", settings=[], on_change=None, width=200):
         div = Div(text=title, sizing_mode="stretch_width")
         cg = CheckboxGroup(labels=[""], sizing_mode="fixed", width=20)
         if on_change is None:
@@ -607,10 +607,10 @@ class MainLayout:
 
     def make_color_figure(self, palette):
         color_mapper = LinearColorMapper(palette=palette, low=0, high=1)
-        color_figure = figure(tools='', height=0)
+        color_figure = figure(tools='', height=0, width=350)
         color_figure.x(0,0)
         color_info = ColorBar(color_mapper=color_mapper, orientation="horizontal", 
-                                   ticker=FixedTicker(ticks=[]))
+                                   ticker=FixedTicker(ticks=[]), width=350)
         #color_info.formatter = FuncTickFormatter(
         #                args={"ticksx": [], "labelsx": []},
         #                code="""
@@ -889,6 +889,7 @@ class MainLayout:
                                                   )
 
         color_scale = self.dropdown_select("Scale Color Range", "tooltip_scale_color_range",
+                                                  ("by absolute max", "abs"), 
                                                   ("zero to max-value", "max"), 
                                                   ("min- to max-value", "minmax"), 
                                                   ("do not scale", "dont"),
@@ -904,22 +905,15 @@ class MainLayout:
                                                     settings=['settings', 'normalization', 'divide_by_row_coverage'])
 
 
-        ddd = self.dropdown_select("Distance Dependent Decay", "tooltip_ddd",
-                                        ("Keep decay", "no"), ("Normalize decay away", "yes"),
-                                        active_item=['settings', 'normalization', 'ddd'])
+        ddd = self.make_checkbox("Divide by Distance Dependent Decay", "tooltip_ddd",
+                                        settings=['settings', 'normalization', 'ddd'])
 
-        square_bins = self.dropdown_select("Bin Aspect Ratio", "tooltip_bin_aspect_ratio",
-                                                  ("Squared relative to view",
-                                                   "view"),
-                                                  ("Squared relative to coordinates",
-                                                   "coord"),
-                                                   active_item=['settings', "interface", "bin_aspect_ratio"]
+        square_bins = self.make_checkbox("Make Bins Squares", "tooltip_bin_aspect_ratio",
+                                                   settings=['settings', "interface", "squared_bins"]
                                                    )
 
-        power_ten_bin = self.dropdown_select("Snap Bin Size", "tooltip_snap_bin_size",
-                                                ("Do not snap", "no"),
-                                                ("To Even Power of Ten", "p10"),
-                                                active_item=['settings', "interface", "snap_bin_size"]
+        power_ten_bin = self.make_checkbox("Snap Bin Size", "tooltip_snap_bin_size",
+                                                settings=['settings', "interface", "snap_bin_size"]
                                             )
 
         color_picker = self.dropdown_select("Color Palette", "tooltip_color",
@@ -952,13 +946,14 @@ class MainLayout:
                                                   )
 
         def stretch_event(val):
-            self.session.set_value(["settings", "interface", "stretch_or_scale"], val)
-            self.heatmap.sizing_mode = val
-        stretch = self.dropdown_select("Stretch/Scale", "tooltip_stretch_scale",
-                                                  ("Scale", "scale_height"),
-                                                  ("Stretch", "stretch_both"),
-                                            active_item=["settings", "interface", "stretch_or_scale"],
-                                            event=stretch_event)
+            self.session.set_value(["settings", "interface", "stretch"], val)
+            if val:
+                self.heatmap.sizing_mode = "stretch_both"
+            else:
+                self.heatmap.sizing_mode = "scale_height"
+        stretch = self.make_checkbox("Stretch heatmap", "tooltip_stretch_scale",
+                                            settings=["settings", "interface", "stretch"],
+                                            on_change=stretch_event)
 
         ms_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, 
                                                 settings=["settings", "filters", "mapping_q"], 
@@ -1413,6 +1408,8 @@ class MainLayout:
                 ticks_y = self.session.get_ticks(False)
 
                 palette = self.session.get_palette()
+
+                w_bin, h_bin = self.session.get_bin_size()
                 #print(colors)
 
                 self.render_step_log("transfer_data")
@@ -1446,18 +1443,17 @@ class MainLayout:
                     #        self.anno_y.y_range.factors = self.displayed_annos
 
                     def readable_display(l):
-                        l = l * self.session.get_value(["dividend"])
-                        exp = int(math.log10(l)-1)
-                        x = max(1, int(l / (10**exp)))
-                        if exp >= 7:
-                            return str(x) + "*10^" + str(exp) + "bp"
-                        elif exp >= 3:
-                            return str(x * int(10**(exp-3))) + "kbp"
+                        def add_commas(x):
+                            return "{:,}".format(x)
+                        if l % 1000000 == 0:
+                            return str(add_commas(l // 1000000)) + "mbp"
+                        elif l % 1000 == 0:
+                            return str(add_commas(l // 1000)) + "kbp"
                         else:
-                            return str(x * int(10**exp)) + "bp"
+                            return str(add_commas(l)) + "bp"
 
-                    end_text = "Rendering Done.<br>Current Bin Size: " #+ readable_display(w_bin) + \
-                    #" x " + readable_display(h_bin) + "."
+                    end_text = "Rendering Done.<br>Current Bin Size: " + readable_display(w_bin) + \
+                                " x " + readable_display(h_bin) + "."
 
 
                     if self.do_export is None:

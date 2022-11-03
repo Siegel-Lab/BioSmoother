@@ -36,7 +36,7 @@
             "spinner_min_restricted": true,
             "spinner_max_restricted": false
         },
-        "ddd": "no",
+        "ddd": false,
         "scale": "max",
         "divide_by_column_coverage": false,
         "divide_by_row_coverage": false
@@ -121,9 +121,9 @@
             "spinner_min_restricted": true,
             "spinner_max_restricted": true
         },
-        "stretch_or_scale": "scale_height",
-        "bin_aspect_ratio": "view",
-        "snap_bin_size": "no",
+        "stretch": false,
+        "squared_bins": false,
+        "snap_bin_size": false,
         "snap_factors": [
             1,
             1.25,
