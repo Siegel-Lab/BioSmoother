@@ -603,6 +603,31 @@ class MainLayout:
         self.unhide_button.on_click(event)
         return self.unhide_button
 
+    def make_color_figure(self, palette):
+        color_mapper = LinearColorMapper(palette=palette, low=0, high=1)
+        color_figure = figure(tools='', height=0)
+        color_figure.x(0,0)
+        color_info = ColorBar(color_mapper=color_mapper, orientation="horizontal", 
+                                   ticker=FixedTicker(ticks=[]))
+        #color_info.formatter = FuncTickFormatter(
+        #                args={"ticksx": [], "labelsx": []},
+        #                code="""
+        #                    for (let i = 0; i < ticksx.length; i++)
+        #                        if(tick == ticksx[i])
+        #                            return labelsx[i];
+        #                    return "n/a";
+        #                """)
+        color_figure.add_layout(color_info, "below")
+
+        # make plot invisible
+        color_figure.axis.visible = False
+        color_figure.toolbar_location = None
+        color_figure.border_fill_alpha = 0
+        color_figure.outline_line_alpha = 0
+
+        return color_figure
+
+
 
     def __init__(self):
         self.show_hide = {"grid_lines": False, "contig_borders": True, "indent_line": False}
@@ -679,8 +704,6 @@ class MainLayout:
         self.spinner = None
         self.info_field = None
         self.do_export = None
-        self.color_mapper = None
-        self.color_info = None
         self.settings_row = None
         self.slider_spinner_config = []
         self.range_slider_spinner_config = []
@@ -694,6 +717,7 @@ class MainLayout:
         self.tick_formatter_y = None
         self.undo_button = None
         self.redo_button = None
+        self.color_layout = None
 
         self.do_layout()
 
@@ -1153,26 +1177,8 @@ class MainLayout:
 
         version_info = Div(text="Smoother "+ self.smoother_version +"<br>LibSps Version: " + Quarry.get_libSps_version())
 
-        self.color_mapper = LinearColorMapper(palette=["black"], low=0, high=1)
-        color_figure = figure(tools='', height=0)
-        color_figure.x(0,0)
-        self.color_info = ColorBar(color_mapper=self.color_mapper, orientation="horizontal", 
-                                   ticker=FixedTicker(ticks=[]))
-        self.color_info.formatter = FuncTickFormatter(
-                        args={"ticksx": [], "labelsx": []},
-                        code="""
-                            for (let i = 0; i < ticksx.length; i++)
-                                if(tick == ticksx[i])
-                                    return labelsx[i];
-                            return "n/a";
-                        """)
-        color_figure.add_layout(self.color_info, "below")
+        self.color_layout = row([self.make_color_figure(["black"])])
 
-        # make plot invisible
-        color_figure.axis.visible = False
-        color_figure.toolbar_location = None
-        color_figure.border_fill_alpha = 0
-        color_figure.outline_line_alpha = 0
 
         quick_configs = [self.config_row("default", lock_name=True)]
         for idx in range(1,7):
@@ -1243,7 +1249,7 @@ class MainLayout:
                                                                 reset_session]), 
                                                           meta_file_label, self.meta_file]),
                 make_panel("Normalization", "tooltip_normalization", [normalization, divide_column, divide_row,
-                                    color_figure, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd]),
+                                    self.color_layout, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd]),
                 make_panel("Replicates", "tooltip_replicates", [in_group, betw_group, group_layout]),
                 make_panel("Interface", "tooltip_interface", [nb_l,
                                     show_hide, mmbs_l,
@@ -1404,6 +1410,9 @@ class MainLayout:
                 ticks_x = self.session.get_ticks(True)
                 ticks_y = self.session.get_ticks(False)
 
+                palette = self.session.get_palette()
+                #print(colors)
+
                 self.render_step_log("transfer_data")
 
                 @gen.coroutine
@@ -1413,11 +1422,7 @@ class MainLayout:
                     #    palette = [xxx/50 - 1 for xxx in range(100)]
                     #else:
                     #    palette = [xxx/100 for xxx in range(100)]
-                    #self.color_mapper.palette = self.color_bins_b(palette)
-                    #self.color_info.formatter.args = {"ticksx": color_bar_ticks, "labelsx": color_bar_tick_labels}
-                    #self.color_info.ticker.ticks = color_bar_ticks
-                    #self.color_info.visible = False
-                    #self.color_info.visible = True # trigger re-render
+                    self.color_layout.children = [self.make_color_figure(palette)]
                     def mmax(*args):
                         m = 0
                         for x in args:
