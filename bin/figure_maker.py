@@ -21,7 +21,7 @@ class FigureMaker:
         self.is_hidden = False
 
     def get(self, register):
-        ret = figure(**self.args)
+        ret = figure(tools="pan,wheel_zoom,box_zoom",**self.args)
         ret.x(x=0, y=0, line_color=None)
         ret.xaxis.visible = self.x_axis_visible
         ret.yaxis.visible = self.y_axis_visible

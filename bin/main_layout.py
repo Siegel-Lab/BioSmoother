@@ -1151,6 +1151,20 @@ class MainLayout:
         for idx in range(1,7):
             quick_configs.append(self.config_row(idx))
 
+        SYM_WIDTH = 10
+        SYM_CSS = ["other_button"]
+        reset_session = Button(label="", css_classes=SYM_CSS + ["fa_reset"], width=SYM_WIDTH, 
+                                  height=SYM_WIDTH, sizing_mode="fixed", button_type="light", align="center")
+        def reset_event():
+            with open(self.meta_file.value + ".smoother_index/default_session.json", 'r') as f:
+                default_session = json.load(f)
+                default_session["settings"] = self.session.get_value(["settings"])
+            self.session.set_session(default_session)
+            self.do_config()
+            self.trigger_render()
+
+        reset_session.on_click(reset_event)
+
         self.ticker_x = ExtraTicksTicker(extra_ticks=[])
         self.ticker_y = ExtraTicksTicker(extra_ticks=[])
 
@@ -1172,8 +1186,6 @@ class MainLayout:
         self.heatmap_x_axis.xaxis[0].formatter = self.tick_formatter_x
         self.heatmap_y_axis.yaxis[0].formatter = self.tick_formatter_y
 
-        SYM_WIDTH = 10
-        SYM_CSS = ["other_button"]
 
         self.undo_button = Button(label="", css_classes=SYM_CSS + ["fa_page_previous_solid"], width=SYM_WIDTH, 
                                   height=SYM_WIDTH, sizing_mode="fixed", button_type="light", align="center")
@@ -1200,7 +1212,8 @@ class MainLayout:
             plot.yaxis.ticker.min_interval = 1
 
         _settings = column([
-                make_panel("General", "tooltip_general", [row([self.undo_button, self.redo_button, tool_bar]), 
+                make_panel("General", "tooltip_general", [row([self.undo_button, self.redo_button, tool_bar, 
+                                                                reset_session]), 
                                                           meta_file_label, self.meta_file]),
                 make_panel("Normalization", "tooltip_normalization", [normalization, divide_column, divide_row,
                                     color_figure, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd]),
@@ -1216,7 +1229,7 @@ class MainLayout:
                 make_panel("Export", "tooltip_export", [export_label, self.export_file, export_sele_layout,
                                         #export_type_layout, 
                                       self.export_button]),
-                make_panel("Quick Config", "tooltip_quick_config", quick_configs),
+                make_panel("Presetting", "tooltip_quick_config", quick_configs),
                 make_panel("Info", "tooltip_info", [version_info]),
             ],
             sizing_mode="stretch_both",
@@ -1516,6 +1529,7 @@ class MainLayout:
                 pass
             def callback():
                 self.spinner.css_classes = ["fade-out"]
+                self.session.save_session()
             self.curdoc.add_next_tick_callback(callback)
 
         self.undo_button.disabled = not self.session.has_undo()
