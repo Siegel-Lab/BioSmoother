@@ -360,10 +360,12 @@ class MainLayout:
         spinner_start = Spinner(width=spinner_width)
         spinner_end = Spinner(width=spinner_width)
 
-        spinner_start.js_on_change('value', CustomJS(args=dict(other=slider), code="other.value = [this.value, other.value[1]]" ) )
+        spinner_start.js_on_change('value', CustomJS(args=dict(other=slider), 
+                                    code="other.value = [this.value, other.value[1]]" ) )
         slider.js_link("value", spinner_start, "value", attr_selector=0)
 
-        spinner_end.js_on_change('value', CustomJS(args=dict(other=slider), code="other.value = [other.value[0], this.value]" ) )
+        spinner_end.js_on_change('value', CustomJS(args=dict(other=slider), 
+                                    code="other.value = [other.value[0], this.value]" ) )
         slider.js_link("value", spinner_end, "value", attr_selector=1)
 
         slider.on_change("value_throttled", lambda _x,_y,_z: on_change(slider.value))
@@ -394,8 +396,18 @@ class MainLayout:
             start = self.session.get_value(session_key + ["min"])
             end = self.session.get_value(session_key + ["max"])
             step = self.session.get_value(session_key + ["step"])
-            spinner.low = start
-            spinner.high = end
+            
+            spinner_min = self.session.get_value(session_key + ["spinner_min_restricted"])
+            spinner_max = self.session.get_value(session_key + ["spinner_max_restricted"])
+            
+            if spinner_min:
+                spinner.low = start
+            else:
+                spinner.low = None
+            if spinner_max:
+                spinner.high = end
+            else:
+                spinner.high = None
             spinner.value = value
             spinner.step = step
 
@@ -414,13 +426,28 @@ class MainLayout:
             end = self.session.get_value(session_key + ["max"])
             step = self.session.get_value(session_key + ["step"])
 
-            spinner_start.low = start
-            spinner_start.high = end
+            spinner_min = self.session.get_value(session_key + ["spinner_min_restricted"])
+            spinner_max = self.session.get_value(session_key + ["spinner_max_restricted"])
+
+            if spinner_min:
+                spinner_start.low = start
+            else:
+                spinner_start.low = None
+            if spinner_max:
+                spinner_start.high = end
+            else:
+                spinner_start.high = None
             spinner_start.value = value_min
             spinner_start.step = step
 
-            spinner_end.low = start
-            spinner_end.high = end
+            if spinner_min:
+                spinner_end.low = start
+            else:
+                spinner_end.low = None
+            if spinner_max:
+                spinner_end.high = end
+            else:
+                spinner_end.high = None
             spinner_end.value = value_max
             spinner_end.step = step
 
