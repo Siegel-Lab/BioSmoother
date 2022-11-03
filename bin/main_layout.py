@@ -1202,12 +1202,23 @@ class MainLayout:
             return FuncTickFormatter(
                     args={"contig_starts": [], "genome_end": 0, "dividend": 1, "contig_names": []},
                     code="""
+                            function numberWithCommas(x) {
+                                return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                            }
                             if(tick < 0 || tick >= genome_end)
                                 return "n/a";
                             var idx = 0;
                             while(contig_starts[idx + 1] <= tick)
                                 idx += 1;
-                            return contig_names[idx] + ": " + dividend * (tick - contig_starts[idx]);
+                            var tick_pos = dividend * (tick - contig_starts[idx]);
+                            var tick_label = "";
+                            if(tick_pos % 1000000 == 0)
+                                tick_label = numberWithCommas(tick_pos / 1000000) + "mbp";
+                            else if (tick_pos % 1000 == 0)
+                                tick_label = numberWithCommas(tick_pos / 1000) + "kbp";
+                            else
+                                tick_label = numberWithCommas(tick_pos) + "bp";
+                            return contig_names[idx] + ": " + tick_label;
                         """)
         
         self.tick_formatter_x = get_formatter()
