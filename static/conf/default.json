@@ -113,7 +113,7 @@
             "spinner_min_restricted": true,
             "spinner_max_restricted": true
         },
-        "ratio_size": {
+        "raw_size": {
             "min": 10,
             "max": 500,
             "val": 50,
@@ -124,6 +124,8 @@
         "stretch": false,
         "squared_bins": false,
         "snap_bin_size": false,
+        "max_detailed_anno_display": 1000,
+        "min_anno_dist": 0.1,
         "snap_factors": [
             1,
             1.25,

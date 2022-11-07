@@ -399,7 +399,7 @@ class MainLayout:
             
             spinner_min = self.session.get_value(session_key + ["spinner_min_restricted"])
             spinner_max = self.session.get_value(session_key + ["spinner_max_restricted"])
-            
+
             if spinner_min:
                 spinner.low = start
             else:
@@ -697,7 +697,7 @@ class MainLayout:
         self.anno_y = None
         self.anno_y_axis = None
         d = {"anno_name": [], "screen_start": [], "screen_end": [], "color": [], "chr": [],
-             "index_start": [], "index_end": [], "info": [], "num_anno": []}
+             "index_start": [], "index_end": [], "info": [], "num_anno": [], "size": []}
         self.anno_x_data = ColumnDataSource(data=d)
         self.anno_y_data = ColumnDataSource(data=d)
         self.meta_file = None
@@ -824,9 +824,9 @@ class MainLayout:
         self.anno_y.ygrid.grid_line_alpha = 0
         self.anno_y.xgrid.minor_grid_line_alpha = 0.5
 
-        self.anno_x.vbar(x="anno_name", top="screen_end", bottom="screen_start", width=0.9, fill_color="color", line_color=None,
+        self.anno_x.vbar(x="anno_name", top="screen_end", bottom="screen_start", width="size", fill_color="color", line_color=None,
                          source=self.anno_x_data)
-        self.anno_y.hbar(y="anno_name", right="screen_end", left="screen_start", height=0.9, fill_color="color", line_color=None,
+        self.anno_y.hbar(y="anno_name", right="screen_end", left="screen_start", height="size", fill_color="color", line_color=None,
                          source=self.anno_y_data)
 
         anno_hover = HoverTool(
