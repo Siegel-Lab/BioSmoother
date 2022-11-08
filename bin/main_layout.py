@@ -1104,11 +1104,13 @@ class MainLayout:
                                                         ["coverage", "list"])
 
         x_coords = self.dropdown_select_session("Column Coordinates", "tooltip_row_coordinates",
-                                                ["contigs", "list"], ["contigs", "column_coordinates"], 
+                                                ["annotation", "list"], 
+                                                ["contigs", "column_coordinates"], 
                                                 [("Genomic loci", "full_genome")])
 
         y_coords = self.dropdown_select_session("Row Coordinates", "tooltip_column_coordinates",
-                                                ["contigs", "list"], ["contigs", "row_coordinates"], 
+                                                ["annotation", "list"], 
+                                                ["contigs", "row_coordinates"], 
                                                 [("Genomic loci", "full_genome")])
 
         chrom_layout = self.multi_choice_auto("Chromosomes",

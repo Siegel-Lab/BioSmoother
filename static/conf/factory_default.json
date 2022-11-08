@@ -176,6 +176,7 @@
             "spinner_max_restricted": false
         },
         "multiple_annos_in_bin": "combine",
+        "anno_in_multiple_bins": "separate",
         "ambiguous_mapping": "enclosed",
         "cut_off_bin": "smaller_if_fullsized_exists"
     },
