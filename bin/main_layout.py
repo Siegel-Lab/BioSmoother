@@ -697,7 +697,7 @@ class MainLayout:
         self.anno_y = None
         self.anno_y_axis = None
         d = {"anno_name": [], "screen_start": [], "screen_end": [], "color": [], "chr": [],
-             "index_start": [], "index_end": [], "info": [], "num_anno": [], "size": []}
+             "index_start": [], "index_end": [], "info": [], "num_anno": [], "size": [], "strand": [], "id": [], "desc": []}
         self.anno_x_data = ColumnDataSource(data=d)
         self.anno_y_data = ColumnDataSource(data=d)
         self.meta_file = None
@@ -835,7 +835,10 @@ class MainLayout:
             tooltips=[
                 ('bin pos', "@chr @index_start - @index_end"),
                 ('num_annotations', "@num_anno"),
-                ('info', "@info"),
+                ('ID', "@id"),
+                ('strand', "@strand"),
+                ('description', "@desc"),
+                ('add. info', "@info"),
             ]
         )
         self.anno_x.add_tools(anno_hover)
