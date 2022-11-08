@@ -125,7 +125,7 @@
         "squared_bins": false,
         "snap_bin_size": false,
         "max_detailed_anno_display": 1000,
-        "min_anno_dist": 0.1,
+        "min_anno_dist": 0.05,
         "snap_factors": [
             1,
             1.25,
@@ -141,6 +141,15 @@
             "#56B4E9",
             "#F0E442",
             "#CC79A7"
+        ],
+        "annotation_color_palette_dark": [
+            "#004166",
+            "#996900",
+            "#8a3c00",
+            "#00523c",
+            "#1c94d9",
+            "#d4c711",
+            "#b54583"
         ],
         "color_low": "#000000",
         "color_high": "#ffffff",

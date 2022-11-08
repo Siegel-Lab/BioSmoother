@@ -5,7 +5,7 @@ __email__ = "Markus.Schmidt@lmu.de"
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup, CrosshairTool, ColorPicker
+from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup, CrosshairTool, ColorPicker, ImageURLTexture
 #from bin.unsorted_multi_choice import UnsortedMultiChoice as MultiChoice
 from bokeh.io import export_png, export_svg
 import math
@@ -824,9 +824,11 @@ class MainLayout:
         self.anno_y.ygrid.grid_line_alpha = 0
         self.anno_y.xgrid.minor_grid_line_alpha = 0.5
 
-        self.anno_x.vbar(x="anno_name", top="screen_end", bottom="screen_start", width="size", fill_color="color", line_color=None,
+        self.anno_x.vbar(x="anno_name", top="screen_end", bottom="screen_start", width="size", fill_color="color", 
+                         line_color=None,
                          source=self.anno_x_data)
-        self.anno_y.hbar(y="anno_name", right="screen_end", left="screen_start", height="size", fill_color="color", line_color=None,
+        self.anno_y.hbar(y="anno_name", right="screen_end", left="screen_start", height="size", fill_color="color",
+                         line_color=None,
                          source=self.anno_y_data)
 
         anno_hover = HoverTool(
