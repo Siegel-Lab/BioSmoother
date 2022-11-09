@@ -720,6 +720,10 @@ class MainLayout:
         self.undo_button = None
         self.redo_button = None
         self.color_layout = None
+        self.x_range_from = None
+        self.x_range_to = None
+        self.y_range_from = None
+        self.y_range_to = None
 
         self.do_layout()
 
@@ -1122,9 +1126,14 @@ class MainLayout:
                 "tooltip_multiple_annotations_in_bin", 
                 ("Combine region from first to last annotation", "combine"), 
                 ("Use first annotation", "first"), 
-                ("Use Random annotation", "random"), 
                 ("Increase number of bins to match number of annotations (might be slow)", "force_separate"),
                 active_item=["settings", "filters", "multiple_annos_in_bin"])
+        multiple_bin_per_anno = self.dropdown_select("Multiple Bins for Annotation", 
+                "tooltip_multiple_bin_for_anno", 
+                ("Show several bins for the annotation", "separate"), 
+                ("Stretch one bin over entire annotation", "stretch"), 
+                ("Make all annotations size 1", "squeeze"), 
+                active_item=["settings", "filters", "anno_in_multiple_bins"])
 
         self.export_button = self.dropdown_select("Export", "tooltip_export",
                                                   ("Current View", "current"),
@@ -1259,10 +1268,17 @@ class MainLayout:
             plot.yaxis.major_label_text_align = "right"
             plot.yaxis.ticker.min_interval = 1
 
+        self.x_range_from = TextInput(value="n/a")
+        self.x_range_to = TextInput(value="n/a")
+        self.y_range_from = TextInput(value="n/a")
+        self.y_range_to = TextInput(value="n/a")
+        area_grid = grid([[Div(text="X"), self.x_range_from, Div(text="-"), self.x_range_to],
+                          [Div(text="Y"), self.y_range_from, Div(text="-"), self.y_range_to]])
+
         _settings = column([
                 make_panel("General", "tooltip_general", [row([self.undo_button, self.redo_button, tool_bar, 
                                                                 reset_session]), 
-                                                          meta_file_label, self.meta_file]),
+                                                          meta_file_label, self.meta_file, area_grid]),
                 make_panel("Normalization", "tooltip_normalization", [normalization, divide_column, divide_row,
                                     self.color_layout, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd]),
                 make_panel("Replicates", "tooltip_replicates", [in_group, betw_group, group_layout]),
@@ -1273,7 +1289,8 @@ class MainLayout:
                                     self.low_color, self.high_color, axis_lables]),
                 make_panel("Filters", "tooltip_filters", [ms_l, incomp_align_layout, 
                                           symmetrie, dds_l, annos_layout, 
-                                          x_coords, y_coords, multiple_anno_per_bin, chrom_layout, multi_mapping]),
+                                          x_coords, y_coords, multiple_anno_per_bin, multiple_bin_per_anno,
+                                          chrom_layout, multi_mapping]),
                 make_panel("Export", "tooltip_export", [export_label, self.export_file, export_sele_layout,
                                         #export_type_layout, 
                                       self.export_button]),
@@ -1287,7 +1304,6 @@ class MainLayout:
         #_settings.min_height = 100
         #_settings.height_policy = "fixed"
 
-
         _settings_n_info = column([
                 self.info_field,
                 _settings
@@ -1297,7 +1313,6 @@ class MainLayout:
         )
         _settings_n_info.width = SETTINGS_WIDTH
         _settings_n_info.width_policy = "fixed"
-        
 
         self.hidable_plots.append((_settings_n_info, ["tools"]))
         self.settings_row = row([Spacer(sizing_mode="stretch_both"), _settings_n_info, self.reshow_settings()], css_classes=["full_height"])
