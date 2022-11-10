@@ -1229,12 +1229,14 @@ class MainLayout:
                                 idx += 1;
                             var tick_pos = dividend * (tick - contig_starts[idx]);
                             var tick_label = "";
-                            if(tick_pos % 1000000 == 0)
-                                tick_label = numberWithCommas(tick_pos / 1000000) + "mbp";
+                            if(tick_pos == 0)
+                                tick_label = "0 bp"
+                            else if(tick_pos % 1000000 == 0)
+                                tick_label = numberWithCommas(tick_pos / 1000000) + " mbp";
                             else if (tick_pos % 1000 == 0)
-                                tick_label = numberWithCommas(tick_pos / 1000) + "kbp";
+                                tick_label = numberWithCommas(tick_pos / 1000) + " kbp";
                             else
-                                tick_label = numberWithCommas(tick_pos) + "bp";
+                                tick_label = numberWithCommas(tick_pos) + " bp";
                             return contig_names[idx] + ": " + tick_label;
                         """)
         
