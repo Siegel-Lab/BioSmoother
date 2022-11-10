@@ -1126,6 +1126,7 @@ class MainLayout:
                 "tooltip_multiple_annotations_in_bin", 
                 ("Combine region from first to last annotation", "combine"), 
                 ("Use first annotation", "first"), 
+                ("Index that is the maximal power of two factor", "max_fac_pow_two"), 
                 ("Increase number of bins to match number of annotations (might be slow)", "force_separate"),
                 active_item=["settings", "filters", "multiple_annos_in_bin"])
         multiple_bin_per_anno = self.dropdown_select("Multiple Bins for Annotation", 

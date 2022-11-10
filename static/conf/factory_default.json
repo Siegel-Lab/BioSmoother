@@ -175,8 +175,8 @@
             "spinner_min_restricted": true,
             "spinner_max_restricted": false
         },
-        "multiple_annos_in_bin": "combine",
-        "anno_in_multiple_bins": "separate",
+        "multiple_annos_in_bin": "max_fac_pow_two",
+        "anno_in_multiple_bins": "stretch",
         "ambiguous_mapping": "enclosed",
         "cut_off_bin": "smaller_if_fullsized_exists"
     },
