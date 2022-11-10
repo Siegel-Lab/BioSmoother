@@ -5,7 +5,7 @@ __email__ = "Markus.Schmidt@lmu.de"
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup, CrosshairTool, ColorPicker, ImageURLTexture
+from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup, CrosshairTool, ColorPicker, ImageURLTexture, TextAreaInput
 #from bin.unsorted_multi_choice import UnsortedMultiChoice as MultiChoice
 from bokeh.io import export_png, export_svg
 import math
@@ -630,6 +630,142 @@ class MainLayout:
         return color_figure
 
 
+    def to_readable_pos(self, x, genome_end, contig_names, contig_starts):
+        oob = x >= genome_end * self.session.get_value(["dividend"]) or x < 0
+        if x < 0: 
+            idx = 0
+        else:
+            for idx, start in enumerate(contig_starts):
+                if x >= start:
+                    x -= start
+                    break
+
+        if x == 0:
+            label = "0 bp"
+        elif x % 1000000 == 0:
+            label = "{:,}".format(x / 1000000) + " mbp"
+        elif x % 1000 == 0:
+            label = "{:,}".format(x / 1000) + " kbp"
+        else:
+            label = "{:,}".format(x) + " bp"
+
+        return contig_names[idx] + ": " + label + (" (OOB)" if oob else "")
+
+    def set_area_range(self):
+        contig_names_x = self.session.get_annotation_list(True)
+        contig_names_y = self.session.get_annotation_list(False)
+        contig_starts_x = self.session.get_tick_list(True)
+        contig_starts_y = self.session.get_tick_list(False)
+        if len(contig_starts_x) > 0 and len(contig_starts_y) > 0:
+            self.area_range_expected = "X: [\t" + \
+                self.to_readable_pos(math.floor(self.heatmap.x_range.start * self.session.get_value(["dividend"])), \
+                                    contig_starts_x[-1], contig_names_x, \
+                                    contig_starts_x[:-1]) + " ~\n\t" + \
+                self.to_readable_pos(math.ceil(self.heatmap.x_range.end * self.session.get_value(["dividend"])), \
+                                    contig_starts_x[-1], contig_names_x, \
+                                    contig_starts_x[:-1]) + " ];\nY: [\t" +\
+                self.to_readable_pos(math.floor(self.heatmap.y_range.start * self.session.get_value(["dividend"])), \
+                                    contig_starts_y[-1], contig_names_y, \
+                                    contig_starts_y[:-1]) + " ~\n\t" + \
+                self.to_readable_pos(math.ceil(self.heatmap.y_range.end * self.session.get_value(["dividend"])), \
+                                    contig_starts_y[-1], contig_names_y, \
+                                    contig_starts_y[:-1]) + " ]"
+        else:
+            self.area_range_expected = "n/a"
+        self.area_range.value = self.area_range_expected
+
+    def isfloat(self, num):
+        try:
+            float(num)
+            return True
+        except ValueError:
+            return False
+
+    def interpret_number(self, s, bot=True):
+        if s[-5:].lower() == "(oob)":
+            s = s[:-5].strip()
+        if s[-2:].lower() == "bp":
+            s = s[:-2]
+        fac = 1
+        if s[-1].lower() == "m":
+            fac = 1000000
+            s = s[:-1].strip()
+        if s[-1].lower() == "k":
+            fac = 1000
+            s = s[:-1].strip()
+        s = s.replace(",", "")
+        if self.isfloat(s):
+            print("number")
+            return float(s) * fac / self.session.get_value(["dividend"])
+        print("none")
+        return None
+
+    def interpret_position(self, s, x_y, bot=True):
+        if s.count(":") == 1:
+            x, y = [i.strip() for i in s.split(":")]
+            a = self.session.interpret_name(x, x_y, True)
+            b = self.interpret_number(y)
+            if not a is None and not b is None:
+                print("number and name", x, y, a, b)
+                return [a + b]
+
+        a = self.interpret_number(s)
+        if not a is None:
+            print("number", s, a)
+            return [a]
+
+        if not s is None:
+            a = self.session.interpret_name(s, x_y, bot)
+            if not a is None:
+                print("name", s, a)
+                return [a]
+
+        print("none")
+        return [None]
+
+    def interpret_range(self, s, x_y):
+        if s.count("~") == 1 and s.count("[") <= 1 and s.count("]") <= 1:
+            x, y = [i.strip() for i in s.split("~")]
+            if x[:1] == "[":
+                x = x[1:].strip()
+            if y[-1:] == "]":
+                y = y[:-1].strip()
+            
+            print("split interval", x, y)
+            return self.interpret_position(x, x_y, True) + self.interpret_position(y, x_y, False)
+        print("combined interval", s)
+        return self.interpret_position(s, x_y, True) + self.interpret_position(s, x_y, False)
+
+    def interpret_area(self, s):
+        if s.count(";") == 1 and s.count("X:") <= 1 and s.count("Y:") <= 1:
+            x, y = [i.strip() for i in s.split(";")]
+            if x[:2] == "X:":
+                x = x[2:].strip()
+            if y[:2] == "Y:":
+                y = y[2:].strip()
+            print("split area", x, y)
+            return self.interpret_range(x, [True]) + self.interpret_range(y, [False])
+        print("combined area", s)
+        return self.interpret_range(s, [True, False]) + self.interpret_range(s, [True, False])
+
+
+    def parse_area_range(self):
+        if self.area_range_expected != self.area_range.value:
+            # get minimal string
+            s = self.area_range.value
+            s = s.replace("\n", " ")
+            s = s.replace("\t", " ")
+            while "  " in s:
+                s = s.replace("  ", " ")
+            s = s.strip()
+
+            i = self.interpret_area(s)
+            if not None in i:
+                self.heatmap.x_range.start = min(i[0], i[1])
+                self.heatmap.x_range.end = max(i[0], i[1])
+                self.heatmap.y_range.start = min(i[2], i[3])
+                self.heatmap.y_range.end = max(i[2], i[3])
+
 
     def __init__(self):
         self.show_hide = {"grid_lines": False, "contig_borders": True, "indent_line": False}
@@ -720,10 +856,8 @@ class MainLayout:
         self.undo_button = None
         self.redo_button = None
         self.color_layout = None
-        self.x_range_from = None
-        self.x_range_to = None
-        self.y_range_from = None
-        self.y_range_to = None
+        self.area_range = None
+        self.area_range_expected = "n/a"
 
         self.do_layout()
 
@@ -1271,17 +1405,13 @@ class MainLayout:
             plot.yaxis.major_label_text_align = "right"
             plot.yaxis.ticker.min_interval = 1
 
-        self.x_range_from = TextInput(value="n/a")
-        self.x_range_to = TextInput(value="n/a")
-        self.y_range_from = TextInput(value="n/a")
-        self.y_range_to = TextInput(value="n/a")
-        area_grid = grid([[Div(text="X"), self.x_range_from, Div(text="-"), self.x_range_to],
-                          [Div(text="Y"), self.y_range_from, Div(text="-"), self.y_range_to]])
+        self.area_range = TextAreaInput(value="n/a", width=SETTINGS_WIDTH, height=80)
+        self.area_range.on_change("value", lambda x, y, z: self.parse_area_range())
 
         _settings = column([
                 make_panel("General", "tooltip_general", [row([self.undo_button, self.redo_button, tool_bar, 
                                                                 reset_session]), 
-                                                          meta_file_label, self.meta_file, area_grid]),
+                                                          meta_file_label, self.meta_file, self.area_range]),
                 make_panel("Normalization", "tooltip_normalization", [normalization, divide_column, divide_row,
                                     self.color_layout, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd]),
                 make_panel("Replicates", "tooltip_replicates", [in_group, betw_group, group_layout]),
@@ -1539,6 +1669,8 @@ class MainLayout:
 
                         self.tick_formatter_x.args = ticks_x
                         self.tick_formatter_y.args = ticks_y
+                        
+                        self.set_area_range()
 
                         
                         for plot in [self.heatmap, self.raw_y, self.anno_y, self.heatmap_x_axis]:
@@ -1674,6 +1806,8 @@ class MainLayout:
                         self.render(zoom_in_render)
                     self.curdoc.add_next_tick_callback(callback)
                     return
+                else:
+                    self.set_area_range()
 
             self.curdoc.add_timeout_callback(
                 lambda: self.render_callback(), self.session.get_value(["settings", "interface", "update_freq", "val"])*1000)
