@@ -631,7 +631,7 @@ class MainLayout:
 
 
     def to_readable_pos(self, x, genome_end, contig_names, contig_starts):
-        oob = x >= genome_end * self.session.get_value(["dividend"]) or x < 0
+        oob = x > genome_end * self.session.get_value(["dividend"]) or x < 0
         if x < 0: 
             idx = 0
         else:
@@ -695,9 +695,7 @@ class MainLayout:
             s = s[:-1].strip()
         s = s.replace(",", "")
         if self.isfloat(s):
-            print("number")
             return float(s) * fac / self.session.get_value(["dividend"])
-        print("no number", s)
         return None
 
     def interpret_position(self, s, x_y, bot=True):
@@ -713,27 +711,22 @@ class MainLayout:
                 if not c is None and bot:
                     c = -c
                 a = self.session.interpret_name(x, x_y, bot if len(y1) == 0 else True)
-                print("number and name and +-", x, y1, y2, a, b, c)
                 if not a is None and not b is None and not c is None:
                     return [a + b + c]
             b = self.interpret_number(y)
             a = self.session.interpret_name(x, x_y, True)
             if not a is None and not b is None:
-                print("number and name", x, y, a, b)
                 return [a + b]
 
         a = self.interpret_number(s)
         if not a is None:
-            print("number", s, a)
             return [a]
 
         if not s is None:
             a = self.session.interpret_name(s, x_y, bot)
             if not a is None:
-                print("name", s, a)
                 return [a]
 
-        print("none")
         return [None]
 
     def interpret_range(self, s, x_y):
@@ -744,9 +737,7 @@ class MainLayout:
             if y[-1:] == "]":
                 y = y[:-1].strip()
             
-            print("split interval", x, y)
             return self.interpret_position(x, x_y, True) + self.interpret_position(y, x_y, False)
-        print("combined interval", s)
         if s[:1] == "[":
             s = s[1:].strip()
         if s[-1:] == "]":
@@ -760,10 +751,8 @@ class MainLayout:
                 x = x[2:].strip()
             if y[:2] == "Y:":
                 y = y[2:].strip()
-            print("split area", x, y)
             return self.interpret_range(x, [True]) + self.interpret_range(y, [False])
-        print("combined area", s)
-        return self.interpret_range(s, [True, False]) + self.interpret_range(s, [True, False])
+        return self.interpret_range(s, [True, False]) + self.interpret_range(s, [False, True])
 
 
     def parse_area_range(self):
