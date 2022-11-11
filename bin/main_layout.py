@@ -681,30 +681,43 @@ class MainLayout:
         except ValueError:
             return False
 
-    def interpret_number(self, s, bot=True):
+    def interpret_number(self, s):
         if s[-5:].lower() == "(oob)":
             s = s[:-5].strip()
         if s[-2:].lower() == "bp":
             s = s[:-2]
         fac = 1
-        if s[-1].lower() == "m":
+        if len(s) > 0 and s[-1].lower() == "m":
             fac = 1000000
             s = s[:-1].strip()
-        if s[-1].lower() == "k":
+        if len(s) > 0 and s[-1].lower() == "k":
             fac = 1000
             s = s[:-1].strip()
         s = s.replace(",", "")
         if self.isfloat(s):
             print("number")
             return float(s) * fac / self.session.get_value(["dividend"])
-        print("none")
+        print("no number", s)
         return None
 
     def interpret_position(self, s, x_y, bot=True):
         if s.count(":") == 1:
             x, y = [i.strip() for i in s.split(":")]
-            a = self.session.interpret_name(x, x_y, True)
+            if "+-" in y:
+                y1, y2 = [i.strip() for i in y.split("+-")]
+                if len(y1) == 0:
+                    b = 0
+                else:
+                    b = self.interpret_number(y1)
+                c = self.interpret_number(y2)
+                if not c is None and bot:
+                    c = -c
+                a = self.session.interpret_name(x, x_y, bot if len(y1) == 0 else True)
+                print("number and name and +-", x, y1, y2, a, b, c)
+                if not a is None and not b is None and not c is None:
+                    return [a + b + c]
             b = self.interpret_number(y)
+            a = self.session.interpret_name(x, x_y, True)
             if not a is None and not b is None:
                 print("number and name", x, y, a, b)
                 return [a + b]
@@ -734,6 +747,10 @@ class MainLayout:
             print("split interval", x, y)
             return self.interpret_position(x, x_y, True) + self.interpret_position(y, x_y, False)
         print("combined interval", s)
+        if s[:1] == "[":
+            s = s[1:].strip()
+        if s[-1:] == "]":
+            s = s[:-1].strip()
         return self.interpret_position(s, x_y, True) + self.interpret_position(s, x_y, False)
 
     def interpret_area(self, s):
@@ -760,11 +777,20 @@ class MainLayout:
             s = s.strip()
 
             i = self.interpret_area(s)
-            if not None in i:
+            if not i[0] is None and not i[1] is None:
                 self.heatmap.x_range.start = min(i[0], i[1])
-                self.heatmap.x_range.end = max(i[0], i[1])
+                self.heatmap.x_range.end = max(i[0], i[1], self.heatmap.x_range.start+1)
+            elif not i[0] is None:
+                self.heatmap.x_range.start = i[0]
+            elif not i[1] is None:
+                self.heatmap.x_range.end = max(i[1], self.heatmap.x_range.start+1)
+            if not i[2] is None and not i[3] is None:
                 self.heatmap.y_range.start = min(i[2], i[3])
-                self.heatmap.y_range.end = max(i[2], i[3])
+                self.heatmap.y_range.end = max(i[2], i[3], self.heatmap.y_range.start+1)
+            elif not i[2] is None:
+                self.heatmap.y_range.start = i[2]
+            elif not i[3] is None:
+                self.heatmap.y_range.end = max(i[3], self.heatmap.y_range.start+1)
 
 
     def __init__(self):
