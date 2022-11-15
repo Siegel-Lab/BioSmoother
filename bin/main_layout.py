@@ -1042,6 +1042,7 @@ class MainLayout:
                                                    "rpk"), 
                                                   ("Binominal Test", "radicl-seq"),
                                                   ("Iterative Correction", "hi-c"),
+                                                  ("Cooler Iterative Correction", "cool-hi-c"),
                                                   ("No Normalization", "dont"),
                                                   active_item=['settings', 'normalization', 'normalize_by']
                                                   )

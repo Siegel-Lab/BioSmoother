@@ -1,21 +1,19 @@
 # smoother todo
 
-- grid seq norm progress print
 - AutocompleteInput for filepath
     - when calling give folder where indices are located
     - restrict for public hosting
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
 - presetting load and save -> status print
-- coverage hover
 - categorical axis for labels chromosome & number
+- remove small ticks on position axis
+- red outline if something failed
 
 # verification
 
 - does radicl sec do normalization for rna?
 - uneven distribution between contigs in grid seq normalization
-- mapping quality and uneven alignments
 - check if lines coincide with rRNA / ncRNA / snoRNA / tRNA
-
 
 
 # presentation
@@ -24,7 +22,7 @@
     - hi-c & radicl-seq
 - structure also for other purposes
     - in databases (plain computer science)
-    - for a chip seq viewer
+    - for a chip seq viewer @todo?
     - other live sciences?
     - e.g. google maps / other heatmaps
 - one main figure about the algorithmmics
