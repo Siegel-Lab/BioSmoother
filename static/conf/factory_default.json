@@ -191,8 +191,8 @@
             "Row Sum",
             "Include Annotation"
         ],
-        "area": "current",
-        "do_export_full": false
+        "do_export_full": false,
+        "export_format": "tsv"
     },
     "active_tools": ["Pan", "Hover", "Crosshair"]
 }

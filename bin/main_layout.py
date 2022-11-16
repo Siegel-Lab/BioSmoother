@@ -1298,10 +1298,18 @@ class MainLayout:
                 ("Make all annotations size 1", "squeeze"), 
                 active_item=["settings", "filters", "anno_in_multiple_bins"])
 
-        self.export_button = self.dropdown_select("Export", "tooltip_export",
-                                                  ("Current View", "current"),
-                                                  ("Full Matrix", "full"),
-                                                  active_item=["settings", "export", "area"])
+        export_button = Button(label="Export", width=350, sizing_mode="fixed", 
+                                    css_classes=["other_button"], height=DROPDOWN_HEIGHT)
+
+                                    
+        export_format = self.dropdown_select("Format", 
+                "tooltip_export_format", 
+                ("TSV-file", "tsv"), 
+                ("SVG-file", "svg"), 
+                active_item=["settings", "export", "export_format"])
+        
+        export_full = self.make_checkbox("Export full matrix instead of visible area", "tooltip_full_matrix",
+                                            settings=["settings", "export", "do_export_full"])
 
         export_label = Div(text="Output Prefix:")
         export_label.margin = DIV_MARGIN
@@ -1453,8 +1461,9 @@ class MainLayout:
                                           x_coords, y_coords, multiple_anno_per_bin, multiple_bin_per_anno,
                                           chrom_layout, multi_mapping]),
                 make_panel("Export", "tooltip_export", [export_label, self.export_file, export_sele_layout,
-                                        #export_type_layout, 
-                                      self.export_button]),
+                                        export_full, export_format,
+                                        export_button
+                                     ]),
                 make_panel("Presetting", "tooltip_quick_config", quick_configs),
                 make_panel("Info", "tooltip_info", [version_info]),
             ],

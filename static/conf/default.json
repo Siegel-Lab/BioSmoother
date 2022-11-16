@@ -187,12 +187,13 @@
         ],
         "list": [
             "Heatmap",
-            "Column Sum",
-            "Row Sum",
-            "Include Annotation"
+            "Column Coverage",
+            "Row Coverage",
+            "Column Annotation",
+            "Row Annotation"
         ],
-        "area": "current",
-        "do_export_full": false
+        "do_export_full": false,
+        "export_format": "tsv"
     },
     "active_tools": ["Pan", "Hover", "Crosshair"]
 }
