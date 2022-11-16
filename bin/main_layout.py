@@ -9,6 +9,7 @@ from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider
 #from bin.unsorted_multi_choice import UnsortedMultiChoice as MultiChoice
 from bokeh.io import export_png, export_svg
 import math
+import time
 from datetime import datetime
 from tornado import gen
 from bokeh.document import without_document_lock
@@ -29,6 +30,7 @@ import json
 import shutil
 from bin.figure_maker import FigureMaker, DROPDOWN_HEIGHT
 from bin.extra_ticks_ticker import *
+from bin.export_tsv import export_tsv
 from bokeh import events
 
 SETTINGS_WIDTH = 400
@@ -788,6 +790,27 @@ class MainLayout:
         if not self.session is None:
             self.session.set_value(["settings", "active_tools"], tools.split(";"))
 
+    @gen.coroutine
+    @without_document_lock
+    def do_export(self):
+        def unlocked_task():
+            def callback():
+                self.spinner.css_classes = ["fade-in"]
+            self.curdoc.add_next_tick_callback(callback)
+
+            if self.session.get_value(["settings", "export", "export_format"]) == "tsv":
+                export_tsv(self.session, self.smoother_version)
+            elif self.session.get_value(["settings", "export", "export_format"]) == "svg":
+                print("unimplemented for now")
+            else:
+                print("invalid value for export_format")
+
+            def callback():
+                self.spinner.css_classes = ["fade-out"]
+                self.curr_bin_size.text = "done exporting."
+            self.curdoc.add_next_tick_callback(callback)
+        yield executor.submit(unlocked_task)
+
     def __init__(self):
         self.show_hide = {"grid_lines": False, "contig_borders": True, "indent_line": False}
         self.hidable_plots = []
@@ -862,7 +885,6 @@ class MainLayout:
         self.curr_bin_size = None
         self.spinner = None
         self.info_field = None
-        self.do_export = None
         self.settings_row = None
         self.slider_spinner_config = []
         self.range_slider_spinner_config = []
@@ -1300,8 +1322,10 @@ class MainLayout:
 
         export_button = Button(label="Export", width=350, sizing_mode="fixed", 
                                     css_classes=["other_button"], height=DROPDOWN_HEIGHT)
+        def exp_event(x):
+            self.do_export()
+        export_button.on_click(exp_event)
 
-                                    
         export_format = self.dropdown_select("Format", 
                 "tooltip_export_format", 
                 ("TSV-file", "tsv"), 
@@ -1316,7 +1340,6 @@ class MainLayout:
         self.export_file = TextInput()
         def export_file_event(_1, _2, _3):
             self.session.set_value(["settings", "export", "prefix"], self.export_file.value)
-            self.trigger_render()
         self.export_file.on_change("value", export_file_event)
         
         export_sele_layout = self.multi_choice_auto("Export Selection", [[["settings", "export", "selection"], ""]],
@@ -1619,7 +1642,6 @@ class MainLayout:
                 palette = self.session.get_palette()
 
                 w_bin, h_bin = self.session.get_bin_size()
-                #print(colors)
 
                 error = self.session.get_error()
 
@@ -1631,10 +1653,6 @@ class MainLayout:
                 @gen.coroutine
                 def callback():
                     self.curdoc.hold()
-                    #if self.settings['replicates']['between_group'] == "sub":
-                    #    palette = [xxx/50 - 1 for xxx in range(100)]
-                    #else:
-                    #    palette = [xxx/100 for xxx in range(100)]
                     self.color_layout.children = [self.make_color_figure(palette)]
                     def mmax(*args):
                         m = 0
@@ -1648,13 +1666,6 @@ class MainLayout:
                             if not x is None and x < m:
                                 m = x
                         return m
-                    #if self.do_export is None:
-                    #    if len(self.displayed_annos) == 0:
-                    #        self.anno_x.x_range.factors = [""]
-                    #        self.anno_y.y_range.factors = [""]
-                    #    else:
-                    #        self.anno_x.x_range.factors = self.displayed_annos
-                    #        self.anno_y.y_range.factors = self.displayed_annos
 
                     def readable_display(l):
                         def add_commas(x):
@@ -1670,109 +1681,74 @@ class MainLayout:
                                 " x " + readable_display(h_bin) + "."
 
 
-                    if self.do_export is None:
-                        self.raw_x_axis.xaxis.bounds = (min_max_tracks_x[0], min_max_tracks_x[1])
-                        self.raw_y_axis.yaxis.bounds = (min_max_tracks_y[0], min_max_tracks_y[1])
+                    self.raw_x_axis.xaxis.bounds = (min_max_tracks_x[0], min_max_tracks_x[1])
+                    self.raw_y_axis.yaxis.bounds = (min_max_tracks_y[0], min_max_tracks_y[1])
 
-                        def set_bounds(plot, left=None, right=None, top=None, bottom=None, color=None):
-                            ra = self.plot_render_area(plot)
-                            ra.left = render_area[0] if left is None else left
-                            ra.bottom = render_area[1] if bottom is None else bottom
-                            ra.right = render_area[2] if right is None else right
-                            ra.top = render_area[3] if top is None else top
-                            if not color is None:
-                                ra.fill_color = color
+                    def set_bounds(plot, left=None, right=None, top=None, bottom=None, color=None):
+                        ra = self.plot_render_area(plot)
+                        ra.left = render_area[0] if left is None else left
+                        ra.bottom = render_area[1] if bottom is None else bottom
+                        ra.right = render_area[2] if right is None else right
+                        ra.top = render_area[3] if top is None else top
+                        if not color is None:
+                            ra.fill_color = color
 
-                        set_bounds(self.raw_x, left=min_max_tracks_x[0], right=min_max_tracks_x[1])
-                        set_bounds(self.raw_y, bottom=min_max_tracks_y[0], top=min_max_tracks_y[1])
-                        set_bounds(self.anno_x, left=0, right=len(displayed_annos_x))
-                        set_bounds(self.anno_y, bottom=0, top=len(displayed_annos_y))
+                    set_bounds(self.raw_x, left=min_max_tracks_x[0], right=min_max_tracks_x[1])
+                    set_bounds(self.raw_y, bottom=min_max_tracks_y[0], top=min_max_tracks_y[1])
+                    set_bounds(self.anno_x, left=0, right=len(displayed_annos_x))
+                    set_bounds(self.anno_y, bottom=0, top=len(displayed_annos_y))
 
-                        set_bounds(self.heatmap, color=b_col)
+                    set_bounds(self.heatmap, color=b_col)
 
-                        self.heatmap_data.data = d_heatmap
-                        self.raw_data_x.data = raw_data_x
-                        self.raw_data_y.data = raw_data_y
-                        #self.ratio_data_x.data = ratio_data_x
-                        #self.ratio_data_y.data = ratio_data_y
-                        
-                        #self.anno_x.x_range.factors = []
-                        #self.anno_y.y_range.factors = []
-                        self.anno_x.x_range.factors = displayed_annos_x
-                        self.anno_y.y_range.factors = displayed_annos_y[::-1]
+                    self.heatmap_data.data = d_heatmap
+                    self.raw_data_x.data = raw_data_x
+                    self.raw_data_y.data = raw_data_y
+                    #self.ratio_data_x.data = ratio_data_x
+                    #self.ratio_data_y.data = ratio_data_y
+                    
+                    #self.anno_x.x_range.factors = []
+                    #self.anno_y.y_range.factors = []
+                    self.anno_x.x_range.factors = displayed_annos_x
+                    self.anno_y.y_range.factors = displayed_annos_y[::-1]
 
-                        #self.anno_x_data.data = {}
-                        #self.anno_y_data.data = {}
-                        self.anno_x_data.data = d_anno_x
-                        self.anno_y_data.data = d_anno_y
-                        #self.overlay_data.data = d_overlay
+                    #self.anno_x_data.data = {}
+                    #self.anno_y_data.data = {}
+                    self.anno_x_data.data = d_anno_x
+                    self.anno_y_data.data = d_anno_y
+                    #self.overlay_data.data = d_overlay
 
-                        self.heatmap.x_range.reset_start = 0
-                        self.heatmap.x_range.reset_end = canvas_size_x
-                        self.heatmap.y_range.reset_start = 0
-                        self.heatmap.y_range.reset_end = canvas_size_y
+                    self.heatmap.x_range.reset_start = 0
+                    self.heatmap.x_range.reset_end = canvas_size_x
+                    self.heatmap.y_range.reset_start = 0
+                    self.heatmap.y_range.reset_end = canvas_size_y
 
-                        self.ticker_x.extra_ticks = tick_list_x
-                        self.ticker_y.extra_ticks = tick_list_y
+                    self.ticker_x.extra_ticks = tick_list_x
+                    self.ticker_y.extra_ticks = tick_list_y
 
-                        self.tick_formatter_x.args = ticks_x
-                        self.tick_formatter_y.args = ticks_y
+                    self.tick_formatter_x.args = ticks_x
+                    self.tick_formatter_y.args = ticks_y
 
-                        if len(error) > 0:
-                            self.heatmap.border_fill_color = "red"
-                        else:
-                            self.heatmap.border_fill_color = None
-                        
-                        self.set_area_range()
+                    if len(error) > 0:
+                        self.heatmap.border_fill_color = "red"
+                    else:
+                        self.heatmap.border_fill_color = None
+                    
+                    self.set_area_range()
 
-                        
-                        for plot in [self.heatmap, self.raw_y, self.anno_y, self.heatmap_x_axis]:
-                            plot.xgrid.bounds = (0, canvas_size_x)
-                            plot.xaxis.bounds = (0, canvas_size_x)
-                        for plot in [self.heatmap, self.raw_x, self.anno_x, self.heatmap_y_axis]:
-                            plot.ygrid.bounds = (0, canvas_size_y)
-                            plot.yaxis.bounds = (0, canvas_size_y)
+                    
+                    for plot in [self.heatmap, self.raw_y, self.anno_y, self.heatmap_x_axis]:
+                        plot.xgrid.bounds = (0, canvas_size_x)
+                        plot.xaxis.bounds = (0, canvas_size_x)
+                    for plot in [self.heatmap, self.raw_x, self.anno_x, self.heatmap_y_axis]:
+                        plot.ygrid.bounds = (0, canvas_size_y)
+                        plot.yaxis.bounds = (0, canvas_size_y)
 
-                    self.do_export = None
                     self.curdoc.unhold()
                     total_time, ram_usage = self.render_done(0)#len(bins[0]) if len(bins) > 0 else 0)
                     self.curr_bin_size.text = end_text + "<br>Took " + str(total_time) + " in total.<br>" + str(ram_usage) + "% RAM used.<br> " #+ str(len(bins[0])//1000) if len(bins) > 0 else "0" + "k bins rendered."
                     self.curdoc.add_timeout_callback(
                         lambda: self.render_callback(),
                             self.session.get_value(["settings", "interface", "update_freq", "val"])*1000)
-
-                if not self.do_export is None and False:
-                    if "Data" in self.export_type:
-                        if "Heatmap" in self.settings["export"]["selection"]:
-                            with open(self.settings["export"]["prefix"] + ".heatmap.bed", "w") as out_file:
-                                out_file.write("##Smoother Version:" + self.smoother_version +"\n##LibSps Version: " + bin.libSps.VERSION + "\n")
-                                out_file.write("##Bin width:" + str(h_bin* self.meta.dividend) + " Bin height:" +
-                                                                str(w_bin* self.meta.dividend) + "\n")
-                                out_file.write("#chr_x\tpos_x\tchr_y\tpos_y\tscore\tannotation_x\tannotation_y\n")
-                                for c, (x, y, w, h), (x_chr_, x_2_, y_chr_, y_2_) in zip(
-                                            self.color_bins_a(sym), bin_coords, bin_coords_2):
-                                    out_file.write("\t".join([x_chr_, str(int(x_2_) * self.meta.dividend), 
-                                                            y_chr_, str(int(y_2_) * self.meta.dividend), 
-                                                            str(c), 
-                                                            self.make_anno_str(x, x+w), 
-                                                            self.make_anno_str(y, y+h)]) + "\n")
-                        if "Column Sum" in self.settings["export"]["selection"]:
-                            with open(self.settings["export"]["prefix"] + ".columns.bed", "w") as out_file:
-                                for c, x_chr_, x_2_, x_ in zip(raw_y_ratio, y_chr, y_pos1, y_pos):
-                                    if not x_ is float('NaN'):
-                                        out_file.write("\t".join([x_chr_, str(int(x_2_) * self.meta.dividend), str(c)]) + "\n")
-                        if "Row Sum" in self.settings["export"]["selection"]:
-                            with open(self.settings["export"]["prefix"] + ".rows.bed", "w") as out_file:
-                                for c, x_chr_, x_2_, x_ in zip(raw_x_ratio, x_chr, x_pos1, x_pos):
-                                    if not x_ is float('NaN'):
-                                        out_file.write("\t".join([x_chr_, str(int(x_2_) * self.meta.dividend), str(c)]) + "\n")
-                    if "Png" in self.export_type:
-                        export_png(self.heatmap, filename=self.settings["export"]["prefix"] + ".heatmap.png")
-                    if "Svg" in self.export_type:
-                        bckup = self.heatmap.output_backend
-                        self.heatmap.output_backend = "svg"
-                        export_svg(self.heatmap, filename=self.settings["export"]["prefix"] + ".heatmap.svg")
-                        self.heatmap.output_backend = bckup
 
                 self.curdoc.add_next_tick_callback(callback)
                 return True
