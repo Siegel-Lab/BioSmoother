@@ -786,7 +786,6 @@ class MainLayout:
 
     def save_tools(self, tools):
         if not self.session is None:
-            print("active_tools", tools)
             self.session.set_value(["settings", "active_tools"], tools.split(";"))
 
     def __init__(self):
@@ -889,6 +888,11 @@ class MainLayout:
         global SETTINGS_WIDTH
         tollbars = []
         self.heatmap = FigureMaker().range1d().scale().combine_tools(tollbars).get(self)
+        self.heatmap.min_border_left = 3
+        self.heatmap.min_border_right = 3
+        self.heatmap.min_border_bottom = 3
+        self.heatmap.min_border_top = 3
+        self.heatmap.border_fill_color = None
 
         self.heatmap.quad(left="screen_left", bottom="screen_bottom", right="screen_right", top="screen_top", 
                           fill_color="color", line_color=None, source=self.heatmap_data, level="underlay")
@@ -1606,6 +1610,11 @@ class MainLayout:
                 w_bin, h_bin = self.session.get_bin_size()
                 #print(colors)
 
+                error = self.session.get_error()
+
+                if len(error) > 0:
+                    print("ERROR:", error)
+
                 self.render_step_log("transfer_data")
 
                 @gen.coroutine
@@ -1697,6 +1706,11 @@ class MainLayout:
 
                         self.tick_formatter_x.args = ticks_x
                         self.tick_formatter_y.args = ticks_y
+
+                        if len(error) > 0:
+                            self.heatmap.border_fill_color = "red"
+                        else:
+                            self.heatmap.border_fill_color = None
                         
                         self.set_area_range()
 
