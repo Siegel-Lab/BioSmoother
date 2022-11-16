@@ -6,8 +6,6 @@
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
 - presetting load and save -> status print
 - categorical axis for labels chromosome & number
-- remove small ticks on position axis
-- red outline if something failed
 
 # verification
 

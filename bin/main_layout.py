@@ -918,8 +918,10 @@ class MainLayout:
 
         self.heatmap_x_axis = FigureMaker().x_axis_of(
             self.heatmap, self, "DNA", True).combine_tools(tollbars).get(self)
+        #self.heatmap_x_axis.xaxis.minor_tick_line_color = None
         self.heatmap_y_axis = FigureMaker().y_axis_of(
             self.heatmap, self, "RNA", True).combine_tools(tollbars).get(self)
+        #self.heatmap_y_axis.yaxis.minor_tick_line_color = None
 
         self.slope = Slope(gradient=1, y_intercept=0, line_color=None)
         self.heatmap.add_layout(self.slope)
@@ -948,7 +950,7 @@ class MainLayout:
         self.raw_x_axis = FigureMaker().x_axis_of(
             self.raw_x, self).combine_tools(tollbars).get(self)
         self.raw_x_axis.xaxis.axis_label = "Cov."
-        self.raw_x_axis.xaxis.ticker = AdaptiveTicker(desired_num_ticks=3)
+        self.raw_x_axis.xaxis.ticker = AdaptiveTicker(desired_num_ticks=3, num_minor_ticks=0)
         self.raw_x.xgrid.ticker = AdaptiveTicker(desired_num_ticks=3, num_minor_ticks=1)
         self.raw_x.xgrid.grid_line_alpha = 0
         self.raw_x.xgrid.minor_grid_line_alpha = 0.5
@@ -960,7 +962,7 @@ class MainLayout:
         self.raw_y_axis = FigureMaker().y_axis_of(
             self.raw_y, self).combine_tools(tollbars).get(self)
         self.raw_y_axis.yaxis.axis_label = "Cov."
-        self.raw_y_axis.yaxis.ticker = AdaptiveTicker(desired_num_ticks=3)
+        self.raw_y_axis.yaxis.ticker = AdaptiveTicker(desired_num_ticks=3, num_minor_ticks=0)
         self.raw_y.ygrid.ticker = AdaptiveTicker(desired_num_ticks=3, num_minor_ticks=1)
         self.raw_y.ygrid.grid_line_alpha = 0
         self.raw_y.ygrid.minor_grid_line_alpha = 0.5
