@@ -98,7 +98,7 @@
             "spinner_max_restricted": true
         },
         "add_draw_area": {
-            "min": 0,
+            "min": 10,
             "max": 500,
             "val": 20,
             "step": 10,
