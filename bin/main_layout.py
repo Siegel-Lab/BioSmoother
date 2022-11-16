@@ -29,6 +29,7 @@ import json
 import shutil
 from bin.figure_maker import FigureMaker, DROPDOWN_HEIGHT
 from bin.extra_ticks_ticker import *
+from bokeh import events
 
 SETTINGS_WIDTH = 400
 DEFAULT_SIZE = 50
@@ -519,6 +520,8 @@ class MainLayout:
 
         self.export_file.value = self.session.get_value(["settings", "export", "prefix"])
 
+        self.set_active_tools_ti.value = ";".join(self.session.get_value(["settings", "active_tools"]))
+
 
     def plot_render_area(self, plot):
         return self.render_areas[plot]
@@ -781,6 +784,10 @@ class MainLayout:
             elif not i[3] is None:
                 self.heatmap.y_range.end = max(i[3], self.heatmap.y_range.start+1)
 
+    def save_tools(self, tools):
+        if not self.session is None:
+            print("active_tools", tools)
+            self.session.set_value(["settings", "active_tools"], tools.split(";"))
 
     def __init__(self):
         self.show_hide = {"grid_lines": False, "contig_borders": True, "indent_line": False}
@@ -873,6 +880,7 @@ class MainLayout:
         self.color_layout = None
         self.area_range = None
         self.area_range_expected = "n/a"
+        self.set_active_tools_ti = None
 
         self.do_layout()
 
@@ -1004,9 +1012,7 @@ class MainLayout:
         for fig in [self.anno_y, self.raw_y, self.heatmap]:
             fig.add_tools(crosshair)
 
-
         tool_bar = FigureMaker.get_tools(tollbars)
-        #SETTINGS_WIDTH = tool_bar.width
         show_hide = self.make_show_hide_dropdown(
             ["settings", "interface", "show_hide"],
                 ("Axes", "axis"), (RAW_PLOT_NAME, "raw"),
@@ -1474,6 +1480,12 @@ class MainLayout:
         quit_ti = TextInput(value="keepalive", name="quit_ti", visible=False)
         quit_ti.on_change("value", lambda x, y, z: sys.exit())
 
+        active_tools_ti = TextInput(value="", name="active_tools_ti", visible=False)
+        active_tools_ti.on_change("value", lambda x, y, z: self.save_tools(active_tools_ti.value))
+        self.set_active_tools_ti = TextInput(value="", name="set_active_tools_ti", visible=False)
+
+        communication = row([quit_ti, active_tools_ti, self.set_active_tools_ti])
+        communication.visible = False
 
         grid_layout = [
             [self.heatmap_y_axis, self.anno_x,   self.raw_x,
@@ -1484,7 +1496,7 @@ class MainLayout:
                 self.raw_y_axis,   self.raw_y,         None],
             [None,              None,             None,       
                 self.anno_y_axis,  self.anno_y,        None],
-            [quit_ti,       None,             None,           
+            [communication,       None,             None,           
                 None,            self.heatmap_x_axis, None],
         ]
 

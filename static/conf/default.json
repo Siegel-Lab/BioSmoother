@@ -193,5 +193,6 @@
         ],
         "area": "current",
         "do_export_full": false
-    }
+    },
+    "active_tools": ["Pan", "Hover", "Crosshair"]
 }

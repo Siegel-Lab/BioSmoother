@@ -176,6 +176,6 @@ class FigureMaker:
     def get_tools(tools_list, toolbar_location="above", **toolbar_options):
         tools = sum([toolbar.tools for toolbar in tools_list], [])
         proxy = ProxyToolbar(toolbars=tools_list,
-                             tools=tools, **toolbar_options)
+                             tools=tools, **toolbar_options, name="toolbar")
         proxy.logo = None
         return ToolbarBox(toolbar=proxy, toolbar_location=toolbar_location)
