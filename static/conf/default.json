@@ -189,9 +189,7 @@
         "list": [
             "Heatmap",
             "Column Coverage",
-            "Row Coverage",
-            "Column Annotation",
-            "Row Annotation"
+            "Column Annotation"
         ],
         "do_export_full": false,
         "export_format": "tsv"

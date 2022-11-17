@@ -14,6 +14,18 @@ def export_tsv(session, smoother_version):
             for tup in session.get_heatmap_export():
                 out_file.write("\t".join([str(x) for x in tup]) + "\n")
 
+    for x_axis, key, suff in [(True, "Column Coverage", "x"), (False, "Row Coverage", "y")]:
+        if key in session.get_value(["settings", "export", "selection"]):
+            with open(session.get_value(["settings", "export", "prefix"]) + ".track." + suff + ".tsv", "w") as out_file:
+                write_header(out_file, smoother_version)
+                out_file.write("#chr_x\tstart_x\tend_x")
+                for track in session.get_track_export_names(x_axis):
+                    out_file.write("\t" + track)
+                out_file.write("\n")
+
+                for tup in session.get_track_export(x_axis):
+                    out_file.write("\t".join(["\t".join([str(y) for y in x]) if isinstance(x, list) else str(x) for x in tup]) + "\n")
+
 if False:
     """
     if not self.do_export is None and False:

@@ -188,9 +188,8 @@
         ],
         "list": [
             "Heatmap",
-            "Column Sum",
-            "Row Sum",
-            "Include Annotation"
+            "Column Coverage",
+            "Column Annotation"
         ],
         "do_export_full": false,
         "export_format": "tsv"
