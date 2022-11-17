@@ -13,6 +13,7 @@ class FigureMaker:
         self.toolbar_list = None
         self._hide_on = []
         self.x_axis_label_orientation = None
+        self.y_axis_label_orientation = None
         self.y_axis_label = ""
         self.x_axis_label = ""
         self._range1d = False
@@ -34,6 +35,8 @@ class FigureMaker:
             register.hidable_plots.append((ret, self._hide_on))
         if not self.x_axis_label_orientation is None:
             ret.xaxis.major_label_orientation = self.x_axis_label_orientation
+        if not self.y_axis_label_orientation is None:
+            ret.yaxis.major_label_orientation = self.y_axis_label_orientation
         if self._range1d:
             ret.x_range = Range1d()
             ret.y_range = Range1d()
@@ -68,6 +71,10 @@ class FigureMaker:
 
     def h(self, h):
         self.args["height"] = h
+        return self
+
+    def frame_h(self, h):
+        self.args["frame_height"] = h
         return self
 
     def link_y(self, other):
@@ -113,7 +120,7 @@ class FigureMaker:
                 for key in _hide_on:
                     self.hide_on(key, register)
 
-    def x_axis_of(self, other, register, label="", stretch=False):
+    def x_axis_of(self, other, register, label="", stretch=False, flip_orientation=True):
         self._axis_of(other, register)
 
         self.x_axis_visible = True
@@ -127,12 +134,13 @@ class FigureMaker:
             self.w(other.width)
             self.args["sizing_mode"] = "fixed"
         self.args["align"] = "start"
-        self.x_axis_label_orientation = math.pi/2
+        if flip_orientation:
+            self.x_axis_label_orientation = math.pi/2
         self.x_axis_label = label
         self.no_border_v = True
         return self
 
-    def y_axis_of(self, other, register, label="", stretch=False):
+    def y_axis_of(self, other, register, label="", stretch=False, flip_orientation=False):
         self._axis_of(other, register)
 
         self.y_axis_visible = True
@@ -146,6 +154,8 @@ class FigureMaker:
             self.h(other.height)
             self.args["sizing_mode"] = "fixed"
         self.args["align"] = "end"
+        if flip_orientation:
+            self.y_axis_label_orientation = math.pi/2
         self.y_axis_label = label
         self.no_border_h = True
         return self

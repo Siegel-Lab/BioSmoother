@@ -847,7 +847,9 @@ class MainLayout:
         self.overlay_data = ColumnDataSource(data=d)
         self.overlay_dataset_id = None
         self.heatmap_x_axis = None
+        self.heatmap_x_axis_2 = None
         self.heatmap_y_axis = None
+        self.heatmap_y_axis_2 = None
         self.raw_x = None
         self.raw_x_axis = None
         self.raw_y = None
@@ -893,9 +895,13 @@ class MainLayout:
         self.multi_choice_config = []
         self.export_file = None
         self.ticker_x = None
+        self.ticker_x_2 = None
         self.ticker_y = None
+        self.ticker_y_2 = None
         self.tick_formatter_x = None
+        self.tick_formatter_x_2 = None
         self.tick_formatter_y = None
+        self.tick_formatter_y_2 = None
         self.undo_button = None
         self.redo_button = None
         self.color_layout = None
@@ -906,7 +912,6 @@ class MainLayout:
         self.do_layout()
 
     def do_layout(self):
-
         global SETTINGS_WIDTH
         tollbars = []
         self.heatmap = FigureMaker().range1d().scale().combine_tools(tollbars).get(self)
@@ -939,10 +944,15 @@ class MainLayout:
         ))
 
         self.heatmap_x_axis = FigureMaker().x_axis_of(
-            self.heatmap, self, "DNA", True).combine_tools(tollbars).get(self)
+            self.heatmap, self, "", True).combine_tools(tollbars).get(self)
+        self.heatmap_x_axis_2 = FigureMaker().x_axis_of(
+            self.heatmap, self, "", True).combine_tools(tollbars).get(self)
+    
         #self.heatmap_x_axis.xaxis.minor_tick_line_color = None
         self.heatmap_y_axis = FigureMaker().y_axis_of(
-            self.heatmap, self, "RNA", True).combine_tools(tollbars).get(self)
+            self.heatmap, self, "", True).combine_tools(tollbars).get(self)
+        self.heatmap_y_axis_2 = FigureMaker().y_axis_of(
+            self.heatmap, self, "", True).combine_tools(tollbars).get(self)
         #self.heatmap_y_axis.yaxis.minor_tick_line_color = None
 
         self.slope = Slope(gradient=1, y_intercept=0, line_color=None)
@@ -1128,8 +1138,8 @@ class MainLayout:
 
         def axis_labels_event(e):
             self.session.set_value(["seetings", "interface", "axis_lables"], e)
-            self.heatmap_y_axis.yaxis.axis_label = e.split("_")[0]
-            self.heatmap_x_axis.xaxis.axis_label = e.split("_")[1]
+            self.heatmap_y_axis_2.yaxis.axis_label = e.split("_")[0]
+            self.heatmap_x_axis_2.xaxis.axis_label = e.split("_")[1]
         axis_lables = self.dropdown_select("Axis Labels", "tooltip_y_axis_label",
                                                   ("RNA / DNA", "RNA_DNA"),
                                                   ("DNA / RNA", "DNA_RNA"),
@@ -1410,11 +1420,13 @@ class MainLayout:
         reset_session.on_click(reset_event)
 
         self.ticker_x = ExtraTicksTicker(extra_ticks=[])
+        self.ticker_x_2 = IntermediateTicksTicker(extra_ticks=[])
         self.ticker_y = ExtraTicksTicker(extra_ticks=[])
+        self.ticker_y_2 = IntermediateTicksTicker(extra_ticks=[])
 
-        def get_formatter():
+        def get_formatter_tick():
             return FuncTickFormatter(
-                    args={"contig_starts": [], "genome_end": 0, "dividend": 1, "contig_names": []},
+                    args={"contig_starts": [], "genome_end": 0, "dividend": 1},
                     code="""
                             function numberWithCommas(x) {
                                 return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -1434,14 +1446,29 @@ class MainLayout:
                                 tick_label = numberWithCommas(tick_pos / 1000) + " kbp";
                             else
                                 tick_label = numberWithCommas(tick_pos) + " bp";
-                            return contig_names[idx] + ": " + tick_label;
+                            return tick_label;
+                        """)
+        def get_formatter_chr():
+            return FuncTickFormatter(
+                    args={"contig_starts": [], "genome_end": 0, "dividend": 1, "contig_names": []},
+                    code="""
+                            if(tick < 0 || tick >= genome_end)
+                                return "n/a";
+                            var idx = 0;
+                            while(contig_starts[idx + 1] <= tick)
+                                idx += 1;
+                            return contig_names[idx];
                         """)
         
-        self.tick_formatter_x = get_formatter()
-        self.tick_formatter_y = get_formatter()
+        self.tick_formatter_x = get_formatter_tick()
+        self.tick_formatter_x_2 = get_formatter_chr()
+        self.tick_formatter_y = get_formatter_tick()
+        self.tick_formatter_y_2 = get_formatter_chr()
 
         self.heatmap_x_axis.xaxis[0].formatter = self.tick_formatter_x
+        self.heatmap_x_axis_2.xaxis[0].formatter = self.tick_formatter_x_2
         self.heatmap_y_axis.yaxis[0].formatter = self.tick_formatter_y
+        self.heatmap_y_axis_2.yaxis[0].formatter = self.tick_formatter_y_2
 
 
         self.undo_button = Button(label="", css_classes=SYM_CSS + ["fa_page_previous_solid"], width=SYM_WIDTH, 
@@ -1458,6 +1485,26 @@ class MainLayout:
             self.do_config()
             self.trigger_render()
         self.redo_button.on_click(redo_event)
+
+        self.heatmap_x_axis_2.xaxis.ticker = self.ticker_x_2
+        self.heatmap_x_axis_2.xaxis.axis_line_color = None
+        self.heatmap_x_axis_2.xaxis.major_tick_line_color = None
+        self.heatmap_x_axis_2.xaxis.major_tick_out = 0
+        self.heatmap_x_axis_2.y_range.start = 1
+        self.heatmap_x_axis_2.y_range.end = 2
+        self.heatmap_x_axis_2.background_fill_color = None
+        self.heatmap_x_axis_2.outline_line_color = None
+        self.heatmap_x_axis_2.ygrid.grid_line_alpha = 0.0
+
+        self.heatmap_y_axis_2.yaxis.ticker = self.ticker_y_2
+        self.heatmap_y_axis_2.yaxis.axis_line_color = None
+        self.heatmap_y_axis_2.yaxis.major_tick_line_color = None
+        self.heatmap_y_axis_2.yaxis.major_tick_out = 0
+        self.heatmap_y_axis_2.x_range.start = 1
+        self.heatmap_y_axis_2.x_range.end = 2
+        self.heatmap_y_axis_2.background_fill_color = None
+        self.heatmap_y_axis_2.outline_line_color = None
+        self.heatmap_y_axis_2.xgrid.grid_line_alpha = 0.0
         
         for plot in [self.heatmap, self.raw_y, self.anno_y, self.heatmap_x_axis]:
             plot.xgrid.ticker = self.ticker_x
@@ -1531,16 +1578,18 @@ class MainLayout:
         communication.visible = False
 
         grid_layout = [
-            [self.heatmap_y_axis, self.anno_x,   self.raw_x,
+            [self.heatmap_y_axis_2, self.heatmap_y_axis, self.anno_x,   self.raw_x,
                       None,              self.heatmap,   self.settings_row],
-            [None,              self.anno_x_axis, self.raw_x_axis,
+            [None, None,              self.anno_x_axis, self.raw_x_axis,
                       None,              None,               None],
-            [None,              None,             None,           
+            [None, None,              None,             None,           
                 self.raw_y_axis,   self.raw_y,         None],
-            [None,              None,             None,       
+            [None, None,              None,             None,       
                 self.anno_y_axis,  self.anno_y,        None],
-            [communication,       None,             None,           
+            [None, None,       None,             None,           
                 None,            self.heatmap_x_axis, None],
+            [communication, None,       None,             None,           
+                None,            self.heatmap_x_axis_2, None],
         ]
 
         root_min_one = grid(grid_layout, sizing_mode="stretch_both")
@@ -1708,19 +1757,12 @@ class MainLayout:
                     self.heatmap_data.data = d_heatmap
                     self.raw_data_x.data = raw_data_x
                     self.raw_data_y.data = raw_data_y
-                    #self.ratio_data_x.data = ratio_data_x
-                    #self.ratio_data_y.data = ratio_data_y
                     
-                    #self.anno_x.x_range.factors = []
-                    #self.anno_y.y_range.factors = []
                     self.anno_x.x_range.factors = displayed_annos_x
                     self.anno_y.y_range.factors = displayed_annos_y[::-1]
 
-                    #self.anno_x_data.data = {}
-                    #self.anno_y_data.data = {}
                     self.anno_x_data.data = d_anno_x
                     self.anno_y_data.data = d_anno_y
-                    #self.overlay_data.data = d_overlay
 
                     self.heatmap.x_range.reset_start = 0
                     self.heatmap.x_range.reset_end = canvas_size_x
@@ -1728,10 +1770,14 @@ class MainLayout:
                     self.heatmap.y_range.reset_end = canvas_size_y
 
                     self.ticker_x.extra_ticks = tick_list_x
+                    self.ticker_x_2.extra_ticks = tick_list_x
                     self.ticker_y.extra_ticks = tick_list_y
+                    self.ticker_y_2.extra_ticks = tick_list_y
 
                     self.tick_formatter_x.args = ticks_x
+                    self.tick_formatter_x_2.args = ticks_x
                     self.tick_formatter_y.args = ticks_y
+                    self.tick_formatter_y_2.args = ticks_y
 
                     if len(error) > 0:
                         self.heatmap.border_fill_color = "red"
@@ -1740,7 +1786,6 @@ class MainLayout:
                     
                     self.set_area_range()
 
-                    
                     for plot in [self.heatmap, self.raw_y, self.anno_y, self.heatmap_x_axis]:
                         plot.xgrid.bounds = (0, canvas_size_x)
                         plot.xaxis.bounds = (0, canvas_size_x)
