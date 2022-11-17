@@ -6,6 +6,9 @@
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
 - presetting load and save -> status print
 - categorical axis for labels chromosome & number
+- conditions in the computational graph of libCm
+- Bug: endless loop - if color range is [0, 0]
+- Bug: Icing remainder seems to be != 0 for empty column?
 
 # verification
 
@@ -27,3 +30,5 @@
 - why is this needed (as a figure)
     - advantages of the tool
 - 
+
+

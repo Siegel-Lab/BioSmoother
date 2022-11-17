@@ -1237,6 +1237,10 @@ class MainLayout:
                                                           [["annotation", "row_filter"], "row filter"], 
                                                           [["annotation", "col_filter"], "column filter"]],
                                                         ["annotation", "list"])
+        
+        
+        disp_ice_remainder = self.make_checkbox("Show ICing remainder", "tooltip_ic_remainder",
+                                        settings=['settings', 'normalization', 'display_ice_remainder'])
 
         power_tick = FuncTickFormatter(
             code="""
@@ -1472,7 +1476,8 @@ class MainLayout:
                                                                 reset_session]), 
                                                           meta_file_label, self.meta_file, self.area_range]),
                 make_panel("Normalization", "tooltip_normalization", [normalization, divide_column, divide_row,
-                                    self.color_layout, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd]),
+                                    self.color_layout, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd,
+                                    disp_ice_remainder]),
                 make_panel("Replicates", "tooltip_replicates", [in_group, betw_group, group_layout]),
                 make_panel("Interface", "tooltip_interface", [nb_l,
                                     show_hide, mmbs_l,
@@ -1615,10 +1620,10 @@ class MainLayout:
 
                 d_heatmap = self.session.get_heatmap()
 
-                raw_data_x = self.session.get_tracks(True)
-                raw_data_y = self.session.get_tracks(False)
-                min_max_tracks_x = self.session.get_min_max_tracks(True)
-                min_max_tracks_y = self.session.get_min_max_tracks(False)
+                raw_data_x = self.session.get_tracks(False)
+                raw_data_y = self.session.get_tracks(True)
+                min_max_tracks_x = self.session.get_min_max_tracks(False)
+                min_max_tracks_y = self.session.get_min_max_tracks(True)
 
                 d_anno_x = self.session.get_annotation(False)
                 d_anno_y = self.session.get_annotation(True)
