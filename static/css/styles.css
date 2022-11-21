@@ -1,8 +1,13 @@
+textarea {
+    resize: none;
+}
+
 .full_height {
     height: 100% !important;
     overflow: hidden !important;
     border-left: 1px solid #D3D3D3 !important;
 }
+
 .scroll_y {
     overflow-y: auto !important;
     overflow-x: hidden !important;
@@ -10,6 +15,17 @@
     top: 15% !important;
     border-top: 1px solid #D3D3D3 !important;
 }
+
+.scroll_y2 {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.outlnie_border {
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+}
+
 .twenty_percent {
     overflow-y: auto !important;
     overflow-x: hidden !important;
@@ -20,23 +36,82 @@
     text-align: left;
     font-weight: bold;
 }
+
 .other_button {
     text-align: center;
     padding: 6px 12px;
 }
+
 .other_button-active {
     background-color: #ebebeb;
     border-color: #adadad;
     box-shadow: inset 0 3px 5px rgb(0 0 0 / 13%);
 }
 
+.fa_sort_up_solid {
+    background-image: url(sort-up-solid.svg) !important;
+    background-size: cover;
+}
+
+.fa_sort_down_solid {
+    background-image: url(sort-down-solid.svg) !important;
+    background-size: cover;
+}
+
+.fa_page_next_solid {
+    background-image: url(page-next-solid.svg) !important;
+    background-size: cover;
+}
+
+.fa_page_previous_solid {
+    background-image: url(page-previous-solid.svg) !important;
+    background-size: cover;
+}
+
+.fa_page_next {
+    background-image: url(page-next.svg) !important;
+    background-size: cover;
+}
+
+.fa_page_previous {
+    background-image: url(page-previous.svg) !important;
+    background-size: cover;
+}
+
+.fa_apply {
+    background-image: url(gear-solid.svg) !important;
+    background-size: cover;
+}
+
+.fa_reset {
+    background-image: url(repeat-solid.svg) !important;
+    background-size: cover;
+}
+
+.fa_reset_disabled {
+    background-image: url(repeat-solid-disabled.svg) !important;
+    background-size: cover;
+}
+
+.fa_save {
+    background-image: url(floppy-disk-solid.svg) !important;
+    background-size: cover;
+}
+
 body {
     margin: 0
+}
+
+.vertical {
+    transform: rotate(-180deg);
+    writing-mode: tb-rl;
+    white-space: nowrap;
 }
 
 button {
     text-align: inherit;
 }
+
 .bk-root .bk-btn {
     text-align: inherit;
     padding: 6px 0px;
@@ -51,15 +126,23 @@ button {
 }
 
 .bk-root .bk-btn-light.bk-active {
-    background-color: inherit;
-    border-color: white;
+    background-color: transparent !important;
+    border-color: transparent;
     font-weight: inherit;
 }
 
-.bk-root .bk-btn:active, .bk-root .bk-btn.bk-active {
+.bk-root .bk-btn-light {
+    background-color: transparent !important;
+    border-color: transparent;
+    font-weight: inherit;
+}
+
+.bk-root .bk-btn:active,
+.bk-root .bk-btn.bk-active {
     box-shadow: inherit;
     font-weight: inherit;
 }
+
 .bk-below {
     text-align: left;
 }
@@ -71,12 +154,14 @@ button {
     position: relative;
     width: 80px;
     height: 80px;
-  }
-  .lds-spinner div {
+}
+
+.lds-spinner div {
     transform-origin: 40px 40px;
     animation: lds-spinner 2s linear infinite;
-  }
-  .lds-spinner div:after {
+}
+
+.lds-spinner div:after {
     content: " ";
     display: block;
     position: absolute;
@@ -86,89 +171,110 @@ button {
     height: 18px;
     border-radius: 40%;
     background: #000000;
-  }  
-  .lds-spinner div:nth-child(1) {
+}
+
+.lds-spinner div:nth-child(1) {
     transform: rotate(0deg);
     animation-delay: -1.1s;
-  }
-  .lds-spinner div:nth-child(2) {
+}
+
+.lds-spinner div:nth-child(2) {
     transform: rotate(30deg);
     animation-delay: -1s;
-  }
-  .lds-spinner div:nth-child(3) {
+}
+
+.lds-spinner div:nth-child(3) {
     transform: rotate(60deg);
     animation-delay: -0.9s;
-  }
-  .lds-spinner div:nth-child(4) {
+}
+
+.lds-spinner div:nth-child(4) {
     transform: rotate(90deg);
     animation-delay: -0.8s;
-  }
-  .lds-spinner div:nth-child(5) {
+}
+
+.lds-spinner div:nth-child(5) {
     transform: rotate(120deg);
     animation-delay: -0.7s;
-  }
-  .lds-spinner div:nth-child(6) {
+}
+
+.lds-spinner div:nth-child(6) {
     transform: rotate(150deg);
     animation-delay: -0.6s;
-  }
-  .lds-spinner div:nth-child(7) {
+}
+
+.lds-spinner div:nth-child(7) {
     transform: rotate(180deg);
     animation-delay: -0.5s;
-  }
-  .lds-spinner div:nth-child(8) {
+}
+
+.lds-spinner div:nth-child(8) {
     transform: rotate(210deg);
     animation-delay: -0.4s;
-  }
-  .lds-spinner div:nth-child(9) {
+}
+
+.lds-spinner div:nth-child(9) {
     transform: rotate(240deg);
     animation-delay: -0.3s;
-  }
-  .lds-spinner div:nth-child(10) {
+}
+
+.lds-spinner div:nth-child(10) {
     transform: rotate(270deg);
     animation-delay: -0.2s;
-  }
-  .lds-spinner div:nth-child(11) {
+}
+
+.lds-spinner div:nth-child(11) {
     transform: rotate(300deg);
     animation-delay: -0.1s;
-  }
-  .lds-spinner div:nth-child(12) {
+}
+
+.lds-spinner div:nth-child(12) {
     transform: rotate(330deg);
     animation-delay: 0s;
-  }
-  @keyframes lds-spinner {
-    0% {
-      opacity: 0;
-    }
-    10% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0;
-    }
-    100% {
-      opacity: 0;
-    }
-  }
+}
 
-  .fade-out {
+@keyframes lds-spinner {
+    0% {
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+.fade-out {
     animation: fadeOut ease 1s forwards;
-  }
-  @keyframes fadeOut {
+}
+
+@keyframes fadeOut {
     0% {
         opacity: 1;
     }
+
     100% {
         opacity: 0;
     }
-  }
-  .fade-in {
+}
+
+.fade-in {
     animation: fadeIn ease 0.2s forwards;
-  }
-  @keyframes fadeIn {
+}
+
+@keyframes fadeIn {
     0% {
         opacity: 0;
     }
+
     100% {
         opacity: 1;
     }
-  }
+}

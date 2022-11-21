@@ -12,6 +12,7 @@ dependencies:
   - nodejs
   - psutil
   - statsmodels
+  - gdb
   # https://firefox-source-docs.mozilla.org/testing/geckodriver/Support.html
   #- selenium=3.11
   #- geckodriver=0.26.0

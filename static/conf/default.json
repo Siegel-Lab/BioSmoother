@@ -1,0 +1,198 @@
+{
+    "smoother_config_file_version": 0.1,
+    "display_name": "Default",
+    "normalization": {
+        "normalize_by": "dont",
+        "min_interactions": {
+            "min": 0,
+            "max": 100,
+            "val": 0,
+            "step": 1,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        },
+        "color_range": {
+            "min": 0,
+            "max": 1,
+            "val_min": 0,
+            "val_max": 1,
+            "step": 0.01,
+            "spinner_min_restricted": false,
+            "spinner_max_restricted": false
+        },
+        "log_base": {
+            "min": 0,
+            "max": 15,
+            "val": 10,
+            "step": 0.1,
+            "spinner_min_restricted": false,
+            "spinner_max_restricted": false
+        },
+        "p_accept": {
+            "min": 0.00,
+            "max": 0.1,
+            "val": 0.05,
+            "step": 0.01,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        },
+        "ddd": false,
+        "scale": "max",
+        "divide_by_column_coverage": false,
+        "divide_by_row_coverage": false,
+        "display_ice_remainder": false
+    },
+    "replicates": {
+        "in_group": "sum",
+        "between_group": "sum"
+    },
+    "interface": {
+        "max_num_bins": {
+            "min": 10,
+            "max": 1000,
+            "val": 50,
+            "step": 10,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        },
+        "max_num_bins_factor": 1000,
+        "show_hide": {
+            "axis": true,
+            "ratio": false,
+            "raw": true,
+            "annotation": true,
+            "tools": true,
+            "grid_lines": false,
+            "indent_line": false,
+            "contig_borders": true
+        },
+        "min_bin_size": {
+            "max": 135,
+            "min": 1,
+            "val": 27,
+            "step": 1,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        },
+        "max_undo": {
+            "min": 0,
+            "max": 100,
+            "val": 25,
+            "step": 1,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": true
+        },
+        "update_freq": {
+            "min": 0.1,
+            "max": 3,
+            "val": 0.5,
+            "step": 0.1,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        },
+        "zoom_redraw": {
+            "min": 0,
+            "max": 100,
+            "val": 90,
+            "step": 1,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": true
+        },
+        "add_draw_area": {
+            "min": 10,
+            "max": 500,
+            "val": 20,
+            "step": 10,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        },
+        "anno_size": {
+            "min": 10,
+            "max": 500,
+            "val": 50,
+            "step": 1,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": true
+        },
+        "raw_size": {
+            "min": 10,
+            "max": 500,
+            "val": 50,
+            "step": 1,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": true
+        },
+        "stretch": false,
+        "squared_bins": false,
+        "snap_bin_size": false,
+        "max_detailed_anno_display": 1000,
+        "min_anno_dist": 0.05,
+        "snap_factors": [
+            1,
+            1.25,
+            2.5,
+            5
+        ],
+        "color_palette": "Viridis256",
+        "annotation_color_palette": [
+            "#0072B2",
+            "#E69F00",
+            "#D55E00",
+            "#009E73",
+            "#56B4E9",
+            "#F0E442",
+            "#CC79A7"
+        ],
+        "annotation_color_palette_dark": [
+            "#004166",
+            "#996900",
+            "#8a3c00",
+            "#00523c",
+            "#1c94d9",
+            "#d4c711",
+            "#b54583"
+        ],
+        "color_low": "#000000",
+        "color_high": "#ffffff",
+        "axis_lables": "RNA_DNA"
+    },
+    "filters": {
+        "mapping_q": {
+            "min": 0,
+            "max": 254,
+            "val_min": 0,
+            "val_max": 254,
+            "step": 1,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": true
+        },
+        "incomplete_alignments": false,
+        "symmetry": "all",
+        "min_diag_dist": {
+            "min": 0,
+            "max": 1000,
+            "val": 0,
+            "step": 1,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        },
+        "multiple_annos_in_bin": "max_fac_pow_two",
+        "anno_in_multiple_bins": "stretch",
+        "ambiguous_mapping": "enclosed",
+        "cut_off_bin": "smaller_if_fullsized_exists"
+    },
+    "export": {
+        "prefix": "export",
+        "selection": [
+            "Heatmap"
+        ],
+        "list": [
+            "Heatmap",
+            "Column Coverage",
+            "Column Annotation"
+        ],
+        "do_export_full": false,
+        "export_format": "tsv"
+    },
+    "active_tools": ["Pan", "Hover", "Crosshair"]
+}

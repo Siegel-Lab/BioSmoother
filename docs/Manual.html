@@ -15,6 +15,7 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -48,18 +49,23 @@
 <li class="toctree-l3"><a class="reference internal" href="#adding-replicates-anna">Adding Replicates (<em>Anna</em>)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#adding-normalization-tracks-anna">Adding Normalization Tracks (<em>Anna</em>)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#adding-grid-seq-normalizations-todo-better-name-markus">Adding Grid-seq normalizations (&#64;todo better name) (<em>Markus</em>)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#list-of-plots-and-what-they-show-anna">List of Plots and what they show (<em>Anna</em>)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#list-of-buttons-and-their-functionality-both">List of Buttons and their functionality (<em>Both</em>)</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#normalization-markus">Normalization (<em>Markus</em>)</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#quick-config-buttons-anna">Quick Config Buttons (<em>Anna</em>)</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#list-of-plots-and-what-they-show-anna">List of Plots and what they show (<em>Anna</em>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#list-of-buttons-and-their-functionality-both">List of Buttons and their functionality (<em>Both</em>)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#normalization-markus">Normalization (<em>Markus</em>)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#normalize-by">Normalize by</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#normalizing-the-radicl-seq-way">Normalizing the RADICL-seq way</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#color-scale-begin-color-scale-log-base">Color Scale Begin &amp; Color Scale Log Base</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#using-slurm-markus">Using Slurm (<em>Markus</em>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#installing-via-github-markus">Installing via GitHub (<em>Markus</em>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#setting-up-a-webserver-markus">Setting up a Webserver (<em>Markus</em>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#the-datastructure-markus">The Datastructure (<em>Markus</em>)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#quick-config-buttons-anna">Quick Config Buttons (<em>Anna</em>)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#using-slurm">Using Slurm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-via-github">Installing via GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-a-webserver">Setting up a Webserver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-datastructure">The Datastructure</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#algorithmic-description">Algorithmic Description</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#f1-constant-lookup-times">F1: Constant lookup times</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#f2-filtering-for-mapping-quality">F2: Filtering for mapping quality</a></li>
@@ -109,15 +115,15 @@
            <div itemprop="articleBody">
              
   <section id="smoother-manual">
-<h1>Smoother Manual<a class="headerlink" href="#smoother-manual" title="Permalink to this headline"></a></h1>
+<h1>Smoother Manual<a class="headerlink" href="#smoother-manual" title="Permalink to this heading"></a></h1>
 <p>Bulk of the manual</p>
 <section id="table-of-contents">
-<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline"></a></h2>
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this heading"></a></h2>
 </section>
 <section id="importing-data">
-<h2>Importing Data<a class="headerlink" href="#importing-data" title="Permalink to this headline"></a></h2>
+<h2>Importing Data<a class="headerlink" href="#importing-data" title="Permalink to this heading"></a></h2>
 <section id="preprocessing-data-anna">
-<h3>Preprocessing Data (<em>Anna</em>)<a class="headerlink" href="#preprocessing-data-anna" title="Permalink to this headline"></a></h3>
+<h3>Preprocessing Data (<em>Anna</em>)<a class="headerlink" href="#preprocessing-data-anna" title="Permalink to this heading"></a></h3>
 <p>generating the chromosome lengths file
 annotation file
 bed &amp; wig files
@@ -126,41 +132,42 @@ output all alignments
 provide some sample files</p>
 </section>
 <section id="create-index-anna">
-<h3>Create Index (<em>Anna</em>)<a class="headerlink" href="#create-index-anna" title="Permalink to this headline"></a></h3>
+<h3>Create Index (<em>Anna</em>)<a class="headerlink" href="#create-index-anna" title="Permalink to this heading"></a></h3>
 <p>creating an empty index
 adding genome sizes
 and annotation file
 min bin size parameter</p>
 </section>
 <section id="adding-replicates-anna">
-<h3>Adding Replicates (<em>Anna</em>)<a class="headerlink" href="#adding-replicates-anna" title="Permalink to this headline"></a></h3>
+<h3>Adding Replicates (<em>Anna</em>)<a class="headerlink" href="#adding-replicates-anna" title="Permalink to this heading"></a></h3>
 <p>adding hi-c or radicl-seq replicates</p>
 </section>
 <section id="adding-normalization-tracks-anna">
-<h3>Adding Normalization Tracks (<em>Anna</em>)<a class="headerlink" href="#adding-normalization-tracks-anna" title="Permalink to this headline"></a></h3>
+<h3>Adding Normalization Tracks (<em>Anna</em>)<a class="headerlink" href="#adding-normalization-tracks-anna" title="Permalink to this heading"></a></h3>
 <p>adding read or wig normalization tracks</p>
 </section>
 <section id="adding-grid-seq-normalizations-todo-better-name-markus">
-<h3>Adding Grid-seq normalizations (&#64;todo better name) (<em>Markus</em>)<a class="headerlink" href="#adding-grid-seq-normalizations-todo-better-name-markus" title="Permalink to this headline"></a></h3>
+<h3>Adding Grid-seq normalizations (&#64;todo better name) (<em>Markus</em>)<a class="headerlink" href="#adding-grid-seq-normalizations-todo-better-name-markus" title="Permalink to this heading"></a></h3>
 <p>creating relevant plots (infliction point)
 setting parameters
 adding as normalization track</p>
 </section>
+</section>
 <section id="list-of-plots-and-what-they-show-anna">
-<h3>List of Plots and what they show (<em>Anna</em>)<a class="headerlink" href="#list-of-plots-and-what-they-show-anna" title="Permalink to this headline"></a></h3>
+<h2>List of Plots and what they show (<em>Anna</em>)<a class="headerlink" href="#list-of-plots-and-what-they-show-anna" title="Permalink to this heading"></a></h2>
 <p>the heatmap the ratio &amp; coverage plots
 mention hovers
 also include status text &amp; command line output</p>
 </section>
 <section id="list-of-buttons-and-their-functionality-both">
-<h3>List of Buttons and their functionality (<em>Both</em>)<a class="headerlink" href="#list-of-buttons-and-their-functionality-both" title="Permalink to this headline"></a></h3>
+<h2>List of Buttons and their functionality (<em>Both</em>)<a class="headerlink" href="#list-of-buttons-and-their-functionality-both" title="Permalink to this heading"></a></h2>
 <p>top to bottom list of things
 group by category
 don’t forget the bokeh buttons</p>
 <section id="normalization-markus">
-<h4>Normalization (<em>Markus</em>)<a class="headerlink" href="#normalization-markus" title="Permalink to this headline"></a></h4>
+<h3>Normalization (<em>Markus</em>)<a class="headerlink" href="#normalization-markus" title="Permalink to this heading"></a></h3>
 <section id="normalize-by">
-<h5>Normalize by<a class="headerlink" href="#normalize-by" title="Permalink to this headline"></a></h5>
+<h4>Normalize by<a class="headerlink" href="#normalize-by" title="Permalink to this heading"></a></h4>
 <p>Smoother can normalize data in various ways. Some of them are suited for symmetric data (e.g. Hi-C), some for asymmetric data (e.g. RADICL-seq).
 For some normalizations, views or different regions or with different bin sizes are not comparable.
 Note that for these normalizations, even zooming or moving around may skew the displayed values.
@@ -253,8 +260,12 @@ It is recommended to use these normalizations merely as an exploratory tool but 
 <p>Groups A and B are normalized individually and then combined according to the ‘Between Group’ setting (see Replicates section).
 The ‘In Group’ operation (see Replicates section) is applied before the Normalization.</p>
 </section>
+<section id="normalizing-the-radicl-seq-way">
+<h4>Normalizing the RADICL-seq way<a class="headerlink" href="#normalizing-the-radicl-seq-way" title="Permalink to this heading"></a></h4>
+<p>&#64;todo</p>
+</section>
 <section id="color-scale-begin-color-scale-log-base">
-<h5>Color Scale Begin &amp; Color Scale Log Base<a class="headerlink" href="#color-scale-begin-color-scale-log-base" title="Permalink to this headline"></a></h5>
+<h4>Color Scale Begin &amp; Color Scale Log Base<a class="headerlink" href="#color-scale-begin-color-scale-log-base" title="Permalink to this heading"></a></h4>
 <p>After normalization, the values in each bin are between zero and one.
 Before displaying these values in the heatmap, we apply a logarithmic transformation.
 Like with logarithmic scales, this keeps all values in the same order but this makes a difference between two small numbers appear bigger than the same difference between two bigger numbers.
@@ -271,29 +282,31 @@ for <em>a=0</em> the function is undefined but approaches the 45-degree diagonal
 </section>
 </section>
 <section id="quick-config-buttons-anna">
-<h4>Quick Config Buttons (<em>Anna</em>)<a class="headerlink" href="#quick-config-buttons-anna" title="Permalink to this headline"></a></h4>
+<h3>Quick Config Buttons (<em>Anna</em>)<a class="headerlink" href="#quick-config-buttons-anna" title="Permalink to this heading"></a></h3>
 <p>what do they change</p>
 </section>
 </section>
-</section>
-<section id="using-slurm-markus">
-<h2>Using Slurm (<em>Markus</em>)<a class="headerlink" href="#using-slurm-markus" title="Permalink to this headline"></a></h2>
+<section id="using-slurm">
+<h2>Using Slurm<a class="headerlink" href="#using-slurm" title="Permalink to this heading"></a></h2>
 <p>Smoother is set up to be run on a server within the <span class="raw-html-md"><a href="https://slurm.schedmd.com/overview.html" title="Go to the Slurm Webpage">Slurm Workload Manager</a></span>.
-For this, you need to log into the main node of the server, with ssh port forwarding.
+For this, you need to log into the main node of the server with ssh port forwarding.
+Port forwarding allows you to reach the smoother application with the webbrowser of your local computer even though it is is running on one of the client nodes on your server.
 The default port that needs to be forwarded is 5009; this requires the following login command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ssh</span> <span class="o">-</span><span class="n">L</span> <span class="mi">5009</span><span class="p">:</span><span class="n">localhost</span><span class="p">:</span><span class="mi">5009</span> <span class="o">-</span><span class="n">t</span> <span class="n">your_user_name</span><span class="nd">@your_server</span><span class="o">.</span><span class="n">com</span>
 </pre></div>
 </div>
-<p>Then you can navigate into the smoother folder and call the srun.sh script.</p>
+<p>Now any internet-traffic that is using the port 5009 is directed to the server you just logged in to.
+Then you can navigate into the smoother folder and call the srun.sh script.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">srun</span><span class="o">.</span><span class="n">sh</span>
 </pre></div>
 </div>
 <p>This will then log into one of the slurm-client nodes (again using the port forwarding) and start smoother there.
+Again the internet-traffic of port 5009 will be redirected, this time from the master node in the server to the client node in the server.
 The command will print an url on your terminal.
-Follow this link with any webbrowser to open smoother on the server.</p>
+Follow this url with any webbrowser to open smoother on the server.</p>
 </section>
-<section id="installing-via-github-markus">
-<h2>Installing via GitHub (<em>Markus</em>)<a class="headerlink" href="#installing-via-github-markus" title="Permalink to this headline"></a></h2>
+<section id="installing-via-github">
+<h2>Installing via GitHub<a class="headerlink" href="#installing-via-github" title="Permalink to this heading"></a></h2>
 <p>For installing smoother via github, run the following commands:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># clone repository</span>
 <span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">MarkusRainerSchmidt</span><span class="o">/</span><span class="n">smoother</span>
@@ -306,16 +319,16 @@ Follow this link with any webbrowser to open smoother on the server.</p>
 </pre></div>
 </div>
 </section>
-<section id="setting-up-a-webserver-markus">
-<h2>Setting up a Webserver (<em>Markus</em>)<a class="headerlink" href="#setting-up-a-webserver-markus" title="Permalink to this headline"></a></h2>
+<section id="setting-up-a-webserver">
+<h2>Setting up a Webserver<a class="headerlink" href="#setting-up-a-webserver" title="Permalink to this heading"></a></h2>
 <p>smoother can be deployed as a webserver so this should be described</p>
 </section>
-<section id="the-datastructure-markus">
-<h2>The Datastructure (<em>Markus</em>)<a class="headerlink" href="#the-datastructure-markus" title="Permalink to this headline"></a></h2>
+<section id="the-datastructure">
+<h2>The Datastructure<a class="headerlink" href="#the-datastructure" title="Permalink to this heading"></a></h2>
 <p>Smoother uses a datastructure called libSps implemented in C++ for querying the interactions as effectiveley as possible.
 You can find the <span class="raw-html-md"><a href="https://github.com/MarkusRainerSchmidt/libSps" title="Go to the libSps GitHub">GitHub of libSps here</a></span>.</p>
 <section id="algorithmic-description">
-<h3>Algorithmic Description<a class="headerlink" href="#algorithmic-description" title="Permalink to this headline"></a></h3>
+<h3>Algorithmic Description<a class="headerlink" href="#algorithmic-description" title="Permalink to this heading"></a></h3>
 <p>libSps provides several features that make it possible to bin, normalize and visualize nucleic acid interaction data on-the-fly.
 In brief, these are:</p>
 <ul class="simple">
@@ -325,7 +338,7 @@ In brief, these are:</p>
 <li><p>F4: The memory requirements for libSps are optimized</p></li>
 </ul>
 <section id="f1-constant-lookup-times">
-<h4>F1: Constant lookup times<a class="headerlink" href="#f1-constant-lookup-times" title="Permalink to this headline"></a></h4>
+<h4>F1: Constant lookup times<a class="headerlink" href="#f1-constant-lookup-times" title="Permalink to this heading"></a></h4>
 <p>libSps uses a technique called prefix sums [1] for storing interaction counts.
 With prefix sums, each cell in a matrix stores the number of interactions that can be found to its bottom-left.</p>
 <img src="../static/algorithmics_desc/2d-prefix-sum.png" /><p><em>Example prefix sum matrix.</em> The left picture shows the positions of individual points. The middle picture shows the matrix entries after prefix sums have been computed for the y-dimension. The right picture shows the matrix entries after prefix sums have been computed for the x and y dimension.</p>
@@ -337,7 +350,7 @@ This lookup is extremely fast, as it is independent of the total number of inter
 In turn, this makes it possible to have varying bin-sizes and normalizations.</p>
 </section>
 <section id="f2-filtering-for-mapping-quality">
-<h4>F2: Filtering for mapping quality<a class="headerlink" href="#f2-filtering-for-mapping-quality" title="Permalink to this headline"></a></h4>
+<h4>F2: Filtering for mapping quality<a class="headerlink" href="#f2-filtering-for-mapping-quality" title="Permalink to this heading"></a></h4>
 <p>Smoother has a slider to dynamically filter out reads with too low or high mapping qualities.
 Mapping qualities are scores that express an aligners confidence that the read was mapped correctly.
 For each interaction (i.e. read-pair with a mapping quality), we place the point at a height according to the mapping quality of the reads.
@@ -346,7 +359,7 @@ If both reads have different mapping qualities, we use the lower value.</p>
 <img src="../static/algorithmics_desc/mapq-filter.png" width="50%" /><p><em>Filtering mapping qualities using a 3rd dimension.</em></p>
 </section>
 <section id="f3-interactions-that-map-to-multiple-consecutive-loci">
-<h4>F3: Interactions that map to multiple consecutive loci<a class="headerlink" href="#f3-interactions-that-map-to-multiple-consecutive-loci" title="Permalink to this headline"></a></h4>
+<h4>F3: Interactions that map to multiple consecutive loci<a class="headerlink" href="#f3-interactions-that-map-to-multiple-consecutive-loci" title="Permalink to this heading"></a></h4>
 <p>Genomes have many forms of repetition.
 For example, In <em>Trypanosome brucei</em>, the organism we study, genes are often placed in arrays.
 I.e. there are many immediateley consecutive copies of the same gene on the genome.
@@ -372,7 +385,7 @@ Again, we can then use the bottom and top positions of our 5d-orthotope queries 
 <img src="../static/algorithmics_desc/rectangle-width.png" width="50%" /><p><em>Adding two more dimensions to filter rectangle width and height.</em></p>
 </section>
 <section id="f4-optimizing-memory-requirements">
-<h4>F4: Optimizing memory requirements<a class="headerlink" href="#f4-optimizing-memory-requirements" title="Permalink to this headline"></a></h4>
+<h4>F4: Optimizing memory requirements<a class="headerlink" href="#f4-optimizing-memory-requirements" title="Permalink to this heading"></a></h4>
 <p>The strategy, as described above, would not be feasible as the required matrices are simply too large to be stored or computed.
 For example, we work with a genome assembly of <em>Trypanosome brucei</em> that contains 50,081,021 nucleotides.
 Rather small considering e.g. the size of the human genome.
@@ -380,7 +393,7 @@ Even so, a genome x genome x mapping confidence matrix is of size 50,081,021^2 *
 This is obviously completely unrealistic and will fit on any hard drive.</p>
 <p>We hence use a customized version of a strategy called “sparse prefix sums” by Shekelyan et al. [1] to reduce the index size. We give a quick summary of the part of their method that is relevant to us:</p>
 <p>They remove empty rows and columns from point matrices using lookup tables:</p>
-<img src="../static/algorithmics_desc/sparse-matrices.png" /><p><em>Removing slices.</em></p>
+<img src="../static/algorithmics_desc/sparse-matrices.png" /><p><em>Removing slices. Image taken from [1]</em></p>
 <p>However, this strategy breaks down for large datasets.
 To split too large datasets down into smaller ones they use overlays.</p>
 <img src="../static/algorithmics_desc/sparse-matrices-in-large-datasets.png" /><p><em>Left: eventhough the matrix is sparse, there are no empty columns and rows. Right: by splitting the matrix into four submatrices, empty columns and rows can be removed again.</em></p>
@@ -415,7 +428,7 @@ This finally gives us a position in the materialized overlay grid.</p>
 </section>
 </section>
 <section id="fileformat-specification">
-<h3>Fileformat specification<a class="headerlink" href="#fileformat-specification" title="Permalink to this headline"></a></h3>
+<h3>Fileformat specification<a class="headerlink" href="#fileformat-specification" title="Permalink to this heading"></a></h3>
 <p>Smoothers preprocessing creates several files.
 In brief, these files contain the following information:</p>
 <table class="docutils align-default">
@@ -456,9 +469,9 @@ In brief, these files contain the following information:</p>
 <p>The exact content of these files is described <span class="raw-html-md"><a href="https://github.com/MarkusRainerSchmidt/libSps" title="Go to the libSps GitHub">here</a></span>.</p>
 </section>
 <section id="implementation-details">
-<h3>Implementation Details<a class="headerlink" href="#implementation-details" title="Permalink to this headline"></a></h3>
+<h3>Implementation Details<a class="headerlink" href="#implementation-details" title="Permalink to this heading"></a></h3>
 <section id="libraries">
-<h4>Libraries<a class="headerlink" href="#libraries" title="Permalink to this headline"></a></h4>
+<h4>Libraries<a class="headerlink" href="#libraries" title="Permalink to this heading"></a></h4>
 <p>Smoother is implemented in two separate parts:</p>
 <ul class="simple">
 <li><p>A Python 3 project that handles data visualization and normalization.</p></li>
@@ -468,18 +481,18 @@ In brief, these files contain the following information:</p>
 The C++ library uses pybind 11 [6] to create an interface for the python project and stxxl [7] for having access to a cached vector implementation.</p>
 </section>
 <section id="runtime-benchmarking">
-<h4>Runtime benchmarking<a class="headerlink" href="#runtime-benchmarking" title="Permalink to this headline"></a></h4>
+<h4>Runtime benchmarking<a class="headerlink" href="#runtime-benchmarking" title="Permalink to this heading"></a></h4>
 </section>
 <section id="verification-of-normalizations">
-<h4>Verification of Normalizations<a class="headerlink" href="#verification-of-normalizations" title="Permalink to this headline"></a></h4>
+<h4>Verification of Normalizations<a class="headerlink" href="#verification-of-normalizations" title="Permalink to this heading"></a></h4>
 </section>
 </section>
 </section>
 <section id="citing-smoother">
-<h2>Citing Smoother<a class="headerlink" href="#citing-smoother" title="Permalink to this headline"></a></h2>
+<h2>Citing Smoother<a class="headerlink" href="#citing-smoother" title="Permalink to this heading"></a></h2>
 </section>
 <section id="references">
-<h2>References<a class="headerlink" href="#references" title="Permalink to this headline"></a></h2>
+<h2>References<a class="headerlink" href="#references" title="Permalink to this heading"></a></h2>
 <p>[1] Shekelyan, M., Dignös, A. &amp; Gamper, J. Sparse prefix sums: Constant-time range sum queries over sparse multidimensional data cubes. Information Systems 82, 136–147 (2019).</p>
 <p>[2] Schmidt et al. &#64;todo</p>
 <p>[3] Bonetti, A. et al. RADICL-seq identifies general and cell type–specific principles of genome-wide RNA-chromatin interactions. Nat Commun 11, 1018 (2020).</p>
@@ -489,7 +502,7 @@ The C++ library uses pybind 11 [6] to create an interface for the python project
 <p>[7] stxxl</p>
 </section>
 <section id="thanks-to">
-<h2>Thanks to…<a class="headerlink" href="#thanks-to" title="Permalink to this headline"></a></h2>
+<h2>Thanks to…<a class="headerlink" href="#thanks-to" title="Permalink to this heading"></a></h2>
 <ul class="simple">
 <li><p>Bokeh</p></li>
 <li><p>Stxxl</p></li>

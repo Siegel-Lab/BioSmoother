@@ -9,6 +9,7 @@
 
     opacity: 0;
     transition-property: opacity;
+    pointer-events: none;
 }
 
 .tooltip:hover:before {
@@ -58,8 +59,16 @@
     content: "toggle the visibility of several GUI elements";
 }
 
+.tooltip_export_w:after {
+    content: "Include additional columns/information in the exported file";
+}
+
 .tooltip_normalize_by:after {
     content: "normalize the matrix in various ways";
+}
+
+.tooltip_multi_mapping:after {
+    content: "how to deal with reads that map to more than one loci";
 }
 
 .tooltip_in_group:after {
@@ -72,6 +81,10 @@
 
 .tooltip_stretch_scale:after {
     content: "stretch or scale the main matrix";
+}
+
+.tooltip_ddd:after {
+    content: "Normalize away the distance dependent decay";
 }
 
 .tooltip_bin_aspect_ratio:after {
@@ -108,4 +121,12 @@
 
 .tooltip_radicl_seq:after {
     content: "Configure smoother to look like the RADICL-seq paper analysis";
+}
+
+.tooltip_color:after {
+    content: "Pick the color palette for the heatmap";
+}
+
+.tooltip_info:after {
+    content: "various information";
 }
