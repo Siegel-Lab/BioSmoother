@@ -1247,10 +1247,6 @@ class MainLayout:
                                                           [["annotation", "row_filter"], "row filter"], 
                                                           [["annotation", "col_filter"], "column filter"]],
                                                         ["annotation", "list"])
-        
-        
-        disp_ice_remainder = self.make_checkbox("Show ICing remainder", "tooltip_ic_remainder",
-                                        settings=['settings', 'normalization', 'display_ice_remainder'])
 
         power_tick = FuncTickFormatter(
             code="""

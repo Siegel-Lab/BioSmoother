@@ -39,8 +39,7 @@
         "ddd": false,
         "scale": "max",
         "divide_by_column_coverage": false,
-        "divide_by_row_coverage": false,
-        "display_ice_remainder": false
+        "divide_by_row_coverage": false
     },
     "replicates": {
         "in_group": "sum",
