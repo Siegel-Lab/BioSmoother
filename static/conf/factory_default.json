@@ -43,7 +43,17 @@
     },
     "replicates": {
         "in_group": "sum",
-        "between_group": "sum"
+        "between_group": "sum",
+        "coverage_get_max_col": false,
+        "coverage_get_max_row": false,
+        "coverage_get_max_bin_size": {
+            "min": 100,
+            "max": 100000,
+            "val": 1000,
+            "step": 100,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        }
     },
     "interface": {
         "max_num_bins": {

@@ -1345,6 +1345,13 @@ class MainLayout:
         export_full = self.make_checkbox("Export full matrix instead of visible area", "tooltip_full_matrix",
                                             settings=["settings", "export", "do_export_full"])
 
+        max_coverage_col = self.make_checkbox("Query max coverage per bin instead of full coverage for columns",
+                                            settings=["settings", "replicates", "coverage_get_max_col"])
+        max_coverage_row = self.make_checkbox("Query max coverage per bin instead of full coverage for rows",
+                                            settings=["settings", "replicates", "coverage_get_max_row"])
+        max_coverage_row = self.make_checkbox("Query max coverage per bin instead of full coverage for rows",
+                                            settings=["settings", "replicates", "coverage_get_max_row"])
+
         export_label = Div(text="Output Prefix:")
         export_label.margin = DIV_MARGIN
         self.export_file = TextInput()
@@ -1520,7 +1527,7 @@ class MainLayout:
                                                           meta_file_label, self.meta_file, self.area_range]),
                 make_panel("Normalization", "tooltip_normalization", [normalization, divide_column, divide_row,
                                     self.color_layout, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd]),
-                make_panel("Replicates", "tooltip_replicates", [in_group, betw_group, group_layout]),
+                make_panel("Replicates", "tooltip_replicates", [in_group, betw_group, group_layout, max_coverage_col, max_coverage_row]),
                 make_panel("Interface", "tooltip_interface", [nb_l,
                                     show_hide, mmbs_l,
                                     ufs_l, rs_l, aas_l, ass_l, rss2_l,

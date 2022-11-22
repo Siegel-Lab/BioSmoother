@@ -43,7 +43,17 @@
     },
     "replicates": {
         "in_group": "sum",
-        "between_group": "sum"
+        "between_group": "sum",
+        "coverage_get_max_col": false,
+        "coverage_get_max_row": false,
+        "coverage_get_max_bin_size": {
+            "min": 100,
+            "max": 100000,
+            "val": 1000,
+            "step": 100,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        }
     },
     "interface": {
         "max_num_bins": {
@@ -178,7 +188,25 @@
         "multiple_annos_in_bin": "max_fac_pow_two",
         "anno_in_multiple_bins": "stretch",
         "ambiguous_mapping": "enclosed",
-        "cut_off_bin": "smaller_if_fullsized_exists"
+        "cut_off_bin": "smaller_if_fullsized_exists",
+        "coverage_bin_filter_column": {
+            "min": 0,
+            "max": 1000,
+            "val_min": 0,
+            "val_max": 0,
+            "step": 1,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        },
+        "coverage_bin_filter_row": {
+            "min": 0,
+            "max": 1000,
+            "val_min": 0,
+            "val_max": 0,
+            "step": 1,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        }
     },
     "export": {
         "prefix": "export",
