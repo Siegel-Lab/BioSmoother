@@ -6,7 +6,7 @@
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
 - presetting load and save -> status print
 - conditions in the computational graph of libCm???
-- Bug: Icing remainder seems to be != 0 for empty column?
+- sortable multi choice: column labels and checkboxes not aligned
 
 # verification
 
