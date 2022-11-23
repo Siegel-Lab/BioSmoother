@@ -1276,6 +1276,9 @@ class MainLayout:
         rsa_l = self.make_slider_spinner(width=SETTINGS_WIDTH, 
                                settings=["settings", "normalization", "p_accept"],
                                title="pAccept for binominal test", sizing_mode="stretch_width")
+        bsmcq_l = self.make_slider_spinner(width=SETTINGS_WIDTH, 
+                               settings=["settings", "replicates", "coverage_get_max_bin_size"],
+                               title="Bin size for max coverage queries [bp]", sizing_mode="stretch_width")
             
         meta_file_label = Div(text="Data path:")
         meta_file_label.margin = DIV_MARGIN
@@ -1295,9 +1298,7 @@ class MainLayout:
 
         annos_layout = self.multi_choice_auto("Annotations", 
                                                          [[["annotation", "visible_y"], "displayed row"],
-                                                          [["annotation", "visible_x"], "displayed col"], 
-                                                          [["annotation", "row_filter"], "row filter"], 
-                                                          [["annotation", "col_filter"], "column filter"]],
+                                                          [["annotation", "visible_x"], "displayed col"]],
                                                         ["annotation", "list"])
 
         power_tick = FuncTickFormatter(
@@ -1585,7 +1586,7 @@ class MainLayout:
                 make_panel("Normalization", "tooltip_normalization", [normalization, normalization_cov, 
                                     divide_column, divide_row,
                                     self.color_layout, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd]),
-                make_panel("Replicates", "tooltip_replicates", [in_group, betw_group, group_layout, max_coverage_col, max_coverage_row]),
+                make_panel("Replicates", "tooltip_replicates", [in_group, betw_group, group_layout, max_coverage_col, max_coverage_row, bsmcq_l]),
                 make_panel("Interface", "tooltip_interface", [nb_l,
                                     show_hide, mmbs_l,
                                     ufs_l, rs_l, aas_l, ass_l, rss2_l,
