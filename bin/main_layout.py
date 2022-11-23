@@ -112,7 +112,7 @@ class MainLayout:
         self.dropdown_select_config.append((set_menu_2, active_item))
         return ret
 
-    def multi_choice(self, label, checkboxes, session_key=None, callback=None, orderable=True):
+    def multi_choice(self, label, tooltip, checkboxes, session_key=None, callback=None, orderable=True):
         if callback is None:
             def default_callback(n, cb):
                 for v in cb.values():
@@ -142,7 +142,7 @@ class MainLayout:
             Div(text="<br>".join(y for _, y in checkboxes), css_classes=["vertical"], sizing_mode="fixed", 
                 width=CHECK_WIDTH),
             empty
-        ], sizing_mode="stretch_width"), col], sizing_mode="stretch_width", css_classes=["outlnie_border"],
+        ], sizing_mode="stretch_width"), col], sizing_mode="stretch_width", css_classes=["outlnie_border", "tooltip", tooltip],
         margin=DIV_MARGIN)
 
         self.reset_options[label] = [col, [], 1, [spinner, next_page, prev_page, page_div]]
@@ -245,8 +245,8 @@ class MainLayout:
         return set_options, layout
     
     
-    def multi_choice_auto(self, label, checkboxes, session_key, callback=None, orderable=True):
-        set_options, layout = self.multi_choice(label, checkboxes, session_key, callback, orderable)
+    def multi_choice_auto(self, label, tooltip, checkboxes, session_key, callback=None, orderable=True):
+        set_options, layout = self.multi_choice(label, tooltip, checkboxes, session_key, callback, orderable)
         self.multi_choice_config.append((set_options, session_key, checkboxes))
         return layout
 
@@ -330,7 +330,7 @@ class MainLayout:
 
         return row([name, apply_button, save_button, reset_button], sizing_mode="stretch_width")
 
-    def make_slider_spinner(self, title, settings, width=200, 
+    def make_slider_spinner(self, title, tooltip, settings, width=200, 
                             on_change=None, spinner_width=80, sizing_mode="stretch_width"):
         if on_change is None:
             def default_on_change(val):
@@ -348,9 +348,9 @@ class MainLayout:
 
         self.slider_spinner_config.append((slider, spinner, on_change, settings))
 
-        return row([slider, spinner], width=width, margin=DIV_MARGIN)
+        return row([slider, spinner], width=width, margin=DIV_MARGIN, css_classes=["tooltip", tooltip])
 
-    def make_range_slider_spinner(self, title, settings, width=200, 
+    def make_range_slider_spinner(self, title, tooltip, settings, width=200, 
                             on_change=None, spinner_width=80, sizing_mode="stretch_width"):
         if on_change is None:
             def default_on_change(val):
@@ -377,7 +377,7 @@ class MainLayout:
 
         self.range_slider_spinner_config.append((slider, spinner_start, spinner_end, on_change, settings))
 
-        return row([slider, spinner_start, spinner_end], width=width, margin=DIV_MARGIN)
+        return row([slider, spinner_start, spinner_end], width=width, margin=DIV_MARGIN, css_classes=["tooltip", tooltip])
 
     def make_checkbox(self, title, tooltip="", settings=[], on_change=None, width=200):
         div = Div(text=title, sizing_mode="stretch_width")
@@ -391,7 +391,7 @@ class MainLayout:
 
         self.checkbox_config.append((cg, settings))
 
-        return row([div, cg], width=width, margin=DIV_MARGIN)
+        return row([div, cg], width=width, margin=DIV_MARGIN, css_classes=["tooltip", tooltip])
 
     def config_slider_spinner(self):
         for slider, spinner, on_change, session_key in self.slider_spinner_config:
@@ -1144,19 +1144,20 @@ class MainLayout:
                                                   )
 
         color_scale = self.dropdown_select("Scale Color Range", "tooltip_scale_color_range",
-                                                  ("by absolute max", "abs"), 
-                                                  ("zero to max-value", "max"), 
-                                                  ("min- to max-value", "minmax"), 
-                                                  ("do not scale", "dont"),
+                                                  ("absolute max [x' = x / max(|v| in V)]", "abs"), 
+                                                  ("max [x' = x / max(v in V)]", "max"), 
+                                    ("min-max [x' = (x + min(v in V)) / (max(v in V) - min(v in V))]", "minmax"), 
+                                                  ("do not scale [x' = x]", "dont"),
                                                   active_item=['settings', 'normalization', 'scale']
                                                   )
 
         incomp_align_layout = self.make_checkbox("Show reads with incomplete alignments", 
+                                                    "tooltip_incomplete_alignments",
                                                     settings=['settings', 'filters', 'incomplete_alignments'])
 
-        divide_column = self.make_checkbox("Divide heatmap columns by track", 
+        divide_column = self.make_checkbox("Divide heatmap columns by track", "tooltip_divide_column",
                                                     settings=['settings', 'normalization', 'divide_by_column_coverage'])
-        divide_row = self.make_checkbox("Divide heatmap rows by track", 
+        divide_row = self.make_checkbox("Divide heatmap rows by track", "tooltip_divide_row",
                                                     settings=['settings', 'normalization', 'divide_by_row_coverage'])
 
 
@@ -1210,40 +1211,41 @@ class MainLayout:
                                             settings=["settings", "interface", "stretch"],
                                             on_change=stretch_event)
 
-        ms_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, 
+        ms_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_map_q_bounds",
                                                 settings=["settings", "filters", "mapping_q"], 
                                                 title="Mapping Quality Bounds", sizing_mode="stretch_width")
 
-        ibs_l = self.make_slider_spinner(width=SETTINGS_WIDTH, 
+        ibs_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_minimum_interactions",
                                                 title="Minimum Interactions", 
                                                 settings=["settings", "normalization", "min_interactions"], 
                                                 sizing_mode="stretch_width")
 
-        crs_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, 
+        crs_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_color_scale_range",
                                                 title="Color Scale Range", 
                                                 settings=["settings", "normalization", "color_range"],
                                                 sizing_mode="stretch_width")
 
-        is_l = self.make_slider_spinner(width=SETTINGS_WIDTH, 
+        is_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_color_scale_log_base",
                                           title="Color Scale Log Base", 
                                           settings=["settings", "normalization", "log_base"],
                                           sizing_mode="stretch_width")
 
         def update_freq_event(val):
             self.session.set_value(["settings", "interface", "update_freq", "val"], val)
-        ufs_l = self.make_slider_spinner(width=SETTINGS_WIDTH,
+        ufs_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_update_frequency",
                                             settings=["settings", "interface", "update_freq"],
                                             title="Update Frequency [seconds]", #, format="0[.]000"
                                             on_change=update_freq_event, sizing_mode="stretch_width")
 
-        rs_l = self.make_slider_spinner(width=SETTINGS_WIDTH,
+        rs_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_redraw_zoom",
                                     settings=["settings", "interface", "zoom_redraw"],
                                     title="Redraw if zoomed in by [%]", sizing_mode="stretch_width")
 
-        aas_l = self.make_slider_spinner(width=SETTINGS_WIDTH, settings=["settings", "interface", "add_draw_area"],
+        aas_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_add_draw_area",
+                                        settings=["settings", "interface", "add_draw_area"],
                                          title="Additional Draw Area [%]", sizing_mode="stretch_width")
 
-        dds_l = self.make_slider_spinner(width=SETTINGS_WIDTH, 
+        dds_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_min_diag_dist",
                                     settings=["settings", "filters", "min_diag_dist"],
                                        title="Minimum Distance from Diagonal (kbp)", sizing_mode="stretch_width")
 
@@ -1253,7 +1255,7 @@ class MainLayout:
             self.anno_x_axis.width = val
             self.anno_y.height = val
             self.anno_y_axis.height = val
-        ass_l = self.make_slider_spinner(width=SETTINGS_WIDTH, 
+        ass_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_anno_size",
                                       settings=["settings", "interface", "anno_size"],
                                        title=ANNOTATION_PLOT_NAME + " Plot Size", sizing_mode="stretch_width",
                                        on_change=anno_size_slider_event)
@@ -1264,28 +1266,28 @@ class MainLayout:
             self.raw_x_axis.width = val
             self.raw_y.height = val
             self.raw_y_axis.height = val
-        rss2_l = self.make_slider_spinner(width=SETTINGS_WIDTH, 
+        rss2_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_raw_size",
                                       settings=["settings", "interface", "raw_size"],
                                       title=RAW_PLOT_NAME + " Plot Size", sizing_mode="stretch_width",
                                       on_change=raw_size_slider_event)
 
-        nb_l = self.make_slider_spinner(width=SETTINGS_WIDTH, 
+        nb_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_max_number_of_bins",
                                settings=["settings", "interface", "max_num_bins"],
                                title="Max number of Bins (in thousands)", sizing_mode="stretch_width")
 
-        rsa_l = self.make_slider_spinner(width=SETTINGS_WIDTH, 
+        rsa_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_p_accept",
                                settings=["settings", "normalization", "p_accept"],
                                title="pAccept for binominal test", sizing_mode="stretch_width")
-        bsmcq_l = self.make_slider_spinner(width=SETTINGS_WIDTH, 
+        bsmcq_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_section_size_max_coverage",
                                settings=["settings", "replicates", "coverage_get_max_bin_size"],
-                               title="Bin size for max coverage queries [bp]", sizing_mode="stretch_width")
+                               title="Section size max coverage [bp]", sizing_mode="stretch_width")
             
         meta_file_label = Div(text="Data path:")
         meta_file_label.margin = DIV_MARGIN
-        self.meta_file = TextInput(value="smoother_out/")
+        self.meta_file = TextInput(value="smoother_out/", css_classes=["tooltip", "tooltip_meta_file"])
         self.meta_file.on_change("value", lambda x, y, z: self.setup())
 
-        group_layout = self.multi_choice_auto("Replicates", 
+        group_layout = self.multi_choice_auto("Replicates", "tooltip_replicates", 
                                                 [[["replicates", "in_group_a"], "group A"], 
                                                 [["replicates", "in_group_b"], "group B"], 
                                                 [["replicates", "in_row"], "track row"], 
@@ -1296,7 +1298,7 @@ class MainLayout:
                                                 [["replicates", "cov_row_b"], "row B"]],
                                                 ["replicates", "list"])
 
-        annos_layout = self.multi_choice_auto("Annotations", 
+        annos_layout = self.multi_choice_auto("Annotations", "tooltip_annotations",
                                                          [[["annotation", "visible_y"], "displayed row"],
                                                           [["annotation", "visible_x"], "displayed col"]],
                                                         ["annotation", "list"])
@@ -1315,7 +1317,8 @@ class MainLayout:
                 value=0,
                 title="Minimum Bin Size",
                 format=power_tick, 
-                sizing_mode="stretch_width")
+                sizing_mode="stretch_width",
+                css_classes=["tooltip", "tooltip_min_bin_size"])
         def min_bin_size_event():
             self.session.set_value(["settings", "interface", "min_bin_size", "val"], self.min_max_bin_size.value)
             self.trigger_render()
@@ -1345,7 +1348,7 @@ class MainLayout:
         self.info_field.min_height = 100
         self.info_field.height_policy = "fixed"
 
-        norm_layout = self.multi_choice_auto("Normalization", 
+        norm_layout = self.multi_choice_auto("Normalization", "tooltip_coverage_normalization",
                                                        [[["coverage", "in_column"], "track column"], 
                                                         [["coverage", "in_row"], "track row"], 
                                                         [["coverage", "cov_column_a"], "column A"], 
@@ -1364,7 +1367,7 @@ class MainLayout:
                                                 ["contigs", "row_coordinates"], 
                                                 [("Genomic loci", "full_genome")])
 
-        chrom_layout = self.multi_choice_auto("Chromosomes",
+        chrom_layout = self.multi_choice_auto("Contigs", "tooltip_chromosomes",
                                                         [[["contigs", "displayed_on_x"], "Rows"], 
                                                          [["contigs", "displayed_on_y"], "Columns"]],
                                                         ["contigs", "list"])
@@ -1384,7 +1387,7 @@ class MainLayout:
                 active_item=["settings", "filters", "anno_in_multiple_bins"])
 
         export_button = Button(label="Export", width=350, sizing_mode="fixed", 
-                                    css_classes=["other_button"], height=DROPDOWN_HEIGHT)
+                                    css_classes=["other_button", "tooltip", "tooltip_export"], height=DROPDOWN_HEIGHT)
         def exp_event(x):
             self.do_export()
         export_button.on_click(exp_event)
@@ -1395,33 +1398,35 @@ class MainLayout:
                 ("SVG-file", "svg"), 
                 active_item=["settings", "export", "export_format"])
         
-        export_full = self.make_checkbox("Export full matrix instead of visible area", "tooltip_full_matrix",
+        export_full = self.make_checkbox("Export full matrix instead", "tooltip_full_matrix",
                                             settings=["settings", "export", "do_export_full"])
 
-        max_coverage_col = self.make_checkbox("Query max coverage per bin instead of full coverage for columns",
+        max_coverage_col = self.make_checkbox("Max coverage per bin columns",
+                                            "tooltip_query_max_cov_col",
                                             settings=["settings", "replicates", "coverage_get_max_col"])
-        max_coverage_row = self.make_checkbox("Query max coverage per bin instead of full coverage for rows",
+        max_coverage_row = self.make_checkbox("Max coverage per bin rows",
+                                            "tooltip_query_max_cov_row",
                                             settings=["settings", "replicates", "coverage_get_max_row"])
         
-        coverage_filter_col = self.make_range_slider_spinner(width=SETTINGS_WIDTH, 
+        coverage_filter_col = self.make_range_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_coverage_filter_col",
                                                 settings=["settings", "filters", "coverage_bin_filter_column"], 
                                                 title="Column Coverage Filter", sizing_mode="stretch_width")
-        coverage_filter_row = self.make_range_slider_spinner(width=SETTINGS_WIDTH, 
+        coverage_filter_row = self.make_range_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_coverage_filter_row",
                                                 settings=["settings", "filters", "coverage_bin_filter_row"], 
                                                 title="Row Coverage Filter", sizing_mode="stretch_width")
 
-        export_label = Div(text="Output Prefix:")
+        export_label = Div(text="Output Prefix:", css_classes=["tooltip", "tooltip_export_prefix"])
         export_label.margin = DIV_MARGIN
-        self.export_file = TextInput()
+        self.export_file = TextInput(css_classes=["tooltip", "tooltip_export_prefix"])
         def export_file_event(_1, _2, _3):
             self.session.set_value(["settings", "export", "prefix"], self.export_file.value)
         self.export_file.on_change("value", export_file_event)
         
-        export_sele_layout = self.multi_choice_auto("Export Selection", [[["settings", "export", "selection"], ""]],
+        export_sele_layout = self.multi_choice_auto("Export Selection", "tooltip_export_selection", [[["settings", "export", "selection"], ""]],
                                                     ["settings", "export", "list"], orderable=False)
     
-        self.low_color = ColorPicker(title="Color Low")
-        self.high_color = ColorPicker(title="Color High")
+        self.low_color = ColorPicker(title="Color Low", css_classes=["tooltip", "tooltip_color_low"])
+        self.high_color = ColorPicker(title="Color High", css_classes=["tooltip", "tooltip_color_high"])
         def color_event_low(_1, _2, _3):
             self.session.set_value(["settings", "interface", "color_low"], self.low_color.color)
             self.trigger_render()
@@ -1459,7 +1464,7 @@ class MainLayout:
 
         version_info = Div(text="Smoother "+ self.smoother_version +"<br>LibSps Version: " + Quarry.get_libSps_version())
 
-        self.color_layout = row([self.make_color_figure(["black"])])
+        self.color_layout = row([self.make_color_figure(["black"])], css_classes=["tooltip", "tooltip_color_layout"])
 
 
         quick_configs = [self.config_row("default", lock_name=True)]
@@ -1576,7 +1581,8 @@ class MainLayout:
             plot.yaxis.major_label_text_align = "right"
             plot.yaxis.ticker.min_interval = 1
 
-        self.area_range = TextAreaInput(value="n/a", width=SETTINGS_WIDTH, height=80)
+        self.area_range = TextAreaInput(value="n/a", width=SETTINGS_WIDTH, height=80,
+                                        css_classes=["tooltip", "tooltip_area_range"])
         self.area_range.on_change("value", lambda x, y, z: self.parse_area_range())
 
         _settings = column([

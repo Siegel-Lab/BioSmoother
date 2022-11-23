@@ -1,13 +1,13 @@
-# smoother todo
+# smoother todo (ranked)
 
+- https://docs.bokeh.org/en/latest/docs/user_guide/interaction/tooltips.html#the-tooltip-object
+- presetting load and save -> status print
+- sortable multi choice: column labels and checkboxes not aligned
+- application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
+- colorscale should show data max & min as well as color range max & min
 - AutocompleteInput for filepath
     - when calling give folder where indices are located
     - restrict for public hosting
-- application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
-- presetting load and save -> status print
-- conditions in the computational graph of libCm???
-- sortable multi choice: column labels and checkboxes not aligned
-- https://docs.bokeh.org/en/latest/docs/user_guide/interaction/tooltips.html#the-tooltip-object
 
 # verification
 

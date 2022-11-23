@@ -31,6 +31,162 @@
     content: "general options";
 }
 
+.tooltip_area_range:after {
+    content: "area that is displayed in the heatmap. Edit the value of this field to jup to a certain locus";
+}
+
+.tooltip_meta_file:after {
+    content: "path to the opened index";
+}
+
+.tooltip_normalize_by_coverage:after {
+    content: "normalize the coverage tracks in various ways";
+}
+
+.tooltip_divide_column:after {
+    content: "divide the heatmaps columns by the coverage track";
+}
+
+.tooltip_divide_row:after {
+    content: "divide the heatmaps rows by the coverage track";
+}
+
+.tooltip_color_layout:after {
+    content: "the color scale of the heatmap";
+}
+
+.tooltip_minimum_interactions:after {
+    content: "subtract this many interactions from each bin";
+}
+
+.tooltip_color_scale_range:after {
+    content: "range of the color scale of the main heatmap";
+}
+
+.tooltip_color_scale_log_base:after {
+    content: "logarithmic base for the color scale. Set to zero for a linear scale";
+}
+
+.tooltip_scale_color_range:after {
+    content: "scale the final values of the main heatmap; where V is the set of all values, x' any sacled and x the respective unscaled value.";
+}
+
+.tooltip_coverage_normalization:after {
+    content: "pick which tracks to display on the x/y-axis and to include in the main coverage";
+}
+
+.tooltip_p_accept:after {
+    content: "the acceptance p-value for the binominal test normalization. Does nothing for other normalizations.";
+}
+
+.tooltip_replicates:after {
+    content: "pick which replicates to show in the heatmap and which to show as coverage tracks.";
+}
+
+.tooltip_query_max_cov_col:after {
+    content: "When querying the coverage of replicates, query the maximal coverage per secion instead of the full coverage of the column.";
+}
+
+.tooltip_section_size_max_coverage:after {
+    content: "When querying the coverage of replicates, query the maximal coverage per secion instead of the full coverage of the column.";
+}
+
+.tooltip_query_max_cov_row:after {
+    content: "The section size when querying the maximal coverage per section of replicates.";
+}
+
+.tooltip_max_number_of_bins:after {
+    content: "Number of bins to display on the heatmap. This is the main runtime deciding factor.";
+}
+
+.tooltip_min_bin_size:after {
+    content: "The minimal size of bins in the main heatmap.";
+}
+
+.tooltip_update_frequency:after {
+    content: "Delay between checking if the heatmap needs to be rerendered due to panning or zooming.";
+}
+
+.tooltip_redraw_zoom:after {
+    content: "Redraw the heatmap if less than x% of the previously rendered heatmap area is visible.";
+}
+
+.tooltip_add_draw_area:after {
+    content: "Increase the rendered area by x% over the visible area. This way, panning does not trigger re-rendering immediately.";
+}
+
+.tooltip_anno_size:after {
+    content: "Size of the annotation plot.";
+}
+
+.tooltip_raw_size:after {
+    content: "Size of the coverage plot.";
+}
+
+.tooltip_color_low:after {
+    content: "The start color of the 'Low to High' palette.";
+}
+
+.tooltip_color_high:after {
+    content: "The end color of the 'Low to High' palette.";
+}
+
+.tooltip_y_axis_label:after {
+    content: "The axis lables to display.";
+}
+
+.tooltip_map_q_bounds:after {
+    content: "Filter out all reads with a mapping quality that does not fall into these bounds. The mapping quality represents an aligners confidence into the correctess of an alignment. The highest possible confidence is 254 while the lowest is zero.";
+}
+
+.tooltip_incomplete_alignments:after {
+    content: "Some reads map to more loci on the genome than can be reported by the aligner. In this situation the aligner may choose some strategy to report at least one of the mapping loci. We call these alignments incomplete, they can be shown using this option but may introduce a lot of noise into the heatmap.";
+}
+
+.tooltip_min_diag_dist:after {
+    content: "Filter out all bins closer to the diagonal than this value.";
+}
+
+.tooltip_annotations:after {
+    content: "Pick which annotations to display.";
+}
+
+.tooltip_multiple_bin_for_anno:after {
+    content: "For annotation-based coordinate systems: pick how to deal with annotations that fall into multiple bins.";
+}
+
+.tooltip_chromosomes:after {
+    content: "Pick which contigs to display.";
+}
+
+.tooltip_export_prefix:after {
+    content: "A common prefix for exported files.";
+}
+
+.tooltip_export_selection:after {
+    content: "Pick which plots to export.";
+}
+
+.tooltip_full_matrix:after {
+    content: "Export the full matrix instead of merely the visible area.";
+}
+
+.tooltip_export_format:after {
+    content: "Pick the format that files shall be exported to.";
+}
+
+.tooltip_export:after {
+    content: "Export the data now!";
+}
+
+.tooltip_coverage_filter_col:after {
+    content: "Filter out heatmap columns with a coverage outside these bounds.";
+}
+
+.tooltip_coverage_filter_row:after {
+    content: "Filter out heatmap rows with a coverage outside these bounds.";
+}
+
 .tooltip_normalization:after {
     content: "options for the data normalization";
 }
@@ -88,11 +244,11 @@
 }
 
 .tooltip_bin_aspect_ratio:after {
-    content: "set the height to width ratio of bins relative to...";
+    content: "Enforce that bins are squares in the dataspace. Does nothing for coordinates systems other than the genome.";
 }
 
 .tooltip_snap_bin_size:after {
-    content: "restrict the allowed binsizes";
+    content: "Restrict the allowed binsizes to round numbers. Does nothing for coordinates systems other than the genome.";
 }
 
 .tooltip_symmetry:after {
