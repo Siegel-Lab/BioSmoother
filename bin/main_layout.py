@@ -640,6 +640,7 @@ class MainLayout:
         if x < 0: 
             idx = 0
         else:
+            idx = 0
             for idx, start in enumerate(contig_starts):
                 if x >= start:
                     x -= start
@@ -654,7 +655,7 @@ class MainLayout:
         else:
             label = "{:,}".format(x) + " bp"
 
-        if idx < len(contig_names):
+        if idx >= len(contig_names):
             return "n/a"
 
         return contig_names[idx] + ": " + label + (" (OOB)" if oob else "")
@@ -911,6 +912,20 @@ class MainLayout:
         self.area_range = None
         self.area_range_expected = "n/a"
         self.set_active_tools_ti = None
+        d = {
+            "chrs": [],
+            "index_start": [],
+            "index_end": [],
+            "xs": [],
+            "ys": [],
+            "colors": [],
+            "score_a": [],
+            "score_b": [],
+        }
+        self.ranked_columns_data = ColumnDataSource(data=d)
+        self.ranked_columns = None
+        self.ranked_rows_data = ColumnDataSource(data=d)
+        self.ranked_rows = None
 
         self.do_layout()
 
@@ -1045,6 +1060,29 @@ class MainLayout:
         )
         self.anno_x.add_tools(anno_hover)
         self.anno_y.add_tools(anno_hover)
+        
+        ranked_hover = HoverTool(
+            tooltips=[
+                ('pos', "@chrs @index_start - @index_end"),
+                ('ranking', "@xs"),
+                ('coverage', "@ys"),
+                ('by group', "A: @score_a, B: @score_b")
+            ]
+        )
+        self.ranked_columns = figure(title="Ranked Columns", tools="pan,wheel_zoom,box_zoom", y_axis_type="log",
+                                     height=200)
+        tollbars.append(self.ranked_columns.toolbar)
+        self.ranked_columns.toolbar_location = None
+        self.ranked_columns.sizing_mode = "stretch_width"
+        self.ranked_columns.dot(x="xs", y="ys", color="colors", size=12, source=self.ranked_columns_data)
+        self.ranked_columns.add_tools(ranked_hover)
+
+        self.ranked_rows = figure(title="Ranked Rows", tools="pan,wheel_zoom,box_zoom", y_axis_type="log", height=200)
+        tollbars.append(self.ranked_rows.toolbar)
+        self.ranked_rows.toolbar_location = None
+        self.ranked_rows.sizing_mode = "stretch_width"
+        self.ranked_rows.dot(x="xs", y="ys", color="colors", size=12, source=self.ranked_rows_data)
+        self.ranked_rows.add_tools(ranked_hover)
 
         crosshair = CrosshairTool(dimensions="width", line_color="lightgrey")
         for fig in [self.anno_x, self.raw_x, self.heatmap]:
@@ -1550,7 +1588,7 @@ class MainLayout:
                                         export_button
                                      ]),
                 make_panel("Presetting", "tooltip_quick_config", quick_configs),
-                make_panel("Info", "tooltip_info", [version_info]),
+                make_panel("Info", "tooltip_info", [version_info, self.ranked_columns, self.ranked_rows]),
             ],
             sizing_mode="stretch_both",
             css_classes=["scroll_y"]
@@ -1707,6 +1745,9 @@ class MainLayout:
 
                 w_bin, h_bin = self.session.get_bin_size()
 
+                ranked_slice_x = self.session.get_ranked_slices(False)
+                ranked_slice_y = self.session.get_ranked_slices(True)
+
                 error = self.session.get_error()
 
                 if len(error) > 0:
@@ -1788,6 +1829,9 @@ class MainLayout:
                     self.tick_formatter_x_2.args = ticks_x
                     self.tick_formatter_y.args = ticks_y
                     self.tick_formatter_y_2.args = ticks_y
+
+                    self.ranked_columns_data.data = ranked_slice_y
+                    self.ranked_rows_data.data = ranked_slice_x
 
                     if len(error) > 0:
                         self.heatmap.border_fill_color = "red"
