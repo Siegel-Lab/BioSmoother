@@ -654,6 +654,9 @@ class MainLayout:
         else:
             label = "{:,}".format(x) + " bp"
 
+        if idx < len(contig_names):
+            return "n/a"
+
         return contig_names[idx] + ": " + label + (" (OOB)" if oob else "")
 
     def set_area_range(self):
@@ -1349,8 +1352,13 @@ class MainLayout:
                                             settings=["settings", "replicates", "coverage_get_max_col"])
         max_coverage_row = self.make_checkbox("Query max coverage per bin instead of full coverage for rows",
                                             settings=["settings", "replicates", "coverage_get_max_row"])
-        max_coverage_row = self.make_checkbox("Query max coverage per bin instead of full coverage for rows",
-                                            settings=["settings", "replicates", "coverage_get_max_row"])
+        
+        coverage_filter_col = self.make_range_slider_spinner(width=SETTINGS_WIDTH, 
+                                                settings=["settings", "filters", "coverage_bin_filter_column"], 
+                                                title="Column Coverage Filter", sizing_mode="stretch_width")
+        coverage_filter_row = self.make_range_slider_spinner(width=SETTINGS_WIDTH, 
+                                                settings=["settings", "filters", "coverage_bin_filter_row"], 
+                                                title="Row Coverage Filter", sizing_mode="stretch_width")
 
         export_label = Div(text="Output Prefix:")
         export_label.margin = DIV_MARGIN
@@ -1536,7 +1544,7 @@ class MainLayout:
                 make_panel("Filters", "tooltip_filters", [ms_l, incomp_align_layout, 
                                           symmetrie, dds_l, annos_layout, 
                                           x_coords, y_coords, multiple_anno_per_bin, multiple_bin_per_anno,
-                                          chrom_layout, multi_mapping]),
+                                          chrom_layout, multi_mapping, coverage_filter_col, coverage_filter_row]),
                 make_panel("Export", "tooltip_export", [export_label, self.export_file, export_sele_layout,
                                         export_full, export_format,
                                         export_button
