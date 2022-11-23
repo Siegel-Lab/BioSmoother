@@ -7,13 +7,13 @@
 - presetting load and save -> status print
 - conditions in the computational graph of libCm???
 - sortable multi choice: column labels and checkboxes not aligned
+- https://docs.bokeh.org/en/latest/docs/user_guide/interaction/tooltips.html#the-tooltip-object
 
 # verification
 
 - does radicl sec do normalization for rna?
 - uneven distribution between contigs in grid seq normalization
 - check if lines coincide with rRNA / ncRNA / snoRNA / tRNA
-
 
 # presentation
 

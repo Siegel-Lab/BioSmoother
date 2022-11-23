@@ -1069,15 +1069,16 @@ class MainLayout:
                 ('by group', "A: @score_a, B: @score_b")
             ]
         )
-        self.ranked_columns = figure(title="Ranked Columns", tools="pan,wheel_zoom,box_zoom", y_axis_type="log",
-                                     height=200)
+        self.ranked_columns = figure(title="Columns ranked by coverage", tools="pan,wheel_zoom,box_zoom,crosshair",
+                                     y_axis_type="log", height=200)
         tollbars.append(self.ranked_columns.toolbar)
         self.ranked_columns.toolbar_location = None
         self.ranked_columns.sizing_mode = "stretch_width"
         self.ranked_columns.dot(x="xs", y="ys", color="colors", size=12, source=self.ranked_columns_data)
         self.ranked_columns.add_tools(ranked_hover)
 
-        self.ranked_rows = figure(title="Ranked Rows", tools="pan,wheel_zoom,box_zoom", y_axis_type="log", height=200)
+        self.ranked_rows = figure(title="Rows ranked by coverage", tools="pan,wheel_zoom,box_zoom,crosshair", 
+                                  y_axis_type="log", height=200)
         tollbars.append(self.ranked_rows.toolbar)
         self.ranked_rows.toolbar_location = None
         self.ranked_rows.sizing_mode = "stretch_width"
@@ -1120,16 +1121,26 @@ class MainLayout:
                                               ("Make Interactions Symmetric (Top to Bottom)", "botToTop"),
                                               active_item=['settings', 'filters', 'symmetry'])
 
-        normalization = self.dropdown_select("Normalize by", "tooltip_normalize_by",
-                                                  ("Reads per Million",
+        normalization = self.dropdown_select("Normalize heatmap by", "tooltip_normalize_by",
+                                                  ("Reads per million",
                                                    "rpm"), 
-                                                  ("Reads per Thousand",
+                                                  ("Reads per thousand",
                                                    "rpk"), 
-                                                  ("Binominal Test", "radicl-seq"),
+                                                  ("Binominal test", "radicl-seq"),
                                                   ("Iterative Correction", "hi-c"),
                                                   ("Cooler Iterative Correction", "cool-hi-c"),
-                                                  ("No Normalization", "dont"),
+                                                  ("No normalization", "dont"),
                                                   active_item=['settings', 'normalization', 'normalize_by']
+                                                  )
+        normalization_cov = self.dropdown_select("Normalize coverage by", "tooltip_normalize_by_coverage",
+                                                  ("Reads per million",
+                                                   "rpm"), 
+                                                  ("Reads per thousand",
+                                                   "rpk"), 
+                                                  ("Reads per million base pairs", "rpmb"),
+                                                  ("Reads per thousand base pairs", "rpkb"),
+                                                  ("No normalization", "dont"),
+                                                  active_item=['settings', 'normalization', 'normalize_by_coverage']
                                                   )
 
         color_scale = self.dropdown_select("Scale Color Range", "tooltip_scale_color_range",
@@ -1571,7 +1582,8 @@ class MainLayout:
                 make_panel("General", "tooltip_general", [row([self.undo_button, self.redo_button, tool_bar, 
                                                                 reset_session]), 
                                                           meta_file_label, self.meta_file, self.area_range]),
-                make_panel("Normalization", "tooltip_normalization", [normalization, divide_column, divide_row,
+                make_panel("Normalization", "tooltip_normalization", [normalization, normalization_cov, 
+                                    divide_column, divide_row,
                                     self.color_layout, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd]),
                 make_panel("Replicates", "tooltip_replicates", [in_group, betw_group, group_layout, max_coverage_col, max_coverage_row]),
                 make_panel("Interface", "tooltip_interface", [nb_l,
