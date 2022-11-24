@@ -926,6 +926,14 @@ class MainLayout:
         self.ranked_columns = None
         self.ranked_rows_data = ColumnDataSource(data=d)
         self.ranked_rows = None
+        d = {
+            "chr": [],
+            "color": [],
+            "xs": [],
+            "ys": []
+        }
+        self.dist_dep_dec_plot_data = ColumnDataSource(data=d)
+        self.dist_dep_dec_plot = None
 
         self.do_layout()
 
@@ -1084,6 +1092,15 @@ class MainLayout:
         self.ranked_rows.sizing_mode = "stretch_width"
         self.ranked_rows.dot(x="xs", y="ys", color="colors", size=12, source=self.ranked_rows_data)
         self.ranked_rows.add_tools(ranked_hover)
+
+        
+        self.dist_dep_dec_plot = figure(title="Distance Dependant Decay", tools="pan,wheel_zoom,box_zoom,crosshair",
+                                        y_axis_type="log", height=200)
+        tollbars.append(self.dist_dep_dec_plot.toolbar)
+        self.dist_dep_dec_plot.toolbar_location = None
+        self.dist_dep_dec_plot.sizing_mode = "stretch_width"
+        self.dist_dep_dec_plot.multi_line(xs="xs", ys="ys", color="color", legend_field="chr",
+                                          source=self.dist_dep_dec_plot_data)
 
         crosshair = CrosshairTool(dimensions="width", line_color="lightgrey")
         for fig in [self.anno_x, self.raw_x, self.heatmap]:
@@ -1607,7 +1624,8 @@ class MainLayout:
                                         export_button
                                      ]),
                 make_panel("Presetting", "tooltip_quick_config", quick_configs),
-                make_panel("Info", "tooltip_info", [version_info, self.ranked_columns, self.ranked_rows]),
+                make_panel("Info", "tooltip_info", [version_info, self.ranked_columns, self.ranked_rows,
+                                                    self.dist_dep_dec_plot]),
             ],
             sizing_mode="stretch_both",
             css_classes=["scroll_y"]
@@ -1766,6 +1784,7 @@ class MainLayout:
 
                 ranked_slice_x = self.session.get_ranked_slices(False)
                 ranked_slice_y = self.session.get_ranked_slices(True)
+                dist_dep_dec_plot_data = self.session.get_decay()
 
                 error = self.session.get_error()
 
@@ -1851,6 +1870,7 @@ class MainLayout:
 
                     self.ranked_columns_data.data = ranked_slice_y
                     self.ranked_rows_data.data = ranked_slice_x
+                    self.dist_dep_dec_plot_data.data = dist_dep_dec_plot_data
 
                     if len(error) > 0:
                         self.heatmap.border_fill_color = "red"

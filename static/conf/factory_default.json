@@ -38,6 +38,14 @@
             "spinner_max_restricted": false
         },
         "ddd": false,
+        "ddd_samples": {
+            "min": 10,
+            "max": 1000,
+            "val": 100,
+            "step": 10,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        },
         "scale": "max",
         "divide_by_column_coverage": false,
         "divide_by_row_coverage": false
