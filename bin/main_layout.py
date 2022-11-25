@@ -1180,6 +1180,14 @@ class MainLayout:
 
         ddd = self.make_checkbox("Divide by Distance Dependent Decay", "tooltip_ddd",
                                         settings=['settings', 'normalization', 'ddd'])
+        ddd_ex_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="@todo",
+                                                title="Distance Dependent Decay Exclusion Quantiles", 
+                                                settings=["settings", "normalization", "ddd_quantile"], 
+                                                sizing_mode="stretch_width")
+        ddd_sam_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, tooltip="@todo",
+                                                title="Distance Dependent Decay Samples", 
+                                                settings=["settings", "normalization", "ddd_samples"], 
+                                                sizing_mode="stretch_width")
 
         square_bins = self.make_checkbox("Make Bins Squares", "tooltip_bin_aspect_ratio",
                                                    settings=['settings', "interface", "squared_bins"]
@@ -1608,7 +1616,8 @@ class MainLayout:
                                                           meta_file_label, self.meta_file, self.area_range]),
                 make_panel("Normalization", "tooltip_normalization", [normalization, normalization_cov, 
                                     divide_column, divide_row,
-                                    self.color_layout, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd]),
+                                    self.color_layout, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd,
+                                    ddd_sam_l, ddd_ex_l]),
                 make_panel("Replicates", "tooltip_replicates", [in_group, betw_group, group_layout, max_coverage_col, max_coverage_row, bsmcq_l]),
                 make_panel("Interface", "tooltip_interface", [nb_l,
                                     show_hide, mmbs_l,
