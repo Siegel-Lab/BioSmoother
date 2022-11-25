@@ -139,6 +139,14 @@
     content: "Filter out all reads with a mapping quality that does not fall into these bounds. The mapping quality represents an aligners confidence into the correctess of an alignment. The highest possible confidence is 254 while the lowest is zero.";
 }
 
+.tooltip_ddd_quantiles:after {
+    content: "Exclude the top and bottom x% of samples when computing the distance dependant decay average.";
+}
+
+.tooltip_ddd_samples:after {
+    content: "Number of samples to compute for the distance dependant decay average. Will always try to compute as many samples as possible but never more than the maximum picked by this slider. Diagonals with less than the minimum amount will be masked out.";
+}
+
 .tooltip_incomplete_alignments:after {
     content: "Some reads map to more loci on the genome than can be reported by the aligner. In this situation the aligner may choose some strategy to report at least one of the mapping loci. We call these alignments incomplete, they can be shown using this option but may introduce a lot of noise into the heatmap.";
 }

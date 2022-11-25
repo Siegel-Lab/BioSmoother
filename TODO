@@ -1,6 +1,6 @@
 # smoother todo (ranked)
 
-- https://docs.bokeh.org/en/latest/docs/user_guide/interaction/tooltips.html#the-tooltip-object
+- icing exclude columns and rows with too little data
 - presetting load and save -> status print
 - sortable multi choice: column labels and checkboxes not aligned
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions

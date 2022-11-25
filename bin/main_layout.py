@@ -1098,9 +1098,34 @@ class MainLayout:
                                         y_axis_type="log", height=200)
         tollbars.append(self.dist_dep_dec_plot.toolbar)
         self.dist_dep_dec_plot.toolbar_location = None
+        self.dist_dep_dec_plot.xaxis.axis_label = "distance from diagonal"
+        self.dist_dep_dec_plot.yaxis.axis_label = "reads per kbp^2"
         self.dist_dep_dec_plot.sizing_mode = "stretch_width"
-        self.dist_dep_dec_plot.multi_line(xs="xs", ys="ys", color="color", legend_field="chr",
-                                          source=self.dist_dep_dec_plot_data)
+        self.dist_dep_dec_plot.multi_line(xs="xs", ys="ys", color="color", source=self.dist_dep_dec_plot_data)
+        self.dist_dep_dec_plot.xaxis[0].formatter = FuncTickFormatter(
+            args={},
+            code="""
+                    function numberWithCommas(x) {
+                        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                    }
+                    var tick_label = "";
+                    if(tick == 0)
+                        tick_label = "0 bp"
+                    else if(tick % 1000000 == 0)
+                        tick_label = numberWithCommas(tick / 1000000) + " mbp";
+                    else if (tick % 1000 == 0)
+                        tick_label = numberWithCommas(tick / 1000) + " kbp";
+                    else
+                        tick_label = numberWithCommas(tick) + " bp";
+                    return tick_label;
+                """)
+        self.dist_dep_dec_plot.add_tools(HoverTool(
+            tooltips="""
+                <div>
+                    <span style="color: @color">@chr: ($data_x, $data_y)</span>
+                </div>
+            """
+        ))
 
         crosshair = CrosshairTool(dimensions="width", line_color="lightgrey")
         for fig in [self.anno_x, self.raw_x, self.heatmap]:
@@ -1180,11 +1205,11 @@ class MainLayout:
 
         ddd = self.make_checkbox("Divide by Distance Dependent Decay", "tooltip_ddd",
                                         settings=['settings', 'normalization', 'ddd'])
-        ddd_ex_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="@todo",
+        ddd_ex_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_ddd_quantiles",
                                                 title="Distance Dependent Decay Exclusion Quantiles", 
                                                 settings=["settings", "normalization", "ddd_quantile"], 
                                                 sizing_mode="stretch_width")
-        ddd_sam_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, tooltip="@todo",
+        ddd_sam_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_ddd_samples",
                                                 title="Distance Dependent Decay Samples", 
                                                 settings=["settings", "normalization", "ddd_samples"], 
                                                 sizing_mode="stretch_width")
