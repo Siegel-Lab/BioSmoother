@@ -1,13 +1,1 @@
-{
-    "display_name": "Hi-C",
-    "normalization": {
-        "normalize_by": "hi-c"
-    },
-    "interface": {
-        "axis_lables": "DNA_DNA"
-    },
-    "filters": {
-        "symmetry": "topToBot"
-    },
-    "smoother_config_file_version": 0.1
-}
+{"interface": {"min_bin_size": {"min": 27}}, "normalization": {"log_base": {"val": 5}, "normalize_by": "hi-c"}, "replicates": {"coverage_get_max_bin_size": {"min": 1000, "step": 1000}}, "display_name": "Hi-C", "smoother_config_file_version": 0.1}

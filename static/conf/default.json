@@ -65,10 +65,10 @@
         "coverage_get_max_col": false,
         "coverage_get_max_row": false,
         "coverage_get_max_bin_size": {
-            "min": 100,
+            "min": 1000,
             "max": 100000,
             "val": 1000,
-            "step": 100,
+            "step": 1000,
             "spinner_min_restricted": true,
             "spinner_max_restricted": false
         }
