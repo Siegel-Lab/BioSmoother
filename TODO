@@ -1,9 +1,9 @@
 # smoother todo (ranked)
 
-- cooler icing option should only be displayed if cooler is installed
 - icing exclude columns and rows with too little data
 - status prints
     - presetting load and save -> status print
+- distance dependant decay should only be computed if normalization is active (or plot selected?)
 - better categories
 - sortable multi choice: column labels and checkboxes not aligned
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions

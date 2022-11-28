@@ -1163,17 +1163,29 @@ class MainLayout:
                                               ("Make Interactions Symmetric (Top to Bottom)", "botToTop"),
                                               active_item=['settings', 'filters', 'symmetry'])
 
-        normalization = self.dropdown_select("Normalize heatmap by", "tooltip_normalize_by",
-                                                  ("Reads per million",
-                                                   "rpm"), 
-                                                  ("Reads per thousand",
-                                                   "rpk"), 
-                                                  ("Binominal test", "radicl-seq"),
-                                                  ("Iterative Correction", "hi-c"),
-                                                  ("Cooler Iterative Correction", "cool-hi-c"),
-                                                  ("No normalization", "dont"),
-                                                  active_item=['settings', 'normalization', 'normalize_by']
-                                                  )
+        if Quarry.has_cooler_icing():
+            normalization = self.dropdown_select("Normalize heatmap by", "tooltip_normalize_by",
+                                                    ("Reads per million",
+                                                    "rpm"), 
+                                                    ("Reads per thousand",
+                                                    "rpk"), 
+                                                    ("Binominal test", "radicl-seq"),
+                                                    ("Iterative Correction", "hi-c"),
+                                                    ("Cooler Iterative Correction", "cool-hi-c"),
+                                                    ("No normalization", "dont"),
+                                                    active_item=['settings', 'normalization', 'normalize_by']
+                                                    )
+        else:
+            normalization = self.dropdown_select("Normalize heatmap by", "tooltip_normalize_by",
+                                                    ("Reads per million",
+                                                    "rpm"), 
+                                                    ("Reads per thousand",
+                                                    "rpk"), 
+                                                    ("Binominal test", "radicl-seq"),
+                                                    ("Iterative Correction", "hi-c"),
+                                                    ("No normalization", "dont"),
+                                                    active_item=['settings', 'normalization', 'normalize_by']
+                                                    )
         normalization_cov = self.dropdown_select("Normalize coverage by", "tooltip_normalize_by_coverage",
                                                   ("Reads per million",
                                                    "rpm"), 
@@ -1203,14 +1215,14 @@ class MainLayout:
                                                     settings=['settings', 'normalization', 'divide_by_row_coverage'])
 
 
-        ddd = self.make_checkbox("Divide by Distance Dependent Decay", "tooltip_ddd",
+        ddd = self.make_checkbox("Divide by Distance Dependant Decay", "tooltip_ddd",
                                         settings=['settings', 'normalization', 'ddd'])
         ddd_ex_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_ddd_quantiles",
-                                                title="Distance Dependent Decay Exclusion Quantiles", 
+                                                title="Distance Dependant Decay Exclusion Quantiles", 
                                                 settings=["settings", "normalization", "ddd_quantile"], 
                                                 sizing_mode="stretch_width")
         ddd_sam_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_ddd_samples",
-                                                title="Distance Dependent Decay Samples", 
+                                                title="Distance Dependant Decay Samples", 
                                                 settings=["settings", "normalization", "ddd_samples"], 
                                                 sizing_mode="stretch_width")
 
