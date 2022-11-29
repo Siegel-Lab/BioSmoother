@@ -3,14 +3,14 @@
 - icing exclude columns and rows with too little data
 - status prints
     - presetting load and save -> status print
+    - error information field
+    - output log
 - better categories
 - sortable multi choice: column labels and checkboxes not aligned
 - extra plots could be auto hidden while empty -> anno cov ddd slice_rankings
     - also column sum & row sum coverage does not need to exist if zero
-- error information field
-- output log
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
-- colorscale should show data max & min as well as color range max & min
+- svg output
 - AutocompleteInput for filepath
     - when calling give folder where indices are located
     - restrict for public hosting

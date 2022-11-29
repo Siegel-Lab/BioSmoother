@@ -5,7 +5,7 @@ __email__ = "Markus.Schmidt@lmu.de"
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup, CrosshairTool, ColorPicker, ImageURLTexture, TextAreaInput
+from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup, CrosshairTool, ColorPicker, ImageURLTexture, TextAreaInput, AllLabels
 #from bin.unsorted_multi_choice import UnsortedMultiChoice as MultiChoice
 from bokeh.io import export_png, export_svg
 import math
@@ -610,20 +610,22 @@ class MainLayout:
         self.unhide_button.on_click(event)
         return self.unhide_button
 
-    def make_color_figure(self, palette):
+    def make_color_figure(self, palette, ticks):
         color_mapper = LinearColorMapper(palette=palette, low=0, high=1)
         color_figure = figure(tools='', height=0, width=350)
-        color_figure.x(0,0)
+        color_figure.x(0, 0)
         color_info = ColorBar(color_mapper=color_mapper, orientation="horizontal", 
-                                   ticker=FixedTicker(ticks=[]), width=350)
-        #color_info.formatter = FuncTickFormatter(
-        #                args={"ticksx": [], "labelsx": []},
-        #                code="""
-        #                    for (let i = 0; i < ticksx.length; i++)
-        #                        if(tick == ticksx[i])
-        #                            return labelsx[i];
-        #                    return "n/a";
-        #                """)
+                                   ticker=FixedTicker(ticks=ticks), width=350)
+        print(ticks)
+        color_info.formatter = FuncTickFormatter(
+                        args={"ticksx": ticks, "labelsx": ["[d", "d]", "[s", "s]"]},
+                        code="""
+                            for (let i = 0; i < ticksx.length; i++)
+                                if(tick == ticksx[i])
+                                    return labelsx[i];
+                            return "n/a";
+                        """)
+        color_info.major_label_policy = AllLabels()
         color_figure.add_layout(color_info, "below")
 
         # make plot invisible
@@ -1532,7 +1534,8 @@ class MainLayout:
 
         version_info = Div(text="Smoother "+ self.smoother_version +"<br>LibSps Version: " + Quarry.get_libSps_version())
 
-        self.color_layout = row([self.make_color_figure(["black"])], css_classes=["tooltip", "tooltip_color_layout"])
+        self.color_layout = row([self.make_color_figure(["black"], [0,0,0,0])], 
+                                css_classes=["tooltip", "tooltip_color_layout"])
 
 
         quick_configs = [self.config_row("default", lock_name=True)]
@@ -1831,6 +1834,7 @@ class MainLayout:
                 ticks_y = self.session.get_ticks(False)
 
                 palette = self.session.get_palette()
+                palette_ticks = self.session.get_palette_ticks()
 
                 w_bin, h_bin = self.session.get_bin_size()
 
@@ -1856,7 +1860,7 @@ class MainLayout:
                 @gen.coroutine
                 def callback():
                     self.curdoc.hold()
-                    self.color_layout.children = [self.make_color_figure(palette)]
+                    self.color_layout.children = [self.make_color_figure(palette, palette_ticks)]
                     def mmax(*args):
                         m = 0
                         for x in args:

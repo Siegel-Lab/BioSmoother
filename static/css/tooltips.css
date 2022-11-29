@@ -292,7 +292,7 @@
 }
 
 .tooltip_color:after {
-    content: "Pick the color palette for the heatmap";
+    content: "Pick the color palette for the heatmap. The range of the displayed data is shown via the [d and d] labels. The color scale range is shown via [s and s].";
 }
 
 .tooltip_info:after {
