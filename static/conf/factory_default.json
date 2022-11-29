@@ -39,6 +39,14 @@
         },
         "ddd": false,
         "ddd_show": false,
+        "ice_sparse_slice_filter": {
+            "max": 1,
+            "min": 0,
+            "spinner_max_restricted": true,
+            "spinner_min_restricted": true,
+            "step": 0.1,
+            "val": 0.1
+        },
         "ddd_samples": {
             "min": 10,
             "max": 1000,

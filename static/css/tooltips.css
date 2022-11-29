@@ -67,6 +67,10 @@
     content: "logarithmic base for the color scale. Set to zero for a linear scale";
 }
 
+.tooltip_ice_sparse_filter:after {
+    content: "Filter out all slices where less than x percent of bins have a value larger than zero";
+}
+
 .tooltip_scale_color_range:after {
     content: "scale the final values of the main heatmap; where V is the set of all values, x' any sacled and x the respective unscaled value.";
 }

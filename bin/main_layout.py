@@ -616,7 +616,6 @@ class MainLayout:
         color_figure.x(0, 0)
         color_info = ColorBar(color_mapper=color_mapper, orientation="horizontal", 
                                    ticker=FixedTicker(ticks=ticks), width=350)
-        print(ticks)
         color_info.formatter = FuncTickFormatter(
                         args={"ticksx": ticks, "labelsx": ["[d", "d]", "[s", "s]"]},
                         code="""
@@ -1229,6 +1228,10 @@ class MainLayout:
                                                 title="Distance Dependant Decay Exclusion Quantiles", 
                                                 settings=["settings", "normalization", "ddd_quantile"], 
                                                 sizing_mode="stretch_width")
+        ice_sparse_filter = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_ice_sparse_filter",
+                                                title="Icing sparse slices filter", 
+                                                settings=["settings", "normalization", "ice_sparse_slice_filter"], 
+                                                sizing_mode="stretch_width")
         ddd_sam_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_ddd_samples",
                                                 title="Distance Dependant Decay Samples", 
                                                 settings=["settings", "normalization", "ddd_samples"], 
@@ -1663,7 +1666,7 @@ class MainLayout:
                 make_panel("Normalization", "tooltip_normalization", [normalization, normalization_cov, 
                                     divide_column, divide_row,
                                     self.color_layout, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd,
-                                    ddd_show, ddd_sam_l, ddd_ex_l]),
+                                    ddd_show, ddd_sam_l, ddd_ex_l, ice_sparse_filter]),
                 make_panel("Replicates", "tooltip_replicates", [in_group, betw_group, group_layout, max_coverage_col, max_coverage_row, bsmcq_l]),
                 make_panel("Interface", "tooltip_interface", [nb_l,
                                     show_hide, mmbs_l,
