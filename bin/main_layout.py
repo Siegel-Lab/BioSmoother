@@ -1084,6 +1084,8 @@ class MainLayout:
         self.ranked_columns.sizing_mode = "stretch_width"
         self.ranked_columns.dot(x="xs", y="ys", color="colors", size=12, source=self.ranked_columns_data)
         self.ranked_columns.add_tools(ranked_hover)
+        self.ranked_columns.xaxis.axis_label = "columns sorted by score"
+        self.ranked_columns.yaxis.axis_label = "normalized score"
 
         self.ranked_rows = figure(title="Rows ranked by coverage", tools="pan,wheel_zoom,box_zoom,crosshair", 
                                   y_axis_type="log", height=200)
@@ -1092,6 +1094,8 @@ class MainLayout:
         self.ranked_rows.sizing_mode = "stretch_width"
         self.ranked_rows.dot(x="xs", y="ys", color="colors", size=12, source=self.ranked_rows_data)
         self.ranked_rows.add_tools(ranked_hover)
+        self.ranked_rows.xaxis.axis_label = "rows sorted by score"
+        self.ranked_rows.yaxis.axis_label = "normalized score"
 
         
         self.dist_dep_dec_plot = figure(title="Distance Dependant Decay", tools="pan,wheel_zoom,box_zoom,crosshair",
