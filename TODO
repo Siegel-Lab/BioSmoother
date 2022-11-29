@@ -3,9 +3,9 @@
 - icing exclude columns and rows with too little data
 - status prints
     - presetting load and save -> status print
-- distance dependant decay should only be computed if normalization is active (or plot selected?)
 - better categories
 - sortable multi choice: column labels and checkboxes not aligned
+- extra plots could be auto hidden while empty -> anno cov ddd slice_rankings
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
 - colorscale should show data max & min as well as color range max & min
 - AutocompleteInput for filepath

@@ -124,7 +124,7 @@ class MainLayout:
         div = Div(text=label)
         SYM_WIDTH = 10
         SYM_CSS = ["other_button"]
-        CHECK_WIDTH = 20*len(checkboxes)
+        CHECK_WIDTH = 19*len(checkboxes)
         ELEMENTS_PER_PAGE = 10
 
         col = column([], sizing_mode="stretch_width")
@@ -140,7 +140,7 @@ class MainLayout:
         layout = column([row([div, prev_page, page_div, spinner, next_page, empty], sizing_mode="stretch_width"), row([
             Div(text="", sizing_mode="stretch_width"),
             Div(text="<br>".join(y for _, y in checkboxes), css_classes=["vertical"], sizing_mode="fixed", 
-                width=CHECK_WIDTH),
+                width=CHECK_WIDTH+5),
             empty
         ], sizing_mode="stretch_width"), col], sizing_mode="stretch_width", css_classes=["outlnie_border", "tooltip", tooltip],
         margin=DIV_MARGIN)
@@ -1217,6 +1217,8 @@ class MainLayout:
 
         ddd = self.make_checkbox("Divide by Distance Dependant Decay", "tooltip_ddd",
                                         settings=['settings', 'normalization', 'ddd'])
+        ddd_show = self.make_checkbox("Display Distance Dependant Decay", "tooltip_ddd_show",
+                                        settings=['settings', 'normalization', 'ddd_show'])
         ddd_ex_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_ddd_quantiles",
                                                 title="Distance Dependant Decay Exclusion Quantiles", 
                                                 settings=["settings", "normalization", "ddd_quantile"], 
@@ -1654,7 +1656,7 @@ class MainLayout:
                 make_panel("Normalization", "tooltip_normalization", [normalization, normalization_cov, 
                                     divide_column, divide_row,
                                     self.color_layout, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd,
-                                    ddd_sam_l, ddd_ex_l]),
+                                    ddd_show, ddd_sam_l, ddd_ex_l]),
                 make_panel("Replicates", "tooltip_replicates", [in_group, betw_group, group_layout, max_coverage_col, max_coverage_row, bsmcq_l]),
                 make_panel("Interface", "tooltip_interface", [nb_l,
                                     show_hide, mmbs_l,
@@ -1830,7 +1832,15 @@ class MainLayout:
 
                 ranked_slice_x = self.session.get_ranked_slices(False)
                 ranked_slice_y = self.session.get_ranked_slices(True)
-                dist_dep_dec_plot_data = self.session.get_decay()
+                if self.session.get_value(["settings", "normalization", "ddd_show"]):
+                    dist_dep_dec_plot_data = self.session.get_decay()
+                else:
+                    dist_dep_dec_plot_data = {
+                            "chr": [],
+                            "color": [],
+                            "xs": [],
+                            "ys": []
+                        }
 
                 error = self.session.get_error()
 

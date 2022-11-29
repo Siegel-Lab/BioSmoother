@@ -248,7 +248,11 @@
 }
 
 .tooltip_ddd:after {
-    content: "Normalize away the distance dependent decay";
+    content: "Normalize away the distance dependent decay.";
+}
+
+.tooltip_ddd_show:after {
+    content: "Display distance dependent decay as a separate plot.";
 }
 
 .tooltip_bin_aspect_ratio:after {
