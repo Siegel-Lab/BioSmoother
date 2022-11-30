@@ -1,6 +1,5 @@
 # smoother todo (ranked)
 
-- icing exclude columns and rows with too little data
 - status prints
     - presetting load and save -> status print
     - error information field

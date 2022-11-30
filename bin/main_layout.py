@@ -25,7 +25,6 @@ from concurrent.futures import ThreadPoolExecutor
 from bokeh.models import BoxAnnotation
 from bokeh.models.tickers import AdaptiveTicker
 from bin.libContactMapping import Quarry
-from bin.render_step_logger import *
 import json
 import shutil
 from bin.figure_maker import FigureMaker, DROPDOWN_HEIGHT
@@ -812,7 +811,7 @@ class MainLayout:
 
             def callback():
                 self.spinner.css_classes = ["fade-out"]
-                self.curr_bin_size.text = "done exporting."
+                self.print_status("done exporting.")
             self.curdoc.add_next_tick_callback(callback)
         yield executor.submit(unlocked_task)
 
@@ -834,7 +833,6 @@ class MainLayout:
         self.curdoc = curdoc()
         self.last_drawing_area = (0, 0, 0, 0)
         self.curr_area_size = 1
-        self.render_logger = Logger()
         self.smoother_version = "?"
         self.reset_options = {}
         self.session = None
@@ -1764,21 +1762,16 @@ class MainLayout:
 
         return b_xs < a_xs or b_ys < a_ys or b_xe > a_xe or b_ye > a_ye
 
-    def render_log_callback(self, s):
-        print(s, end="\033[K\r")
+    def print(self, s):
+        print(s)
 
+    def print_status(self, s):
+        self.print(s)
         def callback():
-            self.curr_bin_size.text = s.replace(". ", "<br>")
+            self.curr_bin_size.text = s.replace("\n", "<br>")
         self.curdoc.add_next_tick_callback(callback)
 
-    def new_render(self, reason):
-        self.render_logger.new_render(reason, callback=lambda s: self.render_log_callback(s))
 
-    def render_step_log(self, step_name="", sub_step=0, sub_step_total=None):
-        self.render_logger.render_step_log(step_name, sub_step, sub_step_total, callback=lambda s: self.render_log_callback(s))
-
-    def render_done(self, bin_amount):
-        return self.render_logger.render_done(bin_amount)
 
 
     def make_anno_str(self, s, e):
@@ -1806,8 +1799,7 @@ class MainLayout:
                     self.spinner.css_classes = ["fade-in"]
                 self.curdoc.add_next_tick_callback(callback)
 
-
-                self.render_step_log("setup_col_data_sources")
+                start_time = datetime.now()
                 self.session.update_cds()
 
                 d_heatmap = self.session.get_heatmap()
@@ -1854,11 +1846,11 @@ class MainLayout:
                         }
 
                 error = self.session.get_error()
+                end_time = datetime.now()
 
                 if len(error) > 0:
                     print("ERROR:", error)
 
-                self.render_step_log("transfer_data")
 
                 @gen.coroutine
                 def callback():
@@ -1887,8 +1879,9 @@ class MainLayout:
                         else:
                             return str(add_commas(l)) + "bp"
 
-                    end_text = "Rendering Done.<br>Current Bin Size: " + readable_display(w_bin) + \
-                                " x " + readable_display(h_bin) + "."
+                    end_text = "Rendering Done.\nCurrent Bin Size: " + readable_display(w_bin) + \
+                                " x " + readable_display(h_bin) + ".\nRuntime: " + str(end_time - start_time) + \
+                                ".\nDisplaying " + str(len(d_heatmap["color"])) + " bins."
 
 
                     self.raw_x_axis.xaxis.bounds = (min_max_tracks_x[0], min_max_tracks_x[1])
@@ -1954,8 +1947,7 @@ class MainLayout:
                         plot.yaxis.bounds = (0, canvas_size_y)
 
                     self.curdoc.unhold()
-                    total_time, ram_usage = self.render_done(0)#len(bins[0]) if len(bins) > 0 else 0)
-                    self.curr_bin_size.text = end_text + "<br>Took " + str(total_time) + " in total.<br>" + str(ram_usage) + "% RAM used.<br> " #+ str(len(bins[0])//1000) if len(bins) > 0 else "0" + "k bins rendered."
+                    self.print_status(end_text)
                     self.curdoc.add_timeout_callback(
                         lambda: self.render_callback(),
                             self.session.get_value(["settings", "interface", "update_freq", "val"])*1000)
@@ -1979,7 +1971,7 @@ class MainLayout:
         print("loading index...\033[K")
         self.spinner.css_classes = ["fade-in"]
         def callback():
-            self.curr_bin_size.text = "loading index..."
+            self.print_status("loading index...")
             def callback2():
                 if os.path.exists(self.meta_file.value + ".smoother_index"):
                     self.session = Quarry(self.meta_file.value + ".smoother_index")
@@ -1991,14 +1983,12 @@ class MainLayout:
                         self.session.set_value(["settings"], settings)
 
 
-                    print("done loading\033[K")
                     self.do_config()
                     self.trigger_render()
-                    self.curr_bin_size.text = "done loading"
+                    self.print_status("done loading.")
                     self.render_callback() # @todo this is not good here!!!!
                 else:
-                    print("File not found")
-                    self.curr_bin_size.text = "File not found. <br>Waiting for Fileinput."
+                    self.print_status("File not found. \nWaiting for Fileinput.")
             self.curdoc.add_next_tick_callback(callback2)
         self.curdoc.add_next_tick_callback(callback)
 
@@ -2019,14 +2009,14 @@ class MainLayout:
                 if curr_area_size / self.curr_area_size < min_change or self.force_render or \
                         MainLayout.area_outside(self.last_drawing_area, curr_area):
                     if curr_area_size / self.curr_area_size < min_change:
-                        self.new_render("zoom in")
+                        self.print_status("rendering due to zoom in.")
                         zoom_in_render = True
                     elif self.force_render:
-                        self.new_render("new setting")
+                        self.print_status("rendering due parameter change.")
                     elif MainLayout.area_outside(self.last_drawing_area, curr_area):
-                        self.new_render("pan / zoom out")
+                        self.print_status("rendering due pan or zoom out.")
                     else:
-                        self.new_render("program start")
+                        self.print_status("rendering.")
                     self.force_render = False
                     self.curr_area_size = curr_area_size
 
