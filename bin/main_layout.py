@@ -5,7 +5,7 @@ __email__ = "Markus.Schmidt@lmu.de"
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup, CrosshairTool, ColorPicker, ImageURLTexture, TextAreaInput, AllLabels
+from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup, CrosshairTool, ColorPicker, ImageURLTexture, TextAreaInput, AllLabels, Paragraph
 #from bin.unsorted_multi_choice import UnsortedMultiChoice as MultiChoice
 from bokeh.io import export_png, export_svg
 import math
@@ -933,6 +933,8 @@ class MainLayout:
         }
         self.dist_dep_dec_plot_data = ColumnDataSource(data=d)
         self.dist_dep_dec_plot = None
+        self.log_div = None
+        self.err_div = None
 
         self.do_layout()
 
@@ -1656,6 +1658,10 @@ class MainLayout:
         self.area_range = TextAreaInput(value="n/a", width=SETTINGS_WIDTH, height=80,
                                         css_classes=["tooltip", "tooltip_area_range"])
         self.area_range.on_change("value", lambda x, y, z: self.parse_area_range())
+        log_div = Div(text="Log:", sizing_mode="stretch_width")
+        self.log_div = Div(css_classes=["scroll_y2"], width=SETTINGS_WIDTH, max_height =200, sizing_mode="fixed", height_policy="fixed") # @todo tooltip
+        err_div = Div(text="Errors:", sizing_mode="stretch_width")
+        self.err_div = Div(css_classes=["scroll_y2"], width=SETTINGS_WIDTH, max_height =200, sizing_mode="fixed", height_policy="fixed") # @todo tooltip
 
         _settings = column([
                 make_panel("General", "tooltip_general", [row([self.undo_button, self.redo_button, tool_bar, 
@@ -1681,7 +1687,7 @@ class MainLayout:
                                      ]),
                 make_panel("Presetting", "tooltip_quick_config", quick_configs),
                 make_panel("Info", "tooltip_info", [version_info, self.ranked_columns, self.ranked_rows,
-                                                    self.dist_dep_dec_plot]),
+                                                    self.dist_dep_dec_plot, log_div, self.log_div, err_div, self.err_div]),
             ],
             sizing_mode="stretch_both",
             css_classes=["scroll_y"]
@@ -1764,14 +1770,15 @@ class MainLayout:
 
     def print(self, s):
         print(s)
+        def callback():
+            self.log_div.text += s.replace("\n", "<br>") + "<br>"
+        self.curdoc.add_next_tick_callback(callback)
 
     def print_status(self, s):
         self.print(s)
         def callback():
             self.curr_bin_size.text = s.replace("\n", "<br>")
         self.curdoc.add_next_tick_callback(callback)
-
-
 
 
     def make_anno_str(self, s, e):
@@ -1848,13 +1855,12 @@ class MainLayout:
                 error = self.session.get_error()
                 end_time = datetime.now()
 
-                if len(error) > 0:
-                    print("ERROR:", error)
-
-
                 @gen.coroutine
                 def callback():
                     self.curdoc.hold()
+                    if len(error) > 0:
+                        self.print("ERROR: " + error)
+                        self.err_div.text = error.replace("\n", "<br>")
                     self.color_layout.children = [self.make_color_figure(palette, palette_ticks)]
                     def mmax(*args):
                         m = 0
@@ -1975,6 +1981,7 @@ class MainLayout:
             def callback2():
                 if os.path.exists(self.meta_file.value + ".smoother_index"):
                     self.session = Quarry(self.meta_file.value + ".smoother_index")
+                    self.session.print_callback = lambda s: self.print(s)
 
                     if self.session.get_value(["settings"]) is None:
                         with open('smoother/static/conf/default.json', 'r') as f:
