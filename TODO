@@ -2,8 +2,6 @@
 
 - status prints
     - presetting load and save -> status print
-    - error information field
-    - output log
 - better categories
 - sortable multi choice: column labels and checkboxes not aligned
 - extra plots could be auto hidden while empty -> anno cov ddd slice_rankings
