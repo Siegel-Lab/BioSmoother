@@ -5,7 +5,7 @@ __email__ = "Markus.Schmidt@lmu.de"
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup, CrosshairTool, ColorPicker, ImageURLTexture, TextAreaInput, AllLabels, Paragraph
+from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup, CrosshairTool, ColorPicker, ImageURLTexture, TextAreaInput, AllLabels, Paragraph, BasicTickFormatter
 #from bin.unsorted_multi_choice import UnsortedMultiChoice as MultiChoice
 from bokeh.io import export_png, export_svg
 import math
@@ -1103,10 +1103,11 @@ class MainLayout:
                                         y_axis_type="log", height=200)
         tollbars.append(self.dist_dep_dec_plot.toolbar)
         self.dist_dep_dec_plot.toolbar_location = None
-        self.dist_dep_dec_plot.xaxis.axis_label = "distance from diagonal"
+        self.dist_dep_dec_plot.xaxis.axis_label = "manhatten distance from diagonal"
         self.dist_dep_dec_plot.yaxis.axis_label = "reads per kbp^2"
         self.dist_dep_dec_plot.sizing_mode = "stretch_width"
-        self.dist_dep_dec_plot.multi_line(xs="xs", ys="ys", color="color", source=self.dist_dep_dec_plot_data)
+        self.dist_dep_dec_plot.multi_line(xs="xs", ys="ys", color="color",
+                                          source=self.dist_dep_dec_plot_data)
         self.dist_dep_dec_plot.xaxis[0].formatter = FuncTickFormatter(
             args={},
             code="""
@@ -1588,22 +1589,30 @@ class MainLayout:
                                 tick_label = numberWithCommas(tick_pos) + " bp";
                             return tick_label;
                         """)
-        def get_formatter_chr():
+        def get_formatter_chr(x):
             return FuncTickFormatter(
-                    args={"contig_starts": [], "genome_end": 0, "dividend": 1, "contig_names": []},
+                    args={"contig_starts": [], "genome_end": 0, "dividend": 1, "contig_names": [], "update": 1},
+                    name="func_tic_x"if x else "func_tic_y",
                     code="""
                             if(tick < 0 || tick >= genome_end)
                                 return "n/a";
                             var idx = 0;
                             while(contig_starts[idx + 1] <= tick)
                                 idx += 1;
-                            return contig_names[idx];
+                            const len = contig_names[idx].length - 9;
+                            if(len > 0)
+                            {
+                                const sec = Math.floor(Date.now() / 1000);
+                                return contig_names[idx].substring(sec % len, (sec % len) + 10);
+                            }
+                            else
+                                return contig_names[idx];
                         """)
         
         self.tick_formatter_x = get_formatter_tick()
-        self.tick_formatter_x_2 = get_formatter_chr()
+        self.tick_formatter_x_2 = get_formatter_chr(True)
         self.tick_formatter_y = get_formatter_tick()
-        self.tick_formatter_y_2 = get_formatter_chr()
+        self.tick_formatter_y_2 = get_formatter_chr(False)
 
         self.heatmap_x_axis.xaxis[0].formatter = self.tick_formatter_x
         self.heatmap_x_axis_2.xaxis[0].formatter = self.tick_formatter_x_2
@@ -1628,6 +1637,7 @@ class MainLayout:
 
         self.heatmap_x_axis_2.xaxis.ticker = self.ticker_x_2
         self.heatmap_x_axis_2.xaxis.axis_line_color = None
+        self.heatmap_x_axis_2.xaxis.axis_label_text_font = "monospace"
         self.heatmap_x_axis_2.xaxis.major_tick_line_color = None
         self.heatmap_x_axis_2.xaxis.major_tick_out = 0
         self.heatmap_x_axis_2.y_range.start = 1
@@ -1678,16 +1688,20 @@ class MainLayout:
                                     stretch, square_bins, power_ten_bin, color_picker, 
                                     self.low_color, self.high_color, axis_lables]),
                 make_panel("Filters", "tooltip_filters", [ms_l, incomp_align_layout, 
-                                          symmetrie, dds_l, annos_layout, 
+                                          symmetrie, dds_l, 
+                                          #annos_layout, 
                                           x_coords, y_coords, multiple_anno_per_bin, multiple_bin_per_anno,
-                                          chrom_layout, multi_mapping, coverage_filter_col, coverage_filter_row]),
+                                          #chrom_layout, 
+                                          multi_mapping, coverage_filter_col, coverage_filter_row]),
                 make_panel("Export", "tooltip_export", [export_label, self.export_file, export_sele_layout,
                                         export_full, export_format,
                                         export_button
                                      ]),
                 make_panel("Presetting", "tooltip_quick_config", quick_configs),
-                make_panel("Info", "tooltip_info", [version_info, self.ranked_columns, self.ranked_rows,
-                                                    self.dist_dep_dec_plot, log_div, self.log_div, err_div, self.err_div]),
+                make_panel("Info", "tooltip_info", [version_info, 
+                                                    #self.ranked_columns, self.ranked_rows, 
+                                                    self.dist_dep_dec_plot, 
+                                                    log_div, self.log_div, err_div, self.err_div]),
             ],
             sizing_mode="stretch_both",
             css_classes=["scroll_y"]
@@ -1834,6 +1848,8 @@ class MainLayout:
                 tick_list_y = self.session.get_tick_list(False)
                 ticks_x = self.session.get_ticks(True)
                 ticks_y = self.session.get_ticks(False)
+                ticks_x["update"] = 0
+                ticks_y["update"] = 0
 
                 palette = self.session.get_palette()
                 palette_ticks = self.session.get_palette_ticks()
@@ -1998,6 +2014,19 @@ class MainLayout:
                     self.print_status("File not found. \nWaiting for Fileinput.")
             self.curdoc.add_next_tick_callback(callback2)
         self.curdoc.add_next_tick_callback(callback)
+        #callback = CustomJS(args={"x": self.tick_formatter_x_2, "y": self.tick_formatter_y_2}, code="""
+        #        x.args.update += 1;
+        #        y.args.update += 1;
+        #    """)
+        #def callback():
+        #    if not self.tick_formatter_x_2 is None:
+        #        self.tick_formatter_x_2.args["update"] += 1
+        #        #self.heatmap_x_axis_2.xaxis[0].formatter = BasicTickFormatter()
+        #        #self.heatmap_x_axis_2.xaxis[0].formatter = self.tick_formatter_x_2
+        #    if not self.tick_formatter_y_2 is None:
+        #        self.heatmap_y_axis_2.yaxis[0].formatter = BasicTickFormatter()
+        #        self.heatmap_y_axis_2.yaxis[0].formatter = self.tick_formatter_y_2
+        #self.curdoc.add_periodic_callback(callback, 1000)
 
     def trigger_render(self):
         self.session.cancel()
