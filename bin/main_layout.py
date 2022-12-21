@@ -1846,6 +1846,8 @@ class MainLayout:
                 canvas_size_x, canvas_size_y = self.session.get_canvas_size()
                 tick_list_x = self.session.get_tick_list(True)
                 tick_list_y = self.session.get_tick_list(False)
+                tick_list_x_2 = self.session.get_tick_list_2(True)
+                tick_list_y_2 = self.session.get_tick_list_2(False)
                 ticks_x = self.session.get_ticks(True)
                 ticks_y = self.session.get_ticks(False)
                 ticks_x["update"] = 0
@@ -1941,9 +1943,9 @@ class MainLayout:
                     self.heatmap.y_range.reset_end = canvas_size_y
 
                     self.ticker_x.extra_ticks = tick_list_x
-                    self.ticker_x_2.extra_ticks = tick_list_x
+                    self.ticker_x_2.extra_ticks = tick_list_x_2
                     self.ticker_y.extra_ticks = tick_list_y
-                    self.ticker_y_2.extra_ticks = tick_list_y
+                    self.ticker_y_2.extra_ticks = tick_list_y_2
 
                     self.tick_formatter_x.args = ticks_x
                     self.tick_formatter_x_2.args = ticks_x

@@ -1,8 +1,7 @@
 # smoother todo (ranked)
 
-- status prints
-    - presetting load and save -> status print
 - better categories
+    - implement better layout
 - sortable multi choice: column labels and checkboxes not aligned
 - extra plots could be auto hidden while empty -> anno cov ddd slice_rankings
     - also column sum & row sum coverage does not need to exist if zero
