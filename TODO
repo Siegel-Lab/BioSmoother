@@ -1,5 +1,14 @@
+# things i left of with:
+
+- annotation filter
+    - proper implementation
+    - changed internal chromosome storage from string to size_t based
+    - still segfaults somewhere...
+
 # smoother todo (ranked)
 
+- sort session .json into static values & parameters
+    -  exclude static values form undo & redo
 - better categories
     - implement better layout
 - sortable multi choice: column labels and checkboxes not aligned
