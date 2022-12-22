@@ -1,12 +1,13 @@
 # things i left of with:
 
-- annotation filter
-    - proper implementation
-    - changed internal chromosome storage from string to size_t based
-    - still segfaults somewhere...
+finished annotation filter
+made top & bottom status bar
 
 # smoother todo (ranked)
 
+- top status bar
+    - sometimes float values are displayed as coords
+    - when zoomed out, end position is given from start of first contig
 - sort session .json into static values & parameters
     -  exclude static values form undo & redo
 - better categories

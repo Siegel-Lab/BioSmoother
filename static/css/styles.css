@@ -11,8 +11,7 @@ textarea {
 .scroll_y {
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    height: 85% !important;
-    top: 15% !important;
+    height: 100% !important;
     border-top: 1px solid #D3D3D3 !important;
 }
 
@@ -152,12 +151,12 @@ button {
     color: official;
     display: inline-block;
     position: relative;
-    width: 80px;
-    height: 80px;
+    width: 22px;
+    height: 22px;
 }
 
 .lds-spinner div {
-    transform-origin: 40px 40px;
+    transform-origin: 11px 11px;
     animation: lds-spinner 2s linear infinite;
 }
 
@@ -165,10 +164,10 @@ button {
     content: " ";
     display: block;
     position: absolute;
-    top: 3px;
-    left: 37px;
-    width: 6px;
-    height: 18px;
+    top: 1px;
+    left: 10px;
+    width: 2px;
+    height: 6px;
     border-radius: 40%;
     background: #000000;
 }

@@ -666,16 +666,16 @@ class MainLayout:
         contig_starts_x = self.session.get_tick_list(True)
         contig_starts_y = self.session.get_tick_list(False)
         if len(contig_starts_x) > 0 and len(contig_starts_y) > 0:
-            self.area_range_expected = "X: [\t" + \
+            self.area_range_expected = "X: [" + \
                 self.to_readable_pos(math.floor(self.heatmap.x_range.start * self.session.get_value(["dividend"])), \
                                     contig_starts_x[-1], contig_names_x, \
-                                    contig_starts_x[:-1]) + " ~\n\t" + \
+                                    contig_starts_x[:-1]) + " ~ " + \
                 self.to_readable_pos(math.ceil(self.heatmap.x_range.end * self.session.get_value(["dividend"])), \
                                     contig_starts_x[-1], contig_names_x, \
-                                    contig_starts_x[:-1]) + " ];\nY: [\t" +\
+                                    contig_starts_x[:-1]) + " ]; Y: [" +\
                 self.to_readable_pos(math.floor(self.heatmap.y_range.start * self.session.get_value(["dividend"])), \
                                     contig_starts_y[-1], contig_names_y, \
-                                    contig_starts_y[:-1]) + " ~\n\t" + \
+                                    contig_starts_y[:-1]) + " ~ " + \
                 self.to_readable_pos(math.ceil(self.heatmap.y_range.end * self.session.get_value(["dividend"])), \
                                     contig_starts_y[-1], contig_names_y, \
                                     contig_starts_y[:-1]) + " ]"
@@ -887,7 +887,7 @@ class MainLayout:
         self.anno_y_data = ColumnDataSource(data=d)
         self.meta_file = None
         self.min_max_bin_size = None
-        self.curr_bin_size = None
+        self.info_status_bar = None
         self.spinner = None
         self.info_field = None
         self.settings_row = None
@@ -934,7 +934,6 @@ class MainLayout:
         self.dist_dep_dec_plot_data = ColumnDataSource(data=d)
         self.dist_dep_dec_plot = None
         self.log_div = None
-        self.err_div = None
 
         self.do_layout()
 
@@ -1411,16 +1410,16 @@ class MainLayout:
 
         mmbs_l = row([self.min_max_bin_size, column([button_s_up, button_s_down])], margin=DIV_MARGIN)
 
-        self.curr_bin_size = Div(text="Waiting for Fileinput.", sizing_mode="stretch_width")
+        self.info_status_bar = Div(text="Waiting for Fileinput.", sizing_mode="stretch_width")
         
         self.spinner = Div(text="<div class=\"lds-spinner\"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>")
-        #self.spinner = Div(text="<div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>", css_classes=["lds-spinner"])
         self.spinner.css_classes = ["fade-out"]
 
-        self.info_field = row([self.spinner, self.curr_bin_size], css_classes=["twenty_percent"])
-        self.info_field.height = 100
-        self.info_field.min_height = 100
+        self.info_field = row([self.spinner, self.info_status_bar])
+        self.info_field.height = 26
+        self.info_field.min_height = 26
         self.info_field.height_policy = "fixed"
+        self.info_field.align = "center"
 
         norm_layout = self.multi_choice_auto("Normalization", "tooltip_coverage_normalization",
                                                        [[["coverage", "in_column"], "track column"], 
@@ -1665,18 +1664,20 @@ class MainLayout:
             plot.yaxis.major_label_text_align = "right"
             plot.yaxis.ticker.min_interval = 1
 
-        self.area_range = TextAreaInput(value="n/a", width=SETTINGS_WIDTH, height=80,
-                                        css_classes=["tooltip", "tooltip_area_range"])
-        self.area_range.on_change("value", lambda x, y, z: self.parse_area_range())
         log_div = Div(text="Log:", sizing_mode="stretch_width")
         self.log_div = Div(css_classes=["scroll_y2"], width=SETTINGS_WIDTH, max_height =200, sizing_mode="fixed", height_policy="fixed") # @todo tooltip
-        err_div = Div(text="Errors:", sizing_mode="stretch_width")
-        self.err_div = Div(css_classes=["scroll_y2"], width=SETTINGS_WIDTH, max_height =200, sizing_mode="fixed", height_policy="fixed") # @todo tooltip
+
+        self.area_range = TextInput(value="n/a", width=SETTINGS_WIDTH*2, height=26,
+                                        css_classes=["tooltip", "tooltip_area_range"])
+        self.area_range.on_change("value", lambda x, y, z: self.parse_area_range())
+        tools_bar = row([self.undo_button, self.redo_button, self.area_range, tool_bar, reset_session])
+        tools_bar.height = 40
+        tools_bar.min_height = 40
+        tools_bar.height_policy = "fixed"
+        tools_bar.align  = "center"
 
         _settings = column([
-                make_panel("General", "tooltip_general", [row([self.undo_button, self.redo_button, tool_bar, 
-                                                                reset_session]), 
-                                                          meta_file_label, self.meta_file, self.area_range]),
+                make_panel("General", "tooltip_general", [meta_file_label, self.meta_file]),
                 make_panel("Normalization", "tooltip_normalization", [normalization, normalization_cov, 
                                     divide_column, divide_row,
                                     self.color_layout, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd,
@@ -1701,7 +1702,7 @@ class MainLayout:
                 make_panel("Info", "tooltip_info", [version_info, 
                                                     #self.ranked_columns, self.ranked_rows, 
                                                     self.dist_dep_dec_plot, 
-                                                    log_div, self.log_div, err_div, self.err_div]),
+                                                    log_div, self.log_div]),
             ],
             sizing_mode="stretch_both",
             css_classes=["scroll_y"]
@@ -1711,7 +1712,6 @@ class MainLayout:
         #_settings.height_policy = "fixed"
 
         _settings_n_info = column([
-                self.info_field,
                 _settings
             ],
             sizing_mode="fixed",
@@ -1755,7 +1755,7 @@ class MainLayout:
 
         root_min_one = grid(grid_layout, sizing_mode="stretch_both")
         root_min_one.align = "center"
-        self.root = grid([[root_min_one]])
+        self.root = grid([[tools_bar], [root_min_one], [self.info_field]])
         self.update_visibility()
 
     # overlap of the given areas relative to the larger area
@@ -1791,7 +1791,7 @@ class MainLayout:
     def print_status(self, s):
         self.print(s)
         def callback():
-            self.curr_bin_size.text = s.replace("\n", "<br>")
+            self.info_status_bar.text = s.replace("\n", " | ")
         self.curdoc.add_next_tick_callback(callback)
 
 
@@ -1871,14 +1871,13 @@ class MainLayout:
                         }
 
                 error = self.session.get_error()
+                error_text = ("None" if len(error) == 0 else error.replace("\n", "; "))
                 end_time = datetime.now()
 
                 @gen.coroutine
                 def callback():
                     self.curdoc.hold()
-                    if len(error) > 0:
-                        self.print("ERROR: " + error)
-                        self.err_div.text = error.replace("\n", "<br>")
+                    self.print("ERROR: " + error_text)
                     self.color_layout.children = [self.make_color_figure(palette, palette_ticks)]
                     def mmax(*args):
                         m = 0
@@ -1971,7 +1970,7 @@ class MainLayout:
                         plot.yaxis.bounds = (0, canvas_size_y)
 
                     self.curdoc.unhold()
-                    self.print_status(end_text)
+                    self.print_status(end_text + " | Errors: " + error_text)
                     self.curdoc.add_timeout_callback(
                         lambda: self.render_callback(),
                             self.session.get_value(["settings", "interface", "update_freq", "val"])*1000)
