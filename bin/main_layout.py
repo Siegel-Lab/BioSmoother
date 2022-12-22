@@ -1510,27 +1510,10 @@ class MainLayout:
         self.high_color.on_change("color", color_event_high)
 
         def make_panel(title, tooltip, children):
-            t = Toggle(active=title == "General", button_type="light", css_classes=["menu_group", "tooltip", tooltip],
-                       height=DROPDOWN_HEIGHT)
+            cx = column(children)#, sizing_mode="stretch_width", css_classes=["tooltip", tooltip])
+            #cx.margin = [0, 20, 0, 20]
+            return Panel(child=cx, title=title)
 
-            cx = column(children, sizing_mode="stretch_width", css_classes=["offset_left"])
-            cx.margin = [0, 20, 0, 20]
-
-            r = column([t, cx], sizing_mode="stretch_width")
-            def callback(e):
-                if t.active:
-                    p = "▿ "
-                else:
-                    p = "▸ "
-                t.label = p + title
-                # remove and read children to force re-layout
-                tmp = cx.children
-                cx.children = []
-                cx.visible = t.active
-                cx.children = tmp
-            t.on_click(callback)
-            callback(None)
-            return r
 
         with open("smoother/VERSION", "r") as in_file:
             self.smoother_version = in_file.readlines()[0][:-1]
@@ -1676,36 +1659,60 @@ class MainLayout:
         tools_bar.height_policy = "fixed"
         tools_bar.align  = "center"
 
-        _settings = column([
-                make_panel("General", "tooltip_general", [meta_file_label, self.meta_file]),
-                make_panel("Normalization", "tooltip_normalization", [normalization, normalization_cov, 
-                                    divide_column, divide_row,
-                                    self.color_layout, ibs_l, crs_l, is_l, color_scale, norm_layout, rsa_l, ddd,
-                                    ddd_show, ddd_sam_l, ddd_ex_l, ice_sparse_filter]),
-                make_panel("Replicates", "tooltip_replicates", [in_group, betw_group, group_layout, max_coverage_col, max_coverage_row, bsmcq_l]),
-                make_panel("Interface", "tooltip_interface", [nb_l,
-                                    show_hide, mmbs_l,
-                                    ufs_l, rs_l, aas_l, ass_l, rss2_l,
-                                    stretch, square_bins, power_ten_bin, color_picker, 
-                                    self.low_color, self.high_color, axis_lables]),
-                make_panel("Filters", "tooltip_filters", [ms_l, incomp_align_layout, 
-                                          symmetrie, dds_l, 
-                                          #annos_layout, 
-                                          x_coords, y_coords, multiple_anno_per_bin, multiple_bin_per_anno,
-                                          #chrom_layout, 
-                                          multi_mapping, coverage_filter_col, coverage_filter_row]),
-                make_panel("Export", "tooltip_export", [export_label, self.export_file, export_sele_layout,
-                                        export_full, export_format,
-                                        export_button
-                                     ]),
-                make_panel("Presetting", "tooltip_quick_config", quick_configs),
-                make_panel("Info", "tooltip_info", [version_info, 
+        _settings = Tabs(tabs=[
+                Panel(title="Normalize", child=column([
+                    normalization, normalization_cov,
+                    Tabs(tabs=[
+                        #make_panel("Approach", "", []),
+                        make_panel("RADICL-seq", "", [rsa_l]),
+                        make_panel("Dist. Dep. Dec.", "", [ddd, ddd_show, ddd_sam_l, ddd_ex_l, self.dist_dep_dec_plot]),
+                        make_panel("GRID-seq", "", [
                                                     #self.ranked_columns, self.ranked_rows, 
-                                                    self.dist_dep_dec_plot, 
-                                                    log_div, self.log_div]),
+                                                    ]),
+                        make_panel("ICE", "", [ice_sparse_filter]),
+                    ], sizing_mode="stretch_both")
+                    ])
+                ),
+                Panel(title="Interface", child=
+                    Tabs(tabs=[
+                        make_panel("Color", "", [self.color_layout, crs_l, is_l, color_scale, color_picker, 
+                                                  self.low_color, self.high_color]),
+                        make_panel("Panels", "", [show_hide, ass_l, rss2_l, stretch, axis_lables]),
+                        make_panel("Bins", "", [nb_l, mmbs_l, square_bins, power_ten_bin]),
+                        make_panel("Redrawing", "", [ufs_l, rs_l, aas_l]),
+                    ],
+                         sizing_mode="stretch_both")
+                ),
+                Panel(title="Filter", child=
+                    Tabs(tabs=[
+                        make_panel("Datapools", "", [in_group, betw_group, group_layout, ibs_l,
+                                                    #,annos_layout
+                                                        norm_layout
+                                                    ]),
+                        make_panel("Mapping", "", [ms_l, incomp_align_layout, multi_mapping]),
+                        make_panel("Coordinates", "", [dds_l, x_coords, y_coords, multiple_anno_per_bin,
+                                                       multiple_bin_per_anno,
+                                                       symmetrie
+                                                       #,binssize not evenly dividable
+                                                       #chrom_layout, 
+                                                       ]),
+                    ],
+                         sizing_mode="stretch_both")
+                ),
+                Panel(title="File", child=
+                    Tabs(tabs=[
+                        make_panel("Index", "", [meta_file_label, self.meta_file]),
+                        make_panel("Presetting", "", [*quick_configs]),
+                        make_panel("Export", "", [export_label, self.export_file, export_sele_layout,
+                                        export_full, export_format,
+                                        export_button]),
+                        make_panel("Info", "", [version_info, log_div, self.log_div]),
+                    ],
+                         sizing_mode="stretch_both")
+                ),
             ],
             sizing_mode="stretch_both",
-            css_classes=["scroll_y"]
+            #css_classes=["scroll_y"]
         )
         #_settings.height = 100
         #_settings.min_height = 100
