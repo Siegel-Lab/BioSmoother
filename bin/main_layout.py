@@ -1660,6 +1660,17 @@ class MainLayout:
         tools_bar.align  = "center"
 
         _settings = Tabs(tabs=[
+                Panel(title="File", child=
+                    Tabs(tabs=[
+                        make_panel("Index", "", [meta_file_label, self.meta_file]),
+                        make_panel("Presetting", "", [*quick_configs]),
+                        make_panel("Export", "", [export_label, self.export_file, export_sele_layout,
+                                        export_full, export_format,
+                                        export_button]),
+                        make_panel("Info", "", [version_info, log_div, self.log_div]),
+                    ],
+                         sizing_mode="stretch_both")
+                ),
                 Panel(title="Normalize", child=column([
                     normalization, normalization_cov,
                     Tabs(tabs=[
@@ -1672,16 +1683,6 @@ class MainLayout:
                         make_panel("ICE", "", [ice_sparse_filter]),
                     ], sizing_mode="stretch_both")
                     ])
-                ),
-                Panel(title="Interface", child=
-                    Tabs(tabs=[
-                        make_panel("Color", "", [self.color_layout, crs_l, is_l, color_scale, color_picker, 
-                                                  self.low_color, self.high_color]),
-                        make_panel("Panels", "", [show_hide, ass_l, rss2_l, stretch, axis_lables]),
-                        make_panel("Bins", "", [nb_l, mmbs_l, square_bins, power_ten_bin]),
-                        make_panel("Redrawing", "", [ufs_l, rs_l, aas_l]),
-                    ],
-                         sizing_mode="stretch_both")
                 ),
                 Panel(title="Filter", child=
                     Tabs(tabs=[
@@ -1699,14 +1700,13 @@ class MainLayout:
                     ],
                          sizing_mode="stretch_both")
                 ),
-                Panel(title="File", child=
+                Panel(title="View", child=
                     Tabs(tabs=[
-                        make_panel("Index", "", [meta_file_label, self.meta_file]),
-                        make_panel("Presetting", "", [*quick_configs]),
-                        make_panel("Export", "", [export_label, self.export_file, export_sele_layout,
-                                        export_full, export_format,
-                                        export_button]),
-                        make_panel("Info", "", [version_info, log_div, self.log_div]),
+                        make_panel("Color", "", [self.color_layout, crs_l, is_l, color_scale, color_picker, 
+                                                  self.low_color, self.high_color]),
+                        make_panel("Panels", "", [show_hide, ass_l, rss2_l, stretch, axis_lables]),
+                        make_panel("Bins", "", [nb_l, mmbs_l, square_bins, power_ten_bin]),
+                        make_panel("Redrawing", "", [ufs_l, rs_l, aas_l]),
                     ],
                          sizing_mode="stretch_both")
                 ),

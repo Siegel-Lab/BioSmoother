@@ -18,6 +18,8 @@ textarea {
 .scroll_y2 {
     overflow-y: auto !important;
     overflow-x: hidden !important;
+    display: flex !important;
+    flex-direction: column-reverse !important;
 }
 
 .outlnie_border {
