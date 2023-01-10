@@ -31,6 +31,7 @@ from bin.figure_maker import FigureMaker, DROPDOWN_HEIGHT
 from bin.extra_ticks_ticker import *
 from bin.export_tsv import export_tsv
 from bokeh import events
+import bin.global_variables
 
 SETTINGS_WIDTH = 400
 DEFAULT_SIZE = 50
@@ -847,7 +848,7 @@ class MainLayout:
         self.curr_area_size = 1
         self.smoother_version = "?"
         self.reset_options = {}
-        self.session = None
+        self.session = bin.global_variables.quarry_session
         with open('smoother/static/conf/default.json', 'r') as f:
             self.settings_default = json.load(f)
 
@@ -1367,12 +1368,6 @@ class MainLayout:
         bsmcq_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_section_size_max_coverage",
                                settings=["settings", "replicates", "coverage_get_max_bin_size"],
                                title="Section size max coverage [bp]", sizing_mode="stretch_width")
-            
-        meta_file_label = Div(text="Data path:")
-        meta_file_label.margin = DIV_MARGIN
-        self.meta_file = TextInput(value="smoother_out/", css_classes=["tooltip", "tooltip_meta_file"], 
-                                   height=DEFAULT_TEXT_INPUT_HEIGHT, width=SETTINGS_WIDTH)
-        self.meta_file.on_change("value", lambda x, y, z: self.setup())
 
         group_layout = self.multi_choice_auto("Active Primary Datasets", "tooltip_replicates", 
                                                 [[["replicates", "in_group_a"], "Datapool A"], 
@@ -1674,7 +1669,6 @@ class MainLayout:
                 Panel(title="File", child=column([
                     Spacer(height=5),
                     Tabs(tabs=[
-                        make_panel("Index", "", [meta_file_label, self.meta_file]),
                         make_panel("Presetting", "", [*quick_configs]),
                         make_panel("Export", "", [export_label, self.export_file, export_sele_layout,
                                         export_full, export_format,
@@ -2018,44 +2012,6 @@ class MainLayout:
         self.redo_button.css_classes = ["other_button", "fa_page_next" if self.redo_button.disabled else "fa_page_next_solid"]
         yield executor.submit(unlocked_task)
 
-    def setup(self):
-        print("loading index...\033[K")
-        self.spinner.css_classes = ["fade-in"]
-        def callback():
-            self.print_status("loading index...")
-            def callback2():
-                if os.path.exists(self.meta_file.value + ".smoother_index"):
-                    self.session = Quarry(self.meta_file.value + ".smoother_index")
-                    self.session.print_callback = lambda s: self.print(s)
-
-                    if self.session.get_value(["settings"]) is None:
-                        with open('smoother/static/conf/default.json', 'r') as f:
-                            settings = json.load(f)
-                        #print(settings)
-                        self.session.set_value(["settings"], settings)
-
-
-                    self.do_config()
-                    self.trigger_render()
-                    self.print_status("done loading.")
-                else:
-                    self.print_status("File not found. \nWaiting for Fileinput.")
-            self.curdoc.add_next_tick_callback(callback2)
-        self.curdoc.add_next_tick_callback(callback)
-        #callback = CustomJS(args={"x": self.tick_formatter_x_2, "y": self.tick_formatter_y_2}, code="""
-        #        x.args.update += 1;
-        #        y.args.update += 1;
-        #    """)
-        #def callback():
-        #    if not self.tick_formatter_x_2 is None:
-        #        self.tick_formatter_x_2.args["update"] += 1
-        #        #self.heatmap_x_axis_2.xaxis[0].formatter = BasicTickFormatter()
-        #        #self.heatmap_x_axis_2.xaxis[0].formatter = self.tick_formatter_x_2
-        #    if not self.tick_formatter_y_2 is None:
-        #        self.heatmap_y_axis_2.yaxis[0].formatter = BasicTickFormatter()
-        #        self.heatmap_y_axis_2.yaxis[0].formatter = self.tick_formatter_y_2
-        #self.curdoc.add_periodic_callback(callback, 1000)
-
     def trigger_render(self):
         self.session.cancel()
         self.force_render = True
@@ -2115,5 +2071,6 @@ class MainLayout:
         self.curdoc.title = "Smoother"
         self.do_render = True
         self.force_render = True
+        self.do_config()
         self.render_callback()
 

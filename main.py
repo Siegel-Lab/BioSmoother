@@ -5,7 +5,5 @@ __email__ = "Markus.Schmidt@lmu.de"
 from bin.main_layout import *
 from bokeh.plotting import curdoc
 
-#FilePickerLayout().set_root()
-
 
 MainLayout().set_root()
