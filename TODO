@@ -5,21 +5,24 @@ made top & bottom status bar
 
 # smoother todo (ranked)
 
+- no annotation filter is displaying empty bins only
+- on axes: last contig name is missing
+- log print needs to be collected and updated in one go -> too laggy the way it is now
 - top status bar
     - sometimes float values are displayed as coords
     - when zoomed out, end position is given from start of first contig
-- sort session .json into static values & parameters
-    -  exclude static values form undo & redo
 - better categories
     - implement better layout
 - sortable multi choice: column labels and checkboxes not aligned
-- extra plots could be auto hidden while empty -> anno cov ddd slice_rankings
-    - also column sum & row sum coverage does not need to exist if zero
+- sort session .json into static values & parameters
+    -  exclude static values form undo & redo
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
 - svg output
 - AutocompleteInput for filepath
     - when calling give folder where indices are located
     - restrict for public hosting
+- extra plots could be auto hidden while empty -> anno cov ddd slice_rankings
+    - also column sum & row sum coverage does not need to exist if zero
 
 # verification
 

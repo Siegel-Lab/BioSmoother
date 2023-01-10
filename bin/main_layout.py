@@ -34,9 +34,8 @@ from bokeh import events
 
 SETTINGS_WIDTH = 400
 DEFAULT_SIZE = 50
-ANNOTATION_PLOT_NAME = "Annotation"
-RATIO_PLOT_NAME = "Ratio"
-RAW_PLOT_NAME = "Cov"
+ANNOTATION_PLOT_NAME = "Annotation panel"
+RAW_PLOT_NAME = "Secondary data panel"
 
 DIV_MARGIN = (5, 5, 0, 5)
 BTN_MARGIN = (3, 3, 3, 3)
@@ -576,7 +575,9 @@ class MainLayout:
 
     def make_show_hide_dropdown(self, session_key, *names):
         for _, key in names:
-            if key not in self.show_hide:
+            if key == "tools":
+                self.show_hide[key] = True
+            elif key not in self.show_hide:
                 self.show_hide[key] = False
         self.names = names
 
@@ -635,14 +636,18 @@ class MainLayout:
         return color_figure
 
 
-    def to_readable_pos(self, x, genome_end, contig_names, contig_starts):
+    def to_readable_pos(self, x, genome_end, contig_names, contig_starts, lcs=0):
         oob = x > genome_end * self.session.get_value(["dividend"]) or x < 0
         if x < 0: 
             idx = 0
+        elif x >= genome_end * self.session.get_value(["dividend"]): 
+            idx = len(contig_names) - 1
+            x -= contig_starts[-1]
         else:
             idx = 0
-            for idx, start in enumerate(contig_starts):
-                if x >= start:
+            for idx, (start, end) in enumerate(zip(contig_starts, contig_starts[1:] + \
+                                                                  [genome_end * self.session.get_value(["dividend"])])):
+                if x >= start and x < end:
                     x -= start
                     break
 
@@ -658,27 +663,29 @@ class MainLayout:
         if idx >= len(contig_names):
             return "n/a"
 
-        return contig_names[idx] + ": " + label + (" (OOB)" if oob else "")
+        return contig_names[idx][:-lcs] + ": " + label + (" (OOB)" if oob else "")
 
     def set_area_range(self):
         contig_names_x = self.session.get_annotation_list(True)
         contig_names_y = self.session.get_annotation_list(False)
         contig_starts_x = self.session.get_tick_list(True)
         contig_starts_y = self.session.get_tick_list(False)
+        lcs = self.session.get_longest_common_suffix()
+        #longest_common_suffix @todo
         if len(contig_starts_x) > 0 and len(contig_starts_y) > 0:
             self.area_range_expected = "X: [" + \
                 self.to_readable_pos(math.floor(self.heatmap.x_range.start * self.session.get_value(["dividend"])), \
                                     contig_starts_x[-1], contig_names_x, \
-                                    contig_starts_x[:-1]) + " ~ " + \
+                                    contig_starts_x[:-1], lcs) + " ~ " + \
                 self.to_readable_pos(math.ceil(self.heatmap.x_range.end * self.session.get_value(["dividend"])), \
                                     contig_starts_x[-1], contig_names_x, \
-                                    contig_starts_x[:-1]) + " ]; Y: [" +\
+                                    contig_starts_x[:-1], lcs) + " ]; Y: [" +\
                 self.to_readable_pos(math.floor(self.heatmap.y_range.start * self.session.get_value(["dividend"])), \
                                     contig_starts_y[-1], contig_names_y, \
-                                    contig_starts_y[:-1]) + " ~ " + \
+                                    contig_starts_y[:-1], lcs) + " ~ " + \
                 self.to_readable_pos(math.ceil(self.heatmap.y_range.end * self.session.get_value(["dividend"])), \
                                     contig_starts_y[-1], contig_names_y, \
-                                    contig_starts_y[:-1]) + " ]"
+                                    contig_starts_y[:-1], lcs) + " ]"
         else:
             self.area_range_expected = "n/a"
         self.area_range.value = self.area_range_expected
@@ -934,6 +941,7 @@ class MainLayout:
         self.dist_dep_dec_plot_data = ColumnDataSource(data=d)
         self.dist_dep_dec_plot = None
         self.log_div = None
+        self.log_div_text = ""
 
         self.do_layout()
 
@@ -1143,9 +1151,9 @@ class MainLayout:
         show_hide = self.make_show_hide_dropdown(
             ["settings", "interface", "show_hide"],
                 ("Axes", "axis"), (RAW_PLOT_NAME, "raw"),
-                                                   (ANNOTATION_PLOT_NAME, "annotation"), ("Tools", "tools"))
+                                                   (ANNOTATION_PLOT_NAME, "annotation"), ("Options Panel", "tools"))
 
-        in_group = self.dropdown_select("In Group", "tooltip_in_group",
+        in_group = self.dropdown_select("Merge datasets by", "tooltip_in_group",
                                              ("Sum [a+b+c+...]", "sum"), 
                                              ("Minimium [min(a,b,c,...)]", "min"),
                                              ("Maximum [max(a,b,c,...)]", "max"),
@@ -1153,7 +1161,7 @@ class MainLayout:
                                              ("Mean [mean(a,b,c,...)]", "mean"),
                                              active_item=['settings', 'replicates', 'in_group'])
 
-        betw_group = self.dropdown_select("Between Group", "tooltip_between_groups",
+        betw_group = self.dropdown_select("Compare datapools by", "tooltip_between_groups",
                                                ("Sum [a+b]", "sum"), ("Show First Group [a]", "1st"), 
                                                ("Show Second Group [b]", "2nd"), ("Substract [a-b]", "sub"),
                                                ("Difference [|a-b|]", "dif"), ("Divide [a/b]", "div"),
@@ -1289,7 +1297,7 @@ class MainLayout:
                                                 title="Mapping Quality Bounds", sizing_mode="stretch_width")
 
         ibs_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_minimum_interactions",
-                                                title="Minimum Interactions", 
+                                                title="read-count adjustment", 
                                                 settings=["settings", "normalization", "min_interactions"], 
                                                 sizing_mode="stretch_width")
 
@@ -1330,7 +1338,7 @@ class MainLayout:
             self.anno_y_axis.height = val
         ass_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_anno_size",
                                       settings=["settings", "interface", "anno_size"],
-                                       title=ANNOTATION_PLOT_NAME + " Plot Size", sizing_mode="stretch_width",
+                                       title=ANNOTATION_PLOT_NAME + " Size", sizing_mode="stretch_width",
                                        on_change=anno_size_slider_event)
 
         def raw_size_slider_event(val):
@@ -1341,7 +1349,7 @@ class MainLayout:
             self.raw_y_axis.height = val
         rss2_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_raw_size",
                                       settings=["settings", "interface", "raw_size"],
-                                      title=RAW_PLOT_NAME + " Plot Size", sizing_mode="stretch_width",
+                                      title=RAW_PLOT_NAME + " Size", sizing_mode="stretch_width",
                                       on_change=raw_size_slider_event)
 
         nb_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_max_number_of_bins",
@@ -1360,7 +1368,7 @@ class MainLayout:
         self.meta_file = TextInput(value="smoother_out/", css_classes=["tooltip", "tooltip_meta_file"])
         self.meta_file.on_change("value", lambda x, y, z: self.setup())
 
-        group_layout = self.multi_choice_auto("Replicates", "tooltip_replicates", 
+        group_layout = self.multi_choice_auto("Datasets", "tooltip_replicates", 
                                                 [[["replicates", "in_group_a"], "group A"], 
                                                 [["replicates", "in_group_b"], "group B"], 
                                                 [["replicates", "in_row"], "track row"], 
@@ -1411,15 +1419,14 @@ class MainLayout:
         mmbs_l = row([self.min_max_bin_size, column([button_s_up, button_s_down])], margin=DIV_MARGIN)
 
         self.info_status_bar = Div(text="Waiting for Fileinput.", sizing_mode="stretch_width")
+        self.info_status_bar.height = 26
+        self.info_status_bar.min_height = 26
+        self.info_status_bar.max_height = 26
+        self.info_status_bar.height_policy = "fixed"
+        #self.info_status_bar.align = "center"
         
         self.spinner = Div(text="<div class=\"lds-spinner\"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>")
         self.spinner.css_classes = ["fade-out"]
-
-        self.info_field = row([self.spinner, self.info_status_bar])
-        self.info_field.height = 26
-        self.info_field.min_height = 26
-        self.info_field.height_policy = "fixed"
-        self.info_field.align = "center"
 
         norm_layout = self.multi_choice_auto("Normalization", "tooltip_coverage_normalization",
                                                        [[["coverage", "in_column"], "track column"], 
@@ -1653,7 +1660,7 @@ class MainLayout:
         self.area_range = TextInput(value="n/a", width=SETTINGS_WIDTH*2, height=26,
                                         css_classes=["tooltip", "tooltip_area_range"])
         self.area_range.on_change("value", lambda x, y, z: self.parse_area_range())
-        tools_bar = row([self.undo_button, self.redo_button, self.area_range, tool_bar, reset_session])
+        tools_bar = row([self.spinner, self.undo_button, self.redo_button, self.area_range, tool_bar, reset_session])
         tools_bar.height = 40
         tools_bar.min_height = 40
         tools_bar.height_policy = "fixed"
@@ -1762,7 +1769,7 @@ class MainLayout:
 
         root_min_one = grid(grid_layout, sizing_mode="stretch_both")
         root_min_one.align = "center"
-        self.root = grid([[tools_bar], [root_min_one], [self.info_field]])
+        self.root = grid([[tools_bar], [root_min_one], [self.info_status_bar]])
         self.update_visibility()
 
     # overlap of the given areas relative to the larger area
@@ -1791,8 +1798,11 @@ class MainLayout:
 
     def print(self, s):
         print(s)
+        self.log_div_text += s.replace("\n", "<br>") + "<br>"
+
+    def update_log_div(self):
         def callback():
-            self.log_div.text += s.replace("\n", "<br>") + "<br>"
+            self.log_div.text += self.log_div_text
         self.curdoc.add_next_tick_callback(callback)
 
     def print_status(self, s):
@@ -2017,7 +2027,6 @@ class MainLayout:
                     self.do_config()
                     self.trigger_render()
                     self.print_status("done loading.")
-                    self.render_callback() # @todo this is not good here!!!!
                 else:
                     self.print_status("File not found. \nWaiting for Fileinput.")
             self.curdoc.add_next_tick_callback(callback2)
@@ -2042,48 +2051,52 @@ class MainLayout:
 
     def render_callback(self):
         if self.do_render:
-            if not None in (self.heatmap.x_range.start, self.heatmap.x_range.end, self.heatmap.y_range.start,
-                            self.heatmap.y_range.end):
+            self.update_log_div()
+            if not self.session is None:
+                if not None in (self.heatmap.x_range.start, self.heatmap.x_range.end, self.heatmap.y_range.start,
+                                self.heatmap.y_range.end):
 
-                curr_area = (self.heatmap.x_range.start, self.heatmap.y_range.start,
-                             self.heatmap.x_range.end, self.heatmap.y_range.end)
-                curr_area_size = (curr_area[2] - curr_area[0]) * (curr_area[3] - curr_area[1])
-                min_change = 1-self.session.get_value(["settings", "interface", "zoom_redraw", "val"])/100
-                zoom_in_render = False
-                if curr_area_size / self.curr_area_size < min_change or self.force_render or \
-                        MainLayout.area_outside(self.last_drawing_area, curr_area):
-                    if curr_area_size / self.curr_area_size < min_change:
-                        self.print_status("rendering due to zoom in.")
-                        zoom_in_render = True
-                    elif self.force_render:
-                        self.print_status("rendering due parameter change.")
-                    elif MainLayout.area_outside(self.last_drawing_area, curr_area):
-                        self.print_status("rendering due pan or zoom out.")
+                    curr_area = (self.heatmap.x_range.start, self.heatmap.y_range.start,
+                                self.heatmap.x_range.end, self.heatmap.y_range.end)
+                    curr_area_size = (curr_area[2] - curr_area[0]) * (curr_area[3] - curr_area[1])
+                    min_change = 1-self.session.get_value(["settings", "interface", "zoom_redraw", "val"])/100
+                    zoom_in_render = False
+                    if curr_area_size / self.curr_area_size < min_change or self.force_render or \
+                            MainLayout.area_outside(self.last_drawing_area, curr_area):
+                        if curr_area_size / self.curr_area_size < min_change:
+                            self.print_status("rendering due to zoom in.")
+                            zoom_in_render = True
+                        elif self.force_render:
+                            self.print_status("rendering due parameter change.")
+                        elif MainLayout.area_outside(self.last_drawing_area, curr_area):
+                            self.print_status("rendering due pan or zoom out.")
+                        else:
+                            self.print_status("rendering.")
+                        self.force_render = False
+                        self.curr_area_size = curr_area_size
+
+                        area_dict = {
+                            "x_start": curr_area[0],
+                            "x_end": curr_area[2],
+                            "y_start": curr_area[1],
+                            "y_end": curr_area[3],
+                        }
+                        self.session.set_value(["area"], area_dict)
+
+                        self.session.cancel()
+
+                        def callback():
+                            self.last_drawing_area = self.session.get_drawing_area()
+                            self.render(zoom_in_render)
+                        self.curdoc.add_next_tick_callback(callback)
+                        return
                     else:
-                        self.print_status("rendering.")
-                    self.force_render = False
-                    self.curr_area_size = curr_area_size
+                        self.set_area_range()
 
-                    area_dict = {
-                        "x_start": curr_area[0],
-                        "x_end": curr_area[2],
-                        "y_start": curr_area[1],
-                        "y_end": curr_area[3],
-                    }
-                    self.session.set_value(["area"], area_dict)
-
-                    self.session.cancel()
-
-                    def callback():
-                        self.last_drawing_area = self.session.get_drawing_area()
-                        self.render(zoom_in_render)
-                    self.curdoc.add_next_tick_callback(callback)
-                    return
-                else:
-                    self.set_area_range()
-
-            self.curdoc.add_timeout_callback(
-                lambda: self.render_callback(), self.session.get_value(["settings", "interface", "update_freq", "val"])*1000)
+                self.curdoc.add_timeout_callback(
+                    lambda: self.render_callback(), self.session.get_value(["settings", "interface", "update_freq", "val"])*1000)
+            else:
+                self.curdoc.add_timeout_callback(lambda: self.render_callback(), 1000)
 
     def set_root(self):
         self.curdoc.clear()
@@ -2091,5 +2104,5 @@ class MainLayout:
         self.curdoc.title = "Smoother"
         self.do_render = True
         self.force_render = True
-
+        self.render_callback()
 
