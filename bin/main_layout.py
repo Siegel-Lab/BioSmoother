@@ -43,6 +43,8 @@ BTN_MARGIN_2 = (3, 3, 3, 3)
 
 CONFIG_FILE_VERSION = 0.1
 
+DEFAULT_TEXT_INPUT_HEIGHT = 30
+
 executor = ThreadPoolExecutor(max_workers=1)
 
 
@@ -51,7 +53,7 @@ executor = ThreadPoolExecutor(max_workers=1)
 
 class MainLayout:
     def dropdown_select_h(self, title, event, tooltip):
-        ret = Dropdown(label=title, menu=[], width=350, sizing_mode="fixed", 
+        ret = Dropdown(label=title, menu=[], width=SETTINGS_WIDTH, sizing_mode="fixed", 
                         css_classes=["other_button", "tooltip", tooltip], height=DROPDOWN_HEIGHT)
 
         options = []
@@ -260,7 +262,8 @@ class MainLayout:
             print("Config file version does not match: expected", CONFIG_FILE_VERSION, 
                   "but got", settings["smoother_config_file_version"])
         
-        name = TextInput(value=settings["display_name"], sizing_mode="stretch_width", disabled=lock_name)
+        name = TextInput(value=settings["display_name"], sizing_mode="stretch_width", disabled=lock_name,
+                         height=DEFAULT_TEXT_INPUT_HEIGHT)
         apply_button = Button(label="", css_classes=SYM_CSS + ["fa_apply"], width=SYM_WIDTH, 
                             height=SYM_WIDTH, sizing_mode="fixed", button_type="light", align="center")
         save_button = Button(label="", css_classes=SYM_CSS + ["fa_save"], width=SYM_WIDTH, 
@@ -377,8 +380,8 @@ class MainLayout:
 
         return row([slider, spinner_start, spinner_end], width=width, margin=DIV_MARGIN, css_classes=["tooltip", tooltip])
 
-    def make_checkbox(self, title, tooltip="", settings=[], on_change=None, width=200):
-        div = Div(text=title, sizing_mode="stretch_width")
+    def make_checkbox(self, title, tooltip="", settings=[], on_change=None, width=SETTINGS_WIDTH):
+        div = Div(text=title, sizing_mode="stretch_width", width=width-20)
         cg = CheckboxGroup(labels=[""], sizing_mode="fixed", width=20)
         if on_change is None:
             def default_event(active):
@@ -582,7 +585,7 @@ class MainLayout:
         self.names = names
 
         self.show_hide_dropdown = Dropdown(label="Show/Hide", menu=self.make_show_hide_menu(),
-                       width=350, sizing_mode="fixed", css_classes=["other_button", "tooltip", "tooltip_show_hide"], height=DROPDOWN_HEIGHT)
+                       width=SETTINGS_WIDTH, sizing_mode="fixed", css_classes=["other_button", "tooltip", "tooltip_show_hide"], height=DROPDOWN_HEIGHT)
 
         def event(e):
             self.toggle_hide(e.item)
@@ -612,10 +615,10 @@ class MainLayout:
 
     def make_color_figure(self, palette, ticks):
         color_mapper = LinearColorMapper(palette=palette, low=0, high=1)
-        color_figure = figure(tools='', height=0, width=350)
+        color_figure = figure(tools='', height=0, width=SETTINGS_WIDTH)
         color_figure.x(0, 0)
         color_info = ColorBar(color_mapper=color_mapper, orientation="horizontal", 
-                                   ticker=FixedTicker(ticks=ticks), width=350)
+                                   ticker=FixedTicker(ticks=ticks), width=SETTINGS_WIDTH)
         color_info.formatter = FuncTickFormatter(
                         args={"ticksx": ticks, "labelsx": ["[d", "d]", "[s", "s]"]},
                         code="""
@@ -1107,7 +1110,7 @@ class MainLayout:
 
         
         self.dist_dep_dec_plot = figure(title="Distance Dependant Decay", tools="pan,wheel_zoom,box_zoom,crosshair",
-                                        y_axis_type="log", height=200)
+                                        y_axis_type="log", height=200, width=SETTINGS_WIDTH)
         tollbars.append(self.dist_dep_dec_plot.toolbar)
         self.dist_dep_dec_plot.toolbar_location = None
         self.dist_dep_dec_plot.xaxis.axis_label = "manhatten distance from diagonal"
@@ -1365,7 +1368,8 @@ class MainLayout:
             
         meta_file_label = Div(text="Data path:")
         meta_file_label.margin = DIV_MARGIN
-        self.meta_file = TextInput(value="smoother_out/", css_classes=["tooltip", "tooltip_meta_file"])
+        self.meta_file = TextInput(value="smoother_out/", css_classes=["tooltip", "tooltip_meta_file"], 
+                                   height=DEFAULT_TEXT_INPUT_HEIGHT, width=SETTINGS_WIDTH)
         self.meta_file.on_change("value", lambda x, y, z: self.setup())
 
         group_layout = self.multi_choice_auto("Datasets", "tooltip_replicates", 
@@ -1423,7 +1427,8 @@ class MainLayout:
         self.info_status_bar.min_height = 26
         self.info_status_bar.max_height = 26
         self.info_status_bar.height_policy = "fixed"
-        #self.info_status_bar.align = "center"
+
+        status_bar_row = row([self.info_status_bar], sizing_mode="stretch_width", css_classes=["top_border"])
         
         self.spinner = Div(text="<div class=\"lds-spinner\"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>")
         self.spinner.css_classes = ["fade-out"]
@@ -1466,7 +1471,7 @@ class MainLayout:
                 ("Make all annotations size 1", "squeeze"), 
                 active_item=["settings", "filters", "anno_in_multiple_bins"])
 
-        export_button = Button(label="Export", width=350, sizing_mode="fixed", 
+        export_button = Button(label="Export", width=SETTINGS_WIDTH, sizing_mode="fixed", 
                                     css_classes=["other_button", "tooltip", "tooltip_export"], height=DROPDOWN_HEIGHT)
         def exp_event(x):
             self.do_export()
@@ -1497,7 +1502,8 @@ class MainLayout:
 
         export_label = Div(text="Output Prefix:", css_classes=["tooltip", "tooltip_export_prefix"])
         export_label.margin = DIV_MARGIN
-        self.export_file = TextInput(css_classes=["tooltip", "tooltip_export_prefix"])
+        self.export_file = TextInput(css_classes=["tooltip", "tooltip_export_prefix"], height=DEFAULT_TEXT_INPUT_HEIGHT,
+                                     width=SETTINGS_WIDTH)
         def export_file_event(_1, _2, _3):
             self.session.set_value(["settings", "export", "prefix"], self.export_file.value)
         self.export_file.on_change("value", export_file_event)
@@ -1505,8 +1511,10 @@ class MainLayout:
         export_sele_layout = self.multi_choice_auto("Export Selection", "tooltip_export_selection", [[["settings", "export", "selection"], ""]],
                                                     ["settings", "export", "list"], orderable=False)
     
-        self.low_color = ColorPicker(title="Color Low", css_classes=["tooltip", "tooltip_color_low"])
-        self.high_color = ColorPicker(title="Color High", css_classes=["tooltip", "tooltip_color_high"])
+        self.low_color = ColorPicker(title="Color Low", css_classes=["tooltip", "tooltip_color_low"],
+                                     height=DEFAULT_TEXT_INPUT_HEIGHT*2)
+        self.high_color = ColorPicker(title="Color High", css_classes=["tooltip", "tooltip_color_high"],
+                                     height=DEFAULT_TEXT_INPUT_HEIGHT*2)
         def color_event_low(_1, _2, _3):
             self.session.set_value(["settings", "interface", "color_low"], self.low_color.color)
             self.trigger_render()
@@ -1660,7 +1668,8 @@ class MainLayout:
         self.area_range = TextInput(value="n/a", width=SETTINGS_WIDTH*2, height=26,
                                         css_classes=["tooltip", "tooltip_area_range"])
         self.area_range.on_change("value", lambda x, y, z: self.parse_area_range())
-        tools_bar = row([self.spinner, self.undo_button, self.redo_button, self.area_range, tool_bar, reset_session])
+        tools_bar = row([self.spinner, self.undo_button, self.redo_button, self.area_range, tool_bar, reset_session],
+                        css_classes=["bottom_border"])
         tools_bar.height = 40
         tools_bar.min_height = 40
         tools_bar.height_policy = "fixed"
@@ -1728,14 +1737,14 @@ class MainLayout:
         _settings_n_info = column([
                 _settings
             ],
-            sizing_mode="fixed",
-            css_classes=["full_height"]
+            sizing_mode="fixed"
         )
         _settings_n_info.width = SETTINGS_WIDTH
         _settings_n_info.width_policy = "fixed"
 
         self.hidable_plots.append((_settings_n_info, ["tools"]))
-        self.settings_row = row([Spacer(sizing_mode="stretch_both"), _settings_n_info, self.reshow_settings()], css_classes=["full_height"])
+        self.settings_row = row([Spacer(sizing_mode="stretch_both"), _settings_n_info, self.reshow_settings()], 
+                                 css_classes=["options_panel"])
         self.settings_row.height = 100
         self.settings_row.min_height = 100
         self.settings_row.height_policy = "fixed"
@@ -1769,7 +1778,7 @@ class MainLayout:
 
         root_min_one = grid(grid_layout, sizing_mode="stretch_both")
         root_min_one.align = "center"
-        self.root = grid([[tools_bar], [root_min_one], [self.info_status_bar]])
+        self.root = grid([[tools_bar], [root_min_one], [status_bar_row]])
         self.update_visibility()
 
     # overlap of the given areas relative to the larger area

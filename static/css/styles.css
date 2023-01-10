@@ -2,17 +2,9 @@ textarea {
     resize: none;
 }
 
-.full_height {
+.options_panel {
     height: 100% !important;
-    overflow: hidden !important;
     border-left: 1px solid #D3D3D3 !important;
-}
-
-.scroll_y {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    height: 100% !important;
-    border-top: 1px solid #D3D3D3 !important;
 }
 
 .scroll_y2 {
@@ -25,6 +17,13 @@ textarea {
 .outlnie_border {
     border: 1px solid #ccc !important;
     border-radius: 4px !important;
+}
+
+.top_border {
+    border-top: 1px solid #D3D3D3 !important;
+}
+.bottom_border {
+    border-bottom: 1px solid #D3D3D3 !important;
 }
 
 .twenty_percent {
