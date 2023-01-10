@@ -125,6 +125,10 @@ button {
     border: none !important;
 }
 
+.bk-root .bk-tabs-header .bk-tab.bk-active {
+    border-top-color: #26aae1 !important;
+}
+
 .bk-root .bk-btn-light.bk-active {
     background-color: transparent !important;
     border-color: transparent;

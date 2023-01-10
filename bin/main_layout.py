@@ -620,12 +620,13 @@ class MainLayout:
         color_info = ColorBar(color_mapper=color_mapper, orientation="horizontal", 
                                    ticker=FixedTicker(ticks=ticks), width=SETTINGS_WIDTH)
         color_info.formatter = FuncTickFormatter(
-                        args={"ticksx": ticks, "labelsx": ["[d", "d]", "[s", "s]"]},
+                        args={"ticksx": [ticks[2], ticks[0], ticks[1], ticks[3]], "labelsx": ["[s", "[d", "d]", "s]"]},
                         code="""
+                            var ret = "";
                             for (let i = 0; i < ticksx.length; i++)
                                 if(tick == ticksx[i])
-                                    return labelsx[i];
-                            return "n/a";
+                                    ret += labelsx[i] + " ";
+                            return ret;
                         """)
         color_info.major_label_policy = AllLabels()
         color_figure.add_layout(color_info, "below")
@@ -640,6 +641,7 @@ class MainLayout:
 
 
     def to_readable_pos(self, x, genome_end, contig_names, contig_starts, lcs=0):
+        x = int(x)
         oob = x > genome_end * self.session.get_value(["dividend"]) or x < 0
         if x < 0: 
             idx = 0
@@ -1014,7 +1016,7 @@ class MainLayout:
         )
 
         self.raw_x = FigureMaker().w(DEFAULT_SIZE).link_y(
-            self.heatmap).hide_on("raw", self).combine_tools(tollbars).get(self)
+            self.heatmap).hidden().hide_on("raw", self).combine_tools(tollbars).get(self)
         self.raw_x.add_tools(raw_hover_x)
         self.raw_x_axis = FigureMaker().x_axis_of(
             self.raw_x, self).combine_tools(tollbars).get(self)
@@ -1026,7 +1028,7 @@ class MainLayout:
         self.raw_x.ygrid.minor_grid_line_alpha = 0.5
 
         self.raw_y = FigureMaker().h(DEFAULT_SIZE).link_x(
-            self.heatmap).hide_on("raw", self).combine_tools(tollbars).get(self)
+            self.heatmap).hidden().hide_on("raw", self).combine_tools(tollbars).get(self)
         self.raw_y.add_tools(raw_hover_y)
         self.raw_y_axis = FigureMaker().y_axis_of(
             self.raw_y, self).combine_tools(tollbars).get(self)
@@ -1042,7 +1044,7 @@ class MainLayout:
         self.raw_y.multi_line(xs="screen_pos", ys="values", source=self.raw_data_y,
                         line_color="colors")  # , level="image"
 
-        self.anno_x = FigureMaker().w(DEFAULT_SIZE).link_y(self.heatmap).hide_on(
+        self.anno_x = FigureMaker().w(DEFAULT_SIZE).link_y(self.heatmap).hidden().hide_on(
             "annotation", self).combine_tools(tollbars).categorical_x().get(self)
         self.anno_x_axis = FigureMaker().x_axis_of(
             self.anno_x, self).combine_tools(tollbars).get(self)
@@ -1051,7 +1053,7 @@ class MainLayout:
         self.anno_x.xgrid.grid_line_alpha = 0
         self.anno_x.ygrid.minor_grid_line_alpha = 0.5
 
-        self.anno_y = FigureMaker().h(DEFAULT_SIZE).link_x(self.heatmap).hide_on(
+        self.anno_y = FigureMaker().h(DEFAULT_SIZE).link_x(self.heatmap).hidden().hide_on(
             "annotation", self).combine_tools(tollbars).categorical_y().get(self)
         self.anno_y_axis = FigureMaker().y_axis_of(
             self.anno_y, self).combine_tools(tollbars).get(self)
@@ -1372,20 +1374,14 @@ class MainLayout:
                                    height=DEFAULT_TEXT_INPUT_HEIGHT, width=SETTINGS_WIDTH)
         self.meta_file.on_change("value", lambda x, y, z: self.setup())
 
-        group_layout = self.multi_choice_auto("Datasets", "tooltip_replicates", 
-                                                [[["replicates", "in_group_a"], "group A"], 
-                                                [["replicates", "in_group_b"], "group B"], 
-                                                [["replicates", "in_row"], "track row"], 
-                                                [["replicates", "in_column"], "track col"],
-                                                [["replicates", "cov_column_a"], "column A"], 
-                                                [["replicates", "cov_column_b"], "column B"], 
-                                                [["replicates", "cov_row_a"], "row A"], 
-                                                [["replicates", "cov_row_b"], "row B"]],
+        group_layout = self.multi_choice_auto("Active Primary Datasets", "tooltip_replicates", 
+                                                [[["replicates", "in_group_a"], "Datapool A"], 
+                                                [["replicates", "in_group_b"], "Datapool B"]],
                                                 ["replicates", "list"])
 
-        annos_layout = self.multi_choice_auto("Annotations", "tooltip_annotations",
-                                                         [[["annotation", "visible_y"], "displayed row"],
-                                                          [["annotation", "visible_x"], "displayed col"]],
+        annos_layout = self.multi_choice_auto("Visible Annotations", "tooltip_annotations",
+                                                         [[["annotation", "visible_y"], "Row"],
+                                                          [["annotation", "visible_x"], "Column"]],
                                                         ["annotation", "list"])
 
         power_tick = FuncTickFormatter(
@@ -1403,7 +1399,8 @@ class MainLayout:
                 title="Minimum Bin Size",
                 format=power_tick, 
                 sizing_mode="stretch_width",
-                css_classes=["tooltip", "tooltip_min_bin_size"])
+                css_classes=["tooltip", "tooltip_min_bin_size"],
+                height=40)
         def min_bin_size_event():
             self.session.set_value(["settings", "interface", "min_bin_size", "val"], self.min_max_bin_size.value)
             self.trigger_render()
@@ -1433,13 +1430,11 @@ class MainLayout:
         self.spinner = Div(text="<div class=\"lds-spinner\"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>")
         self.spinner.css_classes = ["fade-out"]
 
-        norm_layout = self.multi_choice_auto("Normalization", "tooltip_coverage_normalization",
-                                                       [[["coverage", "in_column"], "track column"], 
-                                                        [["coverage", "in_row"], "track row"], 
-                                                        [["coverage", "cov_column_a"], "column A"], 
-                                                        [["coverage", "cov_column_b"], "column B"], 
-                                                        [["coverage", "cov_row_a"], "row A"], 
-                                                        [["coverage", "cov_row_b"], "row B"]],
+        norm_layout = self.multi_choice_auto("Active Secondary Datasets", "tooltip_coverage_normalization",
+                                                       [[["coverage", "cov_column_a"], "Column - Datapool A"], 
+                                                        [["coverage", "cov_column_b"], "Column - Datapool B"], 
+                                                        [["coverage", "cov_row_a"], "Row - Datapool A"], 
+                                                        [["coverage", "cov_row_b"], "Row - Datapool B"]],
                                                         ["coverage", "list"])
 
         x_coords = self.dropdown_select_session("Column Coordinates", "tooltip_row_coordinates",
@@ -1452,9 +1447,9 @@ class MainLayout:
                                                 ["contigs", "row_coordinates"], 
                                                 [("Genomic loci", "full_genome")])
 
-        chrom_layout = self.multi_choice_auto("Contigs", "tooltip_chromosomes",
-                                                        [[["contigs", "displayed_on_x"], "Rows"], 
-                                                         [["contigs", "displayed_on_y"], "Columns"]],
+        chrom_layout = self.multi_choice_auto("Active Contigs", "tooltip_chromosomes",
+                                                        [[["contigs", "displayed_on_x"], "Row"], 
+                                                         [["contigs", "displayed_on_y"], "Column"]],
                                                         ["contigs", "list"])
 
         multiple_anno_per_bin = self.dropdown_select("Multiple Annotations in Bin", 
@@ -1676,7 +1671,8 @@ class MainLayout:
         tools_bar.align  = "center"
 
         _settings = Tabs(tabs=[
-                Panel(title="File", child=
+                Panel(title="File", child=column([
+                    Spacer(height=5),
                     Tabs(tabs=[
                         make_panel("Index", "", [meta_file_label, self.meta_file]),
                         make_panel("Presetting", "", [*quick_configs]),
@@ -1685,9 +1681,10 @@ class MainLayout:
                                         export_button]),
                         make_panel("Info", "", [version_info, log_div, self.log_div]),
                     ],
-                         sizing_mode="stretch_both")
+                         sizing_mode="stretch_both")])
                 ),
                 Panel(title="Normalize", child=column([
+                    Spacer(height=5),
                     normalization, normalization_cov,
                     Tabs(tabs=[
                         #make_panel("Approach", "", []),
@@ -1700,23 +1697,27 @@ class MainLayout:
                     ], sizing_mode="stretch_both")
                     ])
                 ),
-                Panel(title="Filter", child=
+                Panel(title="Filter", child=column([
+                    Spacer(height=5),
                     Tabs(tabs=[
                         make_panel("Datapools", "", [in_group, betw_group, group_layout, ibs_l,
-                                                    #,annos_layout
                                                         norm_layout
                                                     ]),
                         make_panel("Mapping", "", [ms_l, incomp_align_layout, multi_mapping]),
-                        make_panel("Coordinates", "", [dds_l, x_coords, y_coords, multiple_anno_per_bin,
-                                                       multiple_bin_per_anno,
-                                                       symmetrie
+                        make_panel("Coordinates", "", [dds_l, x_coords, y_coords, 
+                                                       symmetrie,
                                                        #,binssize not evenly dividable
-                                                       #chrom_layout, 
+                                                       chrom_layout
+                                                       ]),
+                        make_panel("Annotations", "", [annos_layout,
+                                                        multiple_anno_per_bin,
+                                                       multiple_bin_per_anno,
                                                        ]),
                     ],
-                         sizing_mode="stretch_both")
+                         sizing_mode="stretch_both")])
                 ),
-                Panel(title="View", child=
+                Panel(title="View", child=column([
+                    Spacer(height=5),
                     Tabs(tabs=[
                         make_panel("Color", "", [self.color_layout, crs_l, is_l, color_scale, color_picker, 
                                                   self.low_color, self.high_color]),
@@ -1724,7 +1725,7 @@ class MainLayout:
                         make_panel("Bins", "", [nb_l, mmbs_l, square_bins, power_ten_bin]),
                         make_panel("Redrawing", "", [ufs_l, rs_l, aas_l]),
                     ],
-                         sizing_mode="stretch_both")
+                         sizing_mode="stretch_both")])
                 ),
             ],
             sizing_mode="stretch_both",
@@ -1735,6 +1736,7 @@ class MainLayout:
         #_settings.height_policy = "fixed"
 
         _settings_n_info = column([
+                Spacer(height=5),
                 _settings
             ],
             sizing_mode="fixed"

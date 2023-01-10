@@ -10,7 +10,6 @@ made top & bottom status bar
 - log print needs to be collected and updated in one go -> too laggy the way it is now
 - top status bar
     - sometimes float values are displayed as coords
-    - when zoomed out, end position is given from start of first contig
 - better categories
     - implement better layout
 - sortable multi choice: column labels and checkboxes not aligned
