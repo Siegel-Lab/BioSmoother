@@ -65,8 +65,8 @@
             "spinner_max_restricted": true
         },
         "scale": "max",
-        "divide_by_column_coverage": false,
-        "divide_by_row_coverage": false
+        "divide_by_column_coverage": "dont",
+        "divide_by_row_coverage": "dont"
     },
     "replicates": {
         "in_group": "sum",

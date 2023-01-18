@@ -1228,10 +1228,10 @@ class MainLayout:
                                                     "tooltip_incomplete_alignments",
                                                     settings=['settings', 'filters', 'incomplete_alignments'])
 
-        divide_column = self.make_checkbox("Divide heatmap columns by track", "tooltip_divide_column",
-                                                    settings=['settings', 'normalization', 'divide_by_column_coverage'])
-        divide_row = self.make_checkbox("Divide heatmap rows by track", "tooltip_divide_row",
-                                                    settings=['settings', 'normalization', 'divide_by_row_coverage'])
+        #divide_column = self.make_checkbox("Divide heatmap columns by track", "tooltip_divide_column",
+        #                                            settings=['settings', 'normalization', 'divide_by_column_coverage'])
+        #divide_row = self.make_checkbox("Divide heatmap rows by track", "tooltip_divide_row",
+        #                                            settings=['settings', 'normalization', 'divide_by_row_coverage'])
 
 
         ddd = self.make_checkbox("Divide by Distance Dependant Decay", "tooltip_ddd",
@@ -1883,8 +1883,8 @@ class MainLayout:
 
                 w_bin, h_bin = self.session.get_bin_size()
 
-                ranked_slice_x = self.session.get_ranked_slices(False)
-                ranked_slice_y = self.session.get_ranked_slices(True)
+                #ranked_slice_x = self.session.get_ranked_slices(False)
+                #ranked_slice_y = self.session.get_ranked_slices(True)
                 if self.session.get_value(["settings", "normalization", "ddd_show"]):
                     dist_dep_dec_plot_data = self.session.get_decay()
                 else:
@@ -1976,8 +1976,8 @@ class MainLayout:
                     self.tick_formatter_y.args = ticks_y
                     self.tick_formatter_y_2.args = ticks_y
 
-                    self.ranked_columns_data.data = ranked_slice_y
-                    self.ranked_rows_data.data = ranked_slice_x
+                    #self.ranked_columns_data.data = ranked_slice_y
+                    #self.ranked_rows_data.data = ranked_slice_x
                     self.dist_dep_dec_plot_data.data = dist_dep_dec_plot_data
 
                     if len(error) > 0:
