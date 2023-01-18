@@ -66,7 +66,16 @@
         },
         "scale": "max",
         "divide_by_column_coverage": "dont",
-        "divide_by_row_coverage": "dont"
+        "divide_by_row_coverage": "dont",
+        "grid_seq_samples": {
+            "min": 100,
+            "max": 10000,
+            "val": 1000,
+            "step": 100,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        },
+        "grid_seq_annotation": "gene"
     },
     "replicates": {
         "in_group": "sum",
