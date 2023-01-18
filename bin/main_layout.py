@@ -669,29 +669,33 @@ class MainLayout:
         if idx >= len(contig_names):
             return "n/a"
 
-        return contig_names[idx][:-lcs] + ": " + label + (" (OOB)" if oob else "")
+        if lcs != 0:
+            n = contig_names[idx][:-lcs]
+        else:
+            n = contig_names[idx]
+        return n + ": " + label
 
     def set_area_range(self):
         contig_names_x = self.session.get_annotation_list(True)
         contig_names_y = self.session.get_annotation_list(False)
         contig_starts_x = self.session.get_tick_list(True)
         contig_starts_y = self.session.get_tick_list(False)
-        lcs = 0#self.session.get_longest_common_suffix()
+        lcs = self.session.get_longest_common_suffix()
         #longest_common_suffix @todo
         if len(contig_starts_x) > 0 and len(contig_starts_y) > 0:
-            self.area_range_expected = "X: [" + \
+            self.area_range_expected = "X: " + \
                 self.to_readable_pos(math.floor(self.heatmap.x_range.start * self.session.get_value(["dividend"])), \
                                     contig_starts_x[-1], contig_names_x, \
-                                    contig_starts_x[:-1], lcs) + " ~ " + \
+                                    contig_starts_x[:-1], lcs) + " - " + \
                 self.to_readable_pos(math.ceil(self.heatmap.x_range.end * self.session.get_value(["dividend"])), \
                                     contig_starts_x[-1], contig_names_x, \
-                                    contig_starts_x[:-1], lcs) + " ]; Y: [" +\
+                                    contig_starts_x[:-1], lcs) + " Y: " +\
                 self.to_readable_pos(math.floor(self.heatmap.y_range.start * self.session.get_value(["dividend"])), \
                                     contig_starts_y[-1], contig_names_y, \
-                                    contig_starts_y[:-1], lcs) + " ~ " + \
+                                    contig_starts_y[:-1], lcs) + " - " + \
                 self.to_readable_pos(math.ceil(self.heatmap.y_range.end * self.session.get_value(["dividend"])), \
                                     contig_starts_y[-1], contig_names_y, \
-                                    contig_starts_y[:-1], lcs) + " ]"
+                                    contig_starts_y[:-1], lcs)
         else:
             self.area_range_expected = "n/a"
         self.area_range.value = self.area_range_expected
@@ -704,8 +708,6 @@ class MainLayout:
             return False
 
     def interpret_number(self, s):
-        if s[-5:].lower() == "(oob)":
-            s = s[:-5].strip()
         if s[-2:].lower() == "bp":
             s = s[:-2]
         fac = 1
@@ -752,8 +754,8 @@ class MainLayout:
         return [None]
 
     def interpret_range(self, s, x_y):
-        if s.count("~") == 1 and s.count("[") <= 1 and s.count("]") <= 1:
-            x, y = [i.strip() for i in s.split("~")]
+        if s.count(" - ") == 1 and s.count("[") <= 1 and s.count("]") <= 1:
+            x, y = [i.strip() for i in s.split(" - ")]
             if x[:1] == "[":
                 x = x[1:].strip()
             if y[-1:] == "]":
@@ -767,13 +769,34 @@ class MainLayout:
         return self.interpret_position(s, x_y, True) + self.interpret_position(s, x_y, False)
 
     def interpret_area(self, s):
-        if s.count(";") == 1 and s.count("X:") <= 1 and s.count("Y:") <= 1:
+        s = s.lower()
+        # @todo search does not work in other coordinate systems than genomic
+        if s.count(";") == 1 and s.count("x:") == 0 and s.count("y:") == 0:
             x, y = [i.strip() for i in s.split(";")]
-            if x[:2] == "X:":
+            if x[:2] == "x:":
                 x = x[2:].strip()
-            if y[:2] == "Y:":
+            if y[:2] == "y:":
                 y = y[2:].strip()
             return self.interpret_range(x, [True]) + self.interpret_range(y, [False])
+
+        if s.count("x:") == 1 and s.count("y:") == 0:
+            if s[:2] == "x:":
+                s = s[2:].strip()
+            return self.interpret_range(s, [True]) + [self.heatmap.y_range.start, self.heatmap.y_range.end]
+
+        if s.count("x:") == 0 and s.count("y:") == 1:
+            if s[:2] == "y:":
+                s = s[2:].strip()
+            return [self.heatmap.x_range.start, self.heatmap.x_range.end] + self.interpret_range(s, [True])
+
+        if s.count("x:") == 1 and s.count("y:") == 1:
+            x_pos = s.find("x:")
+            y_pos = s.find("y:")
+            x = (s[x_pos+2:y_pos] if x_pos < y_pos else s[x_pos+2:]).strip()
+            y = (s[y_pos+2:x_pos] if y_pos < x_pos else s[y_pos+2:]).strip()
+            print(x, y)
+            return self.interpret_range(x, [True]) + self.interpret_range(y, [False])
+
         return self.interpret_range(s, [True, False]) + self.interpret_range(s, [False, True])
 
 
@@ -1723,7 +1746,7 @@ class MainLayout:
                         self.make_panel("Mapping", "", [ms_l, incomp_align_layout, multi_mapping]),
                         self.make_panel("Coordinates", "", [dds_l, x_coords, y_coords, 
                                                        symmetrie,
-                                                       #,binssize not evenly dividable
+                                                       #,binssize not evenly dividable @todo
                                                        chrom_layout
                                                        ]),
                         self.make_panel("Annotations", "", [annos_layout,

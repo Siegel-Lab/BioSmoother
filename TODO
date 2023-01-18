@@ -7,11 +7,7 @@ made top & bottom status bar
 
 - no annotation filter is displaying empty bins only
 - on axes: last contig name is missing
-- log print needs to be collected and updated in one go -> too laggy the way it is now
-- top status bar
-    - sometimes float values are displayed as coords
-- better categories
-    - implement better layout
+- opening view->color tab causes rerender
 - sortable multi choice: column labels and checkboxes not aligned
 - sort session .json into static values & parameters
     -  exclude static values form undo & redo
