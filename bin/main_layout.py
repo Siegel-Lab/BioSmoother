@@ -807,6 +807,31 @@ class MainLayout:
         if not self.session is None:
             self.session.set_value(["settings", "active_tools"], tools.split(";"))
 
+    def make_tabs(self, tabs, sizing_mode="stretch_both"):
+        t = Tabs(tabs=tabs, sizing_mode=sizing_mode)
+        def tab_active_change():
+            # super convoluted and unnecessary code...
+            # bokeh's UI becomes slow with too many buttons on one screen
+            # therefore we hide tabs that are not active
+            # however this unhiding the tabs triggers a layout problem
+            # therefore instead of unhiding a tab, we create a new tab (that is visible by default) and set its
+            # title and children to the hidden tabs title and children.
+            # @note once bokeh fixes the layout/performance problem this code should just be removed
+            self.curdoc.hold()
+            for tab in t.tabs:
+                tab.child.visible = False
+            title = t.tabs[t.active].title
+            children = t.tabs[t.active].child.children
+            t.tabs[t.active] = Panel(title=title, child=column(children, visible=True))
+            self.curdoc.unhold()
+
+        t.on_change("active", lambda x, y, z: tab_active_change())
+        t.tabs[t.active].child.visible = True
+        return t
+
+    def make_panel(self, title, tooltip="", children=[]):
+        return Panel(title=title, child=column(children, visible=False))
+
     @gen.coroutine
     @without_document_lock
     def do_export(self):
@@ -1514,11 +1539,6 @@ class MainLayout:
         self.low_color.on_change("color", color_event_low)
         self.high_color.on_change("color", color_event_high)
 
-        def make_panel(title, tooltip, children):
-            cx = column(children)#, sizing_mode="stretch_width", css_classes=["tooltip", tooltip])
-            #cx.margin = [0, 20, 0, 20]
-            return Panel(child=cx, title=title)
-
 
         with open("smoother/VERSION", "r") as in_file:
             self.smoother_version = in_file.readlines()[0][:-1]
@@ -1665,67 +1685,64 @@ class MainLayout:
         tools_bar.height_policy = "fixed"
         tools_bar.align  = "center"
 
-        _settings = Tabs(tabs=[
-                Panel(title="File", child=column([
+        _settings = self.make_tabs(tabs=[
+                self.make_panel("File", children=[
                     Spacer(height=5),
-                    Tabs(tabs=[
-                        make_panel("Presetting", "", [*quick_configs]),
-                        make_panel("Export", "", [export_label, self.export_file, export_sele_layout,
+                    self.make_tabs(tabs=[
+                        self.make_panel("Presetting", "", [*quick_configs]),
+                        self.make_panel("Export", "", [export_label, self.export_file, export_sele_layout,
                                         export_full, export_format,
                                         export_button]),
-                        make_panel("Info", "", [version_info, log_div, #self.log_div
+                        self.make_panel("Info", "", [version_info, log_div, #self.log_div
                                                 ]),
-                    ],
-                         sizing_mode="stretch_both")])
+                    ])
+                    ]
                 ),
-                Panel(title="Normalize", child=column([
+                self.make_panel("Normalize", children=[
                     Spacer(height=5),
                     normalization, normalization_cov,
-                    Tabs(tabs=[
-                        #make_panel("Approach", "", []),
-                        make_panel("RADICL-seq", "", [rsa_l]),
-                        make_panel("Dist. Dep. Dec.", "", [ddd, ddd_show, ddd_sam_l, ddd_ex_l, 
-                            #self.dist_dep_dec_plot
+                    self.make_tabs(tabs=[
+                        #self.make_panel("Approach", "", []),
+                        self.make_panel("RADICL-seq", "", [rsa_l]),
+                        self.make_panel("Dist. Dep. Dec.", "", [ddd, ddd_show, ddd_sam_l, ddd_ex_l, 
+                            self.dist_dep_dec_plot
                         ]),
-                        make_panel("GRID-seq", "", [
-                                                    #self.ranked_columns, self.ranked_rows, 
+                        self.make_panel("GRID-seq", "", [
+                                                    self.ranked_columns, self.ranked_rows, 
                                                     ]),
-                        make_panel("ICE", "", [ice_sparse_filter]),
-                    ], sizing_mode="stretch_both")
+                        self.make_panel("ICE", "", [ice_sparse_filter]),
                     ])
+                    ]
                 ),
-                Panel(title="Filter", child=column([
+                self.make_panel("Filter", children=[
                     Spacer(height=5),
-                    Tabs(tabs=[
-                        make_panel("Datapools", "", [in_group, betw_group, group_layout, ibs_l,
+                    self.make_tabs(tabs=[
+                        self.make_panel("Datapools", "", [in_group, betw_group, group_layout, ibs_l,
                                                         norm_layout
                                                     ]),
-                        make_panel("Mapping", "", [ms_l, incomp_align_layout, multi_mapping]),
-                        make_panel("Coordinates", "", [dds_l, x_coords, y_coords, 
+                        self.make_panel("Mapping", "", [ms_l, incomp_align_layout, multi_mapping]),
+                        self.make_panel("Coordinates", "", [dds_l, x_coords, y_coords, 
                                                        symmetrie,
                                                        #,binssize not evenly dividable
-                                                       #chrom_layout
+                                                       chrom_layout
                                                        ]),
-                        make_panel("Annotations", "", [#annos_layout,
+                        self.make_panel("Annotations", "", [annos_layout,
                                                         multiple_anno_per_bin,
                                                        multiple_bin_per_anno,
                                                        ]),
-                    ],
-                         sizing_mode="stretch_both")])
+                    ])]
                 ),
-                Panel(title="View", child=column([
+                self.make_panel("View", children=[
                     Spacer(height=5),
-                    Tabs(tabs=[
-                        make_panel("Color", "", [self.color_layout, crs_l, is_l, color_scale, color_picker, 
+                    self.make_tabs(tabs=[
+                        self.make_panel("Color", "", [self.color_layout, crs_l, is_l, color_scale, color_picker, 
                                                   self.low_color, self.high_color]),
-                        make_panel("Panels", "", [show_hide, ass_l, rss2_l, stretch, axis_lables]),
-                        make_panel("Bins", "", [nb_l, mmbs_l, square_bins, power_ten_bin]),
-                        make_panel("Redrawing", "", [ufs_l, rs_l, aas_l]),
-                    ],
-                         sizing_mode="stretch_both")])
+                        self.make_panel("Panels", "", [show_hide, ass_l, rss2_l, stretch, axis_lables]),
+                        self.make_panel("Bins", "", [nb_l, mmbs_l, square_bins, power_ten_bin]),
+                        self.make_panel("Redrawing", "", [ufs_l, rs_l, aas_l]),
+                    ])]
                 ),
-            ],
-            sizing_mode="stretch_both",
+            ]
             #css_classes=["scroll_y"]
         )
         #_settings.height = 100

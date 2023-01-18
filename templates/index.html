@@ -12,43 +12,46 @@
 
         function poll_tools()
         {
-            if(Bokeh.documents[0].get_model_by_name('toolbar') != null)
+            if(Bokeh.documents.length > 0 )
             {
-                // report active tool
-                var tools = Bokeh.documents[0].get_model_by_name('toolbar').tools;
-                var set = new Set();
-                for(const tool of tools)
+                if(Bokeh.documents[0].get_model_by_name('toolbar') != null)
                 {
-                    if(tool.active)
-                        set.add(tool.tool_name);
-                }
-                var str = "";
-                for(const tool of set)
-                    str += tool + ";";
-                if(str.length > 0)
-                    str = str.slice(0,-1);
-                Bokeh.documents[0].get_model_by_name('active_tools_ti').value = str;
-
-                // set active tools if necessary
-                if(Bokeh.documents[0].get_model_by_name('set_active_tools_ti').value != "")
-                {
-                    var arr = Bokeh.documents[0].get_model_by_name('set_active_tools_ti').value.split(";");
+                    // report active tool
+                    var tools = Bokeh.documents[0].get_model_by_name('toolbar').tools;
                     var set = new Set();
                     for(const tool of tools)
-                        tool.active = arr.includes(tool.tool_name);
-                    
-                    Bokeh.documents[0].get_model_by_name('set_active_tools_ti').value = "";
-                }
-            }
+                    {
+                        if(tool.active)
+                            set.add(tool.tool_name);
+                    }
+                    var str = "";
+                    for(const tool of set)
+                        str += tool + ";";
+                    if(str.length > 0)
+                        str = str.slice(0,-1);
+                    Bokeh.documents[0].get_model_by_name('active_tools_ti').value = str;
 
-            if(Bokeh.documents[0].get_model_by_name('func_tic_x') != null)
-            {
-                Bokeh.documents[0].get_model_by_name('func_tic_x').properties.args.update += 1;
-                // @todo
-                //Bokeh.documents[0].get_model_by_name('func_tic_x').change.emit();
+                    // set active tools if necessary
+                    if(Bokeh.documents[0].get_model_by_name('set_active_tools_ti').value != "")
+                    {
+                        var arr = Bokeh.documents[0].get_model_by_name('set_active_tools_ti').value.split(";");
+                        var set = new Set();
+                        for(const tool of tools)
+                            tool.active = arr.includes(tool.tool_name);
+                        
+                        Bokeh.documents[0].get_model_by_name('set_active_tools_ti').value = "";
+                    }
+                }
+
+                if(Bokeh.documents[0].get_model_by_name('func_tic_x') != null)
+                {
+                    Bokeh.documents[0].get_model_by_name('func_tic_x').properties.args.update += 1;
+                    // @todo
+                    //Bokeh.documents[0].get_model_by_name('func_tic_x').change.emit();
+                }
+                if(Bokeh.documents[0].get_model_by_name('func_tic_y') != null)
+                    Bokeh.documents[0].get_model_by_name('func_tic_y').args.update += 1;
             }
-            if(Bokeh.documents[0].get_model_by_name('func_tic_y') != null)
-                Bokeh.documents[0].get_model_by_name('func_tic_y').args.update += 1;
 
             setTimeout(poll_tools, 500);
         }
