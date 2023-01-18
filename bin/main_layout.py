@@ -676,7 +676,7 @@ class MainLayout:
         contig_names_y = self.session.get_annotation_list(False)
         contig_starts_x = self.session.get_tick_list(True)
         contig_starts_y = self.session.get_tick_list(False)
-        lcs = self.session.get_longest_common_suffix()
+        lcs = 0#self.session.get_longest_common_suffix()
         #longest_common_suffix @todo
         if len(contig_starts_x) > 0 and len(contig_starts_y) > 0:
             self.area_range_expected = "X: [" + \
@@ -1673,7 +1673,8 @@ class MainLayout:
                         make_panel("Export", "", [export_label, self.export_file, export_sele_layout,
                                         export_full, export_format,
                                         export_button]),
-                        make_panel("Info", "", [version_info, log_div, self.log_div]),
+                        make_panel("Info", "", [version_info, log_div, #self.log_div
+                                                ]),
                     ],
                          sizing_mode="stretch_both")])
                 ),
@@ -1683,7 +1684,9 @@ class MainLayout:
                     Tabs(tabs=[
                         #make_panel("Approach", "", []),
                         make_panel("RADICL-seq", "", [rsa_l]),
-                        make_panel("Dist. Dep. Dec.", "", [ddd, ddd_show, ddd_sam_l, ddd_ex_l, self.dist_dep_dec_plot]),
+                        make_panel("Dist. Dep. Dec.", "", [ddd, ddd_show, ddd_sam_l, ddd_ex_l, 
+                            #self.dist_dep_dec_plot
+                        ]),
                         make_panel("GRID-seq", "", [
                                                     #self.ranked_columns, self.ranked_rows, 
                                                     ]),
@@ -1701,9 +1704,9 @@ class MainLayout:
                         make_panel("Coordinates", "", [dds_l, x_coords, y_coords, 
                                                        symmetrie,
                                                        #,binssize not evenly dividable
-                                                       chrom_layout
+                                                       #chrom_layout
                                                        ]),
-                        make_panel("Annotations", "", [annos_layout,
+                        make_panel("Annotations", "", [#annos_layout,
                                                         multiple_anno_per_bin,
                                                        multiple_bin_per_anno,
                                                        ]),

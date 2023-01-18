@@ -11,8 +11,8 @@ export smoother_port=${port}
 
 cd ..
 
-#gdb python3 -ex "run ~/workspace/smoother/conda_env/smoother/bin/bokeh serve smoother --allow-websocket-origin=localhost:${port} --log-level error --port ${port}"
-
 export smoother_index_path=${1}
 
-bokeh serve smoother --allow-websocket-origin=localhost:${port} --log-level error --port ${port}
+gdb python3 -ex "run ~/workspace/smoother/conda_env/smoother/bin/bokeh serve smoother --allow-websocket-origin=localhost:${port} --port ${port}"
+
+#bokeh serve smoother --allow-websocket-origin=localhost:${port} --log-level error --port ${port}

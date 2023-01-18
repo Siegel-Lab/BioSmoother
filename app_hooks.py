@@ -1,11 +1,12 @@
 import os
 from bin.libContactMapping import Quarry
 import bin.global_variables
+import json
 NUM_SESSIONS = 0
 
 
 def on_server_loaded(server_context):
-    if os.path.exists(os.environ["smoother_index_path"] + ".smoother_index"):
+    if os.path.exists(os.environ["smoother_index_path"] + ".smoother_index/"):
         print("loading index...")
         bin.global_variables.quarry_session = Quarry(os.environ["smoother_index_path"] + ".smoother_index")
         #self.session.print_callback = lambda s: self.print(s)
@@ -18,7 +19,7 @@ def on_server_loaded(server_context):
 
         print("done loading.")
     else:
-        print("Index file not found.")
+        print("Index file", os.environ["smoother_index_path"], "not found.")
         print("exiting.")
         exit()
 
