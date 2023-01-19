@@ -979,8 +979,7 @@ class MainLayout:
             "xs": [],
             "ys": [],
             "colors": [],
-            "score_a": [],
-            "score_b": [],
+            "anno_desc": [],
         }
         self.ranked_columns_data = ColumnDataSource(data=d)
         self.ranked_columns = None
@@ -1136,11 +1135,11 @@ class MainLayout:
                 ('pos', "@chrs @index_start - @index_end"),
                 ('ranking', "@xs"),
                 ('coverage', "@ys"),
-                ('by group', "A: @score_a, B: @score_b")
+                ('desc', "@anno_desc")
             ]
         )
         self.ranked_columns = figure(title="Columns ranked by coverage", tools="pan,wheel_zoom,box_zoom,crosshair",
-                                     y_axis_type="log", height=200)
+                                     y_axis_type="log", height=200, width=SETTINGS_WIDTH)
         tollbars.append(self.ranked_columns.toolbar)
         self.ranked_columns.toolbar_location = None
         self.ranked_columns.sizing_mode = "stretch_width"
@@ -1150,7 +1149,7 @@ class MainLayout:
         self.ranked_columns.yaxis.axis_label = "normalized score"
 
         self.ranked_rows = figure(title="Rows ranked by coverage", tools="pan,wheel_zoom,box_zoom,crosshair", 
-                                  y_axis_type="log", height=200)
+                                  y_axis_type="log", height=200, width=SETTINGS_WIDTH)
         tollbars.append(self.ranked_rows.toolbar)
         self.ranked_rows.toolbar_location = None
         self.ranked_rows.sizing_mode = "stretch_width"
@@ -1238,6 +1237,7 @@ class MainLayout:
                                                     "rpk"), 
                                                     ("Binominal test", "radicl-seq"),
                                                     ("Iterative Correction", "hi-c"),
+                                                    ("Chromatin Associated elements", "grid-seq"),
                                                     ("Cooler Iterative Correction", "cool-hi-c"),
                                                     ("No normalization", "dont"),
                                                     active_item=['settings', 'normalization', 'normalize_by']
@@ -1250,6 +1250,7 @@ class MainLayout:
                                                     "rpk"), 
                                                     ("Binominal test", "radicl-seq"),
                                                     ("Iterative Correction", "hi-c"),
+                                                    ("Chromatin Associated elements", "grid-seq"),
                                                     ("No normalization", "dont"),
                                                     active_item=['settings', 'normalization', 'normalize_by']
                                                     )
@@ -1413,9 +1414,12 @@ class MainLayout:
         rsa_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_p_accept",
                                settings=["settings", "normalization", "p_accept"],
                                title="pAccept for binominal test", sizing_mode="stretch_width")
-        bsmcq_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_section_size_max_coverage",
-                               settings=["settings", "replicates", "coverage_get_max_bin_size"],
+        bsmcq_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="@todo",
+                               settings=["settings", "normalization", "grid_seq_max_bin_size"],
                                title="Section size max coverage [bp]", sizing_mode="stretch_width")
+        grid_seq_samples_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_section_size_max_coverage",
+                               settings=["settings", "normalization", "grid_seq_samples"],
+                               title="Number of samples", sizing_mode="stretch_width")
 
         group_layout = self.multi_choice_auto("Active Primary Datasets", "tooltip_replicates", 
                                                 [[["replicates", "in_group_a"], "Datapool A"], 
@@ -1716,7 +1720,7 @@ class MainLayout:
                         self.make_panel("Export", "", [export_label, self.export_file, export_sele_layout,
                                         export_full, export_format,
                                         export_button]),
-                        self.make_panel("Info", "", [version_info, log_div, #self.log_div
+                        self.make_panel("Info", "", [version_info, log_div, self.log_div
                                                 ]),
                     ])
                     ]
@@ -1731,6 +1735,7 @@ class MainLayout:
                             self.dist_dep_dec_plot
                         ]),
                         self.make_panel("GRID-seq", "", [
+                                                    bsmcq_l, grid_seq_samples_l,
                                                     self.ranked_columns, self.ranked_rows, 
                                                     ]),
                         self.make_panel("ICE", "", [ice_sparse_filter]),
@@ -1778,7 +1783,7 @@ class MainLayout:
             ],
             sizing_mode="fixed"
         )
-        _settings_n_info.width = SETTINGS_WIDTH
+        _settings_n_info.width = SETTINGS_WIDTH + 10
         _settings_n_info.width_policy = "fixed"
 
         self.hidable_plots.append((_settings_n_info, ["tools"]))
@@ -1923,8 +1928,8 @@ class MainLayout:
 
                 w_bin, h_bin = self.session.get_bin_size()
 
-                #ranked_slice_x = self.session.get_ranked_slices(False)
-                #ranked_slice_y = self.session.get_ranked_slices(True)
+                ranked_slice_x = self.session.get_ranked_slices(False)
+                ranked_slice_y = self.session.get_ranked_slices(True)
                 if self.session.get_value(["settings", "normalization", "ddd_show"]):
                     dist_dep_dec_plot_data = self.session.get_decay()
                 else:
@@ -2016,8 +2021,8 @@ class MainLayout:
                     self.tick_formatter_y.args = ticks_y
                     self.tick_formatter_y_2.args = ticks_y
 
-                    #self.ranked_columns_data.data = ranked_slice_y
-                    #self.ranked_rows_data.data = ranked_slice_x
+                    self.ranked_columns_data.data = ranked_slice_y
+                    self.ranked_rows_data.data = ranked_slice_x
                     self.dist_dep_dec_plot_data.data = dist_dep_dec_plot_data
 
                     if len(error) > 0:
