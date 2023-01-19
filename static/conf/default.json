@@ -75,14 +75,9 @@
             "spinner_min_restricted": true,
             "spinner_max_restricted": false
         },
-        "grid_seq_annotation": "gene"
-    },
-    "replicates": {
-        "in_group": "sum",
-        "between_group": "sum",
-        "coverage_get_max_col": false,
-        "coverage_get_max_row": false,
-        "coverage_get_max_bin_size": {
+        "grid_seq_annotation": "gene",
+        "grid_seq_axis_is_column": true,
+        "grid_seq_max_bin_size": {
             "min": 1000,
             "max": 100000,
             "val": 1000,
@@ -90,6 +85,10 @@
             "spinner_min_restricted": true,
             "spinner_max_restricted": false
         }
+    },
+    "replicates": {
+        "in_group": "sum",
+        "between_group": "sum"
     },
     "interface": {
         "max_num_bins": {
