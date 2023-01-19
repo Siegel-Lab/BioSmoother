@@ -42,6 +42,10 @@ textarea {
     padding: 6px 12px;
 }
 
+.text_align_center {
+    text-align: center !important;
+}
+
 .other_button-active {
     background-color: #ebebeb;
     border-color: #adadad;

@@ -1138,25 +1138,25 @@ class MainLayout:
                 ('desc', "@anno_desc")
             ]
         )
-        self.ranked_columns = figure(title="Columns ranked by coverage", tools="pan,wheel_zoom,box_zoom,crosshair",
+        self.ranked_columns = figure(tools="pan,wheel_zoom,box_zoom,crosshair",
                                      y_axis_type="log", height=200, width=SETTINGS_WIDTH)
         tollbars.append(self.ranked_columns.toolbar)
         self.ranked_columns.toolbar_location = None
         self.ranked_columns.sizing_mode = "stretch_width"
         self.ranked_columns.dot(x="xs", y="ys", color="colors", size=12, source=self.ranked_columns_data)
         self.ranked_columns.add_tools(ranked_hover)
-        self.ranked_columns.xaxis.axis_label = "columns sorted by score"
-        self.ranked_columns.yaxis.axis_label = "normalized score"
+        self.ranked_columns.xaxis.axis_label = "Samples ranked by RNA reads per kbp"
+        self.ranked_columns.yaxis.axis_label = "RNA reads per kbp"
 
-        self.ranked_rows = figure(title="Rows ranked by coverage", tools="pan,wheel_zoom,box_zoom,crosshair", 
+        self.ranked_rows = figure(tools="pan,wheel_zoom,box_zoom,crosshair", 
                                   y_axis_type="log", height=200, width=SETTINGS_WIDTH)
         tollbars.append(self.ranked_rows.toolbar)
         self.ranked_rows.toolbar_location = None
         self.ranked_rows.sizing_mode = "stretch_width"
         self.ranked_rows.dot(x="xs", y="ys", color="colors", size=12, source=self.ranked_rows_data)
         self.ranked_rows.add_tools(ranked_hover)
-        self.ranked_rows.xaxis.axis_label = "rows sorted by score"
-        self.ranked_rows.yaxis.axis_label = "normalized score"
+        self.ranked_rows.xaxis.axis_label = "Samples ranked by max. DNA reads in bin"
+        self.ranked_rows.yaxis.axis_label = "Maximal DNA reads in bin"
 
         
         self.dist_dep_dec_plot = figure(title="Distance Dependant Decay", tools="pan,wheel_zoom,box_zoom,crosshair",
@@ -1420,6 +1420,14 @@ class MainLayout:
         grid_seq_samples_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_section_size_max_coverage",
                                settings=["settings", "normalization", "grid_seq_samples"],
                                title="Number of samples", sizing_mode="stretch_width")
+        grid_seq_rna_filter_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, 
+                               tooltip="@todo",
+                               settings=["settings", "normalization", "grid_seq_rna_filter"],
+                               title="RNA reads per kbp bounds", sizing_mode="stretch_width")
+        grid_seq_dna_filter_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, 
+                               tooltip="@todo",
+                               settings=["settings", "normalization", "grid_seq_dna_filter"],
+                               title="Maximal DNA reads in bin bounds", sizing_mode="stretch_width")
 
         group_layout = self.multi_choice_auto("Active Primary Datasets", "tooltip_replicates", 
                                                 [[["replicates", "in_group_a"], "Datapool A"], 
@@ -1527,20 +1535,6 @@ class MainLayout:
         
         export_full = self.make_checkbox("Export full matrix instead", "tooltip_full_matrix",
                                             settings=["settings", "export", "do_export_full"])
-
-        max_coverage_col = self.make_checkbox("Max coverage per bin columns",
-                                            "tooltip_query_max_cov_col",
-                                            settings=["settings", "replicates", "coverage_get_max_col"])
-        max_coverage_row = self.make_checkbox("Max coverage per bin rows",
-                                            "tooltip_query_max_cov_row",
-                                            settings=["settings", "replicates", "coverage_get_max_row"])
-        
-        coverage_filter_col = self.make_range_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_coverage_filter_col",
-                                                settings=["settings", "filters", "coverage_bin_filter_column"], 
-                                                title="Column Coverage Filter", sizing_mode="stretch_width")
-        coverage_filter_row = self.make_range_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_coverage_filter_row",
-                                                settings=["settings", "filters", "coverage_bin_filter_row"], 
-                                                title="Row Coverage Filter", sizing_mode="stretch_width")
 
         export_label = Div(text="Output Prefix:", css_classes=["tooltip", "tooltip_export_prefix"])
         export_label.margin = DIV_MARGIN
@@ -1703,7 +1697,7 @@ class MainLayout:
         self.log_div = Div(css_classes=["scroll_y2"], width=SETTINGS_WIDTH, max_height =200, sizing_mode="fixed", height_policy="fixed") # @todo tooltip
 
         self.area_range = TextInput(value="n/a", width=SETTINGS_WIDTH*2, height=26,
-                                        css_classes=["tooltip", "tooltip_area_range"])
+                                        css_classes=["tooltip", "tooltip_area_range", "text_align_center"]) # @todo text_align_center does not work
         self.area_range.on_change("value", lambda x, y, z: self.parse_area_range())
         tools_bar = row([self.spinner, self.undo_button, self.redo_button, self.area_range, tool_bar, reset_session],
                         css_classes=["bottom_border"])
@@ -1736,7 +1730,9 @@ class MainLayout:
                         ]),
                         self.make_panel("GRID-seq", "", [
                                                     bsmcq_l, grid_seq_samples_l,
-                                                    self.ranked_columns, self.ranked_rows, 
+                                                    grid_seq_rna_filter_l, self.ranked_columns, 
+                                                    grid_seq_dna_filter_l,
+                                                    self.ranked_rows, 
                                                     ]),
                         self.make_panel("ICE", "", [ice_sparse_filter]),
                     ])
