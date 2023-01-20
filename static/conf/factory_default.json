@@ -78,6 +78,7 @@
         "grid_seq_annotation": "gene",
         "grid_seq_axis_is_column": true,
         "grid_seq_filter_intersection": true,
+        "grid_seq_display_background": true,
         "grid_seq_max_bin_size": {
             "min": 1000,
             "max": 100000,
