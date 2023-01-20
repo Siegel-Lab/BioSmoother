@@ -980,6 +980,8 @@ class MainLayout:
             "ys": [],
             "colors": [],
             "anno_desc": [],
+            "sample_id": [],
+            "anno_idx": [],
         }
         self.ranked_columns_data = ColumnDataSource(data=d)
         self.ranked_columns = None
@@ -1135,7 +1137,9 @@ class MainLayout:
                 ('pos', "@chrs @index_start - @index_end"),
                 ('ranking', "@xs"),
                 ('coverage', "@ys"),
-                ('desc', "@anno_desc")
+                ('desc', "@anno_desc"),
+                ('anno. index', "@anno_idx"),
+                ('sample index', "@sample_id")
             ]
         )
         self.ranked_columns = figure(tools="pan,wheel_zoom,box_zoom,crosshair",
@@ -1420,6 +1424,22 @@ class MainLayout:
         grid_seq_samples_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_section_size_max_coverage",
                                settings=["settings", "normalization", "grid_seq_samples"],
                                title="Number of samples", sizing_mode="stretch_width")
+        grid_seq_display_background = self.make_checkbox("Display Background as Secondary Data", 
+                                                "@todo",
+                                                settings=['settings', "normalization", "grid_seq_display_background"]
+                                            )
+        grid_seq_column = self.make_checkbox("Compute Background for Columns", 
+                                                "@todo",
+                                                settings=['settings', "normalization", "grid_seq_axis_is_column"]
+                                            )
+        grid_seq_intersection = self.make_checkbox(
+                                                "Use intersection between replicates of chromatin associated elements", 
+                                                "@todo",
+                                                settings=['settings', "normalization", "grid_seq_filter_intersection"]
+                                            )
+        grid_seq_anno = self.dropdown_select_session("Annotation type", "@todo",
+                                                ["annotation", "list"], 
+                                                ['settings', "normalization", "grid_seq_annotation"])
         grid_seq_rna_filter_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, 
                                tooltip="@todo",
                                settings=["settings", "normalization", "grid_seq_rna_filter"],
@@ -1729,7 +1749,8 @@ class MainLayout:
                             self.dist_dep_dec_plot
                         ]),
                         self.make_panel("GRID-seq", "", [
-                                                    bsmcq_l, grid_seq_samples_l,
+                                                    grid_seq_samples_l, bsmcq_l, grid_seq_column, grid_seq_anno,
+                                                    grid_seq_display_background, grid_seq_intersection,
                                                     grid_seq_rna_filter_l, self.ranked_columns, 
                                                     grid_seq_dna_filter_l,
                                                     self.ranked_rows, 
@@ -2062,7 +2083,7 @@ class MainLayout:
 
     def render_callback(self):
         if self.do_render:
-            self.update_log_div()
+            #self.update_log_div()
             if not self.session is None:
                 if not None in (self.heatmap.x_range.start, self.heatmap.x_range.end, self.heatmap.y_range.start,
                                 self.heatmap.y_range.end):
