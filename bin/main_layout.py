@@ -1697,7 +1697,7 @@ class MainLayout:
         self.log_div = Div(css_classes=["scroll_y2"], width=SETTINGS_WIDTH, max_height =200, sizing_mode="fixed", height_policy="fixed") # @todo tooltip
 
         self.area_range = TextInput(value="n/a", width=SETTINGS_WIDTH*2, height=26,
-                                        css_classes=["tooltip", "tooltip_area_range", "text_align_center"]) # @todo text_align_center does not work
+                                        css_classes=["tooltip", "tooltip_area_range", "text_align_center"]) 
         self.area_range.on_change("value", lambda x, y, z: self.parse_area_range())
         tools_bar = row([self.spinner, self.undo_button, self.redo_button, self.area_range, tool_bar, reset_session],
                         css_classes=["bottom_border"])
@@ -1779,7 +1779,7 @@ class MainLayout:
             ],
             sizing_mode="fixed"
         )
-        _settings_n_info.width = SETTINGS_WIDTH + 10
+        _settings_n_info.width = SETTINGS_WIDTH + 25
         _settings_n_info.width_policy = "fixed"
 
         self.hidable_plots.append((_settings_n_info, ["tools"]))
@@ -1788,7 +1788,7 @@ class MainLayout:
         self.settings_row.height = 100
         self.settings_row.min_height = 100
         self.settings_row.height_policy = "fixed"
-        self.settings_row.width = SETTINGS_WIDTH
+        self.settings_row.width = SETTINGS_WIDTH + 25
         self.settings_row.width_policy = "fixed"
 
         quit_ti = TextInput(value="keepalive", name="quit_ti", visible=False)
