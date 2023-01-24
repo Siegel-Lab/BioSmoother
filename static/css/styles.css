@@ -161,6 +161,11 @@ button {
     text-align: left;
 }
 
+.bk {
+    font-family: Consolas, 'Courier New', monospace !important;
+    font-size: 11px !important;
+}
+
 
 .lds-spinner {
     color: official;

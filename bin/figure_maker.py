@@ -3,6 +3,7 @@ from bokeh.models import BoxAnnotation, Range1d
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
 import math
 
+FONT = "Consolas, sans-serif"
 DROPDOWN_HEIGHT=30
 
 class FigureMaker:
@@ -46,10 +47,15 @@ class FigureMaker:
             ret.min_border_right = 0
         if self.no_border_v:
             ret.min_border_top = 0
-        ret.xaxis.axis_label_text_font_size = "10px"
-        ret.yaxis.axis_label_text_font_size = "10px"
+        ret.xaxis.axis_label_text_font_size = "11px"
+        ret.yaxis.axis_label_text_font_size = "11px"
         ret.xaxis.axis_label_standoff = 0
         ret.yaxis.axis_label_standoff = 0
+        ret.xaxis.major_label_text_font = FONT
+        ret.yaxis.major_label_text_font = FONT
+        ret.xaxis.axis_label_text_font = FONT
+        ret.yaxis.axis_label_text_font = FONT
+        ret.title.text_font = FONT
         ret.xgrid.level = "glyph"
         ret.ygrid.level = "glyph"
         ret.background_fill_color = "lightgrey"

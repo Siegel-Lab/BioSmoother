@@ -27,7 +27,7 @@ from bokeh.models.tickers import AdaptiveTicker
 from bin.libContactMapping import Quarry
 import json
 import shutil
-from bin.figure_maker import FigureMaker, DROPDOWN_HEIGHT
+from bin.figure_maker import FigureMaker, DROPDOWN_HEIGHT, FONT
 from bin.extra_ticks_ticker import *
 from bin.export_tsv import export_tsv
 from bokeh import events
@@ -1145,33 +1145,38 @@ class MainLayout:
         self.ranked_columns = figure(tools="pan,wheel_zoom,box_zoom,crosshair",
                                      y_axis_type="log", height=200, width=SETTINGS_WIDTH)
         tollbars.append(self.ranked_columns.toolbar)
-        self.ranked_columns.toolbar_location = None
-        self.ranked_columns.sizing_mode = "stretch_width"
         self.ranked_columns.dot(x="xs", y="ys", color="colors", size=12, source=self.ranked_columns_data)
-        self.ranked_columns.add_tools(ranked_hover)
         self.ranked_columns.xaxis.axis_label = "Samples ranked by RNA reads per kbp"
         self.ranked_columns.yaxis.axis_label = "RNA reads per kbp"
 
         self.ranked_rows = figure(tools="pan,wheel_zoom,box_zoom,crosshair", 
                                   y_axis_type="log", height=200, width=SETTINGS_WIDTH)
-        tollbars.append(self.ranked_rows.toolbar)
         self.ranked_rows.toolbar_location = None
-        self.ranked_rows.sizing_mode = "stretch_width"
         self.ranked_rows.dot(x="xs", y="ys", color="colors", size=12, source=self.ranked_rows_data)
-        self.ranked_rows.add_tools(ranked_hover)
         self.ranked_rows.xaxis.axis_label = "Samples ranked by max. DNA reads in bin"
         self.ranked_rows.yaxis.axis_label = "Maximal DNA reads in bin"
 
         
         self.dist_dep_dec_plot = figure(title="Distance Dependant Decay", tools="pan,wheel_zoom,box_zoom,crosshair",
                                         y_axis_type="log", height=200, width=SETTINGS_WIDTH)
-        tollbars.append(self.dist_dep_dec_plot.toolbar)
-        self.dist_dep_dec_plot.toolbar_location = None
         self.dist_dep_dec_plot.xaxis.axis_label = "manhatten distance from diagonal"
         self.dist_dep_dec_plot.yaxis.axis_label = "reads per kbp^2"
-        self.dist_dep_dec_plot.sizing_mode = "stretch_width"
         self.dist_dep_dec_plot.multi_line(xs="xs", ys="ys", color="color",
                                           source=self.dist_dep_dec_plot_data)
+
+        for p in [self.ranked_columns, self.ranked_rows, self.dist_dep_dec_plot]:
+            p.sizing_mode = "stretch_width"
+            p.toolbar_location = None
+            tollbars.append(p.toolbar)
+            p.xaxis.axis_label_text_font_size = "11px"
+            p.yaxis.axis_label_text_font_size = "11px"
+            p.xaxis.axis_label_standoff = 0
+            p.yaxis.axis_label_standoff = 0
+            p.xaxis.major_label_text_font = FONT
+            p.yaxis.major_label_text_font = FONT
+            p.xaxis.axis_label_text_font = FONT
+            p.yaxis.axis_label_text_font = FONT
+
         self.dist_dep_dec_plot.xaxis[0].formatter = FuncTickFormatter(
             args={},
             code="""
