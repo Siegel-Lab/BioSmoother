@@ -6,7 +6,6 @@ made top & bottom status bar
 # smoother todo (ranked)
 
 - no annotation filter is displaying empty bins only
-- on axes: last contig name is missing
 - opening view->color tab causes rerender
 - sortable multi choice: column labels and checkboxes not aligned
 - sort session .json into static values & parameters

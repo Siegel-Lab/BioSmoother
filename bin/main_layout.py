@@ -1645,7 +1645,7 @@ class MainLayout:
                             if(tick < 0 || tick >= genome_end)
                                 return "n/a";
                             var idx = 0;
-                            while(contig_starts[idx + 1] <= tick)
+                            while(idx + 1 < contig_starts.length && contig_starts[idx + 1] <= tick)
                                 idx += 1;
                             const len = contig_names[idx].length - 9;
                             if(len > 0)
@@ -2083,7 +2083,7 @@ class MainLayout:
 
     def render_callback(self):
         if self.do_render:
-            #self.update_log_div()
+            self.update_log_div()
             if not self.session is None:
                 if not None in (self.heatmap.x_range.start, self.heatmap.x_range.end, self.heatmap.y_range.start,
                                 self.heatmap.y_range.end):
