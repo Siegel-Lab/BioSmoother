@@ -1429,6 +1429,9 @@ class MainLayout:
         grid_seq_samples_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_section_size_max_coverage",
                                settings=["settings", "normalization", "grid_seq_samples"],
                                title="Number of samples", sizing_mode="stretch_width")
+        radicl_seq_samples_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="@todo",
+                               settings=["settings", "normalization", "radicl_seq_samples"],
+                               title="Number of samples", sizing_mode="stretch_width")
         grid_seq_display_background = self.make_checkbox("Display Background as Secondary Data", 
                                                 "@todo",
                                                 settings=['settings', "normalization", "grid_seq_display_background"]
@@ -1757,7 +1760,7 @@ class MainLayout:
                     normalization, normalization_cov,
                     self.make_tabs(tabs=[
                         #self.make_panel("Approach", "", []),
-                        self.make_panel("Binominal Test", "", [rsa_l, radicl_seq_display_coverage, radicl_seq_column]),
+                        self.make_panel("Binominal Test", "", [rsa_l, radicl_seq_display_coverage, radicl_seq_column, radicl_seq_samples_l]),
                         self.make_panel("Dist. Dep. Dec.", "", [ddd, ddd_show, ddd_sam_l, ddd_ex_l, 
                             self.dist_dep_dec_plot
                         ]),
@@ -1882,10 +1885,11 @@ class MainLayout:
     def print(self, s):
         print(s)
         self.log_div_text += s.replace("\n", "<br>") + "<br>"
+        #self.log_div_text = self.log_div_text[-5000:]
 
     def update_log_div(self):
         def callback():
-            self.log_div.text += self.log_div_text
+            self.log_div.text = self.log_div_text
         self.curdoc.add_next_tick_callback(callback)
 
     def print_status(self, s):
