@@ -1147,6 +1147,7 @@ class MainLayout:
         self.ranked_columns.dot(x="xs", y="ys", color="colors", size=12, source=self.ranked_columns_data)
         self.ranked_columns.xaxis.axis_label = "Samples ranked by RNA reads per kbp"
         self.ranked_columns.yaxis.axis_label = "RNA reads per kbp"
+        self.ranked_columns.add_tools(ranked_hover)
 
         self.ranked_rows = figure(tools="pan,wheel_zoom,box_zoom,crosshair", 
                                   y_axis_type="log", height=200, width=SETTINGS_WIDTH)
@@ -1154,7 +1155,7 @@ class MainLayout:
         self.ranked_rows.dot(x="xs", y="ys", color="colors", size=12, source=self.ranked_rows_data)
         self.ranked_rows.xaxis.axis_label = "Samples ranked by max. DNA reads in bin"
         self.ranked_rows.yaxis.axis_label = "Maximal DNA reads in bin"
-
+        self.ranked_rows.add_tools(ranked_hover)
         
         self.dist_dep_dec_plot = figure(title="Distance Dependant Decay", tools="pan,wheel_zoom,box_zoom,crosshair",
                                         y_axis_type="log", height=200, width=SETTINGS_WIDTH)
