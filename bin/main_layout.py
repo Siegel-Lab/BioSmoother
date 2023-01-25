@@ -681,7 +681,6 @@ class MainLayout:
         contig_starts_x = self.session.get_tick_list(True)
         contig_starts_y = self.session.get_tick_list(False)
         lcs = self.session.get_longest_common_suffix()
-        #longest_common_suffix @todo
         if len(contig_starts_x) > 0 and len(contig_starts_y) > 0:
             self.area_range_expected = "X: " + \
                 self.to_readable_pos(math.floor(self.heatmap.x_range.start * self.session.get_value(["dividend"])), \
@@ -1433,9 +1432,17 @@ class MainLayout:
                                                 "@todo",
                                                 settings=['settings', "normalization", "grid_seq_display_background"]
                                             )
+        radicl_seq_display_coverage = self.make_checkbox("Display Coverage as Secondary Data", 
+                                                "@todo",
+                                                settings=['settings', "normalization", "radicl_seq_display_coverage"]
+                                            )
         grid_seq_column = self.make_checkbox("Compute Background for Columns", 
                                                 "@todo",
                                                 settings=['settings', "normalization", "grid_seq_axis_is_column"]
+                                            )
+        radicl_seq_column = self.make_checkbox("Apply binominal test on Columns", 
+                                                "@todo",
+                                                settings=['settings', "normalization", "radicl_seq_axis_is_column"]
                                             )
         grid_seq_intersection = self.make_checkbox(
                                                 "Use intersection between replicates of chromatin associated elements", 
@@ -1749,11 +1756,11 @@ class MainLayout:
                     normalization, normalization_cov,
                     self.make_tabs(tabs=[
                         #self.make_panel("Approach", "", []),
-                        self.make_panel("RADICL-seq", "", [rsa_l]),
+                        self.make_panel("Binominal Test", "", [rsa_l, radicl_seq_display_coverage, radicl_seq_column]),
                         self.make_panel("Dist. Dep. Dec.", "", [ddd, ddd_show, ddd_sam_l, ddd_ex_l, 
                             self.dist_dep_dec_plot
                         ]),
-                        self.make_panel("GRID-seq", "", [
+                        self.make_panel("Chrom. Asso. Ele.", "", [
                                                     grid_seq_samples_l, bsmcq_l, grid_seq_column, grid_seq_anno,
                                                     grid_seq_display_background, grid_seq_intersection,
                                                     grid_seq_rna_filter_l, self.ranked_columns, 

@@ -1,10 +1,7 @@
-# things i left of with:
-
-finished annotation filter
-made top & bottom status bar
 
 # smoother todo (ranked)
 
+- take care of js warnings
 - no annotation filter is displaying empty bins only
 - opening view->color tab causes rerender
 - sortable multi choice: column labels and checkboxes not aligned
@@ -12,9 +9,6 @@ made top & bottom status bar
     -  exclude static values form undo & redo
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
 - svg output
-- AutocompleteInput for filepath
-    - when calling give folder where indices are located
-    - restrict for public hosting
 - extra plots could be auto hidden while empty -> anno cov ddd slice_rankings
     - also column sum & row sum coverage does not need to exist if zero
 
