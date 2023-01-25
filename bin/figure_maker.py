@@ -119,15 +119,15 @@ class FigureMaker:
         self.no_border_v = True
         return self
 
-    def _axis_of(self, other, register):
-        self.hide_on("axis", register)
+    def _axis_of(self, other, register, hide_keyword):
+        self.hide_on(hide_keyword, register)
         for plot, _hide_on in register.hidable_plots:
             if plot == other:
                 for key in _hide_on:
                     self.hide_on(key, register)
 
-    def x_axis_of(self, other, register, label="", stretch=False, flip_orientation=True):
-        self._axis_of(other, register)
+    def x_axis_of(self, other, register, label="", stretch=False, flip_orientation=True, hide_keyword="axis"):
+        self._axis_of(other, register, hide_keyword)
 
         self.x_axis_visible = True
         self.args["x_range"] = other.x_range
@@ -146,8 +146,8 @@ class FigureMaker:
         self.no_border_v = True
         return self
 
-    def y_axis_of(self, other, register, label="", stretch=False, flip_orientation=False):
-        self._axis_of(other, register)
+    def y_axis_of(self, other, register, label="", stretch=False, flip_orientation=False, hide_keyword="axis"):
+        self._axis_of(other, register, hide_keyword)
 
         self.y_axis_visible = True
         self.args["y_range"] = other.y_range

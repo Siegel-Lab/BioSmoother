@@ -1032,15 +1032,15 @@ class MainLayout:
         ))
 
         self.heatmap_x_axis = FigureMaker().x_axis_of(
-            self.heatmap, self, "", True).combine_tools(tollbars).get(self)
+            self.heatmap, self, "", True, hide_keyword="coords").combine_tools(tollbars).get(self)
         self.heatmap_x_axis_2 = FigureMaker().x_axis_of(
-            self.heatmap, self, "", True).combine_tools(tollbars).get(self)
+            self.heatmap, self, "", True, hide_keyword="regs").combine_tools(tollbars).get(self)
     
         #self.heatmap_x_axis.xaxis.minor_tick_line_color = None
         self.heatmap_y_axis = FigureMaker().y_axis_of(
-            self.heatmap, self, "", True).combine_tools(tollbars).get(self)
+            self.heatmap, self, "", True, hide_keyword="coords").combine_tools(tollbars).get(self)
         self.heatmap_y_axis_2 = FigureMaker().y_axis_of(
-            self.heatmap, self, "", True).combine_tools(tollbars).get(self)
+            self.heatmap, self, "", True, hide_keyword="regs").combine_tools(tollbars).get(self)
         #self.heatmap_y_axis.yaxis.minor_tick_line_color = None
 
         self.slope = Slope(gradient=1, y_intercept=0, line_color=None)
@@ -1212,7 +1212,7 @@ class MainLayout:
         tool_bar = FigureMaker.get_tools(tollbars)
         show_hide = self.make_show_hide_dropdown(
             ["settings", "interface", "show_hide"],
-                ("Axes", "axis"), (RAW_PLOT_NAME, "raw"),
+                ("Secondary Axes", "axis"),("Coordinates", "coords"),("Regions", "regs"), (RAW_PLOT_NAME, "raw"),
                                                    (ANNOTATION_PLOT_NAME, "annotation"), ("Options Panel", "tools"))
 
         in_group = self.dropdown_select("Merge datasets by", "tooltip_in_group",
@@ -1246,7 +1246,7 @@ class MainLayout:
                                                     "rpk"), 
                                                     ("Binominal test", "radicl-seq"),
                                                     ("Iterative Correction", "hi-c"),
-                                                    ("Chromatin Associated elements", "grid-seq"),
+                                                    ("Associated slices", "grid-seq"),
                                                     ("Cooler Iterative Correction", "cool-hi-c"),
                                                     ("No normalization", "dont"),
                                                     active_item=['settings', 'normalization', 'normalize_by']
@@ -1259,7 +1259,7 @@ class MainLayout:
                                                     "rpk"), 
                                                     ("Binominal test", "radicl-seq"),
                                                     ("Iterative Correction", "hi-c"),
-                                                    ("Chromatin Associated elements", "grid-seq"),
+                                                    ("Associated slices", "grid-seq"),
                                                     ("No normalization", "dont"),
                                                     active_item=['settings', 'normalization', 'normalize_by']
                                                     )
@@ -1282,7 +1282,7 @@ class MainLayout:
                                                   active_item=['settings', 'normalization', 'scale']
                                                   )
 
-        incomp_align_layout = self.make_checkbox("Show reads with incomplete alignments", 
+        incomp_align_layout = self.make_checkbox("Show multi-mapping reads with incomplete mapping loci lists", 
                                                     "tooltip_incomplete_alignments",
                                                     settings=['settings', 'filters', 'incomplete_alignments'])
 
@@ -1292,20 +1292,20 @@ class MainLayout:
         #                                            settings=['settings', 'normalization', 'divide_by_row_coverage'])
 
 
-        ddd = self.make_checkbox("Divide by Distance Dependant Decay", "tooltip_ddd",
+        ddd = self.make_checkbox("Normalize Primary data", "tooltip_ddd",
                                         settings=['settings', 'normalization', 'ddd'])
-        ddd_show = self.make_checkbox("Display Distance Dependant Decay", "tooltip_ddd_show",
+        ddd_show = self.make_checkbox("Display", "tooltip_ddd_show",
                                         settings=['settings', 'normalization', 'ddd_show'])
         ddd_ex_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_ddd_quantiles",
-                                                title="Distance Dependant Decay Exclusion Quantiles", 
+                                                title="Percentile of samples to keep [%]",
                                                 settings=["settings", "normalization", "ddd_quantile"], 
                                                 sizing_mode="stretch_width")
         ice_sparse_filter = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_ice_sparse_filter",
-                                                title="Icing sparse slices filter", 
+                                                title="filter out slices with too many empty bins [%]", 
                                                 settings=["settings", "normalization", "ice_sparse_slice_filter"], 
                                                 sizing_mode="stretch_width")
         ddd_sam_l = self.make_range_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_ddd_samples",
-                                                title="Distance Dependant Decay Samples", 
+                                                title="Number of samples", 
                                                 settings=["settings", "normalization", "ddd_samples"], 
                                                 sizing_mode="stretch_width")
 
@@ -1325,12 +1325,12 @@ class MainLayout:
                                                 active_item=['settings', "interface", "color_palette"]
                                                   )
 
-        multi_mapping = self.dropdown_select("Ambiguous Mapping", "tooltip_multi_mapping",
-                                                ("Count read if all mapping loci are within a bin", "enclosed"),
-                                                ("Count read if mapping loci bounding-box overlaps bin", "overlaps"),
-                                                ("Count read if first mapping loci is within a bin", "first"),
-                                                ("Count read if last mapping loci is within a bin", "last"),
-                                                ("Count read if there is only one mapping loci", "points_only"),
+        multi_mapping = self.dropdown_select("Multi-Mapping reads (MMR)", "tooltip_multi_mapping",
+                                                ("Count MMR if all mapping loci are within the same bin", "enclosed"),
+                                                ("Count MMR if mapping loci minimum bounding-box overlaps bin", "overlaps"),
+                                                ("Count MMR if bottom left mapping loci is within a bin", "first"),
+                                                ("Count MMR if top right mapping loci is within a bin", "last"),
+                                                ("Ignore MMRs", "points_only"),
                                                 active_item=['settings', "filters", "ambiguous_mapping"]
                                                   )
 
@@ -1392,7 +1392,7 @@ class MainLayout:
 
         dds_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_min_diag_dist",
                                     settings=["settings", "filters", "min_diag_dist"],
-                                       title="Minimum Distance from Diagonal (kbp)", sizing_mode="stretch_width")
+                                       title="Minimum Distance from Diagonal [kbp]", sizing_mode="stretch_width")
 
         def anno_size_slider_event(val):
             self.session.set_value(["settings", "interface", "anno_size", "val"], val)
@@ -1402,7 +1402,7 @@ class MainLayout:
             self.anno_y_axis.height = val
         ass_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_anno_size",
                                       settings=["settings", "interface", "anno_size"],
-                                       title=ANNOTATION_PLOT_NAME + " Size", sizing_mode="stretch_width",
+                                       title=ANNOTATION_PLOT_NAME + " Size [pixel]", sizing_mode="stretch_width",
                                        on_change=anno_size_slider_event)
 
         def raw_size_slider_event(val):
@@ -1413,12 +1413,12 @@ class MainLayout:
             self.raw_y_axis.height = val
         rss2_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_raw_size",
                                       settings=["settings", "interface", "raw_size"],
-                                      title=RAW_PLOT_NAME + " Size", sizing_mode="stretch_width",
+                                      title=RAW_PLOT_NAME + " Size [pixel]", sizing_mode="stretch_width",
                                       on_change=raw_size_slider_event)
 
         nb_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_max_number_of_bins",
                                settings=["settings", "interface", "max_num_bins"],
-                               title="Max number of Bins (in thousands)", sizing_mode="stretch_width")
+                               title="Max number of Bins [in thousands]", sizing_mode="stretch_width")
 
         rsa_l = self.make_slider_spinner(width=SETTINGS_WIDTH, tooltip="tooltip_p_accept",
                                settings=["settings", "normalization", "p_accept"],
@@ -1449,7 +1449,7 @@ class MainLayout:
                                                 settings=['settings', "normalization", "radicl_seq_axis_is_column"]
                                             )
         grid_seq_intersection = self.make_checkbox(
-                                                "Use intersection between replicates of chromatin associated elements", 
+                                                "Use intersection between replicates", 
                                                 "@todo",
                                                 settings=['settings', "normalization", "grid_seq_filter_intersection"]
                                             )
@@ -1546,8 +1546,8 @@ class MainLayout:
         multiple_anno_per_bin = self.dropdown_select("Multiple Annotations in Bin", 
                 "tooltip_multiple_annotations_in_bin", 
                 ("Combine region from first to last annotation", "combine"), 
-                ("Use first annotation", "first"), 
-                ("Index that is the maximal power of two factor", "max_fac_pow_two"), 
+                ("Use first annotation in Bin", "first"), 
+                ("Use one prioritized annotation. (stable while zoom- and pan-ing)", "max_fac_pow_two"), 
                 ("Increase number of bins to match number of annotations (might be slow)", "force_separate"),
                 active_item=["settings", "filters", "multiple_annos_in_bin"])
         multiple_bin_per_anno = self.dropdown_select("Multiple Bins for Annotation", 
@@ -1764,7 +1764,7 @@ class MainLayout:
                         self.make_panel("Dist. Dep. Dec.", "", [ddd, ddd_show, ddd_sam_l, ddd_ex_l, 
                             self.dist_dep_dec_plot
                         ]),
-                        self.make_panel("Chrom. Asso. Ele.", "", [
+                        self.make_panel("Associated slices", "", [
                                                     grid_seq_samples_l, bsmcq_l, grid_seq_column, grid_seq_anno,
                                                     grid_seq_display_background, grid_seq_intersection,
                                                     grid_seq_rna_filter_l, self.ranked_columns, 

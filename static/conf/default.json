@@ -40,12 +40,12 @@
         "ddd": false,
         "ddd_show": false,
         "ice_sparse_slice_filter": {
-            "max": 1,
+            "max": 100,
             "min": 0,
             "spinner_max_restricted": true,
             "spinner_min_restricted": true,
-            "step": 0.1,
-            "val": 0.1
+            "step": 1,
+            "val": 10
         },
         "ddd_samples": {
             "min": 1,
@@ -58,9 +58,9 @@
         },
         "ddd_quantile": {
             "min": 0,
-            "max": 0.5,
-            "val": 0.1,
-            "step": 0.01,
+            "max": 100,
+            "val": 80,
+            "step": 1,
             "spinner_min_restricted": true,
             "spinner_max_restricted": true
         },
@@ -132,6 +132,8 @@
         "max_num_bins_factor": 1000,
         "show_hide": {
             "axis": true,
+            "coords": true,
+            "regs": true,
             "ratio": false,
             "raw": true,
             "annotation": true,
@@ -250,7 +252,7 @@
             "spinner_min_restricted": true,
             "spinner_max_restricted": false
         },
-        "multiple_annos_in_bin": "max_fac_pow_two",
+        "multiple_annos_in_bin": "combine",
         "anno_in_multiple_bins": "stretch",
         "ambiguous_mapping": "enclosed",
         "cut_off_bin": "smaller_if_fullsized_exists"
