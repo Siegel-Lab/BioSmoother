@@ -1176,6 +1176,7 @@ class MainLayout:
             p.yaxis.major_label_text_font = FONT
             p.xaxis.axis_label_text_font = FONT
             p.yaxis.axis_label_text_font = FONT
+            p.dot(x=[1],y=[1],fill_alpha=0,line_alpha=0)
 
         self.dist_dep_dec_plot.xaxis[0].formatter = FuncTickFormatter(
             args={},
