@@ -14,7 +14,7 @@ from bin.libSps import *
 from bin.grid_seq_norm import *
 from bin.parse_and_group_reads import *
 from bin.dist_dep_decay_norm import *
-from bin.libSmoother import Indexer
+from libSmoother import Indexer
 
 
 # parses file & sets up axis and matrix to have the appropriate size

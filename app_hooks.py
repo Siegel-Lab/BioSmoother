@@ -1,5 +1,5 @@
 import os
-from bin.libSmoother import Quarry
+from libSmoother import Quarry
 import bin.global_variables
 import json
 NUM_SESSIONS = 0
