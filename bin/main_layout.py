@@ -34,6 +34,7 @@ from bokeh import events
 import bin.global_variables
 
 SETTINGS_WIDTH = 400
+BUTTON_HEIGHT = 30
 DEFAULT_SIZE = 50
 ANNOTATION_PLOT_NAME = "Annotation panel"
 RAW_PLOT_NAME = "Secondary data panel"
@@ -122,25 +123,25 @@ class MainLayout:
                     self.session.set_value(session_key, n)
                 self.trigger_render()
             callback = default_callback
-        div = Div(text=label)
+        div = Div(text=label, align="center")
         SYM_WIDTH = 10
         SYM_CSS = ["other_button"]
         CHECK_WIDTH = 19*len(checkboxes)
         ELEMENTS_PER_PAGE = 10
 
-        col = column([], sizing_mode="stretch_width")
         #col.max_height=150
-        empty = Div(text="", sizing_mode="fixed", width=30)
+        col = column([], sizing_mode="stretch_width")
+        empty = Div(text="", sizing_mode="fixed", width=30, height=BUTTON_HEIGHT)
         
-        spinner = TextInput(value="1", width=50, sizing_mode="fixed", visible=False)
+        spinner = TextInput(value="1", width=50, height=BUTTON_HEIGHT, sizing_mode="fixed", visible=False)
         next_page = Button(label="", css_classes=SYM_CSS + ["fa_page_next_solid"], width=SYM_WIDTH, 
-                                      sizing_mode="fixed", button_type="light", visible=False)
+                            height=SYM_WIDTH, sizing_mode="fixed", button_type="light", visible=False, align="center")
         prev_page = Button(label="", css_classes=SYM_CSS + ["fa_page_previous_solid"], width=SYM_WIDTH, 
-                                        sizing_mode="fixed", button_type="light", visible=False)
-        page_div = Div(text="Page:", width=30, sizing_mode="fixed", visible=False)
-        layout = column([row([div, prev_page, page_div, spinner, next_page, empty], sizing_mode="stretch_width"), row([
+                           height=SYM_WIDTH, sizing_mode="fixed", button_type="light", visible=False, align="center")
+        page_div = Div(text="Page:", width=30, height=BUTTON_HEIGHT, sizing_mode="fixed", visible=False, align="center")
+        layout = column([row([div, Spacer(width_policy="max"), prev_page, page_div, spinner, next_page, empty], sizing_mode="stretch_width"), row([
             Div(text="", sizing_mode="stretch_width"),
-            Div(text="<br>".join(y for _, y in checkboxes), css_classes=["vertical"], sizing_mode="fixed", 
+            Div(text="<br>".join(y for _, y in checkboxes), css_classes=["vertical"], width_policy="fixed",
                 width=CHECK_WIDTH+5),
             empty
         ], sizing_mode="stretch_width"), col], sizing_mode="stretch_width", css_classes=["outlnie_border", "tooltip", tooltip],
@@ -194,8 +195,8 @@ class MainLayout:
                     up_button.on_click(lambda _, n=n: up_event(n))
 
                 div = Div(text=n, sizing_mode="stretch_width")
-                cg = CheckboxGroup(labels=[""]*len(checkboxes), active=opts, inline=True, sizing_mode="fixed",
-                                   width=CHECK_WIDTH)
+                cg = CheckboxGroup(labels=[""]*len(checkboxes), active=opts, inline=True,
+                                   width=CHECK_WIDTH, sizing_mode="fixed", height=19)
                 def on_change(idx, cg):
                     self.reset_options[label][1][idx][1] = cg.active
                     trigger_callback()
@@ -206,6 +207,8 @@ class MainLayout:
                 else:
                     l.append(row([div, cg, empty], sizing_mode="stretch_width"))
 
+            if len(l) == 0:
+                l = [empty]
             self.reset_options[label][0].children = l
 
         def spinner_event(x, y, z):
@@ -383,7 +386,7 @@ class MainLayout:
 
     def make_checkbox(self, title, tooltip="", settings=[], on_change=None, width=SETTINGS_WIDTH):
         div = Div(text=title, sizing_mode="stretch_width", width=width-20)
-        cg = CheckboxGroup(labels=[""], sizing_mode="fixed", width=20)
+        cg = CheckboxGroup(labels=[""], width=20)
         if on_change is None:
             def default_event(active):
                 self.session.set_value(settings, active)
@@ -1731,7 +1734,8 @@ class MainLayout:
             plot.yaxis.ticker.min_interval = 1
 
         log_div = Div(text="Log:", sizing_mode="stretch_width")
-        self.log_div = Div(css_classes=["scroll_y2"], width=SETTINGS_WIDTH, max_height =200, sizing_mode="fixed", height_policy="fixed") # @todo tooltip
+        self.log_div = Div(css_classes=["scroll_y2"], width=SETTINGS_WIDTH, max_height=400, 
+                            sizing_mode="stretch_height") # @todo tooltip
 
         self.area_range = TextInput(value="n/a", width=SETTINGS_WIDTH*2, height=26,
                                         css_classes=["tooltip", "tooltip_area_range", "text_align_center"]) 
@@ -1814,8 +1818,7 @@ class MainLayout:
         _settings_n_info = column([
                 Spacer(height=5),
                 _settings
-            ],
-            sizing_mode="fixed"
+            ]
         )
         _settings_n_info.width = SETTINGS_WIDTH + 25
         _settings_n_info.width_policy = "fixed"
