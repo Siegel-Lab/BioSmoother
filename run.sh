@@ -14,12 +14,11 @@ cd ..
 export smoother_index_path=${1}
 
 
-#export smoother_import_mode="redlwdebug"
-export smoother_import_mode="debug"
-gdb python3 -ex "run ~/workspace/smoother/conda_env/smoother/bin/bokeh serve smoother --allow-websocket-origin=localhost:${port} --port ${port}"
+# export PYTHONPATH="$(pwd)/libSmoother/build_rel_w_dbg/":$PYTHONPATH
+# export PYTHONPATH="$(pwd)/libSmoother/build_dbg/":$PYTHONPATH
+# gdb python3 -ex "run ~/workspace/smoother/conda_env/smoother/bin/bokeh serve smoother --allow-websocket-origin=localhost:${port} --port ${port}"
 
-
-# export smoother_import_mode="release"
-# bokeh serve smoother --allow-websocket-origin=localhost:${port} --log-level error --port ${port}
+export PYTHONPATH="$(pwd)/libSmoother/build_rel/":$PYTHONPATH
+bokeh serve smoother --allow-websocket-origin=localhost:${port} --log-level error --port ${port}
 
 # ./run.sh smoother_out/radicl
