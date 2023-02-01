@@ -18,7 +18,7 @@ export smoother_index_path=${1}
 # export PYTHONPATH="$(pwd)/libSmoother/build_dbg/":$PYTHONPATH
 # gdb python3 -ex "run ~/workspace/smoother/conda_env/smoother/bin/bokeh serve smoother --allow-websocket-origin=localhost:${port} --port ${port}"
 
-export PYTHONPATH="$(pwd)/libSmoother/build_rel/":$PYTHONPATH
+#export PYTHONPATH="$(pwd)/libSmoother/build_rel/":$PYTHONPATH
 bokeh serve smoother --allow-websocket-origin=localhost:${port} --log-level error --port ${port}
 
 # ./run.sh smoother_out/radicl

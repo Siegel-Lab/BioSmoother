@@ -24,7 +24,7 @@ import psutil
 from concurrent.futures import ThreadPoolExecutor
 from bokeh.models import BoxAnnotation
 from bokeh.models.tickers import AdaptiveTicker
-from libSmoother import Quarry
+from libsmoother import Quarry
 import json
 import shutil
 from bin.figure_maker import FigureMaker, DROPDOWN_HEIGHT, FONT

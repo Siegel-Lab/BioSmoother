@@ -200,6 +200,23 @@
         },
         "stretch": false,
         "squared_bins": false,
+        "fixed_number_of_bins": false,
+        "fixed_num_bins_x": {
+            "max": 10000,
+            "min": 0,
+            "val": 256,
+            "step": 1,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        },
+        "fixed_num_bins_y": {
+            "max": 10000,
+            "min": 0,
+            "val": 256,
+            "step": 1,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        },
         "snap_bin_size": false,
         "max_detailed_anno_display": 1000,
         "min_anno_dist": 0.05,

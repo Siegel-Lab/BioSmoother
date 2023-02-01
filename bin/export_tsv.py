@@ -1,4 +1,4 @@
-from libSmoother import Quarry
+from libsmoother import Quarry
 
 def write_header(out_file, smoother_version):
     out_file.write("##Smoother " + smoother_version +"\n")
