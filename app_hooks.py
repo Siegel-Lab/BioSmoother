@@ -9,7 +9,7 @@ def on_server_loaded(server_context):
     if os.path.exists(os.environ["smoother_index_path"] + ".smoother_index/"):
         print("loading index...")
         bin.global_variables.quarry_session = Quarry(os.environ["smoother_index_path"] + ".smoother_index")
-        #self.session.print_callback = lambda s: self.print(s)
+        bin.global_variables.quarry_session.allow_ctrl_c_cancel = True
 
         if bin.global_variables.quarry_session.get_value(["settings"]) is None:
             with open('smoother/static/conf/default.json', 'r') as f:
