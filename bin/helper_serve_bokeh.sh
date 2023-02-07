@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source activate $(pwd)/conda_env/smoother
+#source activate $(pwd)/conda_env/smoother
 
 ./bin/conf_version.sh
 
