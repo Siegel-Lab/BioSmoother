@@ -1,8 +1,8 @@
-<img src="static/favicon.png" align="center" width="90">
+<img src="https://raw.githubusercontent.com/Siegel-Lab/Smoother/master/smoother/static/favicon.png" align="center" width="90">
 
 # Smoother
 
-@todo while writing this fix typos & wired names within the viewer
+@todo
 
 ## Abstract-like hook
 
@@ -12,9 +12,13 @@ create & activate a new environment (optional)
 ```
 conda create -y -n smoother python=3.8
 conda activate smoother
+```
+
+Install conda-specific requirements
+```
 # make sure the proper compiler is installed
 conda install -y gcc=9.4.0 gxx=9.4.0 -c conda-forge
-# install conda-specific requirements of smoother serve
+# install requirements of smoother serve
 conda install -y nodejs tornado
 ```
 
@@ -41,21 +45,13 @@ smoother serve micro-c --show
 
 ## Web-version
 
-- provide URL & some simple example analysis and descritpion
-
-## BioConda Installation (_Markus_)
 
 ## Usage
 
-- create index
-- add replicate
-- view index
 
 ## Quick config Buttons
 
 ## Manual
-
-here should be the link to the full Manual.
 
 ## Citing Smoother
 
