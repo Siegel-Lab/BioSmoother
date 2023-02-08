@@ -8,8 +8,7 @@ from setuptools.command.build_ext import build_ext
 import site
 import subprocess
 
-with open("VERSION", "r") as in_file:
-    VERSION = in_file.readline()
+VERSION = "0.3.0"
 
 ### taken from: https://github.com/pybind/cmake_example/blob/master/setup.py
 # A BokehServer needs a sourcedir instead of a file list.
