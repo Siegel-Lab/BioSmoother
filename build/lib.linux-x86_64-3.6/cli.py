@@ -1,11 +1,18 @@
 import argparse
 import libsmoother
 import bokeh.command.subcommands.serve as bcss
-from bokeh.command.subcommand import Subcommand
+import site
+import os
+from pathlib import Path
 
 def serve(args):
-    print(vars(args))
-    #bcss.Serve(parser=argparse.ArgumentParser()).invoke(args)
+    from smoother.bin import global_variables
+    os.environ["smoother_index_path"] = args.index_prefix
+    os.environ["smoother_port"] = str(args.port)
+    smoother_path = os.fspath(Path(os.path.join(site.getsitepackages()[0], "smoother")).resolve())
+    args.files = [smoother_path]
+    args.log_level = "error"
+    bcss.Serve(parser=argparse.ArgumentParser()).invoke(args)
 
 def add_parsers(main_parser):
     parser = main_parser.add_parser(
@@ -18,15 +25,15 @@ def add_parsers(main_parser):
 
     def filter_args(args):
         for name, a in args:
-            if name in set([
+            if name not in set([
                 "--show",
                 "--port",
                 "--address",
-                "--log-level",
                 "--allow-websocket-origin",
                 "--num-procs",
-            ]):
-                yield name, a
+            ]) and not "smoother_dont_hide_args" in os.environ:
+                a["help"] = argparse.SUPPRESS
+            yield name, a
 
     for arg in filter_args(bcss.Serve.args):
             flags, spec = arg

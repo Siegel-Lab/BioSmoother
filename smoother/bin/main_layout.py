@@ -32,6 +32,8 @@ from bin.extra_ticks_ticker import *
 from bin.export_tsv import export_tsv
 from bokeh import events
 import bin.global_variables
+import site
+from pathlib import Path
 
 SETTINGS_WIDTH = 400
 BUTTON_HEIGHT = 30
@@ -48,6 +50,8 @@ CONFIG_FILE_VERSION = 0.1
 DEFAULT_TEXT_INPUT_HEIGHT = 30
 
 executor = ThreadPoolExecutor(max_workers=1)
+
+SMOOTHER_PATH = os.fspath(Path(os.path.join(site.getsitepackages()[0], "smoother")).resolve())
 
 
 ## @todo use multi-inheritance to split this class into smaller ones
@@ -257,9 +261,9 @@ class MainLayout:
     def config_row(self, file_nr, callback=None, lock_name=False):
         SYM_WIDTH = 10
         SYM_CSS = ["other_button"]
-        with open('smoother/static/conf/' + str(file_nr) + '.json', 'r') as f:
+        with open(SMOOTHER_PATH + '/static/conf/' + str(file_nr) + '.json', 'r') as f:
             settings = json.load(f)
-        with open('smoother/static/conf/factory_' + str(file_nr) + '.json', 'r') as f:
+        with open(SMOOTHER_PATH + '/static/conf/factory_' + str(file_nr) + '.json', 'r') as f:
             factory_default = json.load(f)
 
         if CONFIG_FILE_VERSION != settings["smoother_config_file_version"]:
@@ -292,7 +296,7 @@ class MainLayout:
             settings = dict_diff(self.session.get_value(["settings"]), self.settings_default)
             settings["display_name"] = name.value
             settings["smoother_config_file_version"] = CONFIG_FILE_VERSION
-            with open('smoother/static/conf/' + str(file_nr) + '.json', 'w') as f:
+            with open(SMOOTHER_PATH + '/static/conf/' + str(file_nr) + '.json', 'w') as f:
                 json.dump(settings, f)
             reset_button.disabled = settings == factory_default
             reset_button.css_classes = SYM_CSS + ["fa_reset"] if settings != factory_default else ["fa_reset_disabled"]
@@ -300,18 +304,18 @@ class MainLayout:
         save_button.on_click(lambda _: save_event())
 
         def reset_event():
-            shutil.copyfile('smoother/static/conf/factory_' + str(file_nr) + '.json', 
-                            'smoother/static/conf/' + str(file_nr) + '.json')
+            shutil.copyfile(SMOOTHER_PATH + '/static/conf/factory_' + str(file_nr) + '.json', 
+                            SMOOTHER_PATH + '/static/conf/' + str(file_nr) + '.json')
             reset_button.disabled = True
             reset_button.css_classes = SYM_CSS + ["fa_reset_disabled"]
-            with open('smoother/static/conf/' + str(file_nr) + '.json', 'r') as f:
+            with open(SMOOTHER_PATH + '/static/conf/' + str(file_nr) + '.json', 'r') as f:
                 settings = json.load(f)
             name.value = settings["display_name"]
         reset_button.on_click(lambda _: reset_event())
 
         def apply_event():
             print("applying...")
-            with open('smoother/static/conf/' + str(file_nr) + '.json', 'r') as f:
+            with open(SMOOTHER_PATH + '/static/conf/' + str(file_nr) + '.json', 'r') as f:
                 settings = json.load(f)
             def combine_dict(a, b):
                 r = {}
@@ -899,7 +903,7 @@ class MainLayout:
         self.smoother_version = "?"
         self.reset_options = {}
         self.session = bin.global_variables.quarry_session
-        with open('smoother/static/conf/default.json', 'r') as f:
+        with open(SMOOTHER_PATH + '/static/conf/default.json', 'r') as f:
             self.settings_default = json.load(f)
 
         self.heatmap = None
@@ -1601,7 +1605,7 @@ class MainLayout:
         self.high_color.on_change("color", color_event_high)
 
 
-        with open("smoother/VERSION", "r") as in_file:
+        with open(SMOOTHER_PATH + "/VERSION", "r") as in_file:
             self.smoother_version = in_file.readlines()[0][:-1]
 
         version_info = Div(text="Smoother "+ self.smoother_version +"<br>LibSps Version: " + Quarry.get_libSps_version())
@@ -1833,7 +1837,10 @@ class MainLayout:
         self.settings_row.width_policy = "fixed"
 
         quit_ti = TextInput(value="keepalive", name="quit_ti", visible=False)
-        quit_ti.on_change("value", lambda x, y, z: sys.exit())
+        def close_server(x, y, z):
+            print("closing server since session exited")
+            sys.exit()
+        quit_ti.on_change("value", close_server)
 
         active_tools_ti = TextInput(value="", name="active_tools_ti", visible=False)
         active_tools_ti.on_change("value", lambda x, y, z: self.save_tools(active_tools_ti.value))

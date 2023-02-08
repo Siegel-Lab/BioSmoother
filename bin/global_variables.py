@@ -1,2 +1,0 @@
-
-quarry_session = None
