@@ -16,7 +16,7 @@ def on_server_loaded(server_context):
         if not path is None:
             print("loading index...")
             bin.global_variables.quarry_session = Quarry(path)
-            bin.global_variables.quarry_session.allow_ctrl_c_cancel = True
+            bin.global_variables.quarry_session.allow_ctrl_c_cancel = False
 
             if bin.global_variables.quarry_session.get_value(["settings"]) is None:
                 with open('smoother/static/conf/default.json', 'r') as f:
