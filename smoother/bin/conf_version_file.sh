@@ -1,6 +1,6 @@
 #!/bin/bash
 
-V="0.3"
+V=$2
 
 GIT_STATUS=$(git status -s)
 if [ "${GIT_STATUS}" != "" ]

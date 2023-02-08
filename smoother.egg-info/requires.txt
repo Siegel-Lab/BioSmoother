@@ -1,5 +1,0 @@
-libsmoother@ git+https://github.com/Siegel-Lab/libSmoother
-bokeh==2.3.2
-
-[test]
-pytest

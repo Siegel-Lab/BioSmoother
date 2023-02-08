@@ -30,7 +30,6 @@ def add_parsers(main_parser):
                 "--port",
                 "--address",
                 "--allow-websocket-origin",
-                "--num-procs",
             ]) and not "smoother_dont_hide_args" in os.environ:
                 a["help"] = argparse.SUPPRESS
             yield name, a

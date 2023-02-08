@@ -8,6 +8,9 @@ from setuptools.command.build_ext import build_ext
 import site
 import subprocess
 
+with open("VERSION", "r") as in_file:
+    VERSION = in_file.readline()
+
 ### taken from: https://github.com/pybind/cmake_example/blob/master/setup.py
 # A BokehServer needs a sourcedir instead of a file list.
 # The name must be the _single_ output extension from the CMake build.
@@ -21,14 +24,14 @@ class BokehServer(Extension):
 
 class CopyFiles(build_ext):
     def build_extension(self, ext: BokehServer) -> None:
-        subprocess.run([os.path.join(ext.sourcedir, 'bin/conf_version.sh'),
-                        os.path.join(ext.sourcedir, "VERSION")], timeout=10) 
+        subprocess.run([os.path.join(ext.sourcedir, 'bin/conf_version_file.sh'),
+                        os.path.join(ext.sourcedir, "VERSION"), VERSION], timeout=10) 
         #print("XXXXXXX", ext.sourcedir, os.path.join(site.getsitepackages()[0], ext.install_dir))
         copy_tree(ext.sourcedir, os.path.join(site.getsitepackages()[0], ext.install_dir))
 
 setup(
     name="smoother",
-    version="0.1.0",
+    version=VERSION,
     author='Markus Schmidt',
     author_email='markus.rainer.schmidt@gmail.com',
     license='MIT',
