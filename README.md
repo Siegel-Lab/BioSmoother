@@ -8,6 +8,11 @@
 
 ## Quick Start
 
+prerequisites:
+- conda should be installed
+- build-essential should be installed
+
+\
 create & activate a new environment (optional)
 ```
 conda create -y -n smoother python=3.8
@@ -24,7 +29,7 @@ conda install -y nodejs tornado
 
 Install smoother (and all requirements) from GitHub.
 ```
-pip install git+https://github.com/Siegel-Lab/Smoother.git --no-binary libsps,libsmoother
+pip install git+https://github.com/Siegel-Lab/Smoother.git@stable-latest --no-binary libsps,libsmoother
 ```
 
 Download 2 example smoother indices.

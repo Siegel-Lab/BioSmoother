@@ -52,7 +52,7 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
     install_requires=[
-        'libsmoother @ git+https://github.com/Siegel-Lab/libSmoother',
+        'libsmoother @ git+https://github.com/Siegel-Lab/libSmoother@stable-latest',
         'bokeh==2.3.2', # specific version is necessary for now -> with newer versions the layout starts glitching
         'psutil',
     ],
