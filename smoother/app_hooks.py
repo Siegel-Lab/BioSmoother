@@ -4,7 +4,11 @@ import bin.global_variables
 import json
 NUM_SESSIONS = 0
 import os
-
+try:
+    import importlib.resources as pkg_resources
+except ImportError:
+    # Try backported to PY<37 `importlib_resources`.
+    import importlib_resources as pkg_resources
 
 def on_server_loaded(server_context):
     path = None
@@ -19,7 +23,7 @@ def on_server_loaded(server_context):
             bin.global_variables.quarry_session.allow_ctrl_c_cancel = False
 
             if bin.global_variables.quarry_session.get_value(["settings"]) is None:
-                with open('smoother/static/conf/default.json', 'r') as f:
+                with (pkg_resources.files("smoother") / "static" / "conf" / 'default.json').open("r") as f:
                     settings = json.load(f)
                 #print(settings)
                 bin.global_variables.quarry_session.set_value(["settings"], settings)

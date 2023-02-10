@@ -77,10 +77,6 @@ def main():
 
     args = parser.parse_args()
 
-    if args.version:
-        print("smoothers version is:" )
-        exit()
-
     args.func(args)
 
 if __name__ == "__main__":
