@@ -32,7 +32,11 @@ from bin.extra_ticks_ticker import *
 from bin.export_tsv import export_tsv
 from bokeh import events
 import bin.global_variables
-import site
+try:
+    import importlib.resources as pkg_resources
+except ImportError:
+    # Try backported to PY<37 `importlib_resources`.
+    import importlib_resources as pkg_resources
 from pathlib import Path
 
 SETTINGS_WIDTH = 400
@@ -51,8 +55,7 @@ DEFAULT_TEXT_INPUT_HEIGHT = 30
 
 executor = ThreadPoolExecutor(max_workers=1)
 
-SMOOTHER_PATH = os.fspath(Path(os.path.join(site.getsitepackages()[0], "smoother")).resolve())
-
+smoother_home_folder = str(Path.home()) + "/.smoother"
 
 ## @todo use multi-inheritance to split this class into smaller ones
 
@@ -261,10 +264,15 @@ class MainLayout:
     def config_row(self, file_nr, callback=None, lock_name=False):
         SYM_WIDTH = 10
         SYM_CSS = ["other_button"]
-        with open(SMOOTHER_PATH + '/static/conf/' + str(file_nr) + '.json', 'r') as f:
-            settings = json.load(f)
-        with open(SMOOTHER_PATH + '/static/conf/factory_' + str(file_nr) + '.json', 'r') as f:
+        
+        with (pkg_resources.files("smoother") / "static" / "conf" / (str(file_nr) + '.json')).open("r") as f:
             factory_default = json.load(f)
+        out_file = smoother_home_folder + "/conf/" + str(file_nr) + '.json'
+        if not os.path.exists(out_file):
+            with open(out_file, "w") as f:
+                json.dump(factory_default, f)
+        with open(out_file, "r") as f:
+            settings = json.load(f)
 
         if CONFIG_FILE_VERSION != settings["smoother_config_file_version"]:
             print("Config file version does not match: expected", CONFIG_FILE_VERSION, 
@@ -296,7 +304,7 @@ class MainLayout:
             settings = dict_diff(self.session.get_value(["settings"]), self.settings_default)
             settings["display_name"] = name.value
             settings["smoother_config_file_version"] = CONFIG_FILE_VERSION
-            with open(SMOOTHER_PATH + '/static/conf/' + str(file_nr) + '.json', 'w') as f:
+            with open(smoother_home_folder + '/conf/' + str(file_nr) + '.json', 'w') as f:
                 json.dump(settings, f)
             reset_button.disabled = settings == factory_default
             reset_button.css_classes = SYM_CSS + ["fa_reset"] if settings != factory_default else ["fa_reset_disabled"]
@@ -304,18 +312,20 @@ class MainLayout:
         save_button.on_click(lambda _: save_event())
 
         def reset_event():
-            shutil.copyfile(SMOOTHER_PATH + '/static/conf/factory_' + str(file_nr) + '.json', 
-                            SMOOTHER_PATH + '/static/conf/' + str(file_nr) + '.json')
+            with (pkg_resources.files("smoother") / "static" / "conf" / (str(file_nr) + '.json')).open("r") as f_in:
+                with open(smoother_home_folder + '/conf/' + str(file_nr) + '.json') as f_out:
+                    for l in f_in:
+                        f_out.write(l)
             reset_button.disabled = True
             reset_button.css_classes = SYM_CSS + ["fa_reset_disabled"]
-            with open(SMOOTHER_PATH + '/static/conf/' + str(file_nr) + '.json', 'r') as f:
+            with open(smoother_home_folder + '/conf/' + str(file_nr) + '.json', 'r') as f:
                 settings = json.load(f)
             name.value = settings["display_name"]
         reset_button.on_click(lambda _: reset_event())
 
         def apply_event():
             print("applying...")
-            with open(SMOOTHER_PATH + '/static/conf/' + str(file_nr) + '.json', 'r') as f:
+            with open(smoother_home_folder + '/conf/' + str(file_nr) + '.json', 'r') as f:
                 settings = json.load(f)
             def combine_dict(a, b):
                 r = {}
@@ -903,7 +913,16 @@ class MainLayout:
         self.smoother_version = "?"
         self.reset_options = {}
         self.session = bin.global_variables.quarry_session
-        with open(SMOOTHER_PATH + '/static/conf/default.json', 'r') as f:
+        if not os.path.exists(smoother_home_folder + "/conf/"):
+            os.makedirs(smoother_home_folder + "/conf/")
+        if not os.path.exists(smoother_home_folder + "/conf/default.json"):
+            with (pkg_resources.files("smoother") / "static" / "conf" / "default.json").open("r") as f_in:
+                with open(smoother_home_folder + "/conf/default.json", "w") as f_out:
+                    for l in f_in:
+                        f_out.write(l)
+
+
+        with open(smoother_home_folder + '/conf/default.json', 'r') as f:
             self.settings_default = json.load(f)
 
         self.heatmap = None
@@ -1605,7 +1624,7 @@ class MainLayout:
         self.high_color.on_change("color", color_event_high)
 
 
-        with open(SMOOTHER_PATH + "/VERSION", "r") as in_file:
+        with pkg_resources.open_text("smoother", 'VERSION') as in_file:
             self.smoother_version = in_file.readlines()[0][:-1]
 
         version_info = Div(text="Smoother "+ self.smoother_version +"<br>LibSps Version: " + Quarry.get_libSps_version())

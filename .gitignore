@@ -18,3 +18,4 @@ ranking_rna_dna.html
 preprocess.sh
 smoother.egg-info/
 build/
+dist/

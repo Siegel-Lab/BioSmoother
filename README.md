@@ -15,7 +15,7 @@ prerequisites:
 \
 create & activate a new environment (optional)
 ```
-conda create -y -n smoother python=3.8
+conda create -y -n smoother python=3.9
 conda activate smoother
 ```
 
