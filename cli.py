@@ -3,7 +3,11 @@ import libsmoother
 import bokeh.command.subcommands.serve as bcss
 import os
 from pathlib import Path
-
+try:
+    import importlib.resources as pkg_resources
+except ImportError:
+    # Try backported to PY<37 `importlib_resources`.
+    import importlib_resources as pkg_resources
 
 def serve(args):
     import smoother
@@ -64,7 +68,18 @@ def make_main_parser():
 def main():
     parser = make_main_parser()
 
+    parser.add_argument('-v', '--version', action='version',
+                        version=(pkg_resources.files("smoother") / "VERSION").read_text())
+    parser.add_argument('--version_lib', action='version', help=argparse.SUPPRESS,
+                        version=libsmoother._import_lib_smoother_cpp.LIB_SMOOTHER_CPP_VERSION)
+    parser.add_argument('--version_sps', action='version', help=argparse.SUPPRESS,
+                        version=libsmoother._import_lib_smoother_cpp.SPS_VERSION)
+
     args = parser.parse_args()
+
+    if args.version:
+        print("smoothers version is:" )
+        exit()
 
     args.func(args)
 
