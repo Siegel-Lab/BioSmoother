@@ -15,6 +15,9 @@ def serve(args):
 
     os.environ["smoother_index_path"] = args.index_prefix
     os.environ["smoother_port"] = str(args.port)
+    os.environ["smoother_no_save"] = str(args.no_save)
+    os.environ["smoother_keep_alive"] = str(args.keep_alive)
+    os.environ["smoother_quiet"] = str(args.quiet)
 
     args.log_level = "error"
 
@@ -28,6 +31,12 @@ def add_parsers(main_parser):
         "index_prefix",
         help="Path where the index shall be loaded from.",
     )
+    parser.add_argument('-s', '--no_save', action='store_true',
+                        help="Disable saving custom settings or sessions. This is intended for hosting public example datasets. (default: off)")
+    parser.add_argument('-k', '--keep_alive', action='store_true',
+                        help="Keep the server alive even if the last browser window has been closed. (default: off)")
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help="Print less on the command line output. (default: off)")
 
     def filter_args(args):
         for name, a in args:

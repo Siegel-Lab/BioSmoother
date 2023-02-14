@@ -278,7 +278,8 @@ class MainLayout:
             print("Config file version does not match: expected", CONFIG_FILE_VERSION, 
                   "but got", settings["smoother_config_file_version"])
         
-        name = TextInput(value=settings["display_name"], sizing_mode="stretch_width", disabled=lock_name,
+        name = TextInput(value=settings["display_name"], sizing_mode="stretch_width", 
+                         disabled=lock_name or bin.global_variables.no_save,
                          height=DEFAULT_TEXT_INPUT_HEIGHT)
         apply_button = Button(label="", css_classes=SYM_CSS + ["fa_apply"], width=SYM_WIDTH, 
                             height=SYM_WIDTH, sizing_mode="fixed", button_type="light", align="center")
@@ -300,7 +301,8 @@ class MainLayout:
                     elif k not in b or a[k] != b[k]:
                         r[k] = a[k]
                 return r
-            print("saving...")
+            if not bin.global_variables.quiet:
+                print("saving...")
             settings = dict_diff(self.session.get_value(["settings"]), self.settings_default)
             settings["display_name"] = name.value
             settings["smoother_config_file_version"] = CONFIG_FILE_VERSION
@@ -308,7 +310,8 @@ class MainLayout:
                 json.dump(settings, f)
             reset_button.disabled = settings == factory_default
             reset_button.css_classes = SYM_CSS + ["fa_reset"] if settings != factory_default else ["fa_reset_disabled"]
-            print("saved")
+            if not bin.global_variables.quiet:
+                print("saved")
         save_button.on_click(lambda _: save_event())
 
         def reset_event():
@@ -324,7 +327,8 @@ class MainLayout:
         reset_button.on_click(lambda _: reset_event())
 
         def apply_event():
-            print("applying...")
+            if not bin.global_variables.quiet:
+                print("applying...")
             with open(smoother_home_folder + '/conf/' + str(file_nr) + '.json', 'r') as f:
                 settings = json.load(f)
             def combine_dict(a, b):
@@ -344,10 +348,14 @@ class MainLayout:
             self.do_config()
             self.curdoc.unhold()
             self.trigger_render()
-            print("applied")
+            if not bin.global_variables.quiet:
+                print("applied")
         apply_button.on_click(lambda _: apply_event())
 
-        return row([name, apply_button, save_button, reset_button], sizing_mode="stretch_width")
+        if bin.global_variables.no_save:
+            return row([name, apply_button, reset_button], sizing_mode="stretch_width")
+        else:
+            return row([name, apply_button, save_button, reset_button], sizing_mode="stretch_width")
 
     def make_slider_spinner(self, title, tooltip, settings, width=200, 
                             on_change=None, spinner_width=80, sizing_mode="stretch_width"):
@@ -693,11 +701,11 @@ class MainLayout:
         return n + ": " + label
 
     def set_area_range(self):
-        contig_names_x = self.session.get_annotation_list(True)
-        contig_names_y = self.session.get_annotation_list(False)
-        contig_starts_x = self.session.get_tick_list(True)
-        contig_starts_y = self.session.get_tick_list(False)
-        lcs = self.session.get_longest_common_suffix()
+        contig_names_x = self.session.get_annotation_list(True, self.print)
+        contig_names_y = self.session.get_annotation_list(False, self.print)
+        contig_starts_x = self.session.get_tick_list(True, self.print)
+        contig_starts_y = self.session.get_tick_list(False, self.print)
+        lcs = self.session.get_longest_common_suffix(self.print)
         if len(contig_starts_x) > 0 and len(contig_starts_y) > 0:
             self.area_range_expected = "X: " + \
                 self.to_readable_pos(math.floor(self.heatmap.x_range.start * self.session.get_value(["dividend"])), \
@@ -810,7 +818,6 @@ class MainLayout:
             y_pos = s.find("y:")
             x = (s[x_pos+2:y_pos] if x_pos < y_pos else s[x_pos+2:]).strip()
             y = (s[y_pos+2:x_pos] if y_pos < x_pos else s[y_pos+2:]).strip()
-            print(x, y)
             return self.interpret_range(x, [True]) + self.interpret_range(y, [False])
 
         return self.interpret_range(s, [True, False]) + self.interpret_range(s, [False, True])
@@ -882,9 +889,9 @@ class MainLayout:
             if self.session.get_value(["settings", "export", "export_format"]) == "tsv":
                 export_tsv(self.session, self.smoother_version)
             elif self.session.get_value(["settings", "export", "export_format"]) == "svg":
-                print("unimplemented for now")
+                self.print("unimplemented for now")
             else:
-                print("invalid value for export_format")
+                self.print("invalid value for export_format")
 
             def callback():
                 self.spinner.css_classes = ["fade-out"]
@@ -912,7 +919,7 @@ class MainLayout:
         self.curr_area_size = 1
         self.smoother_version = "?"
         self.reset_options = {}
-        self.session = bin.global_variables.quarry_session
+        self.session = Quarry(bin.global_variables.smoother_index)
         if not os.path.exists(smoother_home_folder + "/conf/"):
             os.makedirs(smoother_home_folder + "/conf/")
         if not os.path.exists(smoother_home_folder + "/conf/default.json"):
@@ -1770,16 +1777,20 @@ class MainLayout:
         tools_bar.height_policy = "fixed"
         tools_bar.align  = "center"
 
+        if bin.global_variables.no_save:
+            export_panel = [Div(text="This instance of smoother has been configured not to allow saving files on the server, so the Export tab has been disabled. Otherwise you could use this tab to export your raw data in tsv format, or create svg pictures from your data.", sizing_mode="stretch_width")]
+        else:
+            export_panel = [export_label, self.export_file, export_sele_layout, export_full, export_format, 
+                            export_button]
+
         _settings = self.make_tabs(tabs=[
                 self.make_panel("File", children=[
                     Spacer(height=5),
                     self.make_tabs(tabs=[
                         self.make_panel("Presetting", "", [*quick_configs]),
-                        self.make_panel("Export", "", [export_label, self.export_file, export_sele_layout,
-                                        export_full, export_format,
-                                        export_button]),
+                        self.make_panel("Export", "", export_panel),
                         self.make_panel("Info", "", [version_info, log_div, self.log_div
-                                                ]),
+                                                ]), # @todo index info
                     ])
                     ]
                 ),
@@ -1857,8 +1868,13 @@ class MainLayout:
 
         quit_ti = TextInput(value="keepalive", name="quit_ti", visible=False)
         def close_server(x, y, z):
-            print("closing server since session exited")
-            sys.exit()
+            if bin.global_variables.keep_alive:
+                if not bin.global_variables.quiet:
+                    print("session exited; keeping server alive")
+            else:
+                if not bin.global_variables.quiet:
+                    print("closing server since session exited")
+                sys.exit()
         quit_ti.on_change("value", close_server)
 
         active_tools_ti = TextInput(value="", name="active_tools_ti", visible=False)
@@ -1913,7 +1929,8 @@ class MainLayout:
         return b_xs < a_xs or b_ys < a_ys or b_xe > a_xe or b_ye > a_ye
 
     def print(self, s):
-        print(s)
+        if not bin.global_variables.quiet:
+            print(s)
         self.log_div_text += s.replace("\n", "<br>") + "<br>"
         #self.log_div_text = self.log_div_text[-5000:]
 
@@ -1955,47 +1972,47 @@ class MainLayout:
                 self.curdoc.add_next_tick_callback(callback)
 
                 start_time = datetime.now()
-                self.session.update_cds()
+                self.session.update_cds(self.print)
 
-                d_heatmap = self.session.get_heatmap()
+                d_heatmap = self.session.get_heatmap(self.print)
 
-                raw_data_x = self.session.get_tracks(False)
-                raw_data_y = self.session.get_tracks(True)
-                min_max_tracks_x = self.session.get_min_max_tracks(False)
-                min_max_tracks_y = self.session.get_min_max_tracks(True)
+                raw_data_x = self.session.get_tracks(False, self.print)
+                raw_data_y = self.session.get_tracks(True, self.print)
+                min_max_tracks_x = self.session.get_min_max_tracks(False, self.print)
+                min_max_tracks_y = self.session.get_min_max_tracks(True, self.print)
 
-                d_anno_x = self.session.get_annotation(False)
-                d_anno_y = self.session.get_annotation(True)
-                displayed_annos_x = self.session.get_displayed_annos(False)
+                d_anno_x = self.session.get_annotation(False, self.print)
+                d_anno_y = self.session.get_annotation(True, self.print)
+                displayed_annos_x = self.session.get_displayed_annos(False, self.print)
                 if len(displayed_annos_x) == 0:
                     displayed_annos_x.append("")
-                displayed_annos_y = self.session.get_displayed_annos(True)
+                displayed_annos_y = self.session.get_displayed_annos(True, self.print)
                 if len(displayed_annos_y) == 0:
                     displayed_annos_y.append("")
 
-                b_col = self.session.get_background_color()
+                b_col = self.session.get_background_color(self.print)
 
-                render_area = self.session.get_drawing_area()
+                render_area = self.session.get_drawing_area(self.print)
 
-                canvas_size_x, canvas_size_y = self.session.get_canvas_size()
-                tick_list_x = self.session.get_tick_list(True)
-                tick_list_y = self.session.get_tick_list(False)
-                tick_list_x_2 = self.session.get_tick_list_2(True)
-                tick_list_y_2 = self.session.get_tick_list_2(False)
-                ticks_x = self.session.get_ticks(True)
-                ticks_y = self.session.get_ticks(False)
+                canvas_size_x, canvas_size_y = self.session.get_canvas_size(self.print)
+                tick_list_x = self.session.get_tick_list(True, self.print)
+                tick_list_y = self.session.get_tick_list(False, self.print)
+                tick_list_x_2 = self.session.get_tick_list_2(True, self.print)
+                tick_list_y_2 = self.session.get_tick_list_2(False, self.print)
+                ticks_x = self.session.get_ticks(True, self.print)
+                ticks_y = self.session.get_ticks(False, self.print)
                 ticks_x["update"] = 0
                 ticks_y["update"] = 0
 
-                palette = self.session.get_palette()
-                palette_ticks = self.session.get_palette_ticks()
+                palette = self.session.get_palette(self.print)
+                palette_ticks = self.session.get_palette_ticks(self.print)
 
-                w_bin, h_bin = self.session.get_bin_size()
+                w_bin, h_bin = self.session.get_bin_size(self.print)
 
-                ranked_slice_x = self.session.get_ranked_slices(False)
-                ranked_slice_y = self.session.get_ranked_slices(True)
+                ranked_slice_x = self.session.get_ranked_slices(False, self.print)
+                ranked_slice_y = self.session.get_ranked_slices(True, self.print)
                 if self.session.get_value(["settings", "normalization", "ddd_show"]):
-                    dist_dep_dec_plot_data = self.session.get_decay()
+                    dist_dep_dec_plot_data = self.session.get_decay(self.print)
                 else:
                     dist_dep_dec_plot_data = {
                             "chr": [],
@@ -2011,7 +2028,8 @@ class MainLayout:
                 @gen.coroutine
                 def callback():
                     self.curdoc.hold()
-                    self.print("ERROR: " + error_text)
+                    if not bin.global_variables.quiet:
+                        self.print("ERROR: " + error_text)
                     self.color_layout.children = [self.make_color_figure(palette, palette_ticks)]
                     def mmax(*args):
                         m = 0
@@ -2115,7 +2133,8 @@ class MainLayout:
                 pass
             def callback():
                 self.spinner.css_classes = ["fade-out"]
-                self.session.save_session()
+                if not bin.global_variables.no_save:
+                    self.session.save_session()
             self.curdoc.add_next_tick_callback(callback)
 
         self.undo_button.disabled = not self.session.has_undo()
@@ -2165,7 +2184,7 @@ class MainLayout:
                         self.session.cancel()
 
                         def callback():
-                            self.last_drawing_area = self.session.get_drawing_area()
+                            self.last_drawing_area = self.session.get_drawing_area( self.print )
                             self.render(zoom_in_render)
                         self.curdoc.add_next_tick_callback(callback)
                         return

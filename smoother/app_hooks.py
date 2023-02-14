@@ -1,8 +1,7 @@
 import os
-from libsmoother import Quarry
+from libsmoother import Quarry, Index
 import bin.global_variables
 import json
-NUM_SESSIONS = 0
 import os
 try:
     import importlib.resources as pkg_resources
@@ -11,27 +10,41 @@ except ImportError:
     import importlib_resources as pkg_resources
 
 def on_server_loaded(server_context):
+    global smoother_index
+    if not "smoother_no_save" in os.environ:
+        print("smoother expects smoother_no_save environment variable to be set but it was not")
+    else:
+        bin.global_variables.no_save = os.environ["smoother_no_save"] == "True"
+    if not "smoother_keep_alive" in os.environ:
+        print("smoother expects smoother_keep_alive environment variable to be set but it was not")
+    else:
+        bin.global_variables.keep_alive = os.environ["smoother_keep_alive"] == "True"
+    if not "smoother_quiet" in os.environ:
+        print("smoother expects smoother_quiet environment variable to be set but it was not")
+    else:
+        bin.global_variables.quiet = os.environ["smoother_quiet"] == "True"
+
     path = None
-    if not "smoother_index_path" in os.environ["smoother_index_path"]:
+    if "smoother_index_path" in os.environ:
         if os.path.exists(os.environ["smoother_index_path"]):
             path = os.environ["smoother_index_path"]
         if os.path.exists(os.environ["smoother_index_path"] + ".smoother_index/"):
             path = os.environ["smoother_index_path"] + ".smoother_index/"
         if not path is None:
             print("loading index...")
-            bin.global_variables.quarry_session = Quarry(path)
-            bin.global_variables.quarry_session.allow_ctrl_c_cancel = False
+            smoother_index = Index(path)
 
-            if bin.global_variables.quarry_session.get_value(["settings"]) is None:
+            if smoother_index.get_value(["settings"]) is None:
                 with (pkg_resources.files("smoother") / "static" / "conf" / 'default.json').open("r") as f:
                     settings = json.load(f)
                 #print(settings)
-                bin.global_variables.quarry_session.set_value(["settings"], settings)
+                smoother_index.set_value(["settings"], settings)
+            
+            bin.global_variables.smoother_index = smoother_index
 
             print("done loading.")
         else:
-            print("Index file", os.environ["smoother_index_path"], "not found.")
-            print("exiting.")
+            print("index", os.environ["smoother_index_path"], "does not exist, exiting")
             exit()
     else:
         print("No index path is given.")
@@ -54,14 +67,13 @@ def on_server_unloaded(server_context):
     pass
 
 def on_session_created(session_context):
-    global NUM_SESSIONS
-    # If present, this function executes when the server creates a session.
-    NUM_SESSIONS += 1
+    # If present, this function executes when the server creates a session.    
+    bin.global_variables.NUM_SESSIONS += 1
 
 def on_session_destroyed(session_context):
-    global NUM_SESSIONS
-    NUM_SESSIONS -= 1
-    if NUM_SESSIONS == 0:
-        print("closing server since session exited")
-        # This function executes when the user closes the session.
-        exit()
+    bin.global_variables.NUM_SESSIONS -= 1
+    if not bin.global_variables.keep_alive:
+        if bin.global_variables.NUM_SESSIONS == 0:
+            print("closing server since session exited")
+            # This function executes when the user closes the session.
+            exit()
