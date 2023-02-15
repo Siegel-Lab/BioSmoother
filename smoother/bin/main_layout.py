@@ -1605,8 +1605,8 @@ class MainLayout:
                 ("PNG-picture", "png"), 
                 active_item=["settings", "export", "export_format"])
         
-        export_full = self.make_checkbox("Export full matrix instead", "tooltip_full_matrix",
-                                            settings=["settings", "export", "do_export_full"])
+        #export_full = self.make_checkbox("Export full matrix instead", "tooltip_full_matrix",
+        #                                    settings=["settings", "export", "do_export_full"])
 
         export_label = Div(text="Output Prefix:", css_classes=["tooltip", "tooltip_export_prefix"])
         export_label.margin = DIV_MARGIN
@@ -1615,9 +1615,6 @@ class MainLayout:
         def export_file_event(_1, _2, _3):
             self.session.set_value(["settings", "export", "prefix"], self.export_file.value)
         self.export_file.on_change("value", export_file_event)
-        
-        export_sele_layout = self.multi_choice_auto("Export Selection", "tooltip_export_selection", [[["settings", "export", "selection"], ""]],
-                                                    ["settings", "export", "list"], orderable=False)
     
         self.low_color = ColorPicker(title="Color Low", css_classes=["tooltip", "tooltip_color_low"],
                                      height=DEFAULT_TEXT_INPUT_HEIGHT*2)
@@ -1782,8 +1779,7 @@ class MainLayout:
         if bin.global_variables.no_save:
             export_panel = [Div(text="This instance of smoother has been configured not to allow saving files on the server, so the Export tab has been disabled. Otherwise you could use this tab to export your raw data in tsv format, or create svg pictures from your data.", sizing_mode="stretch_width")]
         else:
-            export_panel = [export_label, self.export_file, export_sele_layout, export_full, export_format, 
-                            export_button]
+            export_panel = [export_label, self.export_file, export_format, export_button]
 
         _settings = self.make_tabs(tabs=[
                 self.make_panel("File", children=[
@@ -1800,7 +1796,6 @@ class MainLayout:
                     Spacer(height=5),
                     normalization, normalization_cov,
                     self.make_tabs(tabs=[
-                        #self.make_panel("Approach", "", []),
                         self.make_panel("Binominal Test", "", [rsa_l, radicl_seq_display_coverage, radicl_seq_column, radicl_seq_samples_l]),
                         self.make_panel("Dist. Dep. Dec.", "", [ddd, ddd_show, ddd_sam_l, ddd_ex_l, 
                             self.dist_dep_dec_plot

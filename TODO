@@ -15,6 +15,7 @@
     - missing:
         - axis lables & ticks
         - overlays (e.g. contig border)
+- virtual 4C functionality
 - extra plots could be auto hidden while empty -> anno cov ddd slice_rankings
     - also column sum & row sum coverage does not need to exist if zero
 
