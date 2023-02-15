@@ -11,6 +11,10 @@
     -  exclude static values form undo & redo
 - application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
 - svg output
+    - works in principle
+    - missing:
+        - axis lables & ticks
+        - overlays (e.g. contig border)
 - extra plots could be auto hidden while empty -> anno cov ddd slice_rankings
     - also column sum & row sum coverage does not need to exist if zero
 

@@ -36,7 +36,7 @@ def add_parsers(main_parser):
     parser.add_argument('-k', '--keep_alive', action='store_true',
                         help="Keep the server alive even if the last browser window has been closed. (default: off)")
     parser.add_argument('-q', '--quiet', action='store_true',
-                        help="Print less on the command line output. (default: off)")
+                        help="Print less on the command line. (default: off)")
 
     def filter_args(args):
         for name, a in args:

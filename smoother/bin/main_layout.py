@@ -24,12 +24,11 @@ import psutil
 from concurrent.futures import ThreadPoolExecutor
 from bokeh.models import BoxAnnotation
 from bokeh.models.tickers import AdaptiveTicker
-from libsmoother import Quarry
+from libsmoother import Quarry, export_tsv, export_png, export_svg
 import json
 import shutil
 from bin.figure_maker import FigureMaker, DROPDOWN_HEIGHT, FONT
 from bin.extra_ticks_ticker import *
-from bin.export_tsv import export_tsv
 from bokeh import events
 import bin.global_variables
 try:
@@ -887,9 +886,11 @@ class MainLayout:
             self.curdoc.add_next_tick_callback(callback)
 
             if self.session.get_value(["settings", "export", "export_format"]) == "tsv":
-                export_tsv(self.session, self.smoother_version)
+                export_tsv(self.session)
             elif self.session.get_value(["settings", "export", "export_format"]) == "svg":
-                self.print("unimplemented for now")
+                export_svg(self.session)
+            elif self.session.get_value(["settings", "export", "export_format"]) == "png":
+                export_png(self.session)
             else:
                 self.print("invalid value for export_format")
 
@@ -1369,7 +1370,7 @@ class MainLayout:
                                                   )
 
         def axis_labels_event(e):
-            self.session.set_value(["seetings", "interface", "axis_lables"], e)
+            self.session.set_value(["settings", "interface", "axis_lables"], e)
             self.heatmap_y_axis_2.yaxis.axis_label = e.split("_")[0]
             self.heatmap_x_axis_2.xaxis.axis_label = e.split("_")[1]
         axis_lables = self.dropdown_select("Axis Labels", "tooltip_y_axis_label",
@@ -1600,7 +1601,8 @@ class MainLayout:
         export_format = self.dropdown_select("Format", 
                 "tooltip_export_format", 
                 ("TSV-file", "tsv"), 
-                ("SVG-file", "svg"), 
+                ("SVG-picture", "svg"), 
+                ("PNG-picture", "png"), 
                 active_item=["settings", "export", "export_format"])
         
         export_full = self.make_checkbox("Export full matrix instead", "tooltip_full_matrix",

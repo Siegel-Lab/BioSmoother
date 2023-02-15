@@ -36,3 +36,7 @@ For installing smoother via github, run the following commands:
 
 smoother can be deployed as a webserver so this should be described
 
+## Additional dependencies image export
+
+@todo use this https://pypi.org/project/drawSvg/ to draw SVG & png / bokeh export svg is not anywhere near usable
+
