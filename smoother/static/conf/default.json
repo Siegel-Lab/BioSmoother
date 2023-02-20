@@ -132,14 +132,14 @@
         "max_num_bins_factor": 1000,
         "show_hide": {
             "axis": true,
-            "coords": true,
+            "coords": false,
             "regs": true,
-            "raw": true,
+            "raw": false,
             "annotation": true,
             "tools": true,
             "grid_lines": false,
             "indent_line": false,
-            "contig_borders": true
+            "contig_borders": false
         },
         "min_bin_size": {
             "max": 135,
@@ -258,7 +258,8 @@
             "spinner_min_restricted": true,
             "spinner_max_restricted": true
         },
-        "incomplete_alignments": false,
+        "incomplete_alignments": true,
+        "directionality": "all",
         "symmetry": "all",
         "min_diag_dist": {
             "min": 0,

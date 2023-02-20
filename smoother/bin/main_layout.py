@@ -1368,6 +1368,14 @@ class MainLayout:
                                                 ("Ignore MMRs", "points_only"),
                                                 active_item=['settings', "filters", "ambiguous_mapping"]
                                                   )
+        directionality = self.dropdown_select("Directionality", "tooltip_directionality",
+                                                ("Count pairs that map to any strand", "all"),
+                                                ("Count pairs that map to the same strand", "same"),
+                                                ("Count pairs that map to opposite strands", "oppo"),
+                                                ("Count pairs that map to the forward strand", "forw"),
+                                                ("Count pairs that map to the reverse strand", "rev"),
+                                                active_item=['settings', "filters", "directionality"]
+                                                  )
 
         def axis_labels_event(e):
             self.session.set_value(["settings", "interface", "axis_lables"], e)
@@ -1817,7 +1825,7 @@ class MainLayout:
                         self.make_panel("Datapools", "", [in_group, betw_group, group_layout, ibs_l,
                                                         norm_layout
                                                     ]),
-                        self.make_panel("Mapping", "", [ms_l, incomp_align_layout, multi_mapping]),
+                        self.make_panel("Mapping", "", [ms_l, incomp_align_layout, multi_mapping, directionality]),
                         self.make_panel("Coordinates", "", [dds_l, x_coords, y_coords, 
                                                        symmetrie,
                                                        #,binssize not evenly dividable @todo
