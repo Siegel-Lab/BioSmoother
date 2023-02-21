@@ -503,6 +503,40 @@ class MainLayout:
                 d[name] = [ele for ele in ele_list if ele in self.session.get_value(key)] 
             set_options(ele_list, d)
 
+    def set_v4c_range(self):
+        self.v4c_col_expected = self.get_readable_range(
+                self.session.get_value(["settings", "interface", "v4c", "col_from"]),
+                self.session.get_value(["settings", "interface", "v4c", "col_to"])
+            )
+        self.v4c_col.value = self.v4c_col_expected
+
+        self.v4c_row_expected = self.get_readable_range(
+                self.session.get_value(["settings", "interface", "v4c", "row_from"]),
+                self.session.get_value(["settings", "interface", "v4c", "row_to"])
+            )
+        self.v4c_row.value = self.v4c_row_expected
+
+    def parse_v4c(self):
+        change = False
+        if self.v4c_col.value != self.v4c_col_expected:
+            col_start, col_end = self.interpret_range(self.v4c_col.value, [True])
+            change = True
+            if not col_start is None:
+                self.session.set_value(["settings", "interface", "v4c", "col_from"], col_start)
+            if not col_end is None:
+                self.session.set_value(["settings", "interface", "v4c", "col_to"], col_end)
+
+        if self.v4c_row.value != self.v4c_row_expected:
+            row_start, row_end = self.interpret_range(self.v4c_row.value, [False])
+            change = True
+            if not row_start is None:
+                self.session.set_value(["settings", "interface", "v4c", "row_from"], row_start)
+            if not row_end is None: 
+                self.session.set_value(["settings", "interface", "v4c", "row_to"], row_end)
+    
+        if change:
+            self.set_v4c_range()
+
     def do_config(self):
         
         def to_idx(x):
@@ -547,6 +581,8 @@ class MainLayout:
         self.config_show_hide(self.session.get_value(["settings", "interface", "show_hide"]))
 
         self.export_file.value = self.session.get_value(["settings", "export", "prefix"])
+
+        self.set_v4c_range()
 
         self.set_active_tools_ti.value = ";".join(self.session.get_value(["settings", "active_tools"]))
 
@@ -670,23 +706,22 @@ class MainLayout:
         oob = x > genome_end * self.session.get_value(["dividend"]) or x < 0
         if x < 0: 
             idx = 0
-        elif x >= genome_end * self.session.get_value(["dividend"]): 
+        elif x >= genome_end * self.session.get_value(["dividend"]):
             idx = len(contig_names) - 1
-            x -= contig_starts[-1]
+            x -= contig_starts[-1] * self.session.get_value(["dividend"])
         else:
             idx = 0
-            for idx, (start, end) in enumerate(zip(contig_starts, contig_starts[1:] + \
-                                                                  [genome_end * self.session.get_value(["dividend"])])):
-                if x >= start and x < end:
-                    x -= start
+            for idx, (start, end) in enumerate(zip(contig_starts, contig_starts[1:] + [genome_end])):
+                if x >= start * self.session.get_value(["dividend"]) and x < end * self.session.get_value(["dividend"]):
+                    x -= start * self.session.get_value(["dividend"])
                     break
 
         if x == 0:
             label = "0 bp"
         elif x % 1000000 == 0:
-            label = "{:,}".format(x / 1000000) + " mbp"
+            label = "{:,}".format(x // 1000000) + " mbp"
         elif x % 1000 == 0:
-            label = "{:,}".format(x / 1000) + " kbp"
+            label = "{:,}".format(x // 1000) + " kbp"
         else:
             label = "{:,}".format(x) + " bp"
 
@@ -699,33 +734,33 @@ class MainLayout:
             n = contig_names[idx]
         return n + ": " + label
 
-    def set_area_range(self):
+    def get_readable_range(self, start, end):
+        lcs = self.session.get_longest_common_suffix(self.print)
         contig_names_x = self.session.get_annotation_list(True, self.print)
         contig_names_y = self.session.get_annotation_list(False, self.print)
         contig_starts_x = self.session.get_tick_list(True, self.print)
         contig_starts_y = self.session.get_tick_list(False, self.print)
-        lcs = self.session.get_longest_common_suffix(self.print)
         if len(contig_starts_x) > 0 and len(contig_starts_y) > 0:
-            self.area_range_expected = "X=[" + \
-                self.to_readable_pos(math.floor(self.heatmap.x_range.start * self.session.get_value(["dividend"])), \
-                                    contig_starts_x[-1], contig_names_x, \
-                                    contig_starts_x[:-1], lcs) + " .. " + \
-                self.to_readable_pos(math.ceil(self.heatmap.x_range.end * self.session.get_value(["dividend"])), \
-                                    contig_starts_x[-1], contig_names_x, \
-                                    contig_starts_x[:-1], lcs) + "] Y=[" +\
-                self.to_readable_pos(math.floor(self.heatmap.y_range.start * self.session.get_value(["dividend"])), \
-                                    contig_starts_y[-1], contig_names_y, \
-                                    contig_starts_y[:-1], lcs) + " .. " + \
-                self.to_readable_pos(math.ceil(self.heatmap.y_range.end * self.session.get_value(["dividend"])), \
-                                    contig_starts_y[-1], contig_names_y, \
-                                    contig_starts_y[:-1], lcs) + "]"
+            return  self.to_readable_pos(start * int(self.session.get_value(["dividend"])), \
+                                        contig_starts_x[-1], contig_names_x, \
+                                        contig_starts_x[:-1], lcs) + " .. " + \
+                    self.to_readable_pos(end * int(self.session.get_value(["dividend"])), \
+                                        contig_starts_y[-1], contig_names_y, \
+                                        contig_starts_y[:-1], lcs)
         else:
-            self.area_range_expected = "n/a"
+            return "n/a"
+
+    def set_area_range(self):
+        self.area_range_expected = "X=[" + \
+            self.get_readable_range(int(math.floor(self.heatmap.x_range.start)), 
+                                    int(math.ceil(self.heatmap.x_range.end))) + "] Y=[" +\
+            self.get_readable_range(int(math.floor(self.heatmap.y_range.start)), 
+                                    int(math.ceil(self.heatmap.y_range.end))) + "]"
         self.area_range.value = self.area_range_expected
 
-    def isfloat(self, num):
+    def isint(self, num):
         try:
-            float(num)
+            int(num)
             return True
         except ValueError:
             return False
@@ -733,7 +768,7 @@ class MainLayout:
     def interpret_number(self, s):
         if s[-1:] == "b":
             s = s[:-1]
-        if s[-2:] == "bp":
+        elif s[-2:] == "bp":
             s = s[:-2]
         fac = 1
         if len(s) > 0 and s[-1] == "m":
@@ -743,8 +778,8 @@ class MainLayout:
             fac = 1000
             s = s[:-1]
         s = s.replace(",", "")
-        if self.isfloat(s):
-            return float(s) * fac / self.session.get_value(["dividend"])
+        if self.isint(s):
+            return (int(s) * fac) // self.session.get_value(["dividend"])
         return None
 
     def interpret_position(self, s, x_y, bot=True):
@@ -787,6 +822,7 @@ class MainLayout:
         return [None]
 
     def interpret_range(self, s, x_y):
+        s = "".join(s.lower().split())
         if s.count("..") == 1 and s.count("[") <= 1 and s.count("]") <= 1:
             x, y = s.split("..")
             if x[:1] == "[":
@@ -820,8 +856,8 @@ class MainLayout:
         if s.count("x=") == 1 and s.count("y=") == 1:
             x_pos = s.find("x=")
             y_pos = s.find("y=")
-            x = (s[x_pos+2:y_pos] if x_pos < y_pos else s[x_pos+2:]).strip()
-            y = (s[y_pos+2:x_pos] if y_pos < x_pos else s[y_pos+2:]).strip()
+            x = s[x_pos+2:y_pos] if x_pos < y_pos else s[x_pos+2:]
+            y = s[y_pos+2:x_pos] if y_pos < x_pos else s[y_pos+2:]
             return self.interpret_range(x, [True]) + self.interpret_range(y, [False])
 
         return self.interpret_range(s, [True, False]) + self.interpret_range(s, [False, True])
@@ -832,18 +868,18 @@ class MainLayout:
             i = self.interpret_area(self.area_range.value)
             if not i[0] is None and not i[1] is None:
                 self.heatmap.x_range.start = min(i[0], i[1])
-                self.heatmap.x_range.end = max(i[0], i[1], self.heatmap.x_range.start+1)
+                self.heatmap.x_range.end = max(i[0], i[1], min(i[0], i[1])+1)
             elif not i[0] is None:
                 self.heatmap.x_range.start = i[0]
             elif not i[1] is None:
-                self.heatmap.x_range.end = max(i[1], self.heatmap.x_range.start+1)
+                self.heatmap.x_range.end = i[1]
             if not i[2] is None and not i[3] is None:
                 self.heatmap.y_range.start = min(i[2], i[3])
-                self.heatmap.y_range.end = max(i[2], i[3], self.heatmap.y_range.start+1)
+                self.heatmap.y_range.end = max(i[2], i[3], min(i[2], i[3])+1)
             elif not i[2] is None:
                 self.heatmap.y_range.start = i[2]
             elif not i[3] is None:
-                self.heatmap.y_range.end = max(i[3], self.heatmap.y_range.start+1)
+                self.heatmap.y_range.end = i[3]
 
     def save_tools(self, tools):
         if not self.session is None:
@@ -1027,6 +1063,10 @@ class MainLayout:
         self.dist_dep_dec_plot = None
         self.log_div = None
         self.log_div_text = ""
+        self.v4c_col_expected = ""
+        self.v4c_col = None
+        self.v4c_row_expected = ""
+        self.v4c_row = None
 
         self.do_layout()
 
@@ -1786,6 +1826,25 @@ class MainLayout:
         else:
             export_panel = [export_label, self.export_file, export_format, export_button]
 
+        do_v4c_col = self.make_checkbox("Compute for columns", 
+                                                    "tooltip_v4c_do_column",
+                                                    settings=['settings', 'interface', 'v4c', 'do_col'])
+        
+        v4c_col_label = Div(text="Column Range", css_classes=["tooltip", "tooltip_v4c_column"])
+        v4c_col_label.margin = DIV_MARGIN
+        self.v4c_col = TextInput(css_classes=["tooltip", "tooltip_v4c_column"], height=DEFAULT_TEXT_INPUT_HEIGHT,
+                                 width=SETTINGS_WIDTH)
+        self.v4c_col.on_change("value", lambda x, y, z: self.parse_v4c())
+
+        do_v4c_row = self.make_checkbox("Compute for rows", 
+                                                    "tooltip_v4c_do_row",
+                                                    settings=['settings', 'interface', 'v4c', 'do_row'])
+        v4c_row_label = Div(text="Row Range", css_classes=["tooltip", "tooltip_v4c_column"])
+        v4c_row_label.margin = DIV_MARGIN
+        self.v4c_row = TextInput(css_classes=["tooltip", "tooltip_v4c_column"], height=DEFAULT_TEXT_INPUT_HEIGHT,
+                                 width=SETTINGS_WIDTH)
+        self.v4c_row.on_change("value", lambda x, y, z: self.parse_v4c())
+
         _settings = self.make_tabs(tabs=[
                 self.make_panel("File", children=[
                     Spacer(height=5),
@@ -1841,7 +1900,7 @@ class MainLayout:
                                                   self.low_color, self.high_color]),
                         self.make_panel("Panels", "", [show_hide, ass_l, rss2_l, stretch, axis_lables]),
                         self.make_panel("Bins", "", [nb_l, mmbs_l, square_bins, power_ten_bin]),
-                        self.make_panel("Virtual4C", "", []),
+                        self.make_panel("Virtual4C", "", [do_v4c_col, v4c_col_label, self.v4c_col, do_v4c_row, v4c_row_label, self.v4c_row,]),
                         self.make_panel("Redrawing", "", [ufs_l, rs_l, aas_l]),
                     ])]
                 ),

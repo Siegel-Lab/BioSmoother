@@ -246,7 +246,15 @@
         ],
         "color_low": "#000000",
         "color_high": "#ffffff",
-        "axis_lables": "RNA_DNA"
+        "axis_lables": "RNA_DNA",
+        "v4c": {
+            "do_col": false,
+            "col_from": 0,
+            "col_to": 10,
+            "do_row": false,
+            "row_from": 0,
+            "row_to": 10
+        }
     },
     "filters": {
         "mapping_q": {
