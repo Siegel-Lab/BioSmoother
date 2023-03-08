@@ -1,10 +1,11 @@
 from distutils.core import setup
 import subprocess
+from conf_version_file import conf_version
 
 VERSION = "0.3.0"
 
 # update version file...
-subprocess.run(['smoother/bin/conf_version_file.sh', "smoother/VERSION", VERSION], timeout=10) 
+conf_version("smoother/VERSION.in", VERSION, "smoother/VERSION")
 
 setup(
     name="smoother",
