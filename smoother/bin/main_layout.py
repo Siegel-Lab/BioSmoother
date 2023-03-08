@@ -1312,6 +1312,16 @@ class MainLayout:
                                               ("Make Interactions Symmetric (Top to Bottom)", "botToTop"),
                                               active_item=['settings', 'filters', 'symmetry'])
 
+        last_bin_in_contig = self.dropdown_select("Remainder Bin", "@todo",
+                                              ("Skip remainder bins", "skip"), 
+                                              ("Display remainder the size it is", "smaller"),
+                                              ("Skip <1 bin contigs; display remainder the size it is", "smaller_if_fullsized_exists"),
+                                              ("Make last bin in contig larger", "larger"), 
+                                              ("Make contig smaller", "fit_chrom_smaller"),
+                                              ("Make contig larger", "fit_chrom_larger"),
+                                              ("Extend bin into next contig (only visual, not for the count)", "cover_multiple"),
+                                              active_item=['settings', 'filters', 'cut_off_bin'])
+
         if Quarry.has_cooler_icing():
             normalization = self.dropdown_select("Normalize heatmap by", "tooltip_normalize_by",
                                                     ("Reads per million",
@@ -1901,7 +1911,7 @@ class MainLayout:
                         self.make_panel("Color", "", [self.color_layout, crs_l, is_l, color_scale, color_picker, 
                                                   self.low_color, self.high_color]),
                         self.make_panel("Panels", "", [show_hide, ass_l, rss2_l, stretch, axis_lables]),
-                        self.make_panel("Bins", "", [nb_l, mmbs_l, square_bins, power_ten_bin]),
+                        self.make_panel("Bins", "", [nb_l, mmbs_l, square_bins, power_ten_bin, last_bin_in_contig]),
                         self.make_panel("Virtual4C", "", [do_v4c_col, v4c_col_label, self.v4c_col, do_v4c_row, v4c_row_label, self.v4c_row,]),
                         self.make_panel("Redrawing", "", [ufs_l, rs_l, aas_l]),
                     ])]
