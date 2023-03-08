@@ -2,7 +2,7 @@ from distutils.core import setup
 import subprocess
 from conf_version_file import conf_version
 
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 
 # update version file...
 conf_version("smoother/VERSION.in", VERSION, "smoother/VERSION")
