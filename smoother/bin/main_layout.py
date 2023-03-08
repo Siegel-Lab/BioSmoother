@@ -735,6 +735,7 @@ class MainLayout:
         return n + ": " + label
 
     def get_readable_range(self, start, end):
+        # @todo this might run in an infinite loop right now (without need)
         lcs = self.session.get_longest_common_suffix(self.print)
         contig_names_x = self.session.get_annotation_list(True, self.print)
         contig_names_y = self.session.get_annotation_list(False, self.print)
@@ -929,7 +930,7 @@ class MainLayout:
 
             def callback():
                 self.spinner.css_classes = ["fade-out"]
-                self.print_status("done exporting.")
+                self.print_status("done exporting. Current Bin Size: " + self.get_readable_bin_size())
             self.curdoc.add_next_tick_callback(callback)
         yield executor.submit(unlocked_task)
 
@@ -954,6 +955,7 @@ class MainLayout:
         self.smoother_version = "?"
         self.reset_options = {}
         self.session = Quarry(bin.global_variables.smoother_index)
+        #self.session.verbosity = 5
         if not os.path.exists(smoother_home_folder + "/conf/"):
             os.makedirs(smoother_home_folder + "/conf/")
         if not os.path.exists(smoother_home_folder + "/conf/default.json"):
@@ -2023,6 +2025,18 @@ class MainLayout:
                     anno_str += str(c) + "x " + anno
         return anno_str
 
+    def get_readable_bin_size(self):
+        w_bin, h_bin = self.session.get_bin_size(self.print)
+        def readable_display(l):
+            def add_commas(x):
+                return "{:,}".format(x)
+            if l % 1000000 == 0:
+                return str(add_commas(l // 1000000)) + "mbp"
+            elif l % 1000 == 0:
+                return str(add_commas(l // 1000)) + "kbp"
+            else:
+                return str(add_commas(l)) + "bp"
+        return readable_display(w_bin) + " x " + readable_display(h_bin)
     @gen.coroutine
     @without_document_lock
     def render(self, zoom_in_render):
@@ -2069,7 +2083,6 @@ class MainLayout:
                 palette = self.session.get_palette(self.print)
                 palette_ticks = self.session.get_palette_ticks(self.print)
 
-                w_bin, h_bin = self.session.get_bin_size(self.print)
 
                 ranked_slice_x = self.session.get_ranked_slices(False, self.print)
                 ranked_slice_y = self.session.get_ranked_slices(True, self.print)
@@ -2106,18 +2119,7 @@ class MainLayout:
                                 m = x
                         return m
 
-                    def readable_display(l):
-                        def add_commas(x):
-                            return "{:,}".format(x)
-                        if l % 1000000 == 0:
-                            return str(add_commas(l // 1000000)) + "mbp"
-                        elif l % 1000 == 0:
-                            return str(add_commas(l // 1000)) + "kbp"
-                        else:
-                            return str(add_commas(l)) + "bp"
-
-                    end_text = "Rendering Done.\nCurrent Bin Size: " + readable_display(w_bin) + \
-                                " x " + readable_display(h_bin) + ".\nRuntime: " + str(end_time - start_time) + \
+                    end_text = "Rendering Done.\nCurrent Bin Size: " + self.get_readable_bin_size() + ".\nRuntime: " + str(end_time - start_time) + \
                                 ".\nDisplaying " + str(len(d_heatmap["color"])) + " bins."
 
 
