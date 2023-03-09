@@ -56,8 +56,6 @@ executor = ThreadPoolExecutor(max_workers=1)
 
 smoother_home_folder = str(Path.home()) + "/.smoother"
 
-## @todo use multi-inheritance to split this class into smaller ones
-
 
 class MainLayout:
     def dropdown_select_h(self, title, event, tooltip):
@@ -735,7 +733,6 @@ class MainLayout:
         return n + ": " + label
 
     def get_readable_range(self, start, end):
-        # @todo this might run in an infinite loop right now (without need)
         lcs = self.session.get_longest_common_suffix(self.print)
         contig_names_x = self.session.get_annotation_list(True, self.print)
         contig_names_y = self.session.get_annotation_list(False, self.print)
@@ -1313,13 +1310,13 @@ class MainLayout:
                                               active_item=['settings', 'filters', 'symmetry'])
 
         last_bin_in_contig = self.dropdown_select("Remainder Bin", "@todo",
-                                              ("Skip remainder bins", "skip"), 
-                                              ("Display remainder the size it is", "smaller"),
-                                              ("Skip <1 bin contigs; display remainder the size it is", "smaller_if_fullsized_exists"),
-                                              ("Make last bin in contig larger", "larger"), 
+                                              ("Hide remainder", "skip"), 
+                                              ("Display remainder", "smaller"),
+                                              ("Hide remainder if no fullsized bin exists", "smaller_if_fullsized_exists"),
+                                              ("Merge remainder into last fullsized bin", "larger"), 
                                               ("Make contig smaller", "fit_chrom_smaller"),
                                               ("Make contig larger", "fit_chrom_larger"),
-                                              ("Extend bin into next contig (only visual, not for the count)", "cover_multiple"),
+                                              ("Extend remainder bin into next contig (only visual)", "cover_multiple"),
                                               active_item=['settings', 'filters', 'cut_off_bin'])
 
         if Quarry.has_cooler_icing():
@@ -2262,8 +2259,6 @@ class MainLayout:
                             self.render(zoom_in_render)
                         self.curdoc.add_next_tick_callback(callback)
                         return
-                    else:
-                        self.set_area_range()
 
                 self.curdoc.add_timeout_callback(
                     lambda: self.render_callback(), self.session.get_value(["settings", "interface", "update_freq", "val"])*1000)
