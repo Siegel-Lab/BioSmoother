@@ -5,7 +5,7 @@ __email__ = "Markus.Schmidt@lmu.de"
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
 from bokeh.models.tools import ToolbarBox, ProxyToolbar
-from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup, CrosshairTool, ColorPicker, ImageURLTexture, TextAreaInput, AllLabels, Paragraph, BasicTickFormatter
+from bokeh.models import ColumnDataSource, Dropdown, Button, RangeSlider, Slider, TextInput, FuncTickFormatter, Div, HoverTool, Toggle, Box, Spinner, MultiSelect, CheckboxGroup, CrosshairTool, ColorPicker, ImageURLTexture, TextAreaInput, AllLabels, Paragraph, BasicTickFormatter, DataTable, TableColumn, CellEditor
 #from bin.unsorted_multi_choice import UnsortedMultiChoice as MultiChoice
 from bokeh.io import export_png, export_svg
 import math
@@ -118,144 +118,245 @@ class MainLayout:
         self.dropdown_select_config.append((set_menu_2, active_item))
         return ret
 
-    def multi_choice(self, label, tooltip, checkboxes, session_key=None, callback=None, orderable=True):
-        # @todo this is super laggy :(
-        if callback is None:
-            def default_callback(n, cb):
-                for v in cb.values():
-                    self.session.set_value(v[0], v[1])
-                if not session_key is None:
-                    self.session.set_value(session_key, n)
-                self.trigger_render()
-            callback = default_callback
-        div = Div(text=label, align="center")
-        SYM_WIDTH = 10
-        SYM_CSS = ["other_button"]
-        CHECK_WIDTH = 19*len(checkboxes)
-        ELEMENTS_PER_PAGE = 10
+    def multi_choice(self, label, tooltip, checkboxes, session_key=None, callback=None, orderable=True, 
+                     renamable=False, title=""):
+        def make_source():
+            source = {}
+            source["idx"] = []
+            if orderable:
+                source["up"] = []
+                source["down"] = []
+            source["names"] = []
+            for _, n in checkboxes:
+                source[n] = []
+            return source
+        columns = []
 
-        #col.max_height=150
-        col = column([], sizing_mode="stretch_width")
-        empty = Div(text="", sizing_mode="fixed", width=30, height=BUTTON_HEIGHT)
-        
-        spinner = TextInput(value="1", width=50, height=BUTTON_HEIGHT, sizing_mode="fixed", visible=False)
-        next_page = Button(label="", css_classes=SYM_CSS + ["fa_page_next_solid"], width=SYM_WIDTH, 
-                            height=SYM_WIDTH, sizing_mode="fixed", button_type="light", visible=False, align="center")
-        prev_page = Button(label="", css_classes=SYM_CSS + ["fa_page_previous_solid"], width=SYM_WIDTH, 
-                           height=SYM_WIDTH, sizing_mode="fixed", button_type="light", visible=False, align="center")
-        page_div = Div(text="Page:", width=30, height=BUTTON_HEIGHT, sizing_mode="fixed", visible=False, align="center")
-        layout = column([row([div, Spacer(width_policy="max"), prev_page, page_div, spinner, next_page, empty], sizing_mode="stretch_width"), row([
-            Div(text="", sizing_mode="stretch_width"),
-            Div(text="<br>".join(y for _, y in checkboxes), css_classes=["vertical"], width_policy="fixed",
-                width=CHECK_WIDTH+5),
-            empty
-        ], sizing_mode="stretch_width"), col], sizing_mode="stretch_width", css_classes=["outlnie_border", "tooltip", tooltip],
-        margin=DIV_MARGIN)
+        if orderable:
+            columns.append(TableColumn(field="idx", title="#"))
+            columns.append(TableColumn(field="up", title="", editor=CellEditor()))
+            columns.append(TableColumn(field="down", title="", editor=CellEditor()))
+        else:
+            columns.append(TableColumn(field="idx", title="#", editor=CellEditor()))
 
-        self.reset_options[label] = [col, [], 1, [spinner, next_page, prev_page, page_div]]
-        
-        def move_element(opt, ele, up):
-            idx = None
-            for i, (k, v) in enumerate(opt):
-                if k == ele:
-                    idx = i
-                    break
-            if not idx is None:
-                if up and idx > 0:
-                    return opt[:idx-1] + [opt[idx], opt[idx-1]] + opt[idx+1:]
-                elif not up and idx + 1 < len(opt):
-                    return opt[:idx] + [opt[idx+1], opt[idx]] + opt[idx+2:]
-            return opt
+        if renamable:
+            columns.append(TableColumn(field="names", title=label, editor=CellEditor()))
+        else:
+            columns.append(TableColumn(field="names", title=label))
 
-        def trigger_callback():
-            cb = {}
-            for k, n in checkboxes:
-                cb[n] = (k, [])
-            order = []
-            for n, opts in self.reset_options[label][1]:
-                order.append(n)
-                for opt in opts:
-                    cb[checkboxes[opt][1]][1].append(n)
-            callback(order, cb)
+        for k, n in checkboxes:
+            columns.append(TableColumn(field=n, title=n, editor=CellEditor()))
 
-        def reset_event(e):
-            l = []
-            pos = self.reset_options[label][2] - 1
-            for idx, (n, opts) in list(enumerate(self.reset_options[label][1]))[pos*ELEMENTS_PER_PAGE:(pos+1)*ELEMENTS_PER_PAGE]:
-                if orderable:
-                    down_button = Button(label="", css_classes=SYM_CSS + ["fa_sort_down_solid"], width=SYM_WIDTH, 
-                                        height=SYM_WIDTH, sizing_mode="fixed", tags=[n], button_type="light")
-                    def down_event(n):
-                        self.reset_options[label][1] = move_element(self.reset_options[label][1], n, False)
-                        reset_event(0)
-                        trigger_callback()
-                    down_button.on_click(lambda _, n=n: down_event(n))
+        select_ret = TextInput(value = "")
+        data_table = DataTable(source=ColumnDataSource(make_source()), columns=columns, editable=True, autosize_mode="fit_columns", index_position=None, width=SETTINGS_WIDTH, tags=["blub"])
 
-                    up_button = Button(label="", css_classes=SYM_CSS + ["fa_sort_up_solid"], width=SYM_WIDTH, 
-                                        height=SYM_WIDTH, sizing_mode="fixed", tags=[n], button_type="light")
-                    def up_event(n):
-                        self.reset_options[label][1] = move_element(self.reset_options[label][1], n, True)
-                        reset_event(0)
-                        trigger_callback()
-                    up_button.on_click(lambda _, n=n: up_event(n))
+        source_code = """
+            var grids = document.getElementsByClassName('grid-canvas');
+            for (var k = 0,kmax = grids.length; k < kmax; k++){
+                if(grids[k].outerHTML.includes('active')){
+                    var grid = grids[k].children;
+                    for (var i = 0,max = grid.length; i < max; i++){
+                        if (grid[i].outerHTML.includes('active')){
+                            for (var j = 0, jmax = grid[i].children.length; j < jmax; j++)
+                                if(grid[i].children[j].outerHTML.includes('active')) { 
+                                    select_ret.value = grid[i].children[0].textContent + " " + grid[i].children[j].className;
+                                }
+                        }
+                    }
+                }
+            }
+        """
+        callback = CustomJS(args={"select_ret": select_ret}, code=source_code)
 
-                div = Div(text=n, sizing_mode="stretch_width")
-                cg = CheckboxGroup(labels=[""]*len(checkboxes), active=opts, inline=True,
-                                   width=CHECK_WIDTH, sizing_mode="fixed", height=19)
-                def on_change(idx, cg):
-                    self.reset_options[label][1][idx][1] = cg.active
-                    trigger_callback()
-                cg.on_change("active", lambda _1,_2,_3,idx=idx,cg=cg: on_change(idx,cg))
-
-                if orderable:
-                    l.append(row([up_button, down_button, div, cg, empty], sizing_mode="stretch_width"))
-                else:
-                    l.append(row([div, cg, empty], sizing_mode="stretch_width"))
-
-            if len(l) == 0:
-                l = [empty]
-            self.reset_options[label][0].children = l
-
-        def spinner_event(x, y, z):
-            if spinner.value.isdigit() and int(spinner.value) > 0 and int(spinner.value) <= len(self.reset_options[label][1]) // ELEMENTS_PER_PAGE + 1:
-                self.reset_options[label][2] = int(spinner.value)
-                reset_event(0)
-            else:
-                spinner.value = str(self.reset_options[label][2])
-
-        spinner.on_change("value", spinner_event)
-
-        
-        def next_page_event():
-            if self.reset_options[label][2] < len(self.reset_options[label][1]) // ELEMENTS_PER_PAGE + 1:
-                self.reset_options[label][2] += 1
-                spinner.value = str(self.reset_options[label][2])
-                reset_event(0)
-        next_page.on_click(lambda _, : next_page_event())
-        def prev_page_event():
-            if self.reset_options[label][2] > 1:
-                self.reset_options[label][2] -= 1
-                spinner.value = str(self.reset_options[label][2])
-                reset_event(0)
-        prev_page.on_click(lambda _, : prev_page_event())
-
+        self.reset_options[label] = [{}, []]
         def set_options(labels, active_dict):
-            self.reset_options[label][1] = []
-            for x in self.reset_options[label][3]:
-                x.visible = len(labels) > ELEMENTS_PER_PAGE
-            for jdx, n in enumerate(labels):
-                self.reset_options[label][1].append([n, []])
-                for idx, cb in enumerate(checkboxes):
-                    if n in active_dict[cb[1]]:
-                        self.reset_options[label][1][jdx][1].append(idx)
-            reset_event(0)
-            trigger_callback()
+            self.reset_options[label] = [active_dict, labels]
+            source = make_source()
+            for idx, name in enumerate(labels):
+                source["idx"].append(str(idx))
+                if orderable:
+                    source["up"].append("▲")
+                    source["down"].append("▼")
+                source["names"].append(name)
+                for _, n in checkboxes:
+                    source[n].append("☑" if name in active_dict[n] else "☐")
+
+            data_table.source.data = source
+
+        def py_callback(attr, old, new):
+            if new != []:
+                print(select_ret.value)
+                sp = select_ret.value.split()
+                y = int(sp[0])
+                for s in sp[1:]:
+                    if s[0] == "l":
+                        x = int(s[1:]) - (4 if orderable else 1)
+                if x >= 0:
+                    print(x, y)
+                    local_label = self.reset_options[label][1][y]
+                    n = checkboxes[x][1]
+                    if local_label in self.reset_options[label][0][n]:
+                        self.reset_options[label][0][n].remove(local_label)
+                    else:
+                        self.reset_options[label][0][n].append(local_label)
+                    set_options(self.reset_options[label][1], self.reset_options[label][0])
+            data_table.source.selected.update(indices=[])
+
+        data_table.source.selected.on_change('indices', py_callback)
+        data_table.source.selected.js_on_change('indices', callback)
+
+        def on_change_rename(attr, old, new):
+            #print(new)
+            pass
+        
+        data_table.source.on_change('data', on_change_rename)
+
+        layout = column([Div(text=title), data_table], sizing_mode="stretch_width", 
+                        css_classes=["outlnie_border", "tooltip", tooltip])
+
 
         return set_options, layout
+
+
+        if False:
+            # @todo this is super laggy :(
+            if callback is None:
+                def default_callback(n, cb):
+                    for v in cb.values():
+                        self.session.set_value(v[0], v[1])
+                    if not session_key is None:
+                        self.session.set_value(session_key, n)
+                    self.trigger_render()
+                callback = default_callback
+            div = Div(text=label, align="center")
+            SYM_WIDTH = 10
+            SYM_CSS = ["other_button"]
+            CHECK_WIDTH = 19*len(checkboxes)
+            ELEMENTS_PER_PAGE = 10
+
+            #col.max_height=150
+            col = column([], sizing_mode="stretch_width")
+            empty = Div(text="", sizing_mode="fixed", width=30, height=BUTTON_HEIGHT)
+            
+            spinner = TextInput(value="1", width=50, height=BUTTON_HEIGHT, sizing_mode="fixed", visible=False)
+            next_page = Button(label="", css_classes=SYM_CSS + ["fa_page_next_solid"], width=SYM_WIDTH, 
+                                height=SYM_WIDTH, sizing_mode="fixed", button_type="light", visible=False, align="center")
+            prev_page = Button(label="", css_classes=SYM_CSS + ["fa_page_previous_solid"], width=SYM_WIDTH, 
+                            height=SYM_WIDTH, sizing_mode="fixed", button_type="light", visible=False, align="center")
+            page_div = Div(text="Page:", width=30, height=BUTTON_HEIGHT, sizing_mode="fixed", visible=False, align="center")
+            layout = column([row([div, Spacer(width_policy="max"), prev_page, page_div, spinner, next_page, empty], sizing_mode="stretch_width"), row([
+                Div(text="", sizing_mode="stretch_width"),
+                Div(text="<br>".join(y for _, y in checkboxes), css_classes=["vertical"], width_policy="fixed",
+                    width=CHECK_WIDTH+5),
+                empty
+            ], sizing_mode="stretch_width"), col], sizing_mode="stretch_width", css_classes=["outlnie_border", "tooltip", tooltip],
+            margin=DIV_MARGIN)
+
+            self.reset_options[label] = [col, [], 1, [spinner, next_page, prev_page, page_div]]
+            
+            def move_element(opt, ele, up):
+                idx = None
+                for i, (k, v) in enumerate(opt):
+                    if k == ele:
+                        idx = i
+                        break
+                if not idx is None:
+                    if up and idx > 0:
+                        return opt[:idx-1] + [opt[idx], opt[idx-1]] + opt[idx+1:]
+                    elif not up and idx + 1 < len(opt):
+                        return opt[:idx] + [opt[idx+1], opt[idx]] + opt[idx+2:]
+                return opt
+
+            def trigger_callback():
+                cb = {}
+                for k, n in checkboxes:
+                    cb[n] = (k, [])
+                order = []
+                for n, opts in self.reset_options[label][1]:
+                    order.append(n)
+                    for opt in opts:
+                        cb[checkboxes[opt][1]][1].append(n)
+                callback(order, cb)
+
+            def reset_event(e):
+                l = []
+                pos = self.reset_options[label][2] - 1
+                for idx, (n, opts) in list(enumerate(self.reset_options[label][1]))[pos*ELEMENTS_PER_PAGE:(pos+1)*ELEMENTS_PER_PAGE]:
+                    if orderable:
+                        down_button = Button(label="", css_classes=SYM_CSS + ["fa_sort_down_solid"], width=SYM_WIDTH, 
+                                            height=SYM_WIDTH, sizing_mode="fixed", tags=[n], button_type="light")
+                        def down_event(n):
+                            self.reset_options[label][1] = move_element(self.reset_options[label][1], n, False)
+                            reset_event(0)
+                            trigger_callback()
+                        down_button.on_click(lambda _, n=n: down_event(n))
+
+                        up_button = Button(label="", css_classes=SYM_CSS + ["fa_sort_up_solid"], width=SYM_WIDTH, 
+                                            height=SYM_WIDTH, sizing_mode="fixed", tags=[n], button_type="light")
+                        def up_event(n):
+                            self.reset_options[label][1] = move_element(self.reset_options[label][1], n, True)
+                            reset_event(0)
+                            trigger_callback()
+                        up_button.on_click(lambda _, n=n: up_event(n))
+
+                    div = Div(text=n, sizing_mode="stretch_width")
+                    cg = CheckboxGroup(labels=[""]*len(checkboxes), active=opts, inline=True,
+                                    width=CHECK_WIDTH, sizing_mode="fixed", height=19)
+                    def on_change(idx, cg):
+                        self.reset_options[label][1][idx][1] = cg.active
+                        trigger_callback()
+                    cg.on_change("active", lambda _1,_2,_3,idx=idx,cg=cg: on_change(idx,cg))
+
+                    if orderable:
+                        l.append(row([up_button, down_button, div, cg, empty], sizing_mode="stretch_width"))
+                    else:
+                        l.append(row([div, cg, empty], sizing_mode="stretch_width"))
+
+                if len(l) == 0:
+                    l = [empty]
+                self.reset_options[label][0].children = l
+
+            def spinner_event(x, y, z):
+                if spinner.value.isdigit() and int(spinner.value) > 0 and int(spinner.value) <= len(self.reset_options[label][1]) // ELEMENTS_PER_PAGE + 1:
+                    self.reset_options[label][2] = int(spinner.value)
+                    reset_event(0)
+                else:
+                    spinner.value = str(self.reset_options[label][2])
+
+            spinner.on_change("value", spinner_event)
+
+            
+            def next_page_event():
+                if self.reset_options[label][2] < len(self.reset_options[label][1]) // ELEMENTS_PER_PAGE + 1:
+                    self.reset_options[label][2] += 1
+                    spinner.value = str(self.reset_options[label][2])
+                    reset_event(0)
+            next_page.on_click(lambda _, : next_page_event())
+            def prev_page_event():
+                if self.reset_options[label][2] > 1:
+                    self.reset_options[label][2] -= 1
+                    spinner.value = str(self.reset_options[label][2])
+                    reset_event(0)
+            prev_page.on_click(lambda _, : prev_page_event())
+
+            def set_options(labels, active_dict):
+                self.reset_options[label][1] = []
+                for x in self.reset_options[label][3]:
+                    x.visible = len(labels) > ELEMENTS_PER_PAGE
+                for jdx, n in enumerate(labels):
+                    self.reset_options[label][1].append([n, []])
+                    for idx, cb in enumerate(checkboxes):
+                        if n in active_dict[cb[1]]:
+                            self.reset_options[label][1][jdx][1].append(idx)
+                reset_event(0)
+                trigger_callback()
+
+            return set_options, layout
     
     
-    def multi_choice_auto(self, label, tooltip, checkboxes, session_key, callback=None, orderable=True):
-        set_options, layout = self.multi_choice(label, tooltip, checkboxes, session_key, callback, orderable)
+    def multi_choice_auto(self, label, tooltip, checkboxes, session_key, callback=None, orderable=True, title=""):
+        set_options, layout = self.multi_choice(label, tooltip, checkboxes, session_key, callback, 
+                                                orderable, title=title)
         self.multi_choice_config.append((set_options, session_key, checkboxes))
         return layout
 
@@ -1610,12 +1711,12 @@ class MainLayout:
         self.spinner = Div(text="<div class=\"lds-spinner\"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>")
         self.spinner.css_classes = ["fade-out"]
 
-        norm_layout = self.multi_choice_auto("Active Secondary Datasets", "tooltip_coverage_normalization",
-                                                       [[["coverage", "cov_column_a"], "Column - Datapool A"], 
-                                                        [["coverage", "cov_column_b"], "Column - Datapool B"], 
-                                                        [["coverage", "cov_row_a"], "Row - Datapool A"], 
-                                                        [["coverage", "cov_row_b"], "Row - Datapool B"]],
-                                                        ["coverage", "list"])
+        norm_layout = self.multi_choice_auto("Dataset name", "tooltip_coverage_normalization",
+                                                       [[["coverage", "cov_column_a"], "Col A"], 
+                                                        [["coverage", "cov_column_b"], "Col B"], 
+                                                        [["coverage", "cov_row_a"], "Row A"], 
+                                                        [["coverage", "cov_row_b"], "Row B"]],
+                                                        ["coverage", "list"], title="Secondary Datapools")
 
         x_coords = self.dropdown_select_session("Column Coordinates", "tooltip_row_coordinates",
                                                 ["annotation", "list"], 
