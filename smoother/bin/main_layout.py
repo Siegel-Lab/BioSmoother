@@ -119,6 +119,7 @@ class MainLayout:
         return ret
 
     def multi_choice(self, label, tooltip, checkboxes, session_key=None, callback=None, orderable=True):
+        # @todo this is super laggy :(
         if callback is None:
             def default_callback(n, cb):
                 for v in cb.values():
@@ -504,13 +505,15 @@ class MainLayout:
     def set_v4c_range(self):
         self.v4c_col_expected = self.get_readable_range(
                 self.session.get_value(["settings", "interface", "v4c", "col_from"]),
-                self.session.get_value(["settings", "interface", "v4c", "col_to"])
+                self.session.get_value(["settings", "interface", "v4c", "col_to"]),
+                True
             )
         self.v4c_col.value = self.v4c_col_expected
 
         self.v4c_row_expected = self.get_readable_range(
                 self.session.get_value(["settings", "interface", "v4c", "row_from"]),
-                self.session.get_value(["settings", "interface", "v4c", "row_to"])
+                self.session.get_value(["settings", "interface", "v4c", "row_to"]),
+                False
             )
         self.v4c_row.value = self.v4c_row_expected
 
@@ -732,28 +735,26 @@ class MainLayout:
             n = contig_names[idx]
         return n + ": " + label
 
-    def get_readable_range(self, start, end):
+    def get_readable_range(self, start, end, x_y):
         lcs = self.session.get_longest_common_suffix(self.print)
-        contig_names_x = self.session.get_annotation_list(True, self.print)
-        contig_names_y = self.session.get_annotation_list(False, self.print)
-        contig_starts_x = self.session.get_tick_list(True, self.print)
-        contig_starts_y = self.session.get_tick_list(False, self.print)
-        if len(contig_starts_x) > 0 and len(contig_starts_y) > 0:
+        contig_names = self.session.get_annotation_list(x_y, self.print)
+        contig_starts = self.session.get_tick_list(x_y, self.print)
+        if len(contig_starts) > 0:
             return  self.to_readable_pos(start * int(self.session.get_value(["dividend"])), \
-                                        contig_starts_x[-1], contig_names_x, \
-                                        contig_starts_x[:-1], lcs) + " .. " + \
+                                        contig_starts[-1], contig_names, \
+                                        contig_starts[:-1], lcs) + " .. " + \
                     self.to_readable_pos(end * int(self.session.get_value(["dividend"])), \
-                                        contig_starts_y[-1], contig_names_y, \
-                                        contig_starts_y[:-1], lcs)
+                                        contig_starts[-1], contig_names, \
+                                        contig_starts[:-1], lcs)
         else:
             return "n/a"
 
     def set_area_range(self):
         self.area_range_expected = "X=[" + \
             self.get_readable_range(int(math.floor(self.heatmap.x_range.start)), 
-                                    int(math.ceil(self.heatmap.x_range.end))) + "] Y=[" +\
+                                    int(math.ceil(self.heatmap.x_range.end)), True) + "] Y=[" +\
             self.get_readable_range(int(math.floor(self.heatmap.y_range.start)), 
-                                    int(math.ceil(self.heatmap.y_range.end))) + "]"
+                                    int(math.ceil(self.heatmap.y_range.end)), False) + "]"
         self.area_range.value = self.area_range_expected
 
     def isint(self, num):
@@ -838,27 +839,26 @@ class MainLayout:
     def interpret_area(self, s):
         # remove all space-like characters
         s = "".join(s.lower().split())
-        # @todo search does not work in other coordinate systems than genomic
         if s.count(";") == 1 and s.count("x=") == 0 and s.count("y=") == 0:
             x, y = s.split(";")
-            return self.interpret_range(x, [True]) + self.interpret_range(y, [False])
+            return self.interpret_range(x, True) + self.interpret_range(y, False)
 
         if s.count("x=") == 1 and s[:2] == "x=" and s.count("y=") == 0:
             s = s[2:]
-            return self.interpret_range(s, [True]) + [self.heatmap.y_range.start, self.heatmap.y_range.end]
+            return self.interpret_range(s, True) + [self.heatmap.y_range.start, self.heatmap.y_range.end]
 
         if s.count("x=") == 0 and s.count("y=") == 1 and s[:2] == "y=":
             s = s[2:]
-            return [self.heatmap.x_range.start, self.heatmap.x_range.end] + self.interpret_range(s, [True])
+            return [self.heatmap.x_range.start, self.heatmap.x_range.end] + self.interpret_range(s, True)
 
         if s.count("x=") == 1 and s.count("y=") == 1:
             x_pos = s.find("x=")
             y_pos = s.find("y=")
             x = s[x_pos+2:y_pos] if x_pos < y_pos else s[x_pos+2:]
             y = s[y_pos+2:x_pos] if y_pos < x_pos else s[y_pos+2:]
-            return self.interpret_range(x, [True]) + self.interpret_range(y, [False])
+            return self.interpret_range(x, True) + self.interpret_range(y, False)
 
-        return self.interpret_range(s, [True, False]) + self.interpret_range(s, [False, True])
+        return self.interpret_range(s, True) + self.interpret_range(s, False)
 
 
     def parse_area_range(self):
