@@ -2634,7 +2634,7 @@ class MainLayout:
             width=SETTINGS_WIDTH,
             max_height=400,
             sizing_mode="stretch_height",
-        )  # @todo tooltip
+        )
 
         self.area_range = TextInput(
             value="n/a",
