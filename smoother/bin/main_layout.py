@@ -2173,6 +2173,27 @@ class MainLayout:
             title="Number of samples",
             sizing_mode="stretch_width",
         )
+        export_coords_size = self.make_slider_spinner(
+            width=SETTINGS_WIDTH,
+            tooltip="tooltip_export_coordinate_size",
+            settings=["settings", "export", "coords"],
+            title="Coordinate size",
+            sizing_mode="stretch_width",
+        )
+        export_contigs_size = self.make_slider_spinner(
+            width=SETTINGS_WIDTH,
+            tooltip="tooltip_export_contigs_size",
+            settings=["settings", "export", "contigs"],
+            title="Contig size",
+            sizing_mode="stretch_width",
+        )
+        export_axis_size = self.make_slider_spinner(
+            width=SETTINGS_WIDTH,
+            tooltip="tooltip_export_axis_size",
+            settings=["settings", "export", "axis"],
+            title="Secondary Axis size",
+            sizing_mode="stretch_width",
+        )
         grid_seq_display_background = self.make_checkbox(
             "Display Background as Secondary Data",
             "tooltip_backg_as_sec_data",
@@ -2672,6 +2693,9 @@ class MainLayout:
                 self.export_file,
                 export_format,
                 export_button,
+                export_coords_size,
+                export_contigs_size,
+                export_axis_size,
             ]
 
         do_v4c_col = self.make_checkbox(

@@ -79,6 +79,18 @@
     content: "Acceptable bounds for the maximal number of reads per kbp. ";
 }
 
+.tooltip_export_coordinate_size:after {
+    content: "The size of the area coordinates are rendered in for the exported image.";
+}
+
+.tooltip_export_axis_size:after {
+    content: "The size of the area the secondary axes are rendered in for the exported image.";
+}
+
+.tooltip_export_contigs_size:after {
+    content: "The size of the area contig names are rendered in for the exported image.";
+}
+
 .tooltip_normalize_by_coverage:after {
     content: "normalize the coverage tracks in various ways";
 }

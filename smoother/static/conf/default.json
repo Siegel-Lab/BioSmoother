@@ -301,6 +301,30 @@
             "spinner_min_restricted": true,
             "spinner_max_restricted": false
         },
+        "coords": {
+            "max": 2000,
+            "min": 0,
+            "val": 125,
+            "step": 25,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        },
+        "contigs": {
+            "max": 2000,
+            "min": 0,
+            "val": 125,
+            "step": 25,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        },
+        "axis": {
+            "max": 2000,
+            "min": 0,
+            "val": 125,
+            "step": 25,
+            "spinner_min_restricted": true,
+            "spinner_max_restricted": false
+        },
         "margins": {
             "max": 100,
             "min": 0,
