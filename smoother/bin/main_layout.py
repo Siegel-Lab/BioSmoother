@@ -120,6 +120,16 @@ class MainLayout:
 
     def multi_choice(self, label, tooltip, checkboxes, session_key=None, callback=None, orderable=True, 
                      renamable=False, title=""):
+                     
+        if callback is None:
+            def default_callback(n, cb):
+                for v in cb.values():
+                    self.session.set_value(v[0], v[1])
+                if not session_key is None:
+                    self.session.set_value(session_key, n)
+                self.trigger_render()
+            callback = default_callback
+        
         def make_source():
             source = {}
             source["idx"] = []
@@ -130,25 +140,28 @@ class MainLayout:
             for _, n in checkboxes:
                 source[n] = []
             return source
-        columns = []
+        def make_columns():
+            columns = []
 
-        if orderable:
-            columns.append(TableColumn(field="idx", title="#"))
-            columns.append(TableColumn(field="up", title="", editor=CellEditor()))
-            columns.append(TableColumn(field="down", title="", editor=CellEditor()))
-        else:
-            columns.append(TableColumn(field="idx", title="#", editor=CellEditor()))
+            if orderable:
+                columns.append(TableColumn(field="idx", title="#", editor=CellEditor()))
+                columns.append(TableColumn(field="up", title="", editor=CellEditor()))
+                columns.append(TableColumn(field="down", title="", editor=CellEditor()))
+            else:
+                columns.append(TableColumn(field="idx", title="#", editor=CellEditor()))
 
-        if renamable:
-            columns.append(TableColumn(field="names", title=label, editor=CellEditor()))
-        else:
-            columns.append(TableColumn(field="names", title=label))
+            if renamable:
+                columns.append(TableColumn(field="names", title=label, editor=CellEditor()))
+            else:
+                # @todo-low-prio eventually allow rename -> remove editor and fix callback below
+                columns.append(TableColumn(field="names", title=label, editor=CellEditor())) 
 
-        for k, n in checkboxes:
-            columns.append(TableColumn(field=n, title=n, editor=CellEditor()))
+            for k, n in checkboxes:
+                columns.append(TableColumn(field=n, title=n, editor=CellEditor()))
+            return columns
 
         select_ret = TextInput(value = "")
-        data_table = DataTable(source=ColumnDataSource(make_source()), columns=columns, editable=True, autosize_mode="fit_columns", index_position=None, width=SETTINGS_WIDTH, tags=["blub"])
+        data_table = DataTable(source=ColumnDataSource(make_source()), columns=make_columns(), editable=True, autosize_mode="fit_columns", index_position=None, width=SETTINGS_WIDTH, tags=["blub"], height=150)
 
         source_code = """
             var grids = document.getElementsByClassName('grid-canvas');
@@ -166,7 +179,7 @@ class MainLayout:
                 }
             }
         """
-        callback = CustomJS(args={"select_ret": select_ret}, code=source_code)
+        js_callback = CustomJS(args={"select_ret": select_ret}, code=source_code)
 
         self.reset_options[label] = [{}, []]
         def set_options(labels, active_dict):
@@ -175,24 +188,55 @@ class MainLayout:
             for idx, name in enumerate(labels):
                 source["idx"].append(str(idx))
                 if orderable:
-                    source["up"].append("▲")
-                    source["down"].append("▼")
+                    source["up"].append("▲" if idx > 0 else "")
+                    source["down"].append("▼" if idx < len(labels) - 1 else "")
                 source["names"].append(name)
                 for _, n in checkboxes:
                     source[n].append("☑" if name in active_dict[n] else "☐")
 
             data_table.source.data = source
+            #data_table.columns = make_columns()
 
-        def py_callback(attr, old, new):
-            if new != []:
-                print(select_ret.value)
-                sp = select_ret.value.split()
+        def trigger_callback():
+            cb = {}
+            order = self.reset_options[label][1]
+            for k, n in checkboxes:
+                cb[n] = (k, [])
+                for opt in order:
+                    if opt in self.reset_options[label][0][n]:
+                        cb[n][1].append(opt)
+            callback(order, cb)
+
+        
+        def move_element(opt, idx, up):
+            if up and idx > 0:
+                return opt[:idx-1] + [opt[idx], opt[idx-1]] + opt[idx+1:]
+            elif not up and idx + 1 < len(opt):
+                return opt[:idx] + [opt[idx+1], opt[idx]] + opt[idx+2:]
+            return opt
+
+        def get_select():
+            sp = select_ret.value.split()
+            if len(sp) > 0:
                 y = int(sp[0])
                 for s in sp[1:]:
                     if s[0] == "l":
-                        x = int(s[1:]) - (4 if orderable else 1)
-                if x >= 0:
-                    print(x, y)
+                        x = int(s[1:]) - (4 if orderable else 2)
+                return x, y
+            return None, None
+
+        def py_callback(attr, old, new):
+            if new != []:
+                x, y = get_select()
+                if orderable and x == -3:
+                    self.reset_options[label][1] = move_element(self.reset_options[label][1], y, True)
+                    set_options(self.reset_options[label][1], self.reset_options[label][0])
+                    trigger_callback()
+                elif orderable and x == -2:
+                    self.reset_options[label][1] = move_element(self.reset_options[label][1], y, False)
+                    set_options(self.reset_options[label][1], self.reset_options[label][0])
+                    trigger_callback()
+                elif x >= 0:
                     local_label = self.reset_options[label][1][y]
                     n = checkboxes[x][1]
                     if local_label in self.reset_options[label][0][n]:
@@ -200,12 +244,19 @@ class MainLayout:
                     else:
                         self.reset_options[label][0][n].append(local_label)
                     set_options(self.reset_options[label][1], self.reset_options[label][0])
+                    trigger_callback()
             data_table.source.selected.update(indices=[])
 
         data_table.source.selected.on_change('indices', py_callback)
-        data_table.source.selected.js_on_change('indices', callback)
+        data_table.source.selected.js_on_change('indices', js_callback)
 
         def on_change_rename(attr, old, new):
+            return
+            x, y = get_select()
+            print("change", x, y)
+            if orderable and x == -4:
+                r_opt = self.reset_options[label][1]
+                self.reset_options[label][1] = r_opt
             #print(new)
             pass
         
@@ -216,142 +267,6 @@ class MainLayout:
 
 
         return set_options, layout
-
-
-        if False:
-            # @todo this is super laggy :(
-            if callback is None:
-                def default_callback(n, cb):
-                    for v in cb.values():
-                        self.session.set_value(v[0], v[1])
-                    if not session_key is None:
-                        self.session.set_value(session_key, n)
-                    self.trigger_render()
-                callback = default_callback
-            div = Div(text=label, align="center")
-            SYM_WIDTH = 10
-            SYM_CSS = ["other_button"]
-            CHECK_WIDTH = 19*len(checkboxes)
-            ELEMENTS_PER_PAGE = 10
-
-            #col.max_height=150
-            col = column([], sizing_mode="stretch_width")
-            empty = Div(text="", sizing_mode="fixed", width=30, height=BUTTON_HEIGHT)
-            
-            spinner = TextInput(value="1", width=50, height=BUTTON_HEIGHT, sizing_mode="fixed", visible=False)
-            next_page = Button(label="", css_classes=SYM_CSS + ["fa_page_next_solid"], width=SYM_WIDTH, 
-                                height=SYM_WIDTH, sizing_mode="fixed", button_type="light", visible=False, align="center")
-            prev_page = Button(label="", css_classes=SYM_CSS + ["fa_page_previous_solid"], width=SYM_WIDTH, 
-                            height=SYM_WIDTH, sizing_mode="fixed", button_type="light", visible=False, align="center")
-            page_div = Div(text="Page:", width=30, height=BUTTON_HEIGHT, sizing_mode="fixed", visible=False, align="center")
-            layout = column([row([div, Spacer(width_policy="max"), prev_page, page_div, spinner, next_page, empty], sizing_mode="stretch_width"), row([
-                Div(text="", sizing_mode="stretch_width"),
-                Div(text="<br>".join(y for _, y in checkboxes), css_classes=["vertical"], width_policy="fixed",
-                    width=CHECK_WIDTH+5),
-                empty
-            ], sizing_mode="stretch_width"), col], sizing_mode="stretch_width", css_classes=["outlnie_border", "tooltip", tooltip],
-            margin=DIV_MARGIN)
-
-            self.reset_options[label] = [col, [], 1, [spinner, next_page, prev_page, page_div]]
-            
-            def move_element(opt, ele, up):
-                idx = None
-                for i, (k, v) in enumerate(opt):
-                    if k == ele:
-                        idx = i
-                        break
-                if not idx is None:
-                    if up and idx > 0:
-                        return opt[:idx-1] + [opt[idx], opt[idx-1]] + opt[idx+1:]
-                    elif not up and idx + 1 < len(opt):
-                        return opt[:idx] + [opt[idx+1], opt[idx]] + opt[idx+2:]
-                return opt
-
-            def trigger_callback():
-                cb = {}
-                for k, n in checkboxes:
-                    cb[n] = (k, [])
-                order = []
-                for n, opts in self.reset_options[label][1]:
-                    order.append(n)
-                    for opt in opts:
-                        cb[checkboxes[opt][1]][1].append(n)
-                callback(order, cb)
-
-            def reset_event(e):
-                l = []
-                pos = self.reset_options[label][2] - 1
-                for idx, (n, opts) in list(enumerate(self.reset_options[label][1]))[pos*ELEMENTS_PER_PAGE:(pos+1)*ELEMENTS_PER_PAGE]:
-                    if orderable:
-                        down_button = Button(label="", css_classes=SYM_CSS + ["fa_sort_down_solid"], width=SYM_WIDTH, 
-                                            height=SYM_WIDTH, sizing_mode="fixed", tags=[n], button_type="light")
-                        def down_event(n):
-                            self.reset_options[label][1] = move_element(self.reset_options[label][1], n, False)
-                            reset_event(0)
-                            trigger_callback()
-                        down_button.on_click(lambda _, n=n: down_event(n))
-
-                        up_button = Button(label="", css_classes=SYM_CSS + ["fa_sort_up_solid"], width=SYM_WIDTH, 
-                                            height=SYM_WIDTH, sizing_mode="fixed", tags=[n], button_type="light")
-                        def up_event(n):
-                            self.reset_options[label][1] = move_element(self.reset_options[label][1], n, True)
-                            reset_event(0)
-                            trigger_callback()
-                        up_button.on_click(lambda _, n=n: up_event(n))
-
-                    div = Div(text=n, sizing_mode="stretch_width")
-                    cg = CheckboxGroup(labels=[""]*len(checkboxes), active=opts, inline=True,
-                                    width=CHECK_WIDTH, sizing_mode="fixed", height=19)
-                    def on_change(idx, cg):
-                        self.reset_options[label][1][idx][1] = cg.active
-                        trigger_callback()
-                    cg.on_change("active", lambda _1,_2,_3,idx=idx,cg=cg: on_change(idx,cg))
-
-                    if orderable:
-                        l.append(row([up_button, down_button, div, cg, empty], sizing_mode="stretch_width"))
-                    else:
-                        l.append(row([div, cg, empty], sizing_mode="stretch_width"))
-
-                if len(l) == 0:
-                    l = [empty]
-                self.reset_options[label][0].children = l
-
-            def spinner_event(x, y, z):
-                if spinner.value.isdigit() and int(spinner.value) > 0 and int(spinner.value) <= len(self.reset_options[label][1]) // ELEMENTS_PER_PAGE + 1:
-                    self.reset_options[label][2] = int(spinner.value)
-                    reset_event(0)
-                else:
-                    spinner.value = str(self.reset_options[label][2])
-
-            spinner.on_change("value", spinner_event)
-
-            
-            def next_page_event():
-                if self.reset_options[label][2] < len(self.reset_options[label][1]) // ELEMENTS_PER_PAGE + 1:
-                    self.reset_options[label][2] += 1
-                    spinner.value = str(self.reset_options[label][2])
-                    reset_event(0)
-            next_page.on_click(lambda _, : next_page_event())
-            def prev_page_event():
-                if self.reset_options[label][2] > 1:
-                    self.reset_options[label][2] -= 1
-                    spinner.value = str(self.reset_options[label][2])
-                    reset_event(0)
-            prev_page.on_click(lambda _, : prev_page_event())
-
-            def set_options(labels, active_dict):
-                self.reset_options[label][1] = []
-                for x in self.reset_options[label][3]:
-                    x.visible = len(labels) > ELEMENTS_PER_PAGE
-                for jdx, n in enumerate(labels):
-                    self.reset_options[label][1].append([n, []])
-                    for idx, cb in enumerate(checkboxes):
-                        if n in active_dict[cb[1]]:
-                            self.reset_options[label][1][jdx][1].append(idx)
-                reset_event(0)
-                trigger_callback()
-
-            return set_options, layout
     
     
     def multi_choice_auto(self, label, tooltip, checkboxes, session_key, callback=None, orderable=True, title=""):
@@ -1006,7 +921,7 @@ class MainLayout:
         t.tabs[t.active].child.visible = True
         return t
 
-    def make_panel(self, title, tooltip="", children=[]):
+    def make_panel(self, title, tooltip="", children=[], inner=True):
         return Panel(title=title, child=column(children, visible=False))
 
     @gen.coroutine
@@ -1679,9 +1594,11 @@ class MainLayout:
                 value=0,
                 title="Minimum Bin Size",
                 format=power_tick, 
-                sizing_mode="stretch_width",
+                sizing_mode="fixed",
                 css_classes=["tooltip", "tooltip_min_bin_size"],
-                height=40)
+                height=40,
+                width=SETTINGS_WIDTH-20
+                )
         def min_bin_size_event():
             self.session.set_value(["settings", "interface", "min_bin_size", "val"], self.min_max_bin_size.value)
             self.trigger_render()
@@ -1698,7 +1615,8 @@ class MainLayout:
                                 button_type="light", width=10, height=10)
         button_s_down.on_click(lambda _: callback(-1))
 
-        mmbs_l = row([self.min_max_bin_size, column([button_s_up, button_s_down])], margin=DIV_MARGIN)
+        mmbs_l = row([self.min_max_bin_size, column([button_s_up, button_s_down])], margin=DIV_MARGIN, 
+                    width=SETTINGS_WIDTH)
 
         self.info_status_bar = Div(text="Waiting for Fileinput.", sizing_mode="stretch_width")
         self.info_status_bar.height = 26
@@ -1964,7 +1882,7 @@ class MainLayout:
                         self.make_panel("Info", "", [version_info, log_div, self.log_div
                                                 ]), # @todo index info
                     ])
-                    ]
+                    ], inner=False
                 ),
                 self.make_panel("Normalize", children=[
                     Spacer(height=5),
@@ -1983,7 +1901,7 @@ class MainLayout:
                                                     ]),
                         self.make_panel("ICE", "", [ice_sparse_filter]),
                     ])
-                    ]
+                    ], inner=False
                 ),
                 self.make_panel("Filter", children=[
                     Spacer(height=5),
@@ -2001,7 +1919,7 @@ class MainLayout:
                                                         multiple_anno_per_bin,
                                                        multiple_bin_per_anno,
                                                        ]),
-                    ])]
+                    ])], inner=False
                 ),
                 self.make_panel("View", children=[
                     Spacer(height=5),
@@ -2012,7 +1930,7 @@ class MainLayout:
                         self.make_panel("Bins", "", [nb_l, mmbs_l, square_bins, power_ten_bin, last_bin_in_contig]),
                         self.make_panel("Virtual4C", "", [do_v4c_col, v4c_col_label, self.v4c_col, do_v4c_row, v4c_row_label, self.v4c_row,]),
                         self.make_panel("Redrawing", "", [ufs_l, rs_l, aas_l]),
-                    ])]
+                    ])], inner=False
                 ),
             ]
             #css_classes=["scroll_y"]

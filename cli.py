@@ -83,6 +83,8 @@ def main():
                         version=libsmoother._import_lib_smoother_cpp.LIB_SMOOTHER_CPP_VERSION)
     parser.add_argument('--version_sps', action='version', help=argparse.SUPPRESS,
                         version=libsmoother._import_lib_smoother_cpp.SPS_VERSION)
+    parser.add_argument('--compiler_id', action='version', help=argparse.SUPPRESS,
+                        version=libsmoother._import_lib_smoother_cpp.COMPILER_ID)
 
     args = parser.parse_args()
 
