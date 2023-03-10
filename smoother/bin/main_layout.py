@@ -118,6 +118,10 @@ class MainLayout:
         self.dropdown_select_config.append((set_menu_2, active_item))
         return ret
 
+    def update_multi_choice(self, obj):
+        if obj in self.updatable_multi_choice:
+            self.updatable_multi_choice[obj]()
+
     def multi_choice(self, label, tooltip, checkboxes, session_key=None, callback=None, orderable=True, 
                      renamable=False, title=""):
                      
@@ -265,7 +269,10 @@ class MainLayout:
         layout = column([Div(text=title), data_table], sizing_mode="stretch_width", 
                         css_classes=["outlnie_border", "tooltip", tooltip])
 
-
+        def update():
+            set_options(self.reset_options[label][1], self.reset_options[label][0])
+        self.updatable_multi_choice[layout] = update
+            
         return set_options, layout
     
     
@@ -915,6 +922,8 @@ class MainLayout:
             title = t.tabs[t.active].title
             children = t.tabs[t.active].child.children
             t.tabs[t.active] = Panel(title=title, child=column(children, visible=True))
+            for c in t.tabs[t.active].child.children:
+                self.update_multi_choice(c)
             self.curdoc.unhold()
 
         t.on_change("active", lambda x, y, z: tab_active_change())
@@ -1053,6 +1062,7 @@ class MainLayout:
         self.area_range = None
         self.area_range_expected = "n/a"
         self.set_active_tools_ti = None
+        self.updatable_multi_choice = {}
         d = {
             "chrs": [],
             "index_start": [],
@@ -1570,15 +1580,15 @@ class MainLayout:
                                settings=["settings", "normalization", "grid_seq_dna_filter"],
                                title="Maximal DNA reads in bin bounds", sizing_mode="stretch_width")
 
-        group_layout = self.multi_choice_auto("Active Primary Datasets", "tooltip_replicates", 
-                                                [[["replicates", "in_group_a"], "Datapool A"], 
-                                                [["replicates", "in_group_b"], "Datapool B"]],
-                                                ["replicates", "list"])
+        group_layout = self.multi_choice_auto("Dataset Name", "tooltip_replicates", 
+                                                [[["replicates", "in_group_a"], "Pool A"], 
+                                                [["replicates", "in_group_b"], "Pool B"]],
+                                                ["replicates", "list"], title="Primary Datapools")
 
-        annos_layout = self.multi_choice_auto("Visible Annotations", "tooltip_annotations",
+        annos_layout = self.multi_choice_auto("Annotation Name", "tooltip_annotations",
                                                          [[["annotation", "visible_y"], "Row"],
                                                           [["annotation", "visible_x"], "Column"]],
-                                                        ["annotation", "list"])
+                                                        ["annotation", "list"], title="Visible Annotations")
 
         power_tick = FuncTickFormatter(
             code="""
@@ -1646,10 +1656,10 @@ class MainLayout:
                                                 ["contigs", "row_coordinates"], 
                                                 [("Genomic loci", "full_genome")])
 
-        chrom_layout = self.multi_choice_auto("Active Contigs", "tooltip_chromosomes",
+        chrom_layout = self.multi_choice_auto("Contig Name", "tooltip_chromosomes",
                                                         [[["contigs", "displayed_on_x"], "Row"], 
                                                          [["contigs", "displayed_on_y"], "Column"]],
-                                                        ["contigs", "list"])
+                                                        ["contigs", "list"], title="Active Contigs")
 
         multiple_anno_per_bin = self.dropdown_select("Multiple Annotations in Bin", 
                 "tooltip_multiple_annotations_in_bin", 
