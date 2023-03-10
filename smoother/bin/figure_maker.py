@@ -4,7 +4,8 @@ from bokeh.models.tools import ToolbarBox, ProxyToolbar
 import math
 
 FONT = "Consolas, sans-serif"
-DROPDOWN_HEIGHT=30
+DROPDOWN_HEIGHT = 30
+
 
 class FigureMaker:
     def __init__(self):
@@ -23,7 +24,7 @@ class FigureMaker:
         self.is_hidden = False
 
     def get(self, register):
-        ret = figure(tools="pan,wheel_zoom,box_zoom",**self.args)
+        ret = figure(tools="pan,wheel_zoom,box_zoom", **self.args)
         ret.x(x=0, y=0, line_color=None)
         ret.xaxis.visible = self.x_axis_visible
         ret.yaxis.visible = self.y_axis_visible
@@ -59,7 +60,9 @@ class FigureMaker:
         ret.xgrid.level = "glyph"
         ret.ygrid.level = "glyph"
         ret.background_fill_color = "lightgrey"
-        render_area = BoxAnnotation(fill_alpha=1, top=0, bottom=0, fill_color='white', level="image")
+        render_area = BoxAnnotation(
+            fill_alpha=1, top=0, bottom=0, fill_color="white", level="image"
+        )
         ret.add_layout(render_area)
         if self.is_hidden:
             ret.visible = False
@@ -86,14 +89,14 @@ class FigureMaker:
     def link_y(self, other):
         self.args["y_range"] = other.y_range
         self.args["sizing_mode"] = "stretch_height"
-        #self.args["height_policy"] = "min"
+        # self.args["height_policy"] = "min"
         self.args["height"] = 10
         self.no_border_v = True
         return self
 
     def link_x(self, other):
         self.args["x_range"] = other.x_range
-        #self.args["sizing_mode"] = "stretch_width"
+        # self.args["sizing_mode"] = "stretch_width"
         self.args["width_policy"] = "fit"
         self.args["width"] = None
         self.no_border_h = True
@@ -101,8 +104,8 @@ class FigureMaker:
 
     def stretch(self):
         self.args["sizing_mode"] = "stretch_both"
-        #self.args["width_policy"] = "fit"
-        #self.args["height_policy"] = "max"
+        # self.args["width_policy"] = "fit"
+        # self.args["height_policy"] = "max"
         self.args["height"] = 10
         self.args["width"] = 10
         self.no_border_h = True
@@ -111,8 +114,8 @@ class FigureMaker:
 
     def scale(self):
         self.args["sizing_mode"] = "scale_height"
-        #self.args["width_policy"] = "fit"
-        #self.args["height_policy"] = "max"
+        # self.args["width_policy"] = "fit"
+        # self.args["height_policy"] = "max"
         self.args["height"] = 10
         self.args["width"] = 10
         self.no_border_h = True
@@ -126,14 +129,22 @@ class FigureMaker:
                 for key in _hide_on:
                     self.hide_on(key, register)
 
-    def x_axis_of(self, other, register, label="", stretch=False, flip_orientation=True, hide_keyword="axis"):
+    def x_axis_of(
+        self,
+        other,
+        register,
+        label="",
+        stretch=False,
+        flip_orientation=True,
+        hide_keyword="axis",
+    ):
         self._axis_of(other, register, hide_keyword)
 
         self.x_axis_visible = True
         self.args["x_range"] = other.x_range
         self.args["frame_height"] = 1
         if stretch:
-            #self.args["sizing_mode"] = "stretch_width"
+            # self.args["sizing_mode"] = "stretch_width"
             self.args["width_policy"] = "fit"
             self.w(None)
         else:
@@ -141,12 +152,20 @@ class FigureMaker:
             self.args["sizing_mode"] = "fixed"
         self.args["align"] = "start"
         if flip_orientation:
-            self.x_axis_label_orientation = math.pi/2
+            self.x_axis_label_orientation = math.pi / 2
         self.x_axis_label = label
         self.no_border_v = True
         return self
 
-    def y_axis_of(self, other, register, label="", stretch=False, flip_orientation=False, hide_keyword="axis"):
+    def y_axis_of(
+        self,
+        other,
+        register,
+        label="",
+        stretch=False,
+        flip_orientation=False,
+        hide_keyword="axis",
+    ):
         self._axis_of(other, register, hide_keyword)
 
         self.y_axis_visible = True
@@ -154,14 +173,14 @@ class FigureMaker:
         self.args["frame_width"] = 1
         if stretch:
             self.args["sizing_mode"] = "stretch_height"
-            #self.args["height_policy"] = "max"
+            # self.args["height_policy"] = "max"
             self.h(10)
         else:
             self.h(other.height)
             self.args["sizing_mode"] = "fixed"
         self.args["align"] = "end"
         if flip_orientation:
-            self.y_axis_label_orientation = math.pi/2
+            self.y_axis_label_orientation = math.pi / 2
         self.y_axis_label = label
         self.no_border_h = True
         return self
@@ -191,7 +210,8 @@ class FigureMaker:
     @staticmethod
     def get_tools(tools_list, toolbar_location="above", **toolbar_options):
         tools = sum([toolbar.tools for toolbar in tools_list], [])
-        proxy = ProxyToolbar(toolbars=tools_list,
-                             tools=tools, **toolbar_options, name="toolbar")
+        proxy = ProxyToolbar(
+            toolbars=tools_list, tools=tools, **toolbar_options, name="toolbar"
+        )
         proxy.logo = None
         return ToolbarBox(toolbar=proxy, toolbar_location=toolbar_location)

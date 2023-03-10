@@ -45,6 +45,7 @@ class ExtraTicksTicker(AdaptiveTicker):
     __implementation__ = TypeScript(TS_CODE)
     extra_ticks = List(Float)
 
+
 TS_CODE_2 = """
 import * as p from "core/properties"
 import {TickSpec} from "models/tickers/ticker"
@@ -89,6 +90,7 @@ export class IntermediateTicksTicker extends AdaptiveTicker {
 
 }
 """
+
 
 class IntermediateTicksTicker(AdaptiveTicker):
     __implementation__ = TypeScript(TS_CODE_2)

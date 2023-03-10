@@ -39,6 +39,46 @@
     content: "path to the opened index";
 }
 
+.tooltip_remainder_bin:after {
+    content: "Remainder bins are the last bins in each contig. They are not fullsize, since usually the contig size is not an exact multiple of the bin size. Choose here how to deal with these bins.";
+}
+
+.tooltip_section_size_max_cov:after {
+    content: "Pick the binsize of the samples that are taken to determine Associated slices.";
+}
+
+.tooltip_radicl_num_samples:after {
+    content: "Number of samples used to determine the coverage of each slice. This coverage is then used in the binominal test.";
+}
+
+.tooltip_backg_as_sec_data:after {
+    content: "Display the sampled background in the secondary data panel.";
+}
+
+.tooltip_cov_as_sec_data:after {
+    content: "Display the sampled coverage in the secondary data panel.";
+}
+
+.tooltip_comp_backg_col:after {
+    content: "If ticked, the normalization is applied column-wise, else row-wise.";
+}
+
+.tooltip_intersect_repl:after {
+    content: "Use the minimum number of interactions between datasets (intersection) as background; otherwise use the maximum.";
+}
+
+.tooltip_anno_type:after {
+    content: "Pick which annotation to compute the background for.";
+}
+
+.tooltip_rna_filter:after {
+    content: "Acceptable bounds for the average number of reads per kbp. ";
+}
+
+.tooltip_dna_filter:after {
+    content: "Acceptable bounds for the maximal number of reads per kbp. ";
+}
+
 .tooltip_normalize_by_coverage:after {
     content: "normalize the coverage tracks in various ways";
 }
