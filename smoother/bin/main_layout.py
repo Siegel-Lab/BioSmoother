@@ -30,6 +30,7 @@ from bokeh.models import (
     TableColumn,
     CellEditor,
 )
+from bokeh.transform import jitter
 
 # from bin.unsorted_multi_choice import UnsortedMultiChoice as MultiChoice
 from bokeh.io import export_png, export_svg
@@ -57,6 +58,7 @@ from bin.figure_maker import FigureMaker, DROPDOWN_HEIGHT, FONT
 from bin.extra_ticks_ticker import *
 from bokeh import events
 import bin.global_variables
+import numpy as np
 
 try:
     import importlib.resources as pkg_resources
@@ -1002,37 +1004,50 @@ class MainLayout:
         self.unhide_button.on_click(event)
         return self.unhide_button
 
-    def make_color_figure(self, palette, ticks):
-        color_mapper = LinearColorMapper(palette=palette, low=0, high=1)
-        color_figure = figure(tools="", height=0, width=SETTINGS_WIDTH)
-        color_figure.x(0, 0)
-        color_info = ColorBar(
-            color_mapper=color_mapper,
-            orientation="horizontal",
-            ticker=FixedTicker(ticks=ticks),
-            width=SETTINGS_WIDTH,
+    def make_color_figure(self, palette):
+        def hex_to_rgb(value):
+            value = value.lstrip('#')
+            lv = len(value)
+            return [int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3)]
+        color_figure = figure(tools="", height=125, width=SETTINGS_WIDTH)
+        color_figure.x(0, 0, color=None)
+        scatter = color_figure.scatter(x="ranged_score", y=jitter("0", 1, distribution="normal"), 
+                             line_color=None, color="color",
+                             source=self.heatmap_data)
+        img = np.empty((1, len(palette)), dtype=np.uint32)
+        view = img.view(dtype=np.uint8).reshape((1, len(palette), 4))
+        for i, p in enumerate(palette):
+            r, g, b = hex_to_rgb(p)
+            view[0, i, 0] = r
+            view[0, i, 1] = g
+            view[0, i, 2] = b
+            view[0, i, 3] = 255
+        color_figure.image_rgba(image=[img], x=0, y=-5.5, dw=1, dh=1)
+        color_figure.add_tools(
+            HoverTool(
+                tooltips=[
+                    (
+                        "(x, y)",
+                        "(@chr_x @index_left .. @index_right, @chr_y @index_bottom .. @index_top)",
+                    ),
+                    (
+                        "sym(x, y)",
+                        "(@chr_x_symmetry @index_symmetry_left .. @index_symmetry_right, @chr_y_symmetry @index_symmetry_bottom .. @index_symmetry_top)",
+                    ),
+                    ("score", "@score_total"),
+                    ("reads by group", "A: @score_a, B: @score_b"),
+                ]
+            )
         )
-        color_info.formatter = FuncTickFormatter(
-            args={
-                "ticksx": [ticks[2], ticks[0], ticks[1], ticks[3]],
-                "labelsx": ["[s", "[d", "d]", "s]"],
-            },
-            code="""
-                            var ret = "";
-                            for (let i = 0; i < ticksx.length; i++)
-                                if(tick == ticksx[i])
-                                    ret += labelsx[i] + " ";
-                            return ret;
-                        """,
-        )
-        color_info.major_label_policy = AllLabels()
-        color_figure.add_layout(color_info, "below")
+        color_figure.hover.renderers = [scatter]
 
         # make plot invisible
         color_figure.axis.visible = False
         color_figure.toolbar_location = None
         color_figure.border_fill_alpha = 0
         color_figure.outline_line_alpha = 0
+        color_figure.xgrid.grid_line_color = None
+        color_figure.ygrid.grid_line_color = None
 
         return color_figure
 
@@ -1372,6 +1387,8 @@ class MainLayout:
             "index_symmetry_right": [],
             "index_symmetry_bottom": [],
             "index_symmetry_top": [],
+            "0": [],
+            "ranged_score": [],
         }
         self.heatmap_data = ColumnDataSource(data=d)
         d = {"b": [], "l": [], "t": [], "r": []}
@@ -1531,11 +1548,11 @@ class MainLayout:
                 tooltips=[
                     (
                         "(x, y)",
-                        "(@chr_x @index_left - @index_right, @chr_y @index_bottom - @index_top)",
+                        "(@chr_x @index_left .. @index_right, @chr_y @index_bottom .. @index_top)",
                     ),
                     (
                         "sym(x, y)",
-                        "(@chr_x_symmetry @index_symmetry_left - @index_symmetry_right, @chr_y_symmetry @index_symmetry_bottom - @index_symmetry_top)",
+                        "(@chr_x_symmetry @index_symmetry_left .. @index_symmetry_right, @chr_y_symmetry @index_symmetry_bottom .. @index_symmetry_top)",
                     ),
                     ("score", "@score_total"),
                     ("reads by group", "A: @score_a, B: @score_b"),
@@ -2000,11 +2017,11 @@ class MainLayout:
         directionality = self.dropdown_select(
             "Directionality",
             "tooltip_directionality",
-            ("Count pairs that map to any strand", "all"),
-            ("Count pairs that map to the same strand", "same"),
-            ("Count pairs that map to opposite strands", "oppo"),
-            ("Count pairs that map to the forward strand", "forw"),
-            ("Count pairs that map to the reverse strand", "rev"),
+            ("Count pairs where reads map to any strand", "all"),
+            ("Count pairs where reads map to the same strand", "same"),
+            ("Count pairs where reads map to opposite strands", "oppo"),
+            ("Count pairs where reads map to the forward strand", "forw"),
+            ("Count pairs where reads map to the reverse strand", "rev"),
             active_item=["settings", "filters", "directionality"],
         )
 
@@ -2486,7 +2503,7 @@ class MainLayout:
         )
 
         self.color_layout = row(
-            [self.make_color_figure(["black"], [0, 0, 0, 0])],
+            [self.make_color_figure(["#000000"])],
             css_classes=["tooltip", "tooltip_color_layout"],
         )
 
@@ -3103,7 +3120,7 @@ class MainLayout:
                 ticks_y["update"] = 0
 
                 palette = self.session.get_palette(self.print)
-                palette_ticks = self.session.get_palette_ticks(self.print)
+                #palette_ticks = self.session.get_palette_ticks(self.print)
 
                 ranked_slice_x = self.session.get_ranked_slices(False, self.print)
                 ranked_slice_y = self.session.get_ranked_slices(True, self.print)
@@ -3127,7 +3144,7 @@ class MainLayout:
                     if not bin.global_variables.quiet:
                         self.print("ERROR: " + error_text)
                     self.color_layout.children = [
-                        self.make_color_figure(palette, palette_ticks)
+                        self.make_color_figure(palette)
                     ]
 
                     def mmax(*args):
