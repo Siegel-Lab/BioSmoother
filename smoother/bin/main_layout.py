@@ -2000,6 +2000,7 @@ class MainLayout:
             ("Viridis", "Viridis256"),
             ("Plasma", "Plasma256"),
             ("Turbo", "Turbo256"),
+            ("Fall", "Fall"),
             ("Low to High", "LowToHigh"),
             active_item=["settings", "interface", "color_palette"],
         )
