@@ -3,7 +3,6 @@ __email__ = "Markus.Schmidt@lmu.de"
 
 from bokeh.layouts import grid, row, column
 from bokeh.plotting import figure, curdoc
-from bokeh.models.tools import ToolbarBox, ProxyToolbar
 from bokeh.models import (
     ColumnDataSource,
     Dropdown,
@@ -14,52 +13,36 @@ from bokeh.models import (
     FuncTickFormatter,
     Div,
     HoverTool,
-    Toggle,
-    Box,
     Spinner,
-    MultiSelect,
     CheckboxGroup,
     CrosshairTool,
     ColorPicker,
-    ImageURLTexture,
-    TextAreaInput,
-    AllLabels,
-    Paragraph,
-    BasicTickFormatter,
     DataTable,
     TableColumn,
     CellEditor,
+    Panel, 
+    Tabs, 
+    Spacer, 
+    Slope, 
+    CustomJS
 )
 from bokeh.transform import jitter
-
-# from bin.unsorted_multi_choice import UnsortedMultiChoice as MultiChoice
-from bokeh.io import export_png, export_svg
 import math
-import time
 from datetime import datetime
 from tornado import gen
 from bokeh.document import without_document_lock
-from bokeh.models import Panel, Tabs, Spacer, Slope, PreText, CustomJS, FixedTicker
-from bokeh.models import Range1d, ColorBar, LinearColorMapper
 import os
 import sys
-
-# from bin.heatmap_as_r_tree import *
 from bokeh.palettes import Viridis256, Colorblind, Plasma256, Turbo256
-from datetime import datetime, timedelta
-import psutil
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
-from bokeh.models import BoxAnnotation
 from bokeh.models.tickers import AdaptiveTicker
 from libsmoother import Quarry, export_tsv, export_png, export_svg
 import json
-import shutil
 from bin.figure_maker import FigureMaker, DROPDOWN_HEIGHT, FONT
 from bin.extra_ticks_ticker import *
-from bokeh import events
 import bin.global_variables
 import numpy as np
-
 try:
     import importlib.resources as pkg_resources
 except ImportError:
