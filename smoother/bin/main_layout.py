@@ -2394,8 +2394,8 @@ class MainLayout:
             "Contig Name",
             "tooltip_chromosomes",
             [
-                [["contigs", "displayed_on_x"], "Row"],
-                [["contigs", "displayed_on_y"], "Column"],
+                [["contigs", "displayed_on_x"], "Column"],
+                [["contigs", "displayed_on_y"], "Row"],
             ],
             ["contigs", "list"],
             title="Active Contigs",

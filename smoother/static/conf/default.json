@@ -198,7 +198,7 @@
             "spinner_max_restricted": true
         },
         "stretch": false,
-        "squared_bins": false,
+        "squared_bins": true,
         "fixed_number_of_bins": false,
         "fixed_num_bins_x": {
             "max": 10000,
