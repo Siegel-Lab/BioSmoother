@@ -2250,6 +2250,7 @@ class MainLayout:
             ],
             ["replicates", "list"],
             title="Primary Datapools",
+            orderable=False
         )
 
         annos_layout = self.multi_choice_auto(
@@ -2348,13 +2349,12 @@ class MainLayout:
             "Dataset name",
             "tooltip_coverage_normalization",
             [
-                [["coverage", "cov_column_a"], "Col A"],
-                [["coverage", "cov_column_b"], "Col B"],
-                [["coverage", "cov_row_a"], "Row A"],
-                [["coverage", "cov_row_b"], "Row B"],
+                [["coverage", "in_column"], "Col"],
+                [["coverage", "in_row"], "Row"],
             ],
             ["coverage", "list"],
             title="Secondary Datapools",
+            orderable=False
         )
 
         x_coords = self.dropdown_select_session(
@@ -3071,6 +3071,7 @@ class MainLayout:
                 self.curdoc.add_next_tick_callback(callback)
 
                 start_time = datetime.now()
+
                 self.session.update_cds(self.print)
 
                 d_heatmap = self.session.get_heatmap(self.print)
