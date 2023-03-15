@@ -1852,8 +1852,7 @@ class MainLayout:
             ("Show All Interactions", "all"),
             ("Only Show Symmetric Interactions", "sym"),
             ("Only Show Asymmetric Interactions", "asym"),
-            ("Make Interactions Symmetric (Bottom to Top)", "topToBot"),
-            ("Make Interactions Symmetric (Top to Bottom)", "botToTop"),
+            ("Mirror Interactions to be Symmetric", "mirror"),
             active_item=["settings", "filters", "symmetry"],
         )
 
@@ -2485,6 +2484,9 @@ class MainLayout:
             + "<br>LibSps Version: "
             + Quarry.get_libSps_version()
         )
+        index_info = Div(
+            text="Index path:" + os.environ["smoother_index_path"] if "smoother_index_path" in os.environ else "unknown"
+        )
 
         self.color_layout = row(
             [self.make_color_figure(["#000000"])],
@@ -2743,8 +2745,8 @@ class MainLayout:
                                 self.make_panel("Presetting", "", [*quick_configs]),
                                 self.make_panel("Export", "", export_panel),
                                 self.make_panel(
-                                    "Info", "", [version_info, log_div, self.log_div]
-                                ),  # @todo index info
+                                    "Info", "", [version_info, index_info, log_div, self.log_div]
+                                ),
                             ]
                         ),
                     ],
