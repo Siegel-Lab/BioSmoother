@@ -2528,7 +2528,7 @@ class MainLayout:
 
         def get_formatter_tick():
             return FuncTickFormatter(
-                args={"contig_starts": [], "genome_end": 0, "dividend": 1},
+                args={"screen_starts": [], "index_starts": [], "genome_end": 0, "dividend": 1},
                 code="""
                             function numberWithCommas(x) {
                                 return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -2536,9 +2536,9 @@ class MainLayout:
                             if(tick < 0 || tick >= genome_end)
                                 return "n/a";
                             var idx = 0;
-                            while(contig_starts[idx + 1] <= tick)
+                            while(screen_starts[idx + 1] <= tick)
                                 idx += 1;
-                            var tick_pos = dividend * (tick - contig_starts[idx]);
+                            var tick_pos = dividend * (tick - screen_starts[idx] + index_starts[idx]);
                             var tick_label = "";
                             if(tick_pos == 0)
                                 tick_label = "0 bp"
@@ -2552,37 +2552,27 @@ class MainLayout:
                         """,
             )
 
-        def get_formatter_chr(x):
+        def get_formatter_chr():
             return FuncTickFormatter(
                 args={
                     "contig_starts": [],
                     "genome_end": 0,
-                    "dividend": 1,
-                    "contig_names": [],
-                    "update": 1,
+                    "contig_names": []
                 },
-                name="func_tic_x" if x else "func_tic_y",
                 code="""
                             if(tick < 0 || tick >= genome_end)
                                 return "n/a";
                             var idx = 0;
                             while(idx + 1 < contig_starts.length && contig_starts[idx + 1] <= tick)
                                 idx += 1;
-                            const len = contig_names[idx].length - 9;
-                            if(len > 0)
-                            {
-                                const sec = Math.floor(Date.now() / 1000);
-                                return contig_names[idx].substring(sec % len, (sec % len) + 10);
-                            }
-                            else
-                                return contig_names[idx];
+                            return contig_names[idx];
                         """,
             )
 
         self.tick_formatter_x = get_formatter_tick()
-        self.tick_formatter_x_2 = get_formatter_chr(True)
+        self.tick_formatter_x_2 = get_formatter_chr()
         self.tick_formatter_y = get_formatter_tick()
-        self.tick_formatter_y_2 = get_formatter_chr(False)
+        self.tick_formatter_y_2 = get_formatter_chr()
 
         self.heatmap_x_axis.xaxis[0].formatter = self.tick_formatter_x
         self.heatmap_x_axis_2.xaxis[0].formatter = self.tick_formatter_x_2
@@ -3099,15 +3089,12 @@ class MainLayout:
                 canvas_size_x, canvas_size_y = self.session.get_canvas_size(self.print)
                 tick_list_x = self.session.get_tick_list(True, self.print)
                 tick_list_y = self.session.get_tick_list(False, self.print)
-                tick_list_x_2 = self.session.get_tick_list_2(True, self.print)
-                tick_list_y_2 = self.session.get_tick_list_2(False, self.print)
                 ticks_x = self.session.get_ticks(True, self.print)
                 ticks_y = self.session.get_ticks(False, self.print)
-                ticks_x["update"] = 0
-                ticks_y["update"] = 0
+                contig_ticks_x = self.session.get_contig_ticks(True, self.print)
+                contig_ticks_y = self.session.get_contig_ticks(False, self.print)
 
                 palette = self.session.get_palette(self.print)
-                #palette_ticks = self.session.get_palette_ticks(self.print)
 
                 ranked_slice_x = self.session.get_ranked_slices(False, self.print)
                 ranked_slice_y = self.session.get_ranked_slices(True, self.print)
@@ -3205,14 +3192,14 @@ class MainLayout:
                     self.heatmap.y_range.reset_end = canvas_size_y
 
                     self.ticker_x.extra_ticks = tick_list_x
-                    self.ticker_x_2.extra_ticks = tick_list_x_2
+                    self.ticker_x_2.extra_ticks = tick_list_x
                     self.ticker_y.extra_ticks = tick_list_y
-                    self.ticker_y_2.extra_ticks = tick_list_y_2
+                    self.ticker_y_2.extra_ticks = tick_list_y
 
                     self.tick_formatter_x.args = ticks_x
-                    self.tick_formatter_x_2.args = ticks_x
+                    self.tick_formatter_x_2.args = contig_ticks_x
                     self.tick_formatter_y.args = ticks_y
-                    self.tick_formatter_y_2.args = ticks_y
+                    self.tick_formatter_y_2.args = contig_ticks_y
 
                     self.ranked_columns_data.data = ranked_slice_y
                     self.ranked_rows_data.data = ranked_slice_x
@@ -3284,6 +3271,7 @@ class MainLayout:
         self.force_render = True
 
     def render_callback(self):
+        # @todo update contig name cycling
         if self.do_render:
             self.update_log_div()
             if not self.session is None:

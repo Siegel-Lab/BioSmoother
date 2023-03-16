@@ -43,14 +43,18 @@
                     }
                 }
 
-                if(Bokeh.documents[0].get_model_by_name('func_tic_x') != null)
-                {
-                    Bokeh.documents[0].get_model_by_name('func_tic_x').properties.args.update += 1;
-                    // @todo
-                    //Bokeh.documents[0].get_model_by_name('func_tic_x').change.emit();
-                }
-                if(Bokeh.documents[0].get_model_by_name('func_tic_y') != null)
-                    Bokeh.documents[0].get_model_by_name('func_tic_y').args.update += 1;
+                // if(Bokeh.documents[0].get_model_by_name('func_tic_x') != null)
+                // {
+                //     Bokeh.documents[0].get_model_by_name('func_tic_x').properties.args.update += 1;
+                //     // @todo
+                //     Bokeh.documents[0].get_model_by_name('func_tic_x').change.emit();
+                // }
+                // if(Bokeh.documents[0].get_model_by_name('func_tic_y') != null)
+                // {
+                //     Bokeh.documents[0].get_model_by_name('func_tic_y').args.update += 1;
+                //     Bokeh.documents[0].get_model_by_name('func_tic_y').change.emit();
+                //     console.log(Bokeh.documents[0].get_model_by_name('func_tic_y'));
+                // }
             }
         }
         window.onload = function(){

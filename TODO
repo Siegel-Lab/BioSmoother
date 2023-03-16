@@ -1,10 +1,11 @@
 
 # smoother todo (ranked)
 
+- add a button to filter for annotation overlap without chaning the coordinate system
+- directionality filter looks wired
 - generating index without multimapping and categories creates wired result...
 - if no read is loaded there is only a very crypic error once you try to look at the index
     - this can happen if for example the contig names do not match...
-- no annotation filter is displaying empty bins only
 - opening view->color tab causes rerender
 - sortable multi choice: column labels and checkboxes not aligned
 - sort session .json into static values & parameters
