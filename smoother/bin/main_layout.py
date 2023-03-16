@@ -1555,6 +1555,12 @@ class MainLayout:
             .combine_tools(tollbars)
             .get(self)
         )
+        self.heatmap_x_axis_3 = (
+            FigureMaker()
+            .x_axis_of(self.heatmap, self, "", True, hide_keyword="regs")
+            .combine_tools(tollbars)
+            .get(self)
+        )
 
         # self.heatmap_x_axis.xaxis.minor_tick_line_color = None
         self.heatmap_y_axis = (
@@ -1569,6 +1575,13 @@ class MainLayout:
             .combine_tools(tollbars)
             .get(self)
         )
+        self.heatmap_y_axis_3 = (
+            FigureMaker()
+            .y_axis_of(self.heatmap, self, "", True, hide_keyword="regs")
+            .combine_tools(tollbars)
+            .get(self)
+        )
+
         # self.heatmap_y_axis.yaxis.minor_tick_line_color = None
 
         self.slope = Slope(gradient=1, y_intercept=0, line_color=None)
@@ -2623,6 +2636,15 @@ class MainLayout:
         self.heatmap_x_axis_2.outline_line_color = None
         self.heatmap_x_axis_2.ygrid.grid_line_alpha = 0.0
 
+        self.heatmap_x_axis_3.xaxis.ticker = self.ticker_x
+        self.heatmap_x_axis_3.xaxis.major_label_text_font_size = '0pt'
+        self.heatmap_x_axis_3.xaxis.minor_tick_line_color = None
+        self.heatmap_x_axis_3.y_range.start = 1
+        self.heatmap_x_axis_3.y_range.end = 2
+        self.heatmap_x_axis_3.background_fill_color = None
+        self.heatmap_x_axis_3.outline_line_color = None
+        self.heatmap_x_axis_3.ygrid.grid_line_alpha = 0.0
+
         self.heatmap_y_axis_2.yaxis.ticker = self.ticker_y_2
         self.heatmap_y_axis_2.yaxis.axis_line_color = None
         self.heatmap_y_axis_2.yaxis.major_tick_line_color = None
@@ -2632,6 +2654,15 @@ class MainLayout:
         self.heatmap_y_axis_2.background_fill_color = None
         self.heatmap_y_axis_2.outline_line_color = None
         self.heatmap_y_axis_2.xgrid.grid_line_alpha = 0.0
+
+        self.heatmap_y_axis_3.yaxis.ticker = self.ticker_y
+        self.heatmap_y_axis_3.yaxis.major_label_text_font_size = '0pt'
+        self.heatmap_y_axis_3.yaxis.minor_tick_line_color = None
+        self.heatmap_y_axis_3.x_range.start = 1
+        self.heatmap_y_axis_3.x_range.end = 2
+        self.heatmap_y_axis_3.background_fill_color = None
+        self.heatmap_y_axis_3.outline_line_color = None
+        self.heatmap_y_axis_3.xgrid.grid_line_alpha = 0.0
 
         for plot in [self.heatmap, self.raw_y, self.anno_y, self.heatmap_x_axis]:
             plot.xgrid.ticker = self.ticker_x
@@ -2951,6 +2982,7 @@ class MainLayout:
         grid_layout = [
             [
                 self.heatmap_y_axis_2,
+                self.heatmap_y_axis_3,
                 self.heatmap_y_axis,
                 self.anno_x,
                 self.raw_x,
@@ -2958,11 +2990,12 @@ class MainLayout:
                 self.heatmap,
                 self.settings_row,
             ],
-            [None, None, self.anno_x_axis, self.raw_x_axis, None, None, None],
-            [None, None, None, None, self.raw_y_axis, self.raw_y, None],
-            [None, None, None, None, self.anno_y_axis, self.anno_y, None],
-            [None, None, None, None, None, self.heatmap_x_axis, None],
-            [communication, None, None, None, None, self.heatmap_x_axis_2, None],
+            [None, None, None, self.anno_x_axis, self.raw_x_axis, None, None, None],
+            [None, None, None, None, None, self.raw_y_axis, self.raw_y, None],
+            [None, None, None, None, None, self.anno_y_axis, self.anno_y, None],
+            [None, None, None, None, None, None, self.heatmap_x_axis, None],
+            [None, None, None, None, None, None, self.heatmap_x_axis_3, None],
+            [communication, None, None, None, None, None, self.heatmap_x_axis_2, None],
         ]
 
         root_min_one = grid(grid_layout, sizing_mode="stretch_both")
@@ -3217,6 +3250,7 @@ class MainLayout:
                         self.raw_y,
                         self.anno_y,
                         self.heatmap_x_axis,
+                        self.heatmap_x_axis_3,
                     ]:
                         plot.xgrid.bounds = (0, canvas_size_x)
                         plot.xaxis.bounds = (0, canvas_size_x)
@@ -3225,6 +3259,7 @@ class MainLayout:
                         self.raw_x,
                         self.anno_x,
                         self.heatmap_y_axis,
+                        self.heatmap_y_axis_3,
                     ]:
                         plot.ygrid.bounds = (0, canvas_size_y)
                         plot.yaxis.bounds = (0, canvas_size_y)
