@@ -1324,7 +1324,6 @@ class MainLayout:
         self.names = None
 
         self.x_coords_d = "full_genome"
-        self.y_coords_d = "full_genome"
 
         self.do_render = False
         self.force_render = True
@@ -2369,20 +2368,38 @@ class MainLayout:
             orderable=False
         )
 
-        x_coords = self.dropdown_select_session(
-            "Column Coordinates",
-            "tooltip_row_coordinates",
+        anno_coords = self.dropdown_select_session(
+            "Annotation Coordinate System",
+            "tooltip_coordinates",
             ["annotation", "list"],
-            ["contigs", "column_coordinates"],
-            [("Genomic loci", "full_genome")],
+            ["contigs", "annotation_coordinates"],
+        )
+        coords_x = self.make_checkbox(
+            "Use Annotation Coordinates for the columns",
+            "@todo",
+            settings=["settings", "filters", "anno_coords_col"],
+        )
+        coords_y = self.make_checkbox(
+            "Use Annotation Coordinates for the rows",
+            "@todo",
+            settings=["settings", "filters", "anno_coords_row"],
         )
 
-        y_coords = self.dropdown_select_session(
-            "Row Coordinates",
-            "tooltip_column_coordinates",
+        anno_read_filter = self.dropdown_select_session(
+            "Only show reads that overlap with a",
+            "@todo",
             ["annotation", "list"],
-            ["contigs", "row_coordinates"],
-            [("Genomic loci", "full_genome")],
+            ["annotation", "filter"],
+        )
+        anno_read_filter_x = self.make_checkbox(
+            "Apply Annotation filter to columns",
+            "@todo",
+            settings=["settings", "filters", "anno_filter_col"],
+        )
+        anno_read_filter_y = self.make_checkbox(
+            "Apply Annotation filter to rows",
+            "@todo",
+            settings=["settings", "filters", "anno_filter_row"],
         )
 
         chrom_layout = self.multi_choice_auto(
@@ -2856,8 +2873,9 @@ class MainLayout:
                                     "",
                                     [
                                         dds_l,
-                                        x_coords,
-                                        y_coords,
+                                        anno_coords,
+                                        coords_x,
+                                        coords_y,
                                         symmetrie,
                                         chrom_layout,
                                     ],
@@ -2869,6 +2887,9 @@ class MainLayout:
                                         annos_layout,
                                         multiple_anno_per_bin,
                                         multiple_bin_per_anno,
+                                        anno_read_filter,
+                                        anno_read_filter_x,
+                                        anno_read_filter_y,
                                     ],
                                 ),
                             ]

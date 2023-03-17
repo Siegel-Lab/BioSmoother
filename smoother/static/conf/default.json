@@ -280,7 +280,11 @@
         "multiple_annos_in_bin": "combine",
         "anno_in_multiple_bins": "stretch",
         "ambiguous_mapping": "enclosed",
-        "cut_off_bin": "smaller_if_fullsized_exists"
+        "cut_off_bin": "smaller_if_fullsized_exists",
+        "anno_coords_col": false,
+        "anno_coords_row": false,
+        "anno_filter_row": false,
+        "anno_filter_col": false
     },
     "export": {
         "prefix": "export",

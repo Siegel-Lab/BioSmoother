@@ -323,13 +323,10 @@
     content: "filter interactions for symmetry";
 }
 
-.tooltip_row_coordinates:after {
-    content: "Pick the coordinate system of the x-axis";
+.tooltip_coordinates:after {
+    content: "Pick the annotation used for the annotation coordinate system";
 }
 
-.tooltip_column_coordinates:after {
-    content: "Pick the coordinate system of the y-axis";
-}
 
 .tooltip_multiple_annotations_in_bin:after {
     content: "For annotation-based coordinate systems: pick how to deal with bins that encompass multiple annotations";
