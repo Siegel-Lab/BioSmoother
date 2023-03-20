@@ -24,7 +24,7 @@ Install conda-specific requirements
 # make sure the proper compiler is installed
 conda install -y gcc=9.4.0 gxx=9.4.0 -c conda-forge
 # install requirements of smoother serve
-conda install -y nodejs tornado
+conda install -y nodejs tornado git
 ```
 
 Install smoother (and all requirements) from GitHub.
