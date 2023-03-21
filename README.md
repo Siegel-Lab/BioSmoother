@@ -8,6 +8,9 @@
 
 ## Quick Start
 
+Here we show how to install smoother on linux systems. Installing smoother on Windows/Mac is possible; however, for now, you will have to install the appropriate compilers on your own (msvc for windows and clang for mac).
+
+
 prerequisites:
 - conda should be installed
 - build-essential should be installed
@@ -24,7 +27,7 @@ Install conda-specific requirements
 # make sure the proper compiler is installed
 conda install -y gcc=9.4.0 gxx=9.4.0 -c conda-forge
 # install requirements of smoother serve
-conda install -y nodejs tornado git
+conda install -y nodejs==18.12.1 tornado git
 ```
 
 Install smoother (and all requirements) from GitHub.
