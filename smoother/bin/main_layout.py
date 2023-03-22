@@ -756,21 +756,24 @@ class MainLayout:
         self.v4c_col_expected = self.get_readable_range(
             self.session.get_value(["settings", "interface", "v4c", "col_from"]),
             self.session.get_value(["settings", "interface", "v4c", "col_to"]),
-            True,
+            False,
+            genomic_coords=True,
         )
         self.v4c_col.value = self.v4c_col_expected
 
         self.v4c_row_expected = self.get_readable_range(
             self.session.get_value(["settings", "interface", "v4c", "row_from"]),
             self.session.get_value(["settings", "interface", "v4c", "row_to"]),
-            False,
+            True,
+            genomic_coords=True,
         )
         self.v4c_row.value = self.v4c_row_expected
+        self.trigger_render()
 
     def parse_v4c(self):
         change = False
         if self.v4c_col.value != self.v4c_col_expected:
-            col_start, col_end = self.interpret_range(self.v4c_col.value, [True])
+            col_start, col_end = self.interpret_range(self.v4c_col.value, False, genomic_coords=True)
             change = True
             if not col_start is None:
                 self.session.set_value(
@@ -782,7 +785,7 @@ class MainLayout:
                 )
 
         if self.v4c_row.value != self.v4c_row_expected:
-            row_start, row_end = self.interpret_range(self.v4c_row.value, [False])
+            row_start, row_end = self.interpret_range(self.v4c_row.value, True, genomic_coords=True)
             change = True
             if not row_start is None:
                 self.session.set_value(
@@ -1071,10 +1074,13 @@ class MainLayout:
             n = contig_names[idx]
         return n + ": " + label
 
-    def get_readable_range(self, start, end, x_y):
+    def get_readable_range(self, start, end, x_y, genomic_coords=False):
         lcs = self.session.get_longest_common_suffix(self.print)
         contig_names = self.session.get_annotation_list(x_y, self.print)
-        contig_starts = self.session.get_tick_list(x_y, self.print)
+        if genomic_coords:
+            contig_starts = self.session.get_contig_start_list(x_y, self.print)
+        else:
+            contig_starts = self.session.get_tick_list(x_y, self.print)
         if len(contig_starts) > 0:
             return (
                 self.to_readable_pos(
@@ -1138,13 +1144,13 @@ class MainLayout:
             return (int(s) * fac) // self.session.get_value(["dividend"])
         return None
 
-    def interpret_position(self, s, x_y, bot=True):
+    def interpret_position(self, s, x_y, bot=True, genomic_coords=False):
         if s.count(":") == 0 and s.count("+-") == 1:
             x, y = s.split("+-")
             c = self.interpret_number(y)
             if not c is None and bot:
                 c = -c
-            a = self.session.interpret_name(x, x_y, bot)
+            a = self.session.interpret_name(x, x_y, bot, genomic_coords)
             if not a is None and not c is None:
                 return [a + c]
         elif s.count(":") == 1:
@@ -1158,11 +1164,11 @@ class MainLayout:
                 c = self.interpret_number(y2)
                 if not c is None and bot:
                     c = -c
-                a = self.session.interpret_name(x, x_y, bot if len(y1) == 0 else True)
+                a = self.session.interpret_name(x, x_y, bot if len(y1) == 0 else True, genomic_coords)
                 if not a is None and not b is None and not c is None:
                     return [a + b + c]
             b = self.interpret_number(y)
-            a = self.session.interpret_name(x, x_y, True)
+            a = self.session.interpret_name(x, x_y, True, genomic_coords)
             if not a is None and not b is None:
                 return [a + b]
 
@@ -1171,13 +1177,13 @@ class MainLayout:
             return [a]
 
         if not s is None:
-            a = self.session.interpret_name(s, x_y, bot)
+            a = self.session.interpret_name(s, x_y, bot, genomic_coords)
             if not a is None:
                 return [a]
 
         return [None]
 
-    def interpret_range(self, s, x_y):
+    def interpret_range(self, s, x_y, genomic_coords=False):
         s = "".join(s.lower().split())
         if s.count("..") == 1 and s.count("[") <= 1 and s.count("]") <= 1:
             x, y = s.split("..")
@@ -1186,15 +1192,15 @@ class MainLayout:
             if y[-1:] == "]":
                 y = y[:-1]
 
-            return self.interpret_position(x, x_y, True) + self.interpret_position(
-                y, x_y, False
+            return self.interpret_position(x, x_y, True, genomic_coords=genomic_coords) + self.interpret_position(
+                y, x_y, False, genomic_coords=genomic_coords
             )
         if s[:1] == "[":
             s = s[1:]
         if s[-1:] == "]":
             s = s[:-1]
-        return self.interpret_position(s, x_y, True) + self.interpret_position(
-            s, x_y, False
+        return self.interpret_position(s, x_y, True, genomic_coords=genomic_coords) + self.interpret_position(
+            s, x_y, False, genomic_coords=genomic_coords
         )
 
     def interpret_area(self, s):
