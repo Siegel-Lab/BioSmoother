@@ -254,11 +254,11 @@ class MainLayout:
                     source["up"].append("")
                     source["down"].append("")
                 source["names"].append("")
-            for _, n in checkboxes:
-                bools = [name in active_dict[n] for name in labels]
-                source[n].append("☑" if all(bools) else ("☐" if all(not b for b in bools) else "·"))
+                for _, n in checkboxes:
+                    bools = [name in active_dict[n] for name in labels]
+                    source[n].append("☑" if all(bools) else ("☐" if all(not b for b in bools) else "·"))
             for idx, name in enumerate(labels):
-                if filter_t_in.value in name or len(filter_t_in.value) == 0:
+                if filter_t_in.value.lower() in name.lower() or len(filter_t_in.value) == 0:
                     source["idx"].append(str(idx))
                     if orderable:
                         source["up"].append("▲" if idx > 0 else "")
