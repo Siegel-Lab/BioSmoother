@@ -132,7 +132,7 @@
             "axis": true,
             "coords": false,
             "regs": true,
-            "raw": false,
+            "raw": true,
             "annotation": true,
             "tools": true,
             "grid_lines": false,
