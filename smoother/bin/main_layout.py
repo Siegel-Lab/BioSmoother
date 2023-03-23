@@ -220,6 +220,7 @@ class MainLayout:
             width=SETTINGS_WIDTH,
             tags=["blub"],
             height=150,
+            sortable=False
         )
 
         source_code = """
@@ -242,20 +243,37 @@ class MainLayout:
 
         self.reset_options[label] = [{}, []]
 
+        filter_t_in = TextInput(placeholder="filter...")
+
         def set_options(labels, active_dict):
             self.reset_options[label] = [active_dict, labels]
             source = make_source()
-            for idx, name in enumerate(labels):
-                source["idx"].append(str(idx))
+            if len(labels) > 1:
+                source["idx"].append("")
                 if orderable:
-                    source["up"].append("▲" if idx > 0 else "")
-                    source["down"].append("▼" if idx < len(labels) - 1 else "")
-                source["names"].append(name)
-                for _, n in checkboxes:
-                    source[n].append("☑" if name in active_dict[n] else "☐")
+                    source["up"].append("")
+                    source["down"].append("")
+                source["names"].append("")
+            for _, n in checkboxes:
+                bools = [name in active_dict[n] for name in labels]
+                source[n].append("☑" if all(bools) else ("☐" if all(not b for b in bools) else "·"))
+            for idx, name in enumerate(labels):
+                if filter_t_in.value in name or len(filter_t_in.value) == 0:
+                    source["idx"].append(str(idx))
+                    if orderable:
+                        source["up"].append("▲" if idx > 0 else "")
+                        source["down"].append("▼" if idx < len(labels) - 1 else "")
+                    source["names"].append(name)
+                    for _, n in checkboxes:
+                        source[n].append("☑" if name in active_dict[n] else "☐")
 
             data_table.source.data = source
+            data_table.frozen_rows=1 if len(labels) > 1 else 0
             # data_table.columns = make_columns()
+
+        filter_t_in.on_change("value", lambda _x, _y, _z: set_options(
+                        self.reset_options[label][1], self.reset_options[label][0]
+                    ))
 
         def trigger_callback():
             cb = {}
@@ -276,8 +294,12 @@ class MainLayout:
 
         def get_select():
             sp = select_ret.value.split()
+            print(sp)
             if len(sp) > 0:
-                y = int(sp[0])
+                if sp[0] != 'slick-cell':
+                    y = int(sp[0])
+                else:
+                    y = None
                 for s in sp[1:]:
                     if s[0] == "l":
                         x = int(s[1:]) - (4 if orderable else 2)
@@ -287,7 +309,7 @@ class MainLayout:
         def py_callback(attr, old, new):
             if new != []:
                 x, y = get_select()
-                if orderable and x == -3:
+                if orderable and x == -3 and not y is None:
                     self.reset_options[label][1] = move_element(
                         self.reset_options[label][1], y, True
                     )
@@ -295,7 +317,7 @@ class MainLayout:
                         self.reset_options[label][1], self.reset_options[label][0]
                     )
                     trigger_callback()
-                elif orderable and x == -2:
+                elif orderable and x == -2 and not y is None:
                     self.reset_options[label][1] = move_element(
                         self.reset_options[label][1], y, False
                     )
@@ -304,12 +326,22 @@ class MainLayout:
                     )
                     trigger_callback()
                 elif x >= 0:
-                    local_label = self.reset_options[label][1][y]
-                    n = checkboxes[x][1]
-                    if local_label in self.reset_options[label][0][n]:
-                        self.reset_options[label][0][n].remove(local_label)
+                    if y is None:
+                        n = checkboxes[x][1]
+                        bools = [not name in self.reset_options[label][0][n] for name in self.reset_options[label][1]]
+                        if all(bools):
+                            # nothing is activate -> set everything active
+                            self.reset_options[label][0][n] = self.reset_options[label][1]
+                        else: # none(bools) or some(bools)
+                            # some things are active -> set everything inactive
+                            self.reset_options[label][0][n] = []
                     else:
-                        self.reset_options[label][0][n].append(local_label)
+                        local_label = self.reset_options[label][1][y]
+                        n = checkboxes[x][1]
+                        if local_label in self.reset_options[label][0][n]:
+                            self.reset_options[label][0][n].remove(local_label)
+                        else:
+                            self.reset_options[label][0][n].append(local_label)
                     set_options(
                         self.reset_options[label][1], self.reset_options[label][0]
                     )
@@ -332,7 +364,7 @@ class MainLayout:
         data_table.source.on_change("data", on_change_rename)
 
         layout = column(
-            [Div(text=title), data_table],
+            [row([Div(text=title), filter_t_in], sizing_mode="stretch_width"), data_table],
             sizing_mode="stretch_width",
             css_classes=["outlnie_border", "tooltip", tooltip],
         )
