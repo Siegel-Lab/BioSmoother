@@ -65,8 +65,6 @@
             "spinner_max_restricted": true
         },
         "scale": "max",
-        "divide_by_column_coverage": "dont",
-        "divide_by_row_coverage": "dont",
         "grid_seq_samples": {
             "min": 100,
             "max": 10000,

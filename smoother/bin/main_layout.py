@@ -888,6 +888,14 @@ class MainLayout:
                     break
             if plot.visible != visible:
                 plot.visible = visible
+        
+        x_visible = len(self.raw_data_x.data["values"]) > 0
+        self.raw_x.visible = self.show_hide["raw"] and x_visible
+        self.raw_x_axis.visible = self.show_hide["raw"] and x_visible
+        y_visible = len(self.raw_data_y.data["values"]) > 0
+        self.raw_y.visible = self.show_hide["raw"] and y_visible
+        self.raw_y_axis.visible = self.show_hide["raw"] and y_visible
+
         if not self.unhide_button is None:
             if self.unhide_button.visible == self.show_hide["tools"]:
                 self.unhide_button.visible = not self.show_hide["tools"]
@@ -1622,7 +1630,6 @@ class MainLayout:
         self.raw_x_axis = (
             FigureMaker().x_axis_of(self.raw_x, self).combine_tools(tollbars).get(self)
         )
-        self.raw_x_axis.xaxis.axis_label = "Cov."
         self.raw_x_axis.xaxis.ticker = AdaptiveTicker(
             desired_num_ticks=3, num_minor_ticks=0
         )
@@ -1644,7 +1651,6 @@ class MainLayout:
         self.raw_y_axis = (
             FigureMaker().y_axis_of(self.raw_y, self).combine_tools(tollbars).get(self)
         )
-        self.raw_y_axis.yaxis.axis_label = "Cov."
         self.raw_y_axis.yaxis.ticker = AdaptiveTicker(
             desired_num_ticks=3, num_minor_ticks=0
         )
@@ -1673,7 +1679,6 @@ class MainLayout:
         self.anno_x_axis = (
             FigureMaker().x_axis_of(self.anno_x, self).combine_tools(tollbars).get(self)
         )
-        self.anno_x_axis.xaxis.axis_label = "Anno."
         self.anno_x.xgrid.minor_grid_line_alpha = 0
         self.anno_x.xgrid.grid_line_alpha = 0
         self.anno_x.ygrid.minor_grid_line_alpha = 0.5
@@ -1691,7 +1696,6 @@ class MainLayout:
         self.anno_y_axis = (
             FigureMaker().y_axis_of(self.anno_y, self).combine_tools(tollbars).get(self)
         )
-        self.anno_y_axis.yaxis.axis_label = "Anno."
         self.anno_y.ygrid.minor_grid_line_alpha = 0
         self.anno_y.ygrid.grid_line_alpha = 0
         self.anno_y.xgrid.minor_grid_line_alpha = 0.5
@@ -1944,11 +1948,6 @@ class MainLayout:
             "tooltip_incomplete_alignments",
             settings=["settings", "filters", "incomplete_alignments"],
         )
-
-        # divide_column = self.make_checkbox("Divide heatmap columns by track", "tooltip_divide_column",
-        #                                            settings=['settings', 'normalization', 'divide_by_column_coverage'])
-        # divide_row = self.make_checkbox("Divide heatmap rows by track", "tooltip_divide_row",
-        #                                            settings=['settings', 'normalization', 'divide_by_row_coverage'])
 
         ddd = self.make_checkbox(
             "Normalize Primary data",
@@ -3238,7 +3237,13 @@ class MainLayout:
 
                     self.heatmap_data.data = d_heatmap
                     self.raw_data_x.data = raw_data_x
+                    x_visible = len(raw_data_x["values"]) > 0
+                    self.raw_x.visible = self.show_hide["raw"] and x_visible
+                    self.raw_x_axis.visible = self.show_hide["raw"] and x_visible
                     self.raw_data_y.data = raw_data_y
+                    y_visible = len(raw_data_y["values"]) > 0
+                    self.raw_y.visible = self.show_hide["raw"] and y_visible
+                    self.raw_y_axis.visible = self.show_hide["raw"] and y_visible
 
                     self.anno_x.x_range.factors = displayed_annos_x
                     self.anno_y.y_range.factors = displayed_annos_y[::-1]
