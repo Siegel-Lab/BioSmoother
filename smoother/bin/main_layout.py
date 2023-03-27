@@ -1078,6 +1078,8 @@ class MainLayout:
         return color_figure
 
     def to_readable_pos(self, x, genome_end, contig_names, contig_starts, lcs=0):
+        if len(contig_names) == 0 or len(contig_starts) == 0:
+            return "n/a"
         x = int(x)
         oob = x > genome_end * self.session.get_value(["dividend"]) or x < 0
         if x < 0:
@@ -1926,31 +1928,25 @@ class MainLayout:
             active_item=["settings", "filters", "cut_off_bin"],
         )
 
+        norm_sele = [
+                ("Reads per million", "rpm"),
+                ("Reads per thousand", "rpk"),
+                ("Binominal test", "radicl-seq"),
+                ("Iterative Correction", "ice-precomp"),
+                ("Associated slices", "grid-seq"),
+                ("No normalization", "dont"),
+            ]
         if Quarry.has_cooler_icing():
-            normalization = self.dropdown_select(
-                "Normalize heatmap by",
-                "tooltip_normalize_by",
-                ("Reads per million", "rpm"),
-                ("Reads per thousand", "rpk"),
-                ("Binominal test", "radicl-seq"),
-                ("Iterative Correction", "hi-c"),
-                ("Associated slices", "grid-seq"),
-                ("Cooler Iterative Correction", "cool-hi-c"),
-                ("No normalization", "dont"),
-                active_item=["settings", "normalization", "normalize_by"],
-            )
-        else:
-            normalization = self.dropdown_select(
-                "Normalize heatmap by",
-                "tooltip_normalize_by",
-                ("Reads per million", "rpm"),
-                ("Reads per thousand", "rpk"),
-                ("Binominal test", "radicl-seq"),
-                ("Iterative Correction", "hi-c"),
-                ("Associated slices", "grid-seq"),
-                ("No normalization", "dont"),
-                active_item=["settings", "normalization", "normalize_by"],
-            )
+            norm_sele.append((("Cooler Iterative Correction", "cool-ice")))
+        if bin.global_variables.allow_local_ice:
+            norm_sele.append((("Local Iterative Correction", "ice-local")))
+
+        normalization = self.dropdown_select(
+            "Normalize heatmap by",
+            "tooltip_normalize_by",
+            *norm_sele,
+            active_item=["settings", "normalization", "normalize_by"],
+        )
         normalization_cov = self.dropdown_select(
             "Normalize coverage by",
             "tooltip_normalize_by_coverage",
@@ -3022,6 +3018,8 @@ class MainLayout:
             else:
                 if not bin.global_variables.quiet:
                     print("closing server since session exited")
+                if not bin.global_variables.no_save:
+                    self.session.save_session()
                 sys.exit()
 
         quit_ti.on_change("value", close_server)

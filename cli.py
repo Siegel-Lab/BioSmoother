@@ -18,6 +18,7 @@ def serve(args):
     os.environ["smoother_no_save"] = str(args.no_save)
     os.environ["smoother_keep_alive"] = str(args.keep_alive)
     os.environ["smoother_quiet"] = str(args.quiet)
+    os.environ["smoother_local_ice"] = str(args.local_ice)
 
     args.log_level = "error"
 
@@ -37,6 +38,7 @@ def add_parsers(main_parser):
                         help="Keep the server alive even if the last browser window has been closed. (default: off)")
     parser.add_argument('-q', '--quiet', action='store_true',
                         help="Print less on the command line. (default: off)")
+    parser.add_argument('--local_ice', action="store_true", default=False, help=argparse.SUPPRESS)
 
     def filter_args(args):
         for name, a in args:
