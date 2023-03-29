@@ -1,5 +1,5 @@
 import os
-from libsmoother import Quarry, Index
+from libsmoother import Index, open_default_json
 import bin.global_variables
 import json
 import os
@@ -45,9 +45,7 @@ def on_server_loaded(server_context):
             smoother_index = Index(path)
 
             if smoother_index.get_value(["settings"]) is None:
-                with (
-                    pkg_resources.files("smoother") / "static" / "conf" / "default.json"
-                ).open("r") as f:
+                with open_default_json() as f:
                     settings = json.load(f)
                 # print(settings)
                 smoother_index.set_value(["settings"], settings)

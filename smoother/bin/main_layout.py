@@ -37,7 +37,7 @@ from bokeh.palettes import Viridis256, Colorblind, Plasma256, Turbo256
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from bokeh.models.tickers import AdaptiveTicker
-from libsmoother import Quarry, export_tsv, export_png, export_svg
+from libsmoother import Quarry, export_tsv, export_png, export_svg, open_default_json
 import json
 from bin.figure_maker import FigureMaker, DROPDOWN_HEIGHT, FONT
 from bin.extra_ticks_ticker import *
@@ -396,7 +396,7 @@ class MainLayout:
         SYM_WIDTH = 10
         SYM_CSS = ["other_button"]
 
-        with (
+        with open_default_json() if file_nr == "default" else (
             pkg_resources.files("smoother")
             / "static"
             / "conf"
@@ -1385,9 +1385,7 @@ class MainLayout:
         if not os.path.exists(smoother_home_folder + "/conf/"):
             os.makedirs(smoother_home_folder + "/conf/")
         if not os.path.exists(smoother_home_folder + "/conf/default.json"):
-            with (
-                pkg_resources.files("smoother") / "static" / "conf" / "default.json"
-            ).open("r") as f_in:
+            with open_default_json() as f_in:
                 with open(smoother_home_folder + "/conf/default.json", "w") as f_out:
                     for l in f_in:
                         f_out.write(l)
@@ -2434,6 +2432,16 @@ class MainLayout:
             "@todo",
             settings=["settings", "filters", "anno_filter_row"],
         )
+        ice_show_bias = self.make_checkbox(
+            "Display Bias as Secondary Data",
+            "@todo",
+            settings=["settings", "normalization", "ice_show_bias"],
+        )
+        ice_show_local_bias = [self.make_checkbox(
+            "Display local Bias as Secondary Data",
+            "@todo",
+            settings=["settings", "normalization", "ice_show_local_bias"],
+        )] if bin.global_variables.allow_local_ice else []
 
         chrom_layout = self.multi_choice_auto(
             "Contig Name",
@@ -2868,7 +2876,7 @@ class MainLayout:
                                         self.ranked_rows,
                                     ],
                                 ),
-                                self.make_panel("ICE", "", [ice_sparse_filter]),
+                                self.make_panel("ICE", "", [ice_sparse_filter, ice_show_bias, *ice_show_local_bias]),
                             ]
                         ),
                     ],
