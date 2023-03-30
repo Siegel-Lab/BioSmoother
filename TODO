@@ -1,6 +1,8 @@
 
 # smoother todo (ranked)
 
+- without annotations -> empty picture
+- min bin size slider does not update value
 - directionality filter looks wired
 - generating index without multimapping and categories creates wired result...
 - if no read is loaded there is only a very crypic error once you try to look at the index

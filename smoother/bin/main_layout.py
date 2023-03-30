@@ -2012,6 +2012,11 @@ class MainLayout:
             "tooltip_bin_aspect_ratio",
             settings=["settings", "interface", "squared_bins"],
         )
+        do_redraw = self.make_checkbox(
+            "Do redraw",
+            "tooltip_do_redraw", # @todo
+            settings=["settings", "interface", "do_redraw"],
+        )
 
         power_ten_bin = self.make_checkbox(
             "Snap Bin Size",
@@ -2774,10 +2779,10 @@ class MainLayout:
                 export_label,
                 self.export_file,
                 export_format,
-                export_button,
                 export_coords_size,
                 export_contigs_size,
                 export_axis_size,
+                export_button,
             ]
 
         do_v4c_col = self.make_checkbox(
@@ -2985,7 +2990,7 @@ class MainLayout:
                                         self.v4c_row,
                                     ],
                                 ),
-                                self.make_panel("Redrawing", "", [ufs_l, rs_l, aas_l]),
+                                self.make_panel("Rendering", "", [ufs_l, rs_l, aas_l, do_redraw]),
                             ]
                         ),
                     ],
@@ -3154,198 +3159,198 @@ class MainLayout:
     def render(self, zoom_in_render):
         def unlocked_task():
             def cancelable_task():
-                def callback():
-                    self.spinner.css_classes = ["fade-in"]
+                if self.session.get_value(["settings", "interface", "do_redraw"]):
+                    def callback():
+                        self.spinner.css_classes = ["fade-in"]
 
-                self.curdoc.add_next_tick_callback(callback)
+                    self.curdoc.add_next_tick_callback(callback)
 
-                start_time = datetime.now()
+                    start_time = datetime.now()
 
-                self.session.update_cds(self.print)
+                    self.session.update_cds(self.print)
 
-                d_heatmap = self.session.get_heatmap(self.print)
+                    d_heatmap = self.session.get_heatmap(self.print)
 
-                raw_data_x = self.session.get_tracks(False, self.print)
-                raw_data_y = self.session.get_tracks(True, self.print)
-                min_max_tracks_x = self.session.get_min_max_tracks(False, self.print)
-                min_max_tracks_y = self.session.get_min_max_tracks(True, self.print)
+                    raw_data_x = self.session.get_tracks(False, self.print)
+                    raw_data_y = self.session.get_tracks(True, self.print)
+                    min_max_tracks_x = self.session.get_min_max_tracks(False, self.print)
+                    min_max_tracks_y = self.session.get_min_max_tracks(True, self.print)
 
-                d_anno_x = self.session.get_annotation(False, self.print)
-                d_anno_y = self.session.get_annotation(True, self.print)
-                displayed_annos_x = self.session.get_displayed_annos(False, self.print)
-                if len(displayed_annos_x) == 0:
-                    displayed_annos_x.append("")
-                displayed_annos_y = self.session.get_displayed_annos(True, self.print)
-                if len(displayed_annos_y) == 0:
-                    displayed_annos_y.append("")
+                    d_anno_x = self.session.get_annotation(False, self.print)
+                    d_anno_y = self.session.get_annotation(True, self.print)
+                    displayed_annos_x = self.session.get_displayed_annos(False, self.print)
+                    if len(displayed_annos_x) == 0:
+                        displayed_annos_x.append("")
+                    displayed_annos_y = self.session.get_displayed_annos(True, self.print)
+                    if len(displayed_annos_y) == 0:
+                        displayed_annos_y.append("")
 
-                b_col = self.session.get_background_color(self.print)
+                    b_col = self.session.get_background_color(self.print)
 
-                render_area = self.session.get_drawing_area(self.print)
+                    render_area = self.session.get_drawing_area(self.print)
 
-                canvas_size_x, canvas_size_y = self.session.get_canvas_size(self.print)
-                tick_list_x = self.session.get_tick_list(True, self.print)
-                tick_list_y = self.session.get_tick_list(False, self.print)
-                ticks_x = self.session.get_ticks(True, self.print)
-                ticks_y = self.session.get_ticks(False, self.print)
-                contig_ticks_x = self.session.get_contig_ticks(True, self.print)
-                contig_ticks_y = self.session.get_contig_ticks(False, self.print)
+                    canvas_size_x, canvas_size_y = self.session.get_canvas_size(self.print)
+                    tick_list_x = self.session.get_tick_list(True, self.print)
+                    tick_list_y = self.session.get_tick_list(False, self.print)
+                    ticks_x = self.session.get_ticks(True, self.print)
+                    ticks_y = self.session.get_ticks(False, self.print)
+                    contig_ticks_x = self.session.get_contig_ticks(True, self.print)
+                    contig_ticks_y = self.session.get_contig_ticks(False, self.print)
 
-                palette = self.session.get_palette(self.print)
+                    palette = self.session.get_palette(self.print)
 
-                ranked_slice_x = self.session.get_ranked_slices(False, self.print)
-                ranked_slice_y = self.session.get_ranked_slices(True, self.print)
-                if self.session.get_value(["settings", "normalization", "ddd_show"]):
-                    dist_dep_dec_plot_data = self.session.get_decay(self.print)
-                else:
-                    dist_dep_dec_plot_data = {
-                        "chr": [],
-                        "color": [],
-                        "xs": [],
-                        "ys": [],
-                    }
-
-                error = self.session.get_error()
-                error_text = "None" if len(error) == 0 else error.replace("\n", "; ")
-                end_time = datetime.now()
-
-                @gen.coroutine
-                def callback():
-                    self.curdoc.hold()
-                    if not bin.global_variables.quiet:
-                        self.print("ERROR: " + error_text)
-                    self.color_layout.children = [
-                        self.make_color_figure(palette)
-                    ]
-
-                    def mmax(*args):
-                        m = 0
-                        for x in args:
-                            if not x is None and x > m:
-                                m = x
-                        return m
-
-                    def mmin(*args):
-                        m = 0
-                        for x in args:
-                            if not x is None and x < m:
-                                m = x
-                        return m
-
-                    end_text = (
-                        "Rendering Done.\nCurrent Bin Size: "
-                        + self.get_readable_bin_size()
-                        + ".\nRuntime: "
-                        + str(end_time - start_time)
-                        + ".\nDisplaying "
-                        + str(len(d_heatmap["color"]))
-                        + " bins."
-                    )
-
-                    self.raw_x_axis.xaxis.bounds = (
-                        min_max_tracks_x[0],
-                        min_max_tracks_x[1],
-                    )
-                    self.raw_y_axis.yaxis.bounds = (
-                        min_max_tracks_y[0],
-                        min_max_tracks_y[1],
-                    )
-
-                    def set_bounds(
-                        plot, left=None, right=None, top=None, bottom=None, color=None
-                    ):
-                        ra = self.plot_render_area(plot)
-                        ra.left = render_area[0] if left is None else left
-                        ra.bottom = render_area[1] if bottom is None else bottom
-                        ra.right = render_area[2] if right is None else right
-                        ra.top = render_area[3] if top is None else top
-                        if not color is None:
-                            ra.fill_color = color
-
-                    set_bounds(
-                        self.raw_x, left=min_max_tracks_x[0], right=min_max_tracks_x[1]
-                    )
-                    set_bounds(
-                        self.raw_y, bottom=min_max_tracks_y[0], top=min_max_tracks_y[1]
-                    )
-                    set_bounds(self.anno_x, left=0, right=len(displayed_annos_x))
-                    set_bounds(self.anno_y, bottom=0, top=len(displayed_annos_y))
-
-                    set_bounds(self.heatmap, color=b_col)
-
-                    self.heatmap_data.data = d_heatmap
-                    self.raw_data_x.data = raw_data_x
-                    x_visible = len(raw_data_x["values"]) > 0
-                    self.raw_x.visible = self.show_hide["raw"] and x_visible
-                    self.raw_x_axis.visible = self.show_hide["raw"] and x_visible
-                    self.raw_data_y.data = raw_data_y
-                    y_visible = len(raw_data_y["values"]) > 0
-                    self.raw_y.visible = self.show_hide["raw"] and y_visible
-                    self.raw_y_axis.visible = self.show_hide["raw"] and y_visible
-
-                    self.anno_x.x_range.factors = displayed_annos_x
-                    self.anno_y.y_range.factors = displayed_annos_y[::-1]
-
-                    self.anno_x_data.data = d_anno_x
-                    self.anno_y_data.data = d_anno_y
-
-                    self.heatmap.x_range.reset_start = 0
-                    self.heatmap.x_range.reset_end = canvas_size_x
-                    self.heatmap.y_range.reset_start = 0
-                    self.heatmap.y_range.reset_end = canvas_size_y
-
-                    self.ticker_x.extra_ticks = tick_list_x
-                    self.ticker_x_2.extra_ticks = tick_list_x
-                    self.ticker_y.extra_ticks = tick_list_y
-                    self.ticker_y_2.extra_ticks = tick_list_y
-
-                    self.tick_formatter_x.args = ticks_x
-                    self.tick_formatter_x_2.args = contig_ticks_x
-                    self.tick_formatter_y.args = ticks_y
-                    self.tick_formatter_y_2.args = contig_ticks_y
-
-                    self.ranked_columns_data.data = ranked_slice_y
-                    self.ranked_rows_data.data = ranked_slice_x
-                    self.dist_dep_dec_plot_data.data = dist_dep_dec_plot_data
-
-                    if len(error) > 0:
-                        self.heatmap.border_fill_color = "red"
+                    ranked_slice_x = self.session.get_ranked_slices(False, self.print)
+                    ranked_slice_y = self.session.get_ranked_slices(True, self.print)
+                    if self.session.get_value(["settings", "normalization", "ddd_show"]):
+                        dist_dep_dec_plot_data = self.session.get_decay(self.print)
                     else:
-                        self.heatmap.border_fill_color = None
+                        dist_dep_dec_plot_data = {
+                            "chr": [],
+                            "color": [],
+                            "xs": [],
+                            "ys": [],
+                        }
 
-                    self.set_area_range()
+                    error = self.session.get_error()
+                    error_text = "None" if len(error) == 0 else error.replace("\n", "; ")
+                    end_time = datetime.now()
 
-                    for plot in [
-                        self.heatmap,
-                        self.raw_y,
-                        self.anno_y,
-                        self.heatmap_x_axis,
-                        self.heatmap_x_axis_3,
-                    ]:
-                        plot.xgrid.bounds = (0, canvas_size_x)
-                        plot.xaxis.bounds = (0, canvas_size_x)
-                    for plot in [
-                        self.heatmap,
-                        self.raw_x,
-                        self.anno_x,
-                        self.heatmap_y_axis,
-                        self.heatmap_y_axis_3,
-                    ]:
-                        plot.ygrid.bounds = (0, canvas_size_y)
-                        plot.yaxis.bounds = (0, canvas_size_y)
+                    @gen.coroutine
+                    def callback():
+                        self.curdoc.hold()
+                        if not bin.global_variables.quiet:
+                            self.print("ERROR: " + error_text)
+                        self.color_layout.children = [
+                            self.make_color_figure(palette)
+                        ]
 
-                    self.curdoc.unhold()
-                    self.print_status(end_text + " | Errors: " + error_text)
-                    self.curdoc.add_timeout_callback(
-                        lambda: self.render_callback(),
-                        self.session.get_value(
-                            ["settings", "interface", "update_freq", "val"]
+                        def mmax(*args):
+                            m = 0
+                            for x in args:
+                                if not x is None and x > m:
+                                    m = x
+                            return m
+
+                        def mmin(*args):
+                            m = 0
+                            for x in args:
+                                if not x is None and x < m:
+                                    m = x
+                            return m
+
+                        end_text = (
+                            "Rendering Done.\nCurrent Bin Size: "
+                            + self.get_readable_bin_size()
+                            + ".\nRuntime: "
+                            + str(end_time - start_time)
+                            + ".\nDisplaying "
+                            + str(len(d_heatmap["color"]))
+                            + " bins."
                         )
-                        * 1000,
-                    )
 
-                self.curdoc.add_next_tick_callback(callback)
-                return True
+                        self.raw_x_axis.xaxis.bounds = (
+                            min_max_tracks_x[0],
+                            min_max_tracks_x[1],
+                        )
+                        self.raw_y_axis.yaxis.bounds = (
+                            min_max_tracks_y[0],
+                            min_max_tracks_y[1],
+                        )
+
+                        def set_bounds(
+                            plot, left=None, right=None, top=None, bottom=None, color=None
+                        ):
+                            ra = self.plot_render_area(plot)
+                            ra.left = render_area[0] if left is None else left
+                            ra.bottom = render_area[1] if bottom is None else bottom
+                            ra.right = render_area[2] if right is None else right
+                            ra.top = render_area[3] if top is None else top
+                            if not color is None:
+                                ra.fill_color = color
+
+                        set_bounds(
+                            self.raw_x, left=min_max_tracks_x[0], right=min_max_tracks_x[1]
+                        )
+                        set_bounds(
+                            self.raw_y, bottom=min_max_tracks_y[0], top=min_max_tracks_y[1]
+                        )
+                        set_bounds(self.anno_x, left=0, right=len(displayed_annos_x))
+                        set_bounds(self.anno_y, bottom=0, top=len(displayed_annos_y))
+
+                        set_bounds(self.heatmap, color=b_col)
+
+                        self.heatmap_data.data = d_heatmap
+                        self.raw_data_x.data = raw_data_x
+                        x_visible = len(raw_data_x["values"]) > 0
+                        self.raw_x.visible = self.show_hide["raw"] and x_visible
+                        self.raw_x_axis.visible = self.show_hide["raw"] and x_visible
+                        self.raw_data_y.data = raw_data_y
+                        y_visible = len(raw_data_y["values"]) > 0
+                        self.raw_y.visible = self.show_hide["raw"] and y_visible
+                        self.raw_y_axis.visible = self.show_hide["raw"] and y_visible
+
+                        self.anno_x.x_range.factors = displayed_annos_x
+                        self.anno_y.y_range.factors = displayed_annos_y[::-1]
+
+                        self.anno_x_data.data = d_anno_x
+                        self.anno_y_data.data = d_anno_y
+
+                        self.heatmap.x_range.reset_start = 0
+                        self.heatmap.x_range.reset_end = canvas_size_x
+                        self.heatmap.y_range.reset_start = 0
+                        self.heatmap.y_range.reset_end = canvas_size_y
+
+                        self.ticker_x.extra_ticks = tick_list_x
+                        self.ticker_x_2.extra_ticks = tick_list_x
+                        self.ticker_y.extra_ticks = tick_list_y
+                        self.ticker_y_2.extra_ticks = tick_list_y
+
+                        self.tick_formatter_x.args = ticks_x
+                        self.tick_formatter_x_2.args = contig_ticks_x
+                        self.tick_formatter_y.args = ticks_y
+                        self.tick_formatter_y_2.args = contig_ticks_y
+
+                        self.ranked_columns_data.data = ranked_slice_y
+                        self.ranked_rows_data.data = ranked_slice_x
+                        self.dist_dep_dec_plot_data.data = dist_dep_dec_plot_data
+
+                        if len(error) > 0:
+                            self.heatmap.border_fill_color = "red"
+                        else:
+                            self.heatmap.border_fill_color = None
+
+                        self.set_area_range()
+
+                        for plot in [
+                            self.heatmap,
+                            self.raw_y,
+                            self.anno_y,
+                            self.heatmap_x_axis,
+                            self.heatmap_x_axis_3,
+                        ]:
+                            plot.xgrid.bounds = (0, canvas_size_x)
+                            plot.xaxis.bounds = (0, canvas_size_x)
+                        for plot in [
+                            self.heatmap,
+                            self.raw_x,
+                            self.anno_x,
+                            self.heatmap_y_axis,
+                            self.heatmap_y_axis_3,
+                        ]:
+                            plot.ygrid.bounds = (0, canvas_size_y)
+                            plot.yaxis.bounds = (0, canvas_size_y)
+
+                        self.curdoc.unhold()
+                        self.print_status(end_text + " | Errors: " + error_text)
+                        self.curdoc.add_timeout_callback(
+                            lambda: self.render_callback(),
+                            self.session.get_value(
+                                ["settings", "interface", "update_freq", "val"]
+                            )
+                            * 1000,
+                        )
+                    self.curdoc.add_next_tick_callback(callback)
+                    return True
 
             while cancelable_task() is None:
                 pass
