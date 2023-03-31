@@ -31,8 +31,6 @@ def on_server_loaded(server_context):
         )
     else:
         bin.global_variables.quiet = os.environ["smoother_quiet"] == "True"
-    if "smoother_local_ice" in os.environ:
-        bin.global_variables.allow_local_ice = os.environ["smoother_local_ice"] == "True"
 
     path = None
     if "smoother_index_path" in os.environ:

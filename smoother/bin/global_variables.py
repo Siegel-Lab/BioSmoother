@@ -13,9 +13,6 @@ keep_alive = False
 global smoother_index
 smoother_index = None
 
-global allow_local_ice
-allow_local_ice = False
-
 global quiet
 quiet = False
 

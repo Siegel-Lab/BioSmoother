@@ -1497,6 +1497,7 @@ class MainLayout:
         self.area_range = None
         self.area_range_expected = "n/a"
         self.set_active_tools_ti = None
+        self.render_now = False
         self.updatable_multi_choice = {}
         d = {
             "chrs": [],
@@ -1930,14 +1931,12 @@ class MainLayout:
                 ("Reads per million", "rpm"),
                 ("Reads per thousand", "rpk"),
                 ("Binominal test", "radicl-seq"),
-                ("Iterative Correction", "ice-precomp"),
+                ("Iterative Correction", "ice"),
                 ("Associated slices", "grid-seq"),
                 ("No normalization", "dont"),
             ]
         if Quarry.has_cooler_icing():
             norm_sele.append((("Cooler Iterative Correction", "cool-ice")))
-        if bin.global_variables.allow_local_ice:
-            norm_sele.append((("Local Iterative Correction", "ice-local")))
 
         normalization = self.dropdown_select(
             "Normalize heatmap by",
@@ -1999,6 +1998,13 @@ class MainLayout:
             settings=["settings", "normalization", "ice_sparse_slice_filter"],
             sizing_mode="stretch_width",
         )
+        ice_num_samples = self.make_slider_spinner(
+            width=SETTINGS_WIDTH,
+            tooltip="tooltip_ice_num_samples", # @todo
+            title="Number of samples",
+            settings=["settings", "normalization", "num_ice_bins"],
+            sizing_mode="stretch_width",
+        )
         ddd_sam_l = self.make_range_slider_spinner(
             width=SETTINGS_WIDTH,
             tooltip="tooltip_ddd_samples",
@@ -2013,10 +2019,23 @@ class MainLayout:
             settings=["settings", "interface", "squared_bins"],
         )
         do_redraw = self.make_checkbox(
-            "Do redraw",
+            "Auto Render",
             "tooltip_do_redraw", # @todo
             settings=["settings", "interface", "do_redraw"],
         )
+        render_now = Button(
+            label="Render Now",
+            width=SETTINGS_WIDTH,
+            sizing_mode="fixed",
+            css_classes=["other_button", "tooltip", "tooltip_render_now"], # @todo
+            height=DROPDOWN_HEIGHT,
+        )
+
+        def render_now_event(x):
+            self.render_now = True
+            self.trigger_render()
+
+        render_now.on_click(render_now_event)
 
         power_ten_bin = self.make_checkbox(
             "Snap Bin Size",
@@ -2437,16 +2456,6 @@ class MainLayout:
             "@todo",
             settings=["settings", "filters", "anno_filter_row"],
         )
-        ice_show_bias = self.make_checkbox(
-            "Display Bias as Secondary Data",
-            "@todo",
-            settings=["settings", "normalization", "ice_show_bias"],
-        )
-        ice_show_local_bias = [self.make_checkbox(
-            "Display local Bias as Secondary Data",
-            "@todo",
-            settings=["settings", "normalization", "ice_show_local_bias"],
-        )] if bin.global_variables.allow_local_ice else []
 
         chrom_layout = self.multi_choice_auto(
             "Contig Name",
@@ -2881,7 +2890,7 @@ class MainLayout:
                                         self.ranked_rows,
                                     ],
                                 ),
-                                self.make_panel("ICE", "", [ice_sparse_filter, ice_show_bias, *ice_show_local_bias]),
+                                self.make_panel("ICE", "", [ice_sparse_filter, ice_num_samples]),
                             ]
                         ),
                     ],
@@ -2990,7 +2999,7 @@ class MainLayout:
                                         self.v4c_row,
                                     ],
                                 ),
-                                self.make_panel("Rendering", "", [ufs_l, rs_l, aas_l, do_redraw]),
+                                self.make_panel("Rendering", "", [ufs_l, rs_l, aas_l, do_redraw, render_now]),
                             ]
                         ),
                     ],
@@ -3159,7 +3168,8 @@ class MainLayout:
     def render(self, zoom_in_render):
         def unlocked_task():
             def cancelable_task():
-                if self.session.get_value(["settings", "interface", "do_redraw"]):
+                if self.session.get_value(["settings", "interface", "do_redraw"]) or self.render_now:
+                    self.render_now = False
                     def callback():
                         self.spinner.css_classes = ["fade-in"]
 
