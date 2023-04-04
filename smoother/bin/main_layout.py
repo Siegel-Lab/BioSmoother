@@ -1056,10 +1056,6 @@ class MainLayout:
                         "(x, y)",
                         "(@chr_x @index_left .. @index_right, @chr_y @index_bottom .. @index_top)",
                     ),
-                    (
-                        "sym(x, y)",
-                        "(@chr_x_symmetry @index_symmetry_left .. @index_symmetry_right, @chr_y_symmetry @index_symmetry_bottom .. @index_symmetry_top)",
-                    ),
                     ("score", "@score_total"),
                     ("reads by group", "A: @score_a, B: @score_b"),
                 ]
@@ -1409,12 +1405,6 @@ class MainLayout:
             "score_total": [],
             "score_a": [],
             "score_b": [],
-            "chr_x_symmetry": [],
-            "chr_y_symmetry": [],
-            "index_symmetry_left": [],
-            "index_symmetry_right": [],
-            "index_symmetry_bottom": [],
-            "index_symmetry_top": [],
             "0": [],
             "ranged_score": [],
         }
@@ -1578,10 +1568,6 @@ class MainLayout:
                     (
                         "(x, y)",
                         "(@chr_x @index_left .. @index_right, @chr_y @index_bottom .. @index_top)",
-                    ),
-                    (
-                        "sym(x, y)",
-                        "(@chr_x_symmetry @index_symmetry_left .. @index_symmetry_right, @chr_y_symmetry @index_symmetry_bottom .. @index_symmetry_top)",
                     ),
                     ("score", "@score_total"),
                     ("reads by group", "A: @score_a, B: @score_b"),
@@ -1914,17 +1900,18 @@ class MainLayout:
         last_bin_in_contig = self.dropdown_select(
             "Remainder Bin",
             "tooltip_remainder_bin",
+            ("Merge remainder into last fullsized bin", "larger"),
             ("Hide remainder", "skip"),
             ("Display remainder", "smaller"),
-            (
-                "Hide remainder if no fullsized bin exists",
-                "smaller_if_fullsized_exists",
-            ),
-            ("Merge remainder into last fullsized bin", "larger"),
             ("Make contig smaller", "fit_chrom_smaller"),
             ("Make contig larger", "fit_chrom_larger"),
             ("Extend remainder bin into next contig (only visual)", "cover_multiple"),
             active_item=["settings", "filters", "cut_off_bin"],
+        )
+        contig_smaller_than_bin = self.make_checkbox(
+            "Fill contigs that are smaller than one bin",
+            "tooltip_cibtug_snakker_than_bin", # @todo
+            settings=["settings", "filters", "show_contig_smaller_than_bin"],
         )
 
         norm_sele = [
@@ -2083,8 +2070,8 @@ class MainLayout:
         axis_lables = self.dropdown_select(
             "Axis Labels",
             "tooltip_y_axis_label",
-            ("RNA / DNA", "RNA_DNA"),
             ("DNA / RNA", "DNA_RNA"),
+            ("RNA / DNA", "RNA_DNA"),
             ("DNA / DNA", "DNA_DNA"),
             active_item=["settings", "interface", "axis_lables"],
             event=axis_labels_event,
@@ -2486,8 +2473,8 @@ class MainLayout:
         multiple_bin_per_anno = self.dropdown_select(
             "Multiple Bins for Annotation",
             "tooltip_multiple_bin_for_anno",
-            ("Show several bins for the annotation", "separate"),
             ("Stretch one bin over entire annotation", "stretch"),
+            ("Show several bins for the annotation", "separate"),
             ("Make all annotations size 1", "squeeze"),
             active_item=["settings", "filters", "anno_in_multiple_bins"],
         )
@@ -2985,6 +2972,7 @@ class MainLayout:
                                         square_bins,
                                         power_ten_bin,
                                         last_bin_in_contig,
+                                        contig_smaller_than_bin,
                                     ],
                                 ),
                                 self.make_panel(
@@ -3124,28 +3112,6 @@ class MainLayout:
             self.info_status_bar.text = s.replace("\n", " | ")
 
         self.curdoc.add_next_tick_callback(callback)
-
-    def make_anno_str(self, s, e):
-        anno_str = ""
-        if "Include Annotation" in self.session.get_value(
-            ["settings", "export", "selection"]
-        ):
-            for anno in self.displayed_annos:
-                c = self.meta.annotations[anno].count(s, e)
-                if c > 0 and c <= 10:
-                    if len(anno_str) > 0:
-                        anno_str += "; "
-                    anno_str += (
-                        anno
-                        + ": {"
-                        + self.meta.annotations[anno].info(s, e).replace("\n", " ")
-                        + "}"
-                    )
-                elif c > 0:
-                    if len(anno_str) > 0:
-                        anno_str += "; "
-                    anno_str += str(c) + "x " + anno
-        return anno_str
 
     def get_readable_bin_size(self):
         w_bin, h_bin = self.session.get_bin_size(self.print)
