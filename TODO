@@ -1,7 +1,7 @@
 
 # smoother todo (ranked)
 
-- separate skip too small contigs from remainder bin options
+- remove default.json from smoother_hg
 - hide empty annotation panel & hide empty heatmap
 - with autorender off -> exiting viewer hangs
 - without annotations -> empty picture

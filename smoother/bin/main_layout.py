@@ -1992,6 +1992,16 @@ class MainLayout:
             settings=["settings", "normalization", "num_ice_bins"],
             sizing_mode="stretch_width",
         )
+        ice_show_bias = self.make_checkbox(
+            "Show Bias",
+            "tooltip_ice_show_bias", # @todo
+            settings=["settings", "normalization", "ice_show_bias"],
+        )
+        ice_local = self.make_checkbox(
+            "Local Ice",
+            "tooltip_local_ice", # @todo
+            settings=["settings", "normalization", "ice_local"],
+        )
         ddd_sam_l = self.make_range_slider_spinner(
             width=SETTINGS_WIDTH,
             tooltip="tooltip_ddd_samples",
@@ -2877,7 +2887,8 @@ class MainLayout:
                                         self.ranked_rows,
                                     ],
                                 ),
-                                self.make_panel("ICE", "", [ice_sparse_filter, ice_num_samples]),
+                                self.make_panel("ICE", "", [ice_sparse_filter, ice_num_samples, 
+                                                            ice_show_bias, ice_local]),
                             ]
                         ),
                     ],

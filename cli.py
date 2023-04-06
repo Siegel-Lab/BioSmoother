@@ -71,7 +71,7 @@ def make_main_parser():
     )
     sub_parsers.required = True
     add_parsers(sub_parsers)
-    libsmoother.indexer_parser.add_parsers(sub_parsers)
+    libsmoother.cli.add_parsers(sub_parsers)
     return parser
 
 def main():
