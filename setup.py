@@ -22,6 +22,7 @@ setup(
     py_modules=["cli"],
     packages=find_packages(where='.'),
     include_package_data=True,
+    data_files=[("smoother", ["smoother/VERSION"])],
     extras_require={"test": "pytest"},
     zip_safe=False,
     python_requires=">=3.9",
