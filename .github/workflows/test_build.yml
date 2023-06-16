@@ -68,6 +68,7 @@ jobs:
     - name: Install package
       run: |
         pip install --upgrade pip
+        pip install scipy statsmodels scikit-learn bokeh==2.3.2 psutil
         pip install --index-url https://test.pypi.org/simple/ biosmoother
 
     - name: Import package
