@@ -2,7 +2,6 @@ from distutils.core import setup
 import os
 from setuptools import find_packages
 import subprocess
-import sys
 
 VERSION = "0.3.3"
 
@@ -47,6 +46,14 @@ def conf_version(in_file_name, cmake_version, out_file_name):
 # update version file...
 conf_version("VERSION.in", VERSION, "biosmoother/VERSION")
 
+def package_files(directory):
+    paths = []
+    for (path, _, filenames) in os.walk(directory):
+        for filename in filenames:
+            paths.append(os.path.join('..', path, filename))
+    return paths
+extra_files = package_files('biosmoother')
+print(extra_files)
 
 setup(
     name="biosmoother",
@@ -61,6 +68,7 @@ setup(
     """,
     py_modules=["cli"],
     packages=find_packages(where='.'),
+    package_data={'biosmoother': extra_files},
     include_package_data=True,
     data_files=[("biosmoother", ["biosmoother/VERSION"])],
     extras_require={"test": "pytest"},
