@@ -9,7 +9,12 @@ def conf_version(in_file_name, cmake_version, out_file_name):
         return subprocess.check_output(cmd)
 
     git_commit_hash="-".join(run_command(["git", "log", "-1", "--format=%h-%ci"]).decode().split()[:2])
-    git_status="" if run_command(["git", "status", "-s"]) == "" else "D-"
+    status_out = run_command(["git", "status", "-s"])
+    if len(status_out) > 0:
+        print("WARNING: building on dirty git repo", status_out)
+        git_status="D-"
+    else:
+        git_status=""
 
     os.makedirs(os.path.dirname(out_file_name), exist_ok=True)
 

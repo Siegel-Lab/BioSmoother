@@ -3,7 +3,7 @@ import os
 from conf_version_file import conf_version
 from setuptools import find_packages
 
-VERSION = "0.3.1"
+VERSION = "0.3.2"
 
 # update version file...
 conf_version("VERSION.in", VERSION, "biosmoother/VERSION")
@@ -18,7 +18,7 @@ setup(
     url='https://github.com/Siegel-Lab/biosmoother',
     description="On-the-fly processing and visualization of contact mapping data",
     long_description="""
-        # On-the-fly processing and visualization of contact mapping data
+        On-the-fly processing and visualization of contact mapping data
     """,
     py_modules=["cli"],
     packages=find_packages(where='.'),
@@ -26,7 +26,7 @@ setup(
     data_files=[("biosmoother", ["biosmoother/VERSION"])],
     extras_require={"test": "pytest"},
     zip_safe=False,
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
