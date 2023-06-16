@@ -16,29 +16,32 @@ permissions:
   contents: read
 
 jobs:
-  build-sourcedist:
+  publish-pypi:
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v3
-    - name: Update submodules
-      run: |
-        git config --global --add safe.directory '*'
-        git submodule update --init --recursive
-    - name: Set up Python
-      uses: actions/setup-python@v3
+    - uses: actions/setup-python@v3
       with:
         python-version: 3.9
+  
     - name: Install dependencies
       run: |
         pip install --upgrade pip
-        pip install wheel pybind11 auditwheel build
-    - name: Build package
-      run: |
-        python -m build --sdist -o dist
-    - uses: actions/upload-artifact@v3
+        pip install wheel libbiosmoother
+        git config --global --add safe.directory '*'
+
+    - uses: actions/checkout@v3
       with:
-        name: dist
-        path: ./dist
+        submodules: true
+
+    - name: Build package
+      run: python setup.py bdist_wheel -vvv
+
+    - name: Publish package
+      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}
 
 
   publish-pypi:

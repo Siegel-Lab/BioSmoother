@@ -7,7 +7,8 @@
 - v4c viewpoint not updating for chr7_core
 - v4c not exported into TSV file
 - be able to import files with counts instead of raw reads
-- presettings bug
+- presettings cannot be loaded
+- extremely slow if all unitigs are there
 
 - export / import session
 - remove default.json from smoother_hg
