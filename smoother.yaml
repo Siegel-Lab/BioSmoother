@@ -1,4 +1,4 @@
-name: smoother
+name: biosmoother
 channels:
   - anaconda
   - conda-forge
@@ -12,5 +12,5 @@ dependencies:
   - git
   - pip
   - pip:
-      - git+https://github.com/Siegel-Lab/Smoother.git@stable-latest
-      - --no-binary libsps,libsmoother
+      - git+https://github.com/Siegel-Lab/BioSmoother.git@stable-latest
+      - --no-binary libsps,libbiosmoother

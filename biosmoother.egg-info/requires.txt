@@ -1,0 +1,6 @@
+libbiosmoother
+bokeh==2.3.2
+psutil
+
+[test]
+pytest

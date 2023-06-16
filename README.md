@@ -25,9 +25,9 @@ conda activate smoother
 Install conda-specific requirements
 ```
 # make sure the proper compiler is installed
-conda install -y gcc=9.4.0 gxx=9.4.0 -c conda-forge
+conda install -y gcc=9.4.0 gxx=9.4.0 cmake=3.19 -c conda-forge
 # install requirements of smoother serve
-conda install -y nodejs==18.12.1 tornado git -c conda-forge
+conda install -y nodejs=18.12.1 tornado=6.1 git=2.23.0 -c conda-forge
 ```
 
 Install smoother (and all requirements) from GitHub.

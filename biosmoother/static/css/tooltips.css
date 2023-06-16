@@ -337,11 +337,11 @@
 }
 
 .tooltip_grid_seq:after {
-    content: "Configure smoother to look like the GRID-seq paper analysis";
+    content: "Configure biosmoother to look like the GRID-seq paper analysis";
 }
 
 .tooltip_radicl_seq:after {
-    content: "Configure smoother to look like the RADICL-seq paper analysis";
+    content: "Configure biosmoother to look like the RADICL-seq paper analysis";
 }
 
 .tooltip_color:after {

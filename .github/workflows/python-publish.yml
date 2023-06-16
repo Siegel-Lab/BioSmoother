@@ -1,0 +1,58 @@
+# This workflow will upload a Python Package using Twine when a release is created
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Publish Python Package
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build-sourcedist:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Update submodules
+      run: |
+        git config --global --add safe.directory '*'
+        git submodule update --init --recursive
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install wheel pybind11 auditwheel build
+    - name: Build package
+      run: |
+        python -m build --sdist -o dist
+    - uses: actions/upload-artifact@v3
+      with:
+        name: dist
+        path: ./dist
+
+
+  publish-pypi:
+    needs: [build-sourcedist]
+    runs-on: ubuntu-20.04
+  
+    steps:
+    - uses: actions/download-artifact@v3
+      with:
+        name: dist
+        path: ./dist
+
+    - name: Publish package
+      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}

@@ -1,6 +1,15 @@
+# Where i left of:
+
+- norm correlation notebook in libBioSmoother
 
 # smoother todo (ranked)
 
+- v4c viewpoint not updating for chr7_core
+- v4c not exported into TSV file
+- be able to import files with counts instead of raw reads
+- presettings bug
+
+- export / import session
 - remove default.json from smoother_hg
 - hide empty annotation panel & hide empty heatmap
 - with autorender off -> exiting viewer hangs
@@ -14,14 +23,6 @@
 - sortable multi choice: column labels and checkboxes not aligned
 - sort session .json into static values & parameters
     -  exclude static values form undo & redo
-- application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
-- virtual 4C functionality
-- extra plots could be auto hidden while empty -> anno cov ddd slice_rankings
-    - also column sum & row sum coverage does not need to exist if zero
-
-# verification
-
-- check if lines coincide with rRNA / ncRNA / snoRNA / tRNA
 
 # presentation
 
@@ -38,3 +39,12 @@
 - 
 
 
+# Reference organisms by genome size:
+
+- e. coli                    5.5 Mb
+- yeast:                    12   Mb
+(- plasmodium:              24   Mb)
+- tryps:                    35   Mb
+- fly:                     180   Mb
+(- zebrafish:             1412   Mb)
+- human:                  3200   Mb

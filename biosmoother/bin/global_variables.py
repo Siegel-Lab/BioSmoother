@@ -10,8 +10,8 @@ no_save = False
 global keep_alive
 keep_alive = False
 
-global smoother_index
-smoother_index = None
+global biosmoother_index
+biosmoother_index = None
 
 global quiet
 quiet = False

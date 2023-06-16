@@ -1,5 +1,5 @@
 import argparse
-import libsmoother
+import libbiosmoother
 import bokeh.command.subcommands.serve as bcss
 import os
 from pathlib import Path
@@ -10,14 +10,14 @@ except ImportError:
     import importlib_resources as pkg_resources
 
 def serve(args):
-    import smoother
-    args.files = [Path(smoother.__file__).parent]
+    import biosmoother
+    args.files = [Path(biosmoother.__file__).parent]
 
-    os.environ["smoother_index_path"] = args.index_prefix
-    os.environ["smoother_port"] = str(args.port)
-    os.environ["smoother_no_save"] = str(args.no_save)
-    os.environ["smoother_keep_alive"] = str(args.keep_alive)
-    os.environ["smoother_quiet"] = str(args.quiet)
+    os.environ["biosmoother_index_path"] = args.index_prefix
+    os.environ["biosmoother_port"] = str(args.port)
+    os.environ["biosmoother_no_save"] = str(args.no_save)
+    os.environ["biosmoother_keep_alive"] = str(args.keep_alive)
+    os.environ["biosmoother_quiet"] = str(args.quiet)
 
     args.log_level = "error"
 
@@ -25,7 +25,7 @@ def serve(args):
 
 def add_parsers(main_parser):
     parser = main_parser.add_parser(
-        "serve", help="Serve a smoother index."
+        "serve", help="Serve a biosmoother index."
     )
     parser.add_argument(
         "index_prefix",
@@ -45,7 +45,7 @@ def add_parsers(main_parser):
                 "--port",
                 "--address",
                 "--allow-websocket-origin",
-            ]) and not "smoother_dont_hide_args" in os.environ:
+            ]) and not "biosmoother_dont_hide_args" in os.environ:
                 a["help"] = argparse.SUPPRESS
             yield name, a
 
@@ -71,20 +71,20 @@ def make_main_parser():
     )
     sub_parsers.required = True
     add_parsers(sub_parsers)
-    libsmoother.cli.add_parsers(sub_parsers)
+    libbiosmoother.cli.add_parsers(sub_parsers)
     return parser
 
 def main():
     parser = make_main_parser()
 
     parser.add_argument('-v', '--version', action='version',
-                        version=(pkg_resources.files("smoother") / "VERSION").read_text())
+                        version=(pkg_resources.files("biosmoother") / "VERSION").read_text())
     parser.add_argument('--version_lib', action='version', help=argparse.SUPPRESS,
-                        version=libsmoother._import_lib_smoother_cpp.LIB_SMOOTHER_CPP_VERSION)
+                        version=libbiosmoother._import_lib_bio_smoother_cpp.LIB_BIO_SMOOTHER_CPP_VERSION)
     parser.add_argument('--version_sps', action='version', help=argparse.SUPPRESS,
-                        version=libsmoother._import_lib_smoother_cpp.SPS_VERSION)
+                        version=libbiosmoother._import_lib_bio_smoother_cpp.SPS_VERSION)
     parser.add_argument('--compiler_id', action='version', help=argparse.SUPPRESS,
-                        version=libsmoother._import_lib_smoother_cpp.COMPILER_ID)
+                        version=libbiosmoother._import_lib_bio_smoother_cpp.COMPILER_ID)
 
     args = parser.parse_args()
 

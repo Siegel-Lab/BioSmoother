@@ -37,7 +37,7 @@ from bokeh.palettes import Viridis256, Colorblind, Plasma256, Turbo256
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from bokeh.models.tickers import AdaptiveTicker
-from libsmoother import Quarry, export_tsv, export_png, export_svg, open_default_json
+from libbiosmoother import Quarry, export_tsv, export_png, export_svg, open_default_json
 import json
 from bin.figure_maker import FigureMaker, DROPDOWN_HEIGHT, FONT
 from bin.extra_ticks_ticker import *
@@ -66,7 +66,7 @@ DEFAULT_TEXT_INPUT_HEIGHT = 30
 
 executor = ThreadPoolExecutor(max_workers=1)
 
-smoother_home_folder = str(Path.home()) + "/.smoother"
+biosmoother_home_folder = str(Path.home()) + "/.biosmoother"
 
 
 class MainLayout:
@@ -397,13 +397,13 @@ class MainLayout:
         SYM_CSS = ["other_button"]
 
         with open_default_json() if file_nr == "default" else (
-            pkg_resources.files("smoother")
+            pkg_resources.files("biosmoother")
             / "static"
             / "conf"
             / (str(file_nr) + ".json")
         ).open("r") as f:
             factory_default = json.load(f)
-        out_file = smoother_home_folder + "/conf/" + str(file_nr) + ".json"
+        out_file = biosmoother_home_folder + "/conf/" + str(file_nr) + ".json"
         if not os.path.exists(out_file):
             with open(out_file, "w") as f:
                 json.dump(factory_default, f)
@@ -475,7 +475,7 @@ class MainLayout:
             settings["display_name"] = name.value
             settings["smoother_config_file_version"] = CONFIG_FILE_VERSION
             with open(
-                smoother_home_folder + "/conf/" + str(file_nr) + ".json", "w"
+                biosmoother_home_folder + "/conf/" + str(file_nr) + ".json", "w"
             ) as f:
                 json.dump(settings, f)
             reset_button.disabled = settings == factory_default
@@ -491,20 +491,20 @@ class MainLayout:
 
         def reset_event():
             with (
-                pkg_resources.files("smoother")
+                pkg_resources.files("biosmoother")
                 / "static"
                 / "conf"
                 / (str(file_nr) + ".json")
             ).open("r") as f_in:
                 with open(
-                    smoother_home_folder + "/conf/" + str(file_nr) + ".json"
+                    biosmoother_home_folder + "/conf/" + str(file_nr) + ".json"
                 ) as f_out:
                     for l in f_in:
                         f_out.write(l)
             reset_button.disabled = True
             reset_button.css_classes = SYM_CSS + ["fa_reset_disabled"]
             with open(
-                smoother_home_folder + "/conf/" + str(file_nr) + ".json", "r"
+                biosmoother_home_folder + "/conf/" + str(file_nr) + ".json", "r"
             ) as f:
                 settings = json.load(f)
             name.value = settings["display_name"]
@@ -515,7 +515,7 @@ class MainLayout:
             if not bin.global_variables.quiet:
                 print("applying...")
             with open(
-                smoother_home_folder + "/conf/" + str(file_nr) + ".json", "r"
+                biosmoother_home_folder + "/conf/" + str(file_nr) + ".json", "r"
             ) as f:
                 settings = json.load(f)
 
@@ -1374,19 +1374,19 @@ class MainLayout:
         self.curdoc = curdoc()
         self.last_drawing_area = (0, 0, 0, 0)
         self.curr_area_size = 1
-        self.smoother_version = "?"
+        self.biosmoother_version = "?"
         self.reset_options = {}
-        self.session = Quarry(bin.global_variables.smoother_index)
+        self.session = Quarry(bin.global_variables.biosmoother_index)
         # self.session.verbosity = 5
-        if not os.path.exists(smoother_home_folder + "/conf/"):
-            os.makedirs(smoother_home_folder + "/conf/")
-        if not os.path.exists(smoother_home_folder + "/conf/default.json"):
+        if not os.path.exists(biosmoother_home_folder + "/conf/"):
+            os.makedirs(biosmoother_home_folder + "/conf/")
+        if not os.path.exists(biosmoother_home_folder + "/conf/default.json"):
             with open_default_json() as f_in:
-                with open(smoother_home_folder + "/conf/default.json", "w") as f_out:
+                with open(biosmoother_home_folder + "/conf/default.json", "w") as f_out:
                     for l in f_in:
                         f_out.write(l)
 
-        with open(smoother_home_folder + "/conf/default.json", "r") as f:
+        with open(biosmoother_home_folder + "/conf/default.json", "r") as f:
             self.settings_default = json.load(f)
 
         self.heatmap = None
@@ -2557,17 +2557,17 @@ class MainLayout:
         self.low_color.on_change("color", color_event_low)
         self.high_color.on_change("color", color_event_high)
 
-        with pkg_resources.open_text("smoother", "VERSION") as in_file:
-            self.smoother_version = in_file.readlines()[0][:-1]
+        with pkg_resources.open_text("biosmoother", "VERSION") as in_file:
+            self.biosmoother_version = in_file.readlines()[0][:-1]
 
         version_info = Div(
-            text="Smoother "
-            + self.smoother_version
+            text="BioSmoother "
+            + self.biosmoother_version
             + "<br>LibSps Version: "
             + Quarry.get_libSps_version()
         )
         index_info = Div(
-            text="Index path:" + os.environ["smoother_index_path"] if "smoother_index_path" in os.environ else "unknown"
+            text="Index path:" + os.environ["biosmoother_index_path"] if "biosmoother_index_path" in os.environ else "unknown"
         )
 
         self.color_layout = row(
@@ -2593,7 +2593,7 @@ class MainLayout:
 
         def reset_event():
             with open(
-                self.meta_file.value + ".smoother_index/default_session.json", "r"
+                self.meta_file.value + ".biosmoother_index/default_session.json", "r"
             ) as f:
                 default_session = json.load(f)
                 default_session["settings"] = self.session.get_value(["settings"])
@@ -2776,7 +2776,7 @@ class MainLayout:
         if bin.global_variables.no_save:
             export_panel = [
                 Div(
-                    text="This instance of smoother has been configured not to allow saving files on the server, so the Export tab has been disabled. Otherwise you could use this tab to export your raw data in tsv format, or create svg pictures from your data.",
+                    text="This instance of biosmoother has been configured not to allow saving files on the server, so the Export tab has been disabled. Otherwise you could use this tab to export your raw data in tsv format, or create svg pictures from your data.",
                     sizing_mode="stretch_width",
                 )
             ]
@@ -3404,9 +3404,9 @@ class MainLayout:
                             self.print_status("rendering due to zoom in.")
                             zoom_in_render = True
                         elif self.force_render:
-                            self.print_status("rendering due parameter change.")
+                            self.print_status("rendering due to parameter change.")
                         elif MainLayout.area_outside(self.last_drawing_area, curr_area):
-                            self.print_status("rendering due pan or zoom out.")
+                            self.print_status("rendering due to pan or zoom out.")
                         else:
                             self.print_status("rendering.")
                         self.force_render = False
@@ -3444,7 +3444,7 @@ class MainLayout:
     def set_root(self):
         self.curdoc.clear()
         self.curdoc.add_root(self.root)
-        self.curdoc.title = "Smoother"
+        self.curdoc.title = "BioSmoother"
         self.do_render = True
         self.force_render = True
         self.do_config()
