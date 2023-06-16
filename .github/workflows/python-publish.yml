@@ -44,10 +44,10 @@ jobs:
         password: ${{ secrets.PYPI_API_TOKEN }}
 
 
-  publish-pypi:
-    needs: [build-sourcedist]
-    runs-on: ubuntu-20.04
-  
+  test:
+    needs: [publish-pypi]
+    runs-on: ubuntu-latest
+
     steps:
     - uses: actions/download-artifact@v3
       with:
