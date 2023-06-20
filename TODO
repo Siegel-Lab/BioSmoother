@@ -7,7 +7,6 @@
 - v4c viewpoint not updating for chr7_core
 - v4c not exported into TSV file
 - be able to import files with counts instead of raw reads
-- presettings cannot be loaded
 - extremely slow if all unitigs are there
 
 - export / import session
@@ -42,10 +41,14 @@
 
 # Reference organisms by genome size:
 
-- e. coli                    5.5 Mb
-- yeast:                    12   Mb
+- e. coli:                   5.5 Mb     OK
+- budding yeast:            12   Mb     OK
 (- plasmodium:              24   Mb)
-- tryps:                    35   Mb
-- fly:                     180   Mb
+- tryps:                    35   Mb     OK
+(- c. elegans:             100   Mb)
+- drosophila:              140   Mb     OK
+(- rice:                   430   Mb)
 (- zebrafish:             1412   Mb)
-- human:                  3200   Mb
+(- chicken:               1000   Mb)
+(- mouse:                 2800   Mb)
+- human:                  3200   Mb     OK

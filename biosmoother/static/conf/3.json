@@ -1,1 +1,18 @@
-{"interface": {"min_bin_size": {"min": 27}}, "normalization": {"log_base": {"val": 5}, "normalize_by": "hi-c"}, "replicates": {"coverage_get_max_bin_size": {"min": 1000, "step": 1000}}, "display_name": "Hi-C", "smoother_config_file_version": 0.1}
+{
+    "active_tools": [
+        "Pan",
+        "Wheel Zoom",
+        "Crosshair"
+    ],
+    "display_name": "Hi-C",
+    "interface": {
+        "min_bin_size": {
+            "min": 36,
+            "val": 36
+        }
+    },
+    "normalization": {
+        "normalize_by": "ice"
+    },
+    "smoother_config_file_version": 0.1
+}

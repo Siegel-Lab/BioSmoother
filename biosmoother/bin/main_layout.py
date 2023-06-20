@@ -497,7 +497,7 @@ class MainLayout:
                 / (str(file_nr) + ".json")
             ).open("r") as f_in:
                 with open(
-                    biosmoother_home_folder + "/conf/" + str(file_nr) + ".json"
+                    biosmoother_home_folder + "/conf/" + str(file_nr) + ".json", "w"
                 ) as f_out:
                     for l in f_in:
                         f_out.write(l)
