@@ -3287,6 +3287,10 @@ class MainLayout:
 
                         self.anno_x_data.data = d_anno_x
                         self.anno_y_data.data = d_anno_y
+                        self.anno_x.visible = len(d_anno_x["anno_name"]) > 0 and self.show_hide["annotation"]
+                        self.anno_x_axis.visible =self.anno_x.visible
+                        self.anno_y.visible = len(d_anno_y["anno_name"]) > 0 and self.show_hide["annotation"]
+                        self.anno_y_axis.visible =self.anno_y.visible
 
                         self.heatmap.x_range.reset_start = 0
                         self.heatmap.x_range.reset_end = canvas_size_x

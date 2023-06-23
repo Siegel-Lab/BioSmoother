@@ -5,15 +5,12 @@
 # smoother todo (ranked)
 
 - v4c viewpoint not updating for chr7_core
-- v4c not exported into TSV file
 - be able to import files with counts instead of raw reads
-- extremely slow if all unitigs are there
 - importing tracks 
 - max number of characters for axis labels -> properly (only on axis lables not in hover)
 
 - export / import session
 - remove default.json from smoother_hg
-- hide empty annotation panel & hide empty heatmap
 - with autorender off -> exiting viewer hangs
 - without annotations -> empty picture
 - min bin size slider does not update value
