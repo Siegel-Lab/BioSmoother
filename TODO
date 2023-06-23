@@ -8,6 +8,8 @@
 - v4c not exported into TSV file
 - be able to import files with counts instead of raw reads
 - extremely slow if all unitigs are there
+- importing tracks 
+- max number of characters for axis labels -> properly (only on axis lables not in hover)
 
 - export / import session
 - remove default.json from smoother_hg

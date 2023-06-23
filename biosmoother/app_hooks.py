@@ -1,5 +1,5 @@
 import os
-from libbiosmoother import Index, open_default_json
+from libbiosmoother import Index
 import bin.global_variables
 import json
 import os
@@ -41,12 +41,6 @@ def on_server_loaded(server_context):
         if not path is None:
             print("loading index...")
             biosmoother_index = Index(path)
-
-            if biosmoother_index.get_value(["settings"]) is None:
-                with open_default_json() as f:
-                    settings = json.load(f)
-                # print(settings)
-                biosmoother_index.set_value(["settings"], settings)
 
             bin.global_variables.biosmoother_index = biosmoother_index
 

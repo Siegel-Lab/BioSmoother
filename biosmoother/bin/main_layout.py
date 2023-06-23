@@ -1524,7 +1524,6 @@ class MainLayout:
         self.heatmap.min_border_right = 3
         self.heatmap.min_border_bottom = 3
         self.heatmap.min_border_top = 3
-        self.heatmap.border_fill_color = None
 
         self.heatmap.quad(
             left="screen_left",
@@ -2242,6 +2241,13 @@ class MainLayout:
             tooltip="tooltip_export_coordinate_size",
             settings=["settings", "export", "coords"],
             title="Coordinate size",
+            sizing_mode="stretch_width",
+        )
+        axis_label_max_char = self.make_slider_spinner(
+            width=SETTINGS_WIDTH,
+            tooltip="@todo",
+            settings=["settings", "interface", "axis_label_max_char"],
+            title="Maximal Character of Labels",
             sizing_mode="stretch_width",
         )
         export_contigs_size = self.make_slider_spinner(
@@ -2972,7 +2978,7 @@ class MainLayout:
                                 self.make_panel(
                                     "Panels",
                                     "",
-                                    [show_hide, ass_l, rss2_l, stretch, axis_lables],
+                                    [show_hide, ass_l, rss2_l, stretch, axis_lables, axis_label_max_char],
                                 ),
                                 self.make_panel(
                                     "Bins",
@@ -3300,11 +3306,6 @@ class MainLayout:
                         self.ranked_columns_data.data = ranked_slice_y
                         self.ranked_rows_data.data = ranked_slice_x
                         self.dist_dep_dec_plot_data.data = dist_dep_dec_plot_data
-
-                        if len(error) > 0:
-                            self.heatmap.border_fill_color = "red"
-                        else:
-                            self.heatmap.border_fill_color = None
 
                         self.set_area_range()
 
