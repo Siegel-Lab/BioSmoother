@@ -95,7 +95,7 @@ class MainLayout:
             options = op
             d = {}
             for _, key in options:
-                d[key] = key == active_item
+                d[key] = key == str(active_item)
             if active_item is None:
                 d[options[0][1]] = True
             make_menu()
@@ -927,6 +927,10 @@ class MainLayout:
         y_visible = len(self.raw_data_y.data["values"]) > 0
         self.raw_y.visible = self.show_hide["raw"] and y_visible
         self.raw_y_axis.visible = self.show_hide["raw"] and y_visible
+        self.anno_x.visible = len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"]
+        self.anno_x_axis.visible =self.anno_x.visible
+        self.anno_y.visible = len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"]
+        self.anno_y_axis.visible =self.anno_y.visible
 
         if not self.unhide_button is None:
             if self.unhide_button.visible == self.show_hide["tools"]:
@@ -1293,10 +1297,11 @@ class MainLayout:
         if not self.session is None:
             self.session.set_value(["settings", "active_tools"], tools.split(";"))
 
-    def make_tabs(self, tabs, sizing_mode="stretch_both"):
-        t = Tabs(tabs=tabs, sizing_mode=sizing_mode)
+    def make_tabs(self, tabs, sizing_mode="stretch_both", outer=False):
+        t = Tabs(tabs=tabs, sizing_mode=sizing_mode)#, disabled=True)
 
         def tab_active_change():
+            #return
             # super convoluted and unnecessary code...
             # bokeh's UI becomes slow with too many buttons on one screen
             # therefore we hide tabs that are not active
@@ -1314,12 +1319,14 @@ class MainLayout:
                 self.update_multi_choice(c)
             self.curdoc.unhold()
 
+        #if not outer:
         t.on_change("active", lambda x, y, z: tab_active_change())
         t.tabs[t.active].child.visible = True
         return t
 
     def make_panel(self, title, tooltip="", children=[], inner=True):
         return Panel(title=title, child=column(children, visible=False))
+        #return Panel(title=title, child=column(children, visible=True))
 
     @gen.coroutine
     @without_document_lock
@@ -2100,13 +2107,39 @@ class MainLayout:
             on_change=stretch_event,
         )
 
-        ms_l = self.make_range_slider_spinner(
-            width=SETTINGS_WIDTH,
-            tooltip="tooltip_map_q_bounds",
-            settings=["settings", "filters", "mapping_q"],
-            title="Mapping Quality Bounds",
-            sizing_mode="stretch_width",
+
+        def lower_bound_event(e):
+            self.session.set_value(["settings", "filters", "mapping_q", "val_min"], int(e))
+            self.trigger_render()
+
+        ms_l = self.dropdown_select(
+            "Mapping Quality: Lower Bound",
+            "tooltip_map_q_bounds",
+            (">= 0", "0"),
+            *[(">= " + str(i), str(idx + 1)) for idx, i in enumerate(self.session.get_value(["map_q_thresholds"]))],
+            active_item=["settings", "filters", "mapping_q", "val_min"],
+            event=lower_bound_event,
         )
+
+        def upper_bound_event(e):
+            self.session.set_value(["settings", "filters", "mapping_q", "val_max"], int(e))
+            self.trigger_render()
+        ms_l_2 = self.dropdown_select(
+            "Mapping Quality: Upper Bound",
+            "tooltip_map_q_bounds",
+            *[("< " + str(i), str(idx + 1)) for idx, i in enumerate(self.session.get_value(["map_q_thresholds"]))],
+            ("< 255", str(len(self.session.get_value(["map_q_thresholds"])) + 1)),
+            active_item=["settings", "filters", "mapping_q", "val_max"],
+            event=upper_bound_event,
+        )
+
+        #ms_l = self.make_range_slider_spinner(
+        #    width=SETTINGS_WIDTH,
+        #    tooltip="tooltip_map_q_bounds",
+        #    settings=["settings", "filters", "mapping_q"],
+        #    title="Mapping Quality Bounds",
+        #    sizing_mode="stretch_width",
+        #)
 
         ibs_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
@@ -2292,7 +2325,7 @@ class MainLayout:
         grid_seq_anno = self.dropdown_select_session(
             "Annotation type",
             "tooltip_anno_type",
-            ["annotation", "list"],
+            ["annotation", "filterable"],
             ["settings", "normalization", "grid_seq_annotation"],
         )
         grid_seq_rna_filter_l = self.make_range_slider_spinner(
@@ -2429,7 +2462,7 @@ class MainLayout:
         anno_coords = self.dropdown_select_session(
             "Annotation Coordinate System",
             "tooltip_coordinates",
-            ["annotation", "list"],
+            ["annotation", "filterable"],
             ["contigs", "annotation_coordinates"],
         )
         coords_x = self.make_checkbox(
@@ -2446,7 +2479,7 @@ class MainLayout:
         anno_read_filter = self.dropdown_select_session(
             "Only show reads that overlap with a",
             "@todo",
-            ["annotation", "list"],
+            ["annotation", "filterable"],
             ["annotation", "filter"],
         )
         anno_read_filter_x = self.make_checkbox(
@@ -2922,6 +2955,7 @@ class MainLayout:
                                     "",
                                     [
                                         ms_l,
+                                        ms_l_2,
                                         incomp_align_layout,
                                         multi_mapping,
                                         directionality,
@@ -3010,7 +3044,8 @@ class MainLayout:
                     ],
                     inner=False,
                 ),
-            ]
+            ],
+            outer=True
             # css_classes=["scroll_y"]
         )
         # _settings.height = 100
