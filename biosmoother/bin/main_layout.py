@@ -1014,6 +1014,8 @@ class MainLayout:
             self.show_hide_dropdown.menu = self.make_show_hide_menu()
 
         self.show_hide_dropdown.on_click(event)
+
+        self.show_hide_dropdown.js_on_click(CustomJS(code="setTimeout(function(){window.dispatchEvent(new Event('resize'));}, 100)"))
         return self.show_hide_dropdown
 
     def config_show_hide(self, settings):
@@ -1884,6 +1886,7 @@ class MainLayout:
             (ANNOTATION_PLOT_NAME, "annotation"),
             ("Options Panel", "tools"),
         )
+
 
         in_group = self.dropdown_select(
             "Merge datasets by",

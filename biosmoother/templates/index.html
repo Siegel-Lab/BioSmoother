@@ -38,15 +38,21 @@
 {%   block js_resources -%}
     {{  bokeh_js if bokeh_js }}
     <script>
+        window.onbeforeunload = function(){
+            Bokeh.documents[0].get_model_by_name('quit_ti').value = "shutdown";
+        };
+
         function reflow(){
-            elements = document.getElementsByClassName(["grid-item", "grid-container", "body"]);
-            for(let i = 0; i < elements.length; i++){
-                void(elements[i].offsetWidth);
+            if(Bokeh.documents.length > 0 && Bokeh.documents[0].get_model_by_name('heatmap') != null){
+                window.dispatchEvent(new Event('resize'));
             }
-            void(Bokeh.documents[0].get_model_by_name('heatmap').offsetWidth);
+            else{
+                setTimeout(reflow, 100);
+            }
+            
         }
         window.onload = function(){
-            setInterval(reflow, 500);
+            setTimeout(reflow, 100);
         };
     </script>
 {%-  endblock js_resources %}
