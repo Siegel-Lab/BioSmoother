@@ -549,7 +549,12 @@ class MainLayout:
             return row([name, apply_button, reset_button], sizing_mode="stretch_width")
         else:
             return row(
-                [name, apply_button, save_button, reset_button],
+                [
+                 name, 
+                 apply_button, 
+                 save_button, 
+                 reset_button
+                 ],
                 sizing_mode="stretch_width",
             )
 
@@ -1301,7 +1306,7 @@ class MainLayout:
         t = Tabs(tabs=tabs, sizing_mode=sizing_mode)#, disabled=True)
 
         def tab_active_change():
-            #return
+            return
             # super convoluted and unnecessary code...
             # bokeh's UI becomes slow with too many buttons on one screen
             # therefore we hide tabs that are not active
@@ -1321,12 +1326,13 @@ class MainLayout:
 
         #if not outer:
         t.on_change("active", lambda x, y, z: tab_active_change())
-        t.tabs[t.active].child.visible = True
+        if len(t.tabs) > 0:
+            t.tabs[t.active].child.visible = True
         return t
 
     def make_panel(self, title, tooltip="", children=[], inner=True):
-        return Panel(title=title, child=column(children, visible=False))
-        #return Panel(title=title, child=column(children, visible=True))
+        #return Panel(title=title, child=column(children, visible=False))
+        return Panel(title=title, child=column(children, visible=True))
 
     @gen.coroutine
     @without_document_lock
@@ -1524,9 +1530,10 @@ class MainLayout:
         self.do_layout()
 
     def do_layout(self):
+        self.curdoc.clear()
         global SETTINGS_WIDTH
         tollbars = []
-        self.heatmap = FigureMaker().range1d().scale().combine_tools(tollbars).get(self)
+        self.heatmap = FigureMaker().name("heatmap").range1d().scale().combine_tools(tollbars).get(self)
         self.heatmap.min_border_left = 3
         self.heatmap.min_border_right = 3
         self.heatmap.min_border_bottom = 3
@@ -1585,18 +1592,21 @@ class MainLayout:
             FigureMaker()
             .x_axis_of(self.heatmap, self, "", True, hide_keyword="coords")
             .combine_tools(tollbars)
+            .name("heatmap_x_axis")
             .get(self)
         )
         self.heatmap_x_axis_2 = (
             FigureMaker()
             .x_axis_of(self.heatmap, self, "", True, hide_keyword="regs")
             .combine_tools(tollbars)
+            .name("heatmap_x_axis_2")
             .get(self)
         )
         self.heatmap_x_axis_3 = (
             FigureMaker()
             .x_axis_of(self.heatmap, self, "", True, hide_keyword="regs")
             .combine_tools(tollbars)
+            .name("heatmap_x_axis_3")
             .get(self)
         )
 
@@ -1605,18 +1615,21 @@ class MainLayout:
             FigureMaker()
             .y_axis_of(self.heatmap, self, "", True, hide_keyword="coords")
             .combine_tools(tollbars)
+            .name("heatmap_y_axis")
             .get(self)
         )
         self.heatmap_y_axis_2 = (
             FigureMaker()
             .y_axis_of(self.heatmap, self, "", True, hide_keyword="regs")
             .combine_tools(tollbars)
+            .name("heatmap_y_axis_2")
             .get(self)
         )
         self.heatmap_y_axis_3 = (
             FigureMaker()
             .y_axis_of(self.heatmap, self, "", True, hide_keyword="regs")
             .combine_tools(tollbars)
+            .name("heatmap_y_axis_3")
             .get(self)
         )
 
@@ -1649,11 +1662,12 @@ class MainLayout:
             .hidden()
             .hide_on("raw", self)
             .combine_tools(tollbars)
+            .name("raw_x")
             .get(self)
         )
         self.raw_x.add_tools(raw_hover_x)
         self.raw_x_axis = (
-            FigureMaker().x_axis_of(self.raw_x, self).combine_tools(tollbars).get(self)
+            FigureMaker().x_axis_of(self.raw_x, self).combine_tools(tollbars).name("raw_x_axis").get(self)
         )
         self.raw_x_axis.xaxis.ticker = AdaptiveTicker(
             desired_num_ticks=3, num_minor_ticks=0
@@ -1670,11 +1684,12 @@ class MainLayout:
             .hidden()
             .hide_on("raw", self)
             .combine_tools(tollbars)
+            .name("raw_y")
             .get(self)
         )
         self.raw_y.add_tools(raw_hover_y)
         self.raw_y_axis = (
-            FigureMaker().y_axis_of(self.raw_y, self).combine_tools(tollbars).get(self)
+            FigureMaker().y_axis_of(self.raw_y, self).combine_tools(tollbars).name("raw_y_axis").get(self)
         )
         self.raw_y_axis.yaxis.ticker = AdaptiveTicker(
             desired_num_ticks=3, num_minor_ticks=0
@@ -1699,10 +1714,11 @@ class MainLayout:
             .hide_on("annotation", self)
             .combine_tools(tollbars)
             .categorical_x()
+            .name("anno_x")
             .get(self)
         )
         self.anno_x_axis = (
-            FigureMaker().x_axis_of(self.anno_x, self).combine_tools(tollbars).get(self)
+            FigureMaker().x_axis_of(self.anno_x, self).combine_tools(tollbars).name("anno_x_axis").get(self)
         )
         self.anno_x.xgrid.minor_grid_line_alpha = 0
         self.anno_x.xgrid.grid_line_alpha = 0
@@ -1716,10 +1732,11 @@ class MainLayout:
             .hide_on("annotation", self)
             .combine_tools(tollbars)
             .categorical_y()
+            .name("anno_y")
             .get(self)
         )
         self.anno_y_axis = (
-            FigureMaker().y_axis_of(self.anno_y, self).combine_tools(tollbars).get(self)
+            FigureMaker().y_axis_of(self.anno_y, self).combine_tools(tollbars).name("anno_y_axis").get(self)
         )
         self.anno_y.ygrid.minor_grid_line_alpha = 0
         self.anno_y.ygrid.grid_line_alpha = 0
@@ -2440,6 +2457,7 @@ class MainLayout:
             [self.info_status_bar],
             sizing_mode="stretch_width",
             css_classes=["top_border"],
+            name="status_bar"
         )
 
         self.spinner = Div(
@@ -2806,11 +2824,11 @@ class MainLayout:
                 reset_session,
             ],
             css_classes=["bottom_border"],
+            name="tools_bar",
         )
         tools_bar.height = 40
         tools_bar.min_height = 40
         tools_bar.height_policy = "fixed"
-        tools_bar.align = "center"
 
         if bin.global_variables.no_save:
             export_panel = [
@@ -2874,7 +2892,9 @@ class MainLayout:
                                 self.make_panel("Presetting", "", [*quick_configs]),
                                 self.make_panel("Export", "", export_panel),
                                 self.make_panel(
-                                    "Info", "", [version_info, index_info, log_div, self.log_div]
+                                    "Info", "", [version_info, index_info, log_div, 
+                                                 self.log_div
+                                                 ]
                                 ),
                             ]
                         ),
@@ -3063,11 +3083,12 @@ class MainLayout:
                 _settings_n_info,
                 self.reshow_settings(),
             ],
-            css_classes=["options_panel"],
+            name="settings_row",
+            sizing_mode="stretch_height",
         )
-        self.settings_row.height = 100
-        self.settings_row.min_height = 100
-        self.settings_row.height_policy = "fixed"
+        #self.settings_row.height = 500
+        #self.settings_row.min_height = 100
+        #self.settings_row.height_policy = "fixed"
         self.settings_row.width = SETTINGS_WIDTH + 25
         self.settings_row.width_policy = "fixed"
 
@@ -3094,31 +3115,29 @@ class MainLayout:
             value="", name="set_active_tools_ti", visible=False
         )
 
-        communication = row([quit_ti, active_tools_ti, self.set_active_tools_ti])
+        communication = row([quit_ti, active_tools_ti, self.set_active_tools_ti], name="communication")
         communication.visible = False
 
-        grid_layout = [
-            [
-                self.heatmap_y_axis_2,
-                self.heatmap_y_axis_3,
-                self.heatmap_y_axis,
-                self.anno_x,
-                self.raw_x,
-                None,
-                self.heatmap,
-                self.settings_row,
-            ],
-            [None, None, None, self.anno_x_axis, self.raw_x_axis, None, None, None],
-            [None, None, None, None, None, self.raw_y_axis, self.raw_y, None],
-            [None, None, None, None, None, self.anno_y_axis, self.anno_y, None],
-            [None, None, None, None, None, None, self.heatmap_x_axis, None],
-            [None, None, None, None, None, None, self.heatmap_x_axis_3, None],
-            [communication, None, None, None, None, None, self.heatmap_x_axis_2, None],
-        ]
+        self.curdoc.add_root(self.heatmap)
+        self.curdoc.add_root(self.heatmap_y_axis)
+        self.curdoc.add_root(self.heatmap_y_axis_2)
+        self.curdoc.add_root(self.heatmap_y_axis_3)
+        self.curdoc.add_root(self.heatmap_x_axis)
+        self.curdoc.add_root(self.heatmap_x_axis_2)
+        self.curdoc.add_root(self.heatmap_x_axis_3)
+        self.curdoc.add_root(self.anno_x)
+        self.curdoc.add_root(self.anno_x_axis)
+        self.curdoc.add_root(self.raw_x)
+        self.curdoc.add_root(self.raw_x_axis)
+        self.curdoc.add_root(self.anno_y)
+        self.curdoc.add_root(self.anno_y_axis)
+        self.curdoc.add_root(self.raw_y)
+        self.curdoc.add_root(self.raw_y_axis)
+        self.curdoc.add_root(self.settings_row)
+        self.curdoc.add_root(communication)
+        self.curdoc.add_root(status_bar_row)
+        self.curdoc.add_root(tools_bar)
 
-        root_min_one = grid(grid_layout, sizing_mode="stretch_both")
-        root_min_one.align = "center"
-        self.root = grid([[tools_bar], [root_min_one], [status_bar_row]])
         self.update_visibility()
 
     # overlap of the given areas relative to the larger area
@@ -3195,6 +3214,7 @@ class MainLayout:
 
                     start_time = datetime.now()
 
+                    # @continue_here @fixme type must be number but is null json exception from cpp
                     self.session.update_cds(self.print)
 
                     d_heatmap = self.session.get_heatmap(self.print)
@@ -3482,8 +3502,6 @@ class MainLayout:
                 self.curdoc.add_timeout_callback(lambda: self.render_callback(), 1000)
 
     def set_root(self):
-        self.curdoc.clear()
-        self.curdoc.add_root(self.root)
         self.curdoc.title = "BioSmoother"
         self.do_render = True
         self.force_render = True

@@ -70,6 +70,10 @@ class FigureMaker:
         register.grid_line_plots.append(ret)
         return ret
 
+    def name(self, name):
+        self.args["name"] = name
+        return self
+
     def range1d(self):
         self._range1d = True
         return self
@@ -88,17 +92,17 @@ class FigureMaker:
 
     def link_y(self, other):
         self.args["y_range"] = other.y_range
-        self.args["sizing_mode"] = "stretch_height"
-        # self.args["height_policy"] = "min"
+        #self.args["sizing_mode"] = "stretch_height"
+        self.args["height_policy"] = "max"
         self.args["height"] = 10
         self.no_border_v = True
         return self
 
     def link_x(self, other):
         self.args["x_range"] = other.x_range
-        # self.args["sizing_mode"] = "stretch_width"
-        self.args["width_policy"] = "fit"
-        self.args["width"] = None
+        #self.args["sizing_mode"] = "stretch_width"
+        self.args["width_policy"] = "max"
+        self.args["width"] = 10
         self.no_border_h = True
         return self
 
@@ -113,9 +117,9 @@ class FigureMaker:
         return self
 
     def scale(self):
-        self.args["sizing_mode"] = "scale_height"
-        # self.args["width_policy"] = "fit"
-        # self.args["height_policy"] = "max"
+        #self.args["sizing_mode"] = "fixed"
+        self.args["width_policy"] = "max"
+        self.args["height_policy"] = "max"
         self.args["height"] = 10
         self.args["width"] = 10
         self.no_border_h = True
@@ -144,8 +148,8 @@ class FigureMaker:
         self.args["x_range"] = other.x_range
         self.args["frame_height"] = 1
         if stretch:
-            # self.args["sizing_mode"] = "stretch_width"
-            self.args["width_policy"] = "fit"
+            self.args["sizing_mode"] = "stretch_width"
+            #self.args["width_policy"] = "fit"
             self.w(None)
         else:
             self.w(other.width)
@@ -174,7 +178,7 @@ class FigureMaker:
         if stretch:
             self.args["sizing_mode"] = "stretch_height"
             # self.args["height_policy"] = "max"
-            self.h(10)
+            self.h(None)
         else:
             self.h(other.height)
             self.args["sizing_mode"] = "fixed"
