@@ -60,19 +60,6 @@ def on_server_loaded(server_context):
         "/biosmoother",
         sep="",
     )
-    print("")
-    print("For Clusters:")
-    print("\tIf you log in via SSH into your cluster and want to run biosmoother there,")
-    print("\tyou need to forward BioSmoothers port from your local machine.")
-    print("\tPorts can be forwarded using the SSH command option -L.")
-    print(
-        "\tI.e. log in to your cluster with another terminal using this command: ssh -L ",
-        os.environ["biosmoother_port"],
-        ":localhost:",
-        os.environ["biosmoother_port"],
-        " <your_server_addr>",
-        sep="",
-    )
 
 
 def on_server_unloaded(server_context):

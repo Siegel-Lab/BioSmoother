@@ -33,7 +33,6 @@ from tornado import gen
 from bokeh.document import without_document_lock
 import os
 import sys
-from bokeh.palettes import Viridis256, Colorblind, Plasma256, Turbo256
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from bokeh.models.tickers import AdaptiveTicker
@@ -3159,7 +3158,6 @@ class MainLayout:
 
                 start_time = datetime.now()
 
-                # @continue_here @fixme type must be number but is null json exception from cpp
                 self.session.update_cds(self.print)
 
                 d_heatmap = self.session.get_heatmap(self.print)
