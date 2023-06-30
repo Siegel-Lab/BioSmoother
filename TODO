@@ -5,9 +5,7 @@
 - importing tracks 
 - max number of characters for axis labels -> properly (only on axis lables not in hover)
 
-- export / import session
 - remove default.json from smoother_hg
-- with autorender off -> exiting viewer hangs
 - sort session .json into static values & parameters
     -  exclude static values form undo & redo
 
