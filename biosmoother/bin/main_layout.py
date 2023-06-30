@@ -253,7 +253,7 @@ class MainLayout:
                 if orderable:
                     source["up"].append("")
                     source["down"].append("")
-                source["names"].append("")
+                source["names"].append("select all")
                 for _, n in checkboxes:
                     bools = [name in active_dict[n] for name in labels]
                     source[n].append("☑" if all(bools) else ("☐" if all(not b for b in bools) else "·"))
@@ -909,10 +909,6 @@ class MainLayout:
 
         self.set_v4c_range()
 
-        self.set_active_tools_ti.value = ";".join(
-            self.session.get_value(["settings", "active_tools"])
-        )
-
     def plot_render_area(self, plot):
         return self.render_areas[plot]
 
@@ -1305,35 +1301,10 @@ class MainLayout:
             self.session.set_value(["settings", "active_tools"], tools.split(";"))
 
     def make_tabs(self, tabs, sizing_mode="stretch_both", outer=False):
-        t = Tabs(tabs=tabs, sizing_mode=sizing_mode)#, disabled=True)
-
-        def tab_active_change():
-            return
-            # super convoluted and unnecessary code...
-            # bokeh's UI becomes slow with too many buttons on one screen
-            # therefore we hide tabs that are not active
-            # however this unhiding the tabs triggers a layout problem
-            # therefore instead of unhiding a tab, we create a new tab (that is visible by default) and set its
-            # title and children to the hidden tabs title and children.
-            # @note once bokeh fixes the layout/performance problem this code should just be removed
-            self.curdoc.hold()
-            for tab in t.tabs:
-                tab.child.visible = False
-            title = t.tabs[t.active].title
-            children = t.tabs[t.active].child.children
-            t.tabs[t.active] = Panel(title=title, child=column(children, visible=True))
-            for c in t.tabs[t.active].child.children:
-                self.update_multi_choice(c)
-            self.curdoc.unhold()
-
-        #if not outer:
-        t.on_change("active", lambda x, y, z: tab_active_change())
-        if len(t.tabs) > 0:
-            t.tabs[t.active].child.visible = True
+        t = Tabs(tabs=tabs, sizing_mode=sizing_mode)
         return t
 
     def make_panel(self, title, tooltip="", children=[], inner=True):
-        #return Panel(title=title, child=column(children, visible=False))
         return Panel(title=title, child=column(children, visible=True))
 
     @gen.coroutine
@@ -1476,7 +1447,6 @@ class MainLayout:
         }
         self.anno_x_data = ColumnDataSource(data=d)
         self.anno_y_data = ColumnDataSource(data=d)
-        self.meta_file = None
         self.min_max_bin_size = None
         self.info_status_bar = None
         self.spinner = None
@@ -1501,7 +1471,6 @@ class MainLayout:
         self.color_layout = None
         self.area_range = None
         self.area_range_expected = "n/a"
-        self.set_active_tools_ti = None
         self.render_now = False
         self.updatable_multi_choice = {}
         d = {
@@ -2113,19 +2082,6 @@ class MainLayout:
             event=axis_labels_event,
         )
 
-        def stretch_event(val):
-            self.session.set_value(["settings", "interface", "stretch"], val)
-            if val:
-                self.heatmap.sizing_mode = "stretch_both"
-            else:
-                self.heatmap.sizing_mode = "scale_height"
-
-        stretch = self.make_checkbox(
-            "Stretch heatmap",
-            "tooltip_stretch_scale",
-            settings=["settings", "interface", "stretch"],
-            on_change=stretch_event,
-        )
 
 
         def lower_bound_event(e):
@@ -2639,24 +2595,29 @@ class MainLayout:
         for idx in range(1, 7):
             quick_configs.append(self.config_row(idx))
 
-        SYM_WIDTH = 10
+        SYM_WIDTH = 18
         SYM_CSS = ["other_button"]
         reset_session = Button(
             label="",
             css_classes=SYM_CSS + ["fa_reset"],
             width=SYM_WIDTH,
-            height=SYM_WIDTH,
+            height=25,
             sizing_mode="fixed",
             button_type="light",
             align="center",
         )
 
         def reset_event():
-            with open(
-                self.meta_file.value + ".biosmoother_index/default_session.json", "r"
-            ) as f:
-                default_session = json.load(f)
-                default_session["settings"] = self.session.get_value(["settings"])
+            path = None
+            if "biosmoother_index_path" in os.environ:
+                if os.path.exists(os.environ["biosmoother_index_path"]):
+                    path = os.environ["biosmoother_index_path"]
+                if os.path.exists(os.environ["biosmoother_index_path"] + ".biosmoother_index/"):
+                    path = os.environ["biosmoother_index_path"] + ".biosmoother_index/"
+            if not path is None:
+                with open(path + "/default_session.json", "r") as f:
+                    default_session = json.load(f)
+                    default_session["settings"] = self.session.get_value(["settings"])
             self.session.set_session(default_session)
             self.do_config()
             self.trigger_render()
@@ -3035,7 +2996,7 @@ class MainLayout:
                                 self.make_panel(
                                     "Panels",
                                     "",
-                                    [show_hide, ass_l, rss2_l, stretch, axis_lables, axis_label_max_char],
+                                    [show_hide, ass_l, rss2_l, axis_lables, axis_label_max_char],
                                 ),
                                 self.make_panel(
                                     "Bins",
@@ -3069,11 +3030,7 @@ class MainLayout:
                 ),
             ],
             outer=True
-            # css_classes=["scroll_y"]
         )
-        # _settings.height = 100
-        # _settings.min_height = 100
-        # _settings.height_policy = "fixed"
 
         _settings_n_info = column([Spacer(height=5), _settings])
         _settings_n_info.width = SETTINGS_WIDTH + 25
@@ -3089,9 +3046,6 @@ class MainLayout:
             name="settings_row",
             sizing_mode="stretch_height",
         )
-        #self.settings_row.height = 500
-        #self.settings_row.min_height = 100
-        #self.settings_row.height_policy = "fixed"
         self.settings_row.width = SETTINGS_WIDTH + 25
         self.settings_row.width_policy = "fixed"
 
@@ -3110,15 +3064,7 @@ class MainLayout:
 
         quit_ti.on_change("value", close_server)
 
-        active_tools_ti = TextInput(value="", name="active_tools_ti", visible=False)
-        active_tools_ti.on_change(
-            "value", lambda x, y, z: self.save_tools(active_tools_ti.value)
-        )
-        self.set_active_tools_ti = TextInput(
-            value="", name="set_active_tools_ti", visible=False
-        )
-
-        communication = row([quit_ti, active_tools_ti, self.set_active_tools_ti], name="communication")
+        communication = row([quit_ti], name="communication")
         communication.visible = False
 
         self.curdoc.add_root(self.heatmap)

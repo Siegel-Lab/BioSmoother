@@ -90,7 +90,8 @@ textarea {
 
 .fa_reset {
     background-image: url(repeat-solid.svg) !important;
-    background-size: cover;
+    background-size: contain;
+    background-repeat: no-repeat;
 }
 
 .fa_reset_disabled {
