@@ -2,80 +2,91 @@
 {% extends base %}
 <html lang="en">
 {% block head %}
+
 <head>
-{% block inner_head %}
+    {% block inner_head %}
     <meta charset="utf-8">
     <title>{% block title %}{{ title | e if title else "Bokeh Plot" }}{% endblock %}</title>
-{%  block preamble -%}{%- endblock %}
-{%  block resources -%}
-{%   block css_resources -%}
+    {% block preamble -%}{%- endblock %}
+    {% block resources -%}
+    {% block css_resources -%}
     {{- bokeh_css if bokeh_css }}
-    <link rel="stylesheet" href="biosmoother/static/css/styles.css"/>
-    <link rel="stylesheet" href="biosmoother/static/css/tooltips.css"/>
+    <link rel="stylesheet" href="biosmoother/static/css/styles.css" />
+    <link rel="stylesheet" href="biosmoother/static/css/tooltips.css" />
     <link rel="icon" type="image/x-icon" href="biosmoother/static/favicon.ico">
-{%-  endblock css_resources %}
-{%   block js_resources -%}
-    {{  bokeh_js if bokeh_js }}
+    {%- endblock css_resources %}
+    {% block js_resources -%}
+    {{ bokeh_js if bokeh_js }}
     <script>
-        window.onbeforeunload = function(){
+        window.onbeforeunload = function ()
+        {
             Bokeh.documents[0].get_model_by_name('quit_ti').value = "shutdown";
         };
         let layout_needed = true;
     </script>
-{%-  endblock js_resources %}
-{%  endblock resources %}
-{%  block postamble %}{% endblock %}
-{% endblock inner_head %}
+    {%- endblock js_resources %}
+    {% endblock resources %}
+    {% block postamble %}{% endblock %}
+    {% endblock inner_head %}
 </head>
 {% endblock head%}
 {% block body %}
+
 <body class="body">
-{%  block inner_body %}
-{% block contents %}
-{%      for doc in docs %}
-{{        embed(doc) if doc.elementid }}
-<div style="position:absolute; height: 40px; left: 0; top: 0; right: 0; justify-content: center; display: flex">
-    {{ embed(doc.roots.tools_bar) }}
-</div>
-<div style="position:absolute; top: 40px; bottom: 26px; right: 425px; left: 0; justify-content: center; display: flex">
-    <div style="aspect-ratio: 1">
-        <div class="grid-container">
-            <div class="grid-item" style="grid-column: 1; grid-row: 1;"> {{ embed(doc.roots.heatmap_y_axis_2) }} </div>
-            <div class="grid-item" style="grid-column: 2; grid-row: 1;"> {{ embed(doc.roots.heatmap_y_axis_3) }} </div>
-            <div class="grid-item" style="grid-column: 3; grid-row: 1;"> {{ embed(doc.roots.heatmap_y_axis) }} </div>
-            <div class="grid-item" style="grid-column: 4; grid-row: 1;"> {{ embed(doc.roots.anno_x) }} </div>
-            <div class="grid-item" style="grid-column: 5; grid-row: 1;"> {{ embed(doc.roots.raw_x) }} </div>
-            <div class="grid-item" style="grid-column: 7; grid-row: 1;"> {{ embed(doc.roots.heatmap) }} </div>
-        
-            <div class="grid-item" style="grid-column: 4; grid-row: 2;"> {{ embed(doc.roots.anno_x_axis) }} </div>
-            <div class="grid-item" style="grid-column: 5; grid-row: 2;"> {{ embed(doc.roots.raw_x_axis) }} </div>
-        
-            <div class="grid-item" style="grid-column: 6; grid-row: 3;"> {{ embed(doc.roots.raw_y_axis) }} </div>
-            <div class="grid-item" style="grid-column: 7; grid-row: 3;"> {{ embed(doc.roots.raw_y) }}</div>
-        
-            <div class="grid-item" style="grid-column: 6; grid-row: 4;"> {{ embed(doc.roots.anno_y_axis) }} </div>
-            <div class="grid-item" style="grid-column: 7; grid-row: 4;"> {{ embed(doc.roots.anno_y) }} </div>
-        
-            <div class="grid-item" style="grid-column: 7; grid-row: 5;"> {{ embed(doc.roots.heatmap_x_axis) }} </div>
-        
-            <div class="grid-item" style="grid-column: 7; grid-row: 6;"> {{ embed(doc.roots.heatmap_x_axis_3) }} </div>
-        
-            <div class="grid-item" style="grid-column: 1; grid-row: 7;"> {{ embed(doc.roots.communication) }} </div>
-            <div class="grid-item" style="grid-column: 7; grid-row: 7;"> {{ embed(doc.roots.heatmap_x_axis_2) }} </div>
+    {% block inner_body %}
+    {% block contents %}
+    {% for doc in docs %}
+    {{ embed(doc) if doc.elementid }}
+    <div style="position:absolute; height: 40px; left: 0; top: 0; right: 0; justify-content: center; display: flex">
+        {{ embed(doc.roots.tools_bar) }}
+    </div>
+    <div
+        style="position:absolute; top: 40px; bottom: 26px; right: 425px; left: 0; justify-content: center; display: flex">
+        <div style="aspect-ratio: 1">
+            <div class="grid-container">
+                <div class="grid-item" style="grid-column: 1; grid-row: 1;"> {{ embed(doc.roots.heatmap_y_axis_2) }}
+                </div>
+                <div class="grid-item" style="grid-column: 2; grid-row: 1;"> {{ embed(doc.roots.heatmap_y_axis_3) }}
+                </div>
+                <div class="grid-item" style="grid-column: 3; grid-row: 1;"> {{ embed(doc.roots.heatmap_y_axis) }}
+                </div>
+                <div class="grid-item" style="grid-column: 4; grid-row: 1;"> {{ embed(doc.roots.anno_x) }} </div>
+                <div class="grid-item" style="grid-column: 5; grid-row: 1;"> {{ embed(doc.roots.raw_x) }} </div>
+                <div class="grid-item" style="grid-column: 7; grid-row: 1;"> {{ embed(doc.roots.heatmap) }} </div>
+
+                <div class="grid-item" style="grid-column: 4; grid-row: 2;"> {{ embed(doc.roots.anno_x_axis) }} </div>
+                <div class="grid-item" style="grid-column: 5; grid-row: 2;"> {{ embed(doc.roots.raw_x_axis) }} </div>
+
+                <div class="grid-item" style="grid-column: 6; grid-row: 3;"> {{ embed(doc.roots.raw_y_axis) }} </div>
+                <div class="grid-item" style="grid-column: 7; grid-row: 3;"> {{ embed(doc.roots.raw_y) }}</div>
+
+                <div class="grid-item" style="grid-column: 6; grid-row: 4;"> {{ embed(doc.roots.anno_y_axis) }} </div>
+                <div class="grid-item" style="grid-column: 7; grid-row: 4;"> {{ embed(doc.roots.anno_y) }} </div>
+
+                <div class="grid-item" style="grid-column: 7; grid-row: 5;"> {{ embed(doc.roots.heatmap_x_axis) }}
+                </div>
+
+                <div class="grid-item" style="grid-column: 7; grid-row: 6;"> {{ embed(doc.roots.heatmap_x_axis_3) }}
+                </div>
+
+                <div class="grid-item" style="grid-column: 1; grid-row: 7;"> {{ embed(doc.roots.communication) }} </div>
+                <div class="grid-item" style="grid-column: 7; grid-row: 7;"> {{ embed(doc.roots.heatmap_x_axis_2) }}
+                </div>
+            </div>
         </div>
     </div>
-</div>
-<div style="position:absolute; width: 425px; top: 40px; bottom: 26px; right: 0;" class="options_panel">
-    {{ embed(doc.roots.settings_row) }}
-</div>
-<div style="position:absolute; height: 26px; left: 0; bottom: 0; right: 0; justify-content: center; display: flex">
-    {{ embed(doc.roots.status_bar) }}
-</div>
+    <div style="position:absolute; width: 425px; top: 40px; bottom: 26px; right: 0;" class="options_panel">
+        {{ embed(doc.roots.settings_row) }}
+    </div>
+    <div style="position:absolute; height: 26px; left: 0; bottom: 0; right: 0; justify-content: center; display: flex">
+        {{ embed(doc.roots.status_bar) }}
+    </div>
 
-{%      endfor %}
-{% endblock contents %}
-{{ plot_script | indent(4) }}
-{%  endblock inner_body %}
+    {% endfor %}
+    {% endblock contents %}
+    {{ plot_script | indent(4) }}
+    {% endblock inner_body %}
 </body>
 {% endblock body%}
+
 </html>

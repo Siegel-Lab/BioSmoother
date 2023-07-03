@@ -92,7 +92,7 @@ class FigureMaker:
 
     def link_y(self, other):
         self.args["y_range"] = other.y_range
-        #self.args["sizing_mode"] = "stretch_height"
+        # self.args["sizing_mode"] = "stretch_height"
         self.args["height_policy"] = "max"
         self.args["height"] = 10
         self.no_border_v = True
@@ -100,7 +100,7 @@ class FigureMaker:
 
     def link_x(self, other):
         self.args["x_range"] = other.x_range
-        #self.args["sizing_mode"] = "stretch_width"
+        # self.args["sizing_mode"] = "stretch_width"
         self.args["width_policy"] = "max"
         self.args["width"] = 10
         self.no_border_h = True
@@ -117,7 +117,7 @@ class FigureMaker:
         return self
 
     def scale(self):
-        #self.args["sizing_mode"] = "fixed"
+        # self.args["sizing_mode"] = "fixed"
         self.args["width_policy"] = "max"
         self.args["height_policy"] = "max"
         self.args["height"] = 10
@@ -149,7 +149,7 @@ class FigureMaker:
         self.args["frame_height"] = 1
         if stretch:
             self.args["sizing_mode"] = "stretch_width"
-            #self.args["width_policy"] = "fit"
+            # self.args["width_policy"] = "fit"
             self.w(None)
         else:
             self.w(other.width)

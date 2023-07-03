@@ -20,11 +20,11 @@ from bokeh.models import (
     DataTable,
     TableColumn,
     CellEditor,
-    Panel, 
-    Tabs, 
-    Spacer, 
-    Slope, 
-    CustomJS
+    Panel,
+    Tabs,
+    Spacer,
+    Slope,
+    CustomJS,
 )
 from bokeh.transform import jitter
 import math
@@ -38,15 +38,20 @@ from concurrent.futures import ThreadPoolExecutor
 from bokeh.models.tickers import AdaptiveTicker
 from libbiosmoother import Quarry, export_tsv, export_png, export_svg, open_default_json
 import json
-from bin.figure_maker import FigureMaker, DROPDOWN_HEIGHT, FONT # pyright: ignore missing import
-from bin.extra_ticks_ticker import * # pyright: ignore missing import
-import bin.global_variables # pyright: ignore missing import
+from bin.figure_maker import (
+    FigureMaker,
+    DROPDOWN_HEIGHT,
+    FONT,
+)  # pyright: ignore missing import
+from bin.extra_ticks_ticker import *  # pyright: ignore missing import
+import bin.global_variables  # pyright: ignore missing import
 import numpy as np
+
 try:
     import importlib.resources as pkg_resources
 except ImportError:
     # Try backported to PY<37 `importlib_resources`.
-    import importlib_resources as pkg_resources # pyright: ignore missing import
+    import importlib_resources as pkg_resources  # pyright: ignore missing import
 from pathlib import Path
 
 SETTINGS_WIDTH = 400
@@ -72,7 +77,6 @@ JS_UPDATE_LAYOUT = """
     setTimeout(function(){
         if(layout_needed){
             window.dispatchEvent(new Event('resize'));
-            console.log('layout updated');
             layout_needed=false;
         }
     }, 100);
@@ -230,7 +234,7 @@ class MainLayout:
             width=SETTINGS_WIDTH,
             tags=["blub"],
             height=150,
-            sortable=False
+            sortable=False,
         )
 
         source_code = """
@@ -266,9 +270,16 @@ class MainLayout:
                 source["names"].append("select all")
                 for _, n in checkboxes:
                     bools = [name in active_dict[n] for name in labels]
-                    source[n].append("☑" if all(bools) else ("☐" if all(not b for b in bools) else "·"))
+                    source[n].append(
+                        "☑"
+                        if all(bools)
+                        else ("☐" if all(not b for b in bools) else "·")
+                    )
             for idx, name in enumerate(labels):
-                if filter_t_in.value.lower() in name.lower() or len(filter_t_in.value) == 0:
+                if (
+                    filter_t_in.value.lower() in name.lower()
+                    or len(filter_t_in.value) == 0
+                ):
                     source["idx"].append(str(idx))
                     if orderable:
                         source["up"].append("▲" if idx > 0 else "")
@@ -278,12 +289,15 @@ class MainLayout:
                         source[n].append("☑" if name in active_dict[n] else "☐")
 
             data_table.source.data = source
-            data_table.frozen_rows=1 if len(labels) > 1 else 0
+            data_table.frozen_rows = 1 if len(labels) > 1 else 0
             # data_table.columns = make_columns()
 
-        filter_t_in.on_change("value", lambda _x, _y, _z: set_options(
-                        self.reset_options[label][1], self.reset_options[label][0]
-                    ))
+        filter_t_in.on_change(
+            "value",
+            lambda _x, _y, _z: set_options(
+                self.reset_options[label][1], self.reset_options[label][0]
+            ),
+        )
 
         def trigger_callback():
             cb = {}
@@ -306,7 +320,7 @@ class MainLayout:
             sp = select_ret.value.split()
             print(sp)
             if len(sp) > 0:
-                if sp[0] != 'slick-cell':
+                if sp[0] != "slick-cell":
                     y = int(sp[0])
                 else:
                     y = None
@@ -338,11 +352,16 @@ class MainLayout:
                 elif x >= 0:
                     if y is None:
                         n = checkboxes[x][1]
-                        bools = [not name in self.reset_options[label][0][n] for name in self.reset_options[label][1]]
+                        bools = [
+                            not name in self.reset_options[label][0][n]
+                            for name in self.reset_options[label][1]
+                        ]
                         if all(bools):
                             # nothing is activate -> set everything active
-                            self.reset_options[label][0][n] = self.reset_options[label][1]
-                        else: # none(bools) or some(bools)
+                            self.reset_options[label][0][n] = self.reset_options[label][
+                                1
+                            ]
+                        else:  # none(bools) or some(bools)
                             # some things are active -> set everything inactive
                             self.reset_options[label][0][n] = []
                     else:
@@ -374,7 +393,10 @@ class MainLayout:
         data_table.source.on_change("data", on_change_rename)
 
         layout = column(
-            [row([Div(text=title), filter_t_in], sizing_mode="stretch_width"), data_table],
+            [
+                row([Div(text=title), filter_t_in], sizing_mode="stretch_width"),
+                data_table,
+            ],
             sizing_mode="stretch_width",
             css_classes=["outlnie_border", "tooltip", tooltip],
         )
@@ -559,12 +581,7 @@ class MainLayout:
             return row([name, apply_button, reset_button], sizing_mode="stretch_width")
         else:
             return row(
-                [
-                 name, 
-                 apply_button, 
-                 save_button, 
-                 reset_button
-                 ],
+                [name, apply_button, save_button, reset_button],
                 sizing_mode="stretch_width",
             )
 
@@ -824,7 +841,9 @@ class MainLayout:
     def parse_v4c(self):
         change = False
         if self.v4c_col.value != self.v4c_col_expected:
-            col_start, col_end = self.interpret_range(self.v4c_col.value, False, genomic_coords=True)
+            col_start, col_end = self.interpret_range(
+                self.v4c_col.value, False, genomic_coords=True
+            )
             change = True
             if not col_start is None:
                 self.session.set_value(
@@ -836,7 +855,9 @@ class MainLayout:
                 )
 
         if self.v4c_row.value != self.v4c_row_expected:
-            row_start, row_end = self.interpret_range(self.v4c_row.value, True, genomic_coords=True)
+            row_start, row_end = self.interpret_range(
+                self.v4c_row.value, True, genomic_coords=True
+            )
             change = True
             if not row_start is None:
                 self.session.set_value(
@@ -935,17 +956,21 @@ class MainLayout:
                     break
             if plot.visible != visible:
                 plot.visible = visible
-        
+
         x_visible = len(self.raw_data_x.data["values"]) > 0
         self.raw_x.visible = self.show_hide["raw"] and x_visible
         self.raw_x_axis.visible = self.show_hide["raw"] and x_visible
         y_visible = len(self.raw_data_y.data["values"]) > 0
         self.raw_y.visible = self.show_hide["raw"] and y_visible
         self.raw_y_axis.visible = self.show_hide["raw"] and y_visible
-        self.anno_x.visible = len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"]
-        self.anno_x_axis.visible =self.anno_x.visible
-        self.anno_y.visible = len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"]
-        self.anno_y_axis.visible =self.anno_y.visible
+        self.anno_x.visible = (
+            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"]
+        )
+        self.anno_x_axis.visible = self.anno_x.visible
+        self.anno_y.visible = (
+            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"]
+        )
+        self.anno_y_axis.visible = self.anno_y.visible
 
         if not self.unhide_button is None:
             if self.unhide_button.visible == self.show_hide["tools"]:
@@ -1052,14 +1077,19 @@ class MainLayout:
 
     def make_color_figure(self, palette):
         def hex_to_rgb(value):
-            value = value.lstrip('#')
+            value = value.lstrip("#")
             lv = len(value)
-            return [int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3)]
+            return [int(value[i : i + lv // 3], 16) for i in range(0, lv, lv // 3)]
+
         color_figure = figure(tools="", height=125, width=SETTINGS_WIDTH)
         color_figure.x(0, 0, color=None)
-        scatter = color_figure.scatter(x="ranged_score", y=jitter("0", 1, distribution="normal"), 
-                             line_color=None, color="color",
-                             source=self.heatmap_data)
+        scatter = color_figure.scatter(
+            x="ranged_score",
+            y=jitter("0", 1, distribution="normal"),
+            line_color=None,
+            color="color",
+            source=self.heatmap_data,
+        )
         img = np.empty((1, len(palette)), dtype=np.uint32)
         view = img.view(dtype=np.uint8).reshape((1, len(palette), 4))
         for i, p in enumerate(palette):
@@ -1222,7 +1252,9 @@ class MainLayout:
                 c = self.interpret_number(y2)
                 if not c is None and bot:
                     c = -c
-                a = self.session.interpret_name(x, x_y, bot if len(y1) == 0 else True, genomic_coords)
+                a = self.session.interpret_name(
+                    x, x_y, bot if len(y1) == 0 else True, genomic_coords
+                )
                 if not a is None and not b is None and not c is None:
                     return [a + b + c]
             b = self.interpret_number(y)
@@ -1250,16 +1282,16 @@ class MainLayout:
             if y[-1:] == "]":
                 y = y[:-1]
 
-            return self.interpret_position(x, x_y, True, genomic_coords=genomic_coords) + self.interpret_position(
-                y, x_y, False, genomic_coords=genomic_coords
-            )
+            return self.interpret_position(
+                x, x_y, True, genomic_coords=genomic_coords
+            ) + self.interpret_position(y, x_y, False, genomic_coords=genomic_coords)
         if s[:1] == "[":
             s = s[1:]
         if s[-1:] == "]":
             s = s[:-1]
-        return self.interpret_position(s, x_y, True, genomic_coords=genomic_coords) + self.interpret_position(
-            s, x_y, False, genomic_coords=genomic_coords
-        )
+        return self.interpret_position(
+            s, x_y, True, genomic_coords=genomic_coords
+        ) + self.interpret_position(s, x_y, False, genomic_coords=genomic_coords)
 
     def interpret_area(self, s):
         # remove all space-like characters
@@ -1516,7 +1548,14 @@ class MainLayout:
         self.curdoc.clear()
         global SETTINGS_WIDTH
         tollbars = []
-        self.heatmap = FigureMaker().name("heatmap").range1d().scale().combine_tools(tollbars).get(self)
+        self.heatmap = (
+            FigureMaker()
+            .name("heatmap")
+            .range1d()
+            .scale()
+            .combine_tools(tollbars)
+            .get(self)
+        )
         self.heatmap.min_border_left = 3
         self.heatmap.min_border_right = 3
         self.heatmap.min_border_bottom = 3
@@ -1650,7 +1689,11 @@ class MainLayout:
         )
         self.raw_x.add_tools(raw_hover_x)
         self.raw_x_axis = (
-            FigureMaker().x_axis_of(self.raw_x, self).combine_tools(tollbars).name("raw_x_axis").get(self)
+            FigureMaker()
+            .x_axis_of(self.raw_x, self)
+            .combine_tools(tollbars)
+            .name("raw_x_axis")
+            .get(self)
         )
         self.raw_x_axis.xaxis.ticker = AdaptiveTicker(
             desired_num_ticks=3, num_minor_ticks=0
@@ -1672,7 +1715,11 @@ class MainLayout:
         )
         self.raw_y.add_tools(raw_hover_y)
         self.raw_y_axis = (
-            FigureMaker().y_axis_of(self.raw_y, self).combine_tools(tollbars).name("raw_y_axis").get(self)
+            FigureMaker()
+            .y_axis_of(self.raw_y, self)
+            .combine_tools(tollbars)
+            .name("raw_y_axis")
+            .get(self)
         )
         self.raw_y_axis.yaxis.ticker = AdaptiveTicker(
             desired_num_ticks=3, num_minor_ticks=0
@@ -1701,7 +1748,11 @@ class MainLayout:
             .get(self)
         )
         self.anno_x_axis = (
-            FigureMaker().x_axis_of(self.anno_x, self).combine_tools(tollbars).name("anno_x_axis").get(self)
+            FigureMaker()
+            .x_axis_of(self.anno_x, self)
+            .combine_tools(tollbars)
+            .name("anno_x_axis")
+            .get(self)
         )
         self.anno_x.xgrid.minor_grid_line_alpha = 0
         self.anno_x.xgrid.grid_line_alpha = 0
@@ -1719,7 +1770,11 @@ class MainLayout:
             .get(self)
         )
         self.anno_y_axis = (
-            FigureMaker().y_axis_of(self.anno_y, self).combine_tools(tollbars).name("anno_y_axis").get(self)
+            FigureMaker()
+            .y_axis_of(self.anno_y, self)
+            .combine_tools(tollbars)
+            .name("anno_y_axis")
+            .get(self)
         )
         self.anno_y.ygrid.minor_grid_line_alpha = 0
         self.anno_y.ygrid.grid_line_alpha = 0
@@ -1868,7 +1923,6 @@ class MainLayout:
             ("Options Panel", "tools"),
         )
 
-
         in_group = self.dropdown_select(
             "Merge datasets by",
             "tooltip_in_group",
@@ -1917,18 +1971,18 @@ class MainLayout:
         )
         contig_smaller_than_bin = self.make_checkbox(
             "Fill contigs that are smaller than one bin",
-            "tooltip_cibtug_snakker_than_bin", # @todo
+            "tooltip_cibtug_snakker_than_bin",  # @todo
             settings=["settings", "filters", "show_contig_smaller_than_bin"],
         )
 
         norm_sele = [
-                ("Reads per million", "rpm"),
-                ("Reads per thousand", "rpk"),
-                ("Binominal test", "radicl-seq"),
-                ("Iterative Correction", "ice"),
-                ("Associated slices", "grid-seq"),
-                ("No normalization", "dont"),
-            ]
+            ("Reads per million", "rpm"),
+            ("Reads per thousand", "rpk"),
+            ("Binominal test", "radicl-seq"),
+            ("Iterative Correction", "ice"),
+            ("Associated slices", "grid-seq"),
+            ("No normalization", "dont"),
+        ]
         if Quarry.has_cooler_icing():
             norm_sele.append((("Cooler Iterative Correction", "cool-ice")))
 
@@ -1994,19 +2048,19 @@ class MainLayout:
         )
         ice_num_samples = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_ice_num_samples", # @todo
+            tooltip="tooltip_ice_num_samples",  # @todo
             title="Number of samples",
             settings=["settings", "normalization", "num_ice_bins"],
             sizing_mode="stretch_width",
         )
         ice_show_bias = self.make_checkbox(
             "Show Bias",
-            "tooltip_ice_show_bias", # @todo
+            "tooltip_ice_show_bias",  # @todo
             settings=["settings", "normalization", "ice_show_bias"],
         )
         ice_local = self.make_checkbox(
             "Local Ice",
-            "tooltip_local_ice", # @todo
+            "tooltip_local_ice",  # @todo
             settings=["settings", "normalization", "ice_local"],
         )
         ddd_sam_l = self.make_range_slider_spinner(
@@ -2024,14 +2078,14 @@ class MainLayout:
         )
         do_redraw = self.make_checkbox(
             "Auto Render",
-            "tooltip_do_redraw", # @todo
+            "tooltip_do_redraw",  # @todo
             settings=["settings", "interface", "do_redraw"],
         )
         render_now = Button(
             label="Render Now",
             width=SETTINGS_WIDTH,
             sizing_mode="fixed",
-            css_classes=["other_button", "tooltip", "tooltip_render_now"], # @todo
+            css_classes=["other_button", "tooltip", "tooltip_render_now"],  # @todo
             height=DROPDOWN_HEIGHT,
         )
 
@@ -2094,40 +2148,49 @@ class MainLayout:
             event=axis_labels_event,
         )
 
-
-
         def lower_bound_event(e):
-            self.session.set_value(["settings", "filters", "mapping_q", "val_min"], int(e))
+            self.session.set_value(
+                ["settings", "filters", "mapping_q", "val_min"], int(e)
+            )
             self.trigger_render()
 
         ms_l = self.dropdown_select(
             "Mapping Quality: Lower Bound",
             "tooltip_map_q_bounds",
             (">= 0", "0"),
-            *[(">= " + str(i), str(idx + 1)) for idx, i in enumerate(self.session.get_value(["map_q_thresholds"]))],
+            *[
+                (">= " + str(i), str(idx + 1))
+                for idx, i in enumerate(self.session.get_value(["map_q_thresholds"]))
+            ],
             active_item=["settings", "filters", "mapping_q", "val_min"],
             event=lower_bound_event,
         )
 
         def upper_bound_event(e):
-            self.session.set_value(["settings", "filters", "mapping_q", "val_max"], int(e))
+            self.session.set_value(
+                ["settings", "filters", "mapping_q", "val_max"], int(e)
+            )
             self.trigger_render()
+
         ms_l_2 = self.dropdown_select(
             "Mapping Quality: Upper Bound",
             "tooltip_map_q_bounds",
-            *[("< " + str(i), str(idx + 1)) for idx, i in enumerate(self.session.get_value(["map_q_thresholds"]))],
+            *[
+                ("< " + str(i), str(idx + 1))
+                for idx, i in enumerate(self.session.get_value(["map_q_thresholds"]))
+            ],
             ("< 255", str(len(self.session.get_value(["map_q_thresholds"])) + 1)),
             active_item=["settings", "filters", "mapping_q", "val_max"],
             event=upper_bound_event,
         )
 
-        #ms_l = self.make_range_slider_spinner(
+        # ms_l = self.make_range_slider_spinner(
         #    width=SETTINGS_WIDTH,
         #    tooltip="tooltip_map_q_bounds",
         #    settings=["settings", "filters", "mapping_q"],
         #    title="Mapping Quality Bounds",
         #    sizing_mode="stretch_width",
-        #)
+        # )
 
         ibs_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
@@ -2202,7 +2265,7 @@ class MainLayout:
             settings=["settings", "interface", "anno_size"],
             title=ANNOTATION_PLOT_NAME + " Size [pixel]",
             sizing_mode="stretch_width",
-            on_change=anno_size_slider_event
+            on_change=anno_size_slider_event,
         )
 
         def raw_size_slider_event(val):
@@ -2340,7 +2403,7 @@ class MainLayout:
             ],
             ["replicates", "list"],
             title="Primary Datapools",
-            orderable=False
+            orderable=False,
         )
 
         annos_layout = self.multi_choice_auto(
@@ -2428,7 +2491,7 @@ class MainLayout:
             [self.info_status_bar],
             sizing_mode="stretch_width",
             css_classes=["top_border"],
-            name="status_bar"
+            name="status_bar",
         )
 
         self.spinner = Div(
@@ -2445,7 +2508,7 @@ class MainLayout:
             ],
             ["coverage", "list"],
             title="Secondary Datapools",
-            orderable=False
+            orderable=False,
         )
 
         anno_coords = self.dropdown_select_session(
@@ -2595,7 +2658,9 @@ class MainLayout:
             + Quarry.get_libSps_version()
         )
         index_info = Div(
-            text="Index path:" + os.environ["biosmoother_index_path"] if "biosmoother_index_path" in os.environ else "unknown"
+            text="Index path:" + os.environ["biosmoother_index_path"]
+            if "biosmoother_index_path" in os.environ
+            else "unknown"
         )
 
         self.color_layout = row(
@@ -2624,7 +2689,9 @@ class MainLayout:
             if "biosmoother_index_path" in os.environ:
                 if os.path.exists(os.environ["biosmoother_index_path"]):
                     path = os.environ["biosmoother_index_path"]
-                if os.path.exists(os.environ["biosmoother_index_path"] + ".biosmoother_index/"):
+                if os.path.exists(
+                    os.environ["biosmoother_index_path"] + ".biosmoother_index/"
+                ):
                     path = os.environ["biosmoother_index_path"] + ".biosmoother_index/"
             if not path is None:
                 with open(path + "/default_session.json", "r") as f:
@@ -2636,14 +2703,23 @@ class MainLayout:
 
         reset_session.on_click(reset_event)
 
-        self.ticker_x = ExtraTicksTicker(extra_ticks=[]) # pyright: ignore type
-        self.ticker_x_2 = IntermediateTicksTicker(extra_ticks=[]) # pyright: ignore type
-        self.ticker_y = ExtraTicksTicker(extra_ticks=[]) # pyright: ignore type
-        self.ticker_y_2 = IntermediateTicksTicker(extra_ticks=[]) # pyright: ignore type
+        self.ticker_x = ExtraTicksTicker(extra_ticks=[])  # pyright: ignore type
+        self.ticker_x_2 = IntermediateTicksTicker(
+            extra_ticks=[]
+        )  # pyright: ignore type
+        self.ticker_y = ExtraTicksTicker(extra_ticks=[])  # pyright: ignore type
+        self.ticker_y_2 = IntermediateTicksTicker(
+            extra_ticks=[]
+        )  # pyright: ignore type
 
         def get_formatter_tick():
             return FuncTickFormatter(
-                args={"screen_starts": [], "index_starts": [], "genome_end": 0, "dividend": 1},
+                args={
+                    "screen_starts": [],
+                    "index_starts": [],
+                    "genome_end": 0,
+                    "dividend": 1,
+                },
                 code="""
                             function numberWithCommas(x) {
                                 return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -2669,11 +2745,7 @@ class MainLayout:
 
         def get_formatter_chr():
             return FuncTickFormatter(
-                args={
-                    "contig_starts": [],
-                    "genome_end": 0,
-                    "contig_names": []
-                },
+                args={"contig_starts": [], "genome_end": 0, "contig_names": []},
                 code="""
                             if(tick < 0 || tick >= genome_end)
                                 return "n/a";
@@ -2739,7 +2811,7 @@ class MainLayout:
         self.heatmap_x_axis_2.ygrid.grid_line_alpha = 0.0
 
         self.heatmap_x_axis_3.xaxis.ticker = self.ticker_x
-        self.heatmap_x_axis_3.xaxis.major_label_text_font_size = '0pt'
+        self.heatmap_x_axis_3.xaxis.major_label_text_font_size = "0pt"
         self.heatmap_x_axis_3.xaxis.minor_tick_line_color = None
         self.heatmap_x_axis_3.y_range.start = 1
         self.heatmap_x_axis_3.y_range.end = 2
@@ -2758,7 +2830,7 @@ class MainLayout:
         self.heatmap_y_axis_2.xgrid.grid_line_alpha = 0.0
 
         self.heatmap_y_axis_3.yaxis.ticker = self.ticker_y
-        self.heatmap_y_axis_3.yaxis.major_label_text_font_size = '0pt'
+        self.heatmap_y_axis_3.yaxis.major_label_text_font_size = "0pt"
         self.heatmap_y_axis_3.yaxis.minor_tick_line_color = None
         self.heatmap_y_axis_3.x_range.start = 1
         self.heatmap_y_axis_3.x_range.end = 2
@@ -2766,10 +2838,23 @@ class MainLayout:
         self.heatmap_y_axis_3.outline_line_color = None
         self.heatmap_y_axis_3.xgrid.grid_line_alpha = 0.0
 
-        for plot in [self.heatmap, self.raw_x, self.anno_x, self.raw_y, self.anno_y, self.heatmap_x_axis, 
-                     self.heatmap_y_axis, self.anno_x_axis, self.anno_y_axis, self.heatmap_x_axis_2, 
-                     self.heatmap_y_axis_2, self.heatmap_x_axis_3, self.heatmap_y_axis_3, self.raw_x_axis, 
-                     self.raw_y_axis]:
+        for plot in [
+            self.heatmap,
+            self.raw_x,
+            self.anno_x,
+            self.raw_y,
+            self.anno_y,
+            self.heatmap_x_axis,
+            self.heatmap_y_axis,
+            self.anno_x_axis,
+            self.anno_y_axis,
+            self.heatmap_x_axis_2,
+            self.heatmap_y_axis_2,
+            self.heatmap_x_axis_3,
+            self.heatmap_y_axis_3,
+            self.raw_x_axis,
+            self.raw_y_axis,
+        ]:
             plot.js_on_change("visible", CustomJS(code=JS_UPDATE_LAYOUT))
             plot.js_on_change("outer_height", CustomJS(code=JS_UPDATE_LAYOUT))
             plot.js_on_change("outer_height", CustomJS(code=JS_UPDATE_LAYOUT))
@@ -2879,9 +2964,9 @@ class MainLayout:
                                 self.make_panel("Presetting", "", [*quick_configs]),
                                 self.make_panel("Export", "", export_panel),
                                 self.make_panel(
-                                    "Info", "", [version_info, index_info, log_div, 
-                                                 self.log_div
-                                                 ]
+                                    "Info",
+                                    "",
+                                    [version_info, index_info, log_div, self.log_div],
                                 ),
                             ]
                         ),
@@ -2933,8 +3018,16 @@ class MainLayout:
                                         self.ranked_rows,
                                     ],
                                 ),
-                                self.make_panel("ICE", "", [ice_sparse_filter, ice_num_samples, 
-                                                            ice_show_bias, ice_local]),
+                                self.make_panel(
+                                    "ICE",
+                                    "",
+                                    [
+                                        ice_sparse_filter,
+                                        ice_num_samples,
+                                        ice_show_bias,
+                                        ice_local,
+                                    ],
+                                ),
                             ]
                         ),
                     ],
@@ -3019,7 +3112,13 @@ class MainLayout:
                                 self.make_panel(
                                     "Panels",
                                     "",
-                                    [show_hide, ass_l, rss2_l, axis_lables, axis_label_max_char],
+                                    [
+                                        show_hide,
+                                        ass_l,
+                                        rss2_l,
+                                        axis_lables,
+                                        axis_label_max_char,
+                                    ],
                                 ),
                                 self.make_panel(
                                     "Bins",
@@ -3045,14 +3144,18 @@ class MainLayout:
                                         self.v4c_row,
                                     ],
                                 ),
-                                self.make_panel("Rendering", "", [ufs_l, rs_l, aas_l, do_redraw, render_now]),
+                                self.make_panel(
+                                    "Rendering",
+                                    "",
+                                    [ufs_l, rs_l, aas_l, do_redraw, render_now],
+                                ),
                             ]
                         ),
                     ],
                     inner=False,
                 ),
             ],
-            outer=True
+            outer=True,
         )
 
         _settings_n_info = column([Spacer(height=5), _settings])
@@ -3106,7 +3209,9 @@ class MainLayout:
         self.curdoc.add_root(self.anno_y)
         self.curdoc.add_root(self.anno_y_axis)
         self.curdoc.add_root(self.raw_y)
-        self.curdoc.add_root(column([self.raw_y_axis], name="raw_y_axis", sizing_mode="stretch_width"))
+        self.curdoc.add_root(
+            column([self.raw_y_axis], name="raw_y_axis", sizing_mode="stretch_width")
+        )
         self.curdoc.add_root(self.settings_row)
         self.curdoc.add_root(communication)
         self.curdoc.add_root(status_bar_row)
@@ -3239,9 +3344,7 @@ class MainLayout:
                     self.curdoc.hold()
                     if not bin.global_variables.quiet:
                         self.print("ERROR: " + error_text)
-                    self.color_layout.children = [
-                        self.make_color_figure(palette)
-                    ]
+                    self.color_layout.children = [self.make_color_figure(palette)]
 
                     def mmax(*args):
                         m = 0
@@ -3313,10 +3416,14 @@ class MainLayout:
 
                     self.anno_x_data.data = d_anno_x
                     self.anno_y_data.data = d_anno_y
-                    self.anno_x.visible = len(d_anno_x["anno_name"]) > 0 and self.show_hide["annotation"]
-                    self.anno_x_axis.visible =self.anno_x.visible
-                    self.anno_y.visible = len(d_anno_y["anno_name"]) > 0 and self.show_hide["annotation"]
-                    self.anno_y_axis.visible =self.anno_y.visible
+                    self.anno_x.visible = (
+                        len(d_anno_x["anno_name"]) > 0 and self.show_hide["annotation"]
+                    )
+                    self.anno_x_axis.visible = self.anno_x.visible
+                    self.anno_y.visible = (
+                        len(d_anno_y["anno_name"]) > 0 and self.show_hide["annotation"]
+                    )
+                    self.anno_y_axis.visible = self.anno_y.visible
 
                     self.heatmap.x_range.reset_start = 0
                     self.heatmap.x_range.reset_end = canvas_size_x
@@ -3367,6 +3474,7 @@ class MainLayout:
                         )
                         * 1000,
                     )
+
                 self.curdoc.add_next_tick_callback(callback)
                 return True
 
@@ -3375,7 +3483,7 @@ class MainLayout:
 
             def callback():
                 self.spinner.css_classes = ["fade-out"]
-                self.re_layout.text = "a" if self.re_layout.text == "a" else "b"
+                self.re_layout.text = "a" if self.re_layout.text == "b" else "b"
                 if not bin.global_variables.no_save:
                     self.session.save_session()
 
@@ -3427,11 +3535,12 @@ class MainLayout:
                 )
                 zoom_in_render = False
                 if (
-                    ( ( curr_area_size / self.curr_area_size < min_change
-                        or MainLayout.area_outside(self.last_drawing_area, curr_area) )
-                      and self.session.get_value(["settings", "interface", "do_redraw"]) )
-                    or self.force_render
-                ):
+                    (
+                        curr_area_size / self.curr_area_size < min_change
+                        or MainLayout.area_outside(self.last_drawing_area, curr_area)
+                    )
+                    and self.session.get_value(["settings", "interface", "do_redraw"])
+                ) or self.force_render:
                     if curr_area_size / self.curr_area_size < min_change:
                         self.print_status("rendering due to zoom in.")
                         zoom_in_render = True
@@ -3465,9 +3574,7 @@ class MainLayout:
 
             self.curdoc.add_timeout_callback(
                 lambda: self.render_callback(),
-                self.session.get_value(
-                    ["settings", "interface", "update_freq", "val"]
-                )
+                self.session.get_value(["settings", "interface", "update_freq", "val"])
                 * 1000,
             )
         else:

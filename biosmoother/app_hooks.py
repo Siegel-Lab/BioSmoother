@@ -46,7 +46,9 @@ def on_server_loaded(server_context):
 
             print("done loading.")
         else:
-            print("index", os.environ["biosmoother_index_path"], "does not exist, exiting")
+            print(
+                "index", os.environ["biosmoother_index_path"], "does not exist, exiting"
+            )
             exit()
     else:
         print("No index path is given.")
