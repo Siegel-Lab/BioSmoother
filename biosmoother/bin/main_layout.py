@@ -67,6 +67,8 @@ executor = ThreadPoolExecutor(max_workers=1)
 
 biosmoother_home_folder = str(Path.home()) + "/.biosmoother"
 
+JS_UPDATE_LAYOUT = "setTimeout(function(){window.dispatchEvent(new Event('resize'));console.log('layout updated');}, 100);"
+
 
 class MainLayout:
     def dropdown_select_h(self, title, event, tooltip):
@@ -566,6 +568,7 @@ class MainLayout:
         on_change=None,
         spinner_width=80,
         sizing_mode="stretch_width",
+        js_on_change=None,
     ):
         if on_change is None:
 
@@ -591,6 +594,9 @@ class MainLayout:
         spinner.on_change(
             "value_throttled", lambda _x, _y, _z: on_change(spinner.value)
         )
+        if not js_on_change is None:
+            slider.js_on_change("value_throttled", CustomJS(code=js_on_change))
+            spinner.js_on_change("value_throttled", CustomJS(code=js_on_change))
 
         self.slider_spinner_config.append((slider, spinner, on_change, settings))
 
@@ -1010,7 +1016,6 @@ class MainLayout:
 
         self.show_hide_dropdown.on_click(event)
 
-        self.show_hide_dropdown.js_on_click(CustomJS(code="setTimeout(function(){window.dispatchEvent(new Event('resize'));}, 100)"))
         return self.show_hide_dropdown
 
     def config_show_hide(self, settings):
@@ -2187,7 +2192,7 @@ class MainLayout:
             settings=["settings", "interface", "anno_size"],
             title=ANNOTATION_PLOT_NAME + " Size [pixel]",
             sizing_mode="stretch_width",
-            on_change=anno_size_slider_event,
+            on_change=anno_size_slider_event
         )
 
         def raw_size_slider_event(val):
@@ -2750,6 +2755,11 @@ class MainLayout:
         self.heatmap_y_axis_3.background_fill_color = None
         self.heatmap_y_axis_3.outline_line_color = None
         self.heatmap_y_axis_3.xgrid.grid_line_alpha = 0.0
+
+        for plot in [self.heatmap, self.raw_x, self.anno_x, self.raw_y, self.anno_y]:
+            plot.js_on_change("visible", CustomJS(code=JS_UPDATE_LAYOUT))
+            plot.js_on_change("height", CustomJS(code=JS_UPDATE_LAYOUT))
+            plot.js_on_change("width", CustomJS(code=JS_UPDATE_LAYOUT))
 
         for plot in [self.heatmap, self.raw_y, self.anno_y, self.heatmap_x_axis]:
             plot.xgrid.ticker = self.ticker_x
