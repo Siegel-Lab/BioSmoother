@@ -10,27 +10,6 @@
 {%  block resources -%}
 {%   block css_resources -%}
     {{- bokeh_css if bokeh_css }}
-    
-    <style>
-        #left_panel {
-            position: absolute;
-            width: 96px;
-            padding-left: 4px;
-            height: 100px;
-            right: 0;
-            background-color: #f0f0ff;
-        }
-
-        #right_panel {
-            content: '';
-            background-color: #ccc;
-            position: absolute;
-            left: 0;
-            width: 4px;
-            height: 100px;
-            cursor: ew-resize;
-        }
-    </style>
     <link rel="stylesheet" href="biosmoother/static/css/styles.css"/>
     <link rel="stylesheet" href="biosmoother/static/css/tooltips.css"/>
     <link rel="icon" type="image/x-icon" href="biosmoother/static/favicon.ico">
@@ -41,19 +20,7 @@
         window.onbeforeunload = function(){
             Bokeh.documents[0].get_model_by_name('quit_ti').value = "shutdown";
         };
-
-        function reflow(){
-            if(Bokeh.documents.length > 0 && Bokeh.documents[0].get_model_by_name('heatmap') != null){
-                window.dispatchEvent(new Event('resize'));
-            }
-            else{
-                setTimeout(reflow, 100);
-            }
-            
-        }
-        window.onload = function(){
-            setTimeout(reflow, 100);
-        };
+        let layout_needed = true;
     </script>
 {%-  endblock js_resources %}
 {%  endblock resources %}
@@ -98,8 +65,12 @@
         </div>
     </div>
 </div>
-<div style="position:absolute; width: 425px; top: 40px; bottom: 26px; right: 0;" class="options_panel">{{ embed(doc.roots.settings_row) }}</div>
-<div style="position:absolute; height: 26px; left: 0; bottom: 0; right: 0; justify-content: center; display: flex">{{ embed(doc.roots.status_bar) }}</div>
+<div style="position:absolute; width: 425px; top: 40px; bottom: 26px; right: 0;" class="options_panel">
+    {{ embed(doc.roots.settings_row) }}
+</div>
+<div style="position:absolute; height: 26px; left: 0; bottom: 0; right: 0; justify-content: center; display: flex">
+    {{ embed(doc.roots.status_bar) }}
+</div>
 
 {%      endfor %}
 {% endblock contents %}

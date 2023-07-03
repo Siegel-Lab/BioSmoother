@@ -38,15 +38,15 @@ from concurrent.futures import ThreadPoolExecutor
 from bokeh.models.tickers import AdaptiveTicker
 from libbiosmoother import Quarry, export_tsv, export_png, export_svg, open_default_json
 import json
-from bin.figure_maker import FigureMaker, DROPDOWN_HEIGHT, FONT
-from bin.extra_ticks_ticker import *
-import bin.global_variables
+from bin.figure_maker import FigureMaker, DROPDOWN_HEIGHT, FONT # pyright: ignore missing import
+from bin.extra_ticks_ticker import * # pyright: ignore missing import
+import bin.global_variables # pyright: ignore missing import
 import numpy as np
 try:
     import importlib.resources as pkg_resources
 except ImportError:
     # Try backported to PY<37 `importlib_resources`.
-    import importlib_resources as pkg_resources
+    import importlib_resources as pkg_resources # pyright: ignore missing import
 from pathlib import Path
 
 SETTINGS_WIDTH = 400
@@ -67,7 +67,16 @@ executor = ThreadPoolExecutor(max_workers=1)
 
 biosmoother_home_folder = str(Path.home()) + "/.biosmoother"
 
-JS_UPDATE_LAYOUT = "setTimeout(function(){window.dispatchEvent(new Event('resize'));console.log('layout updated');}, 100);"
+JS_UPDATE_LAYOUT = """
+    layout_needed=true;
+    setTimeout(function(){
+        if(layout_needed){
+            window.dispatchEvent(new Event('resize'));
+            console.log('layout updated');
+            layout_needed=false;
+        }
+    }, 100);
+"""
 
 
 class MainLayout:
@@ -1378,6 +1387,7 @@ class MainLayout:
         with open(biosmoother_home_folder + "/conf/default.json", "r") as f:
             self.settings_default = json.load(f)
 
+        self.re_layout = None
         self.heatmap = None
         d = {
             "screen_bottom": [],
@@ -2626,10 +2636,10 @@ class MainLayout:
 
         reset_session.on_click(reset_event)
 
-        self.ticker_x = ExtraTicksTicker(extra_ticks=[])
-        self.ticker_x_2 = IntermediateTicksTicker(extra_ticks=[])
-        self.ticker_y = ExtraTicksTicker(extra_ticks=[])
-        self.ticker_y_2 = IntermediateTicksTicker(extra_ticks=[])
+        self.ticker_x = ExtraTicksTicker(extra_ticks=[]) # pyright: ignore type
+        self.ticker_x_2 = IntermediateTicksTicker(extra_ticks=[]) # pyright: ignore type
+        self.ticker_y = ExtraTicksTicker(extra_ticks=[]) # pyright: ignore type
+        self.ticker_y_2 = IntermediateTicksTicker(extra_ticks=[]) # pyright: ignore type
 
         def get_formatter_tick():
             return FuncTickFormatter(
@@ -2756,10 +2766,16 @@ class MainLayout:
         self.heatmap_y_axis_3.outline_line_color = None
         self.heatmap_y_axis_3.xgrid.grid_line_alpha = 0.0
 
-        for plot in [self.heatmap, self.raw_x, self.anno_x, self.raw_y, self.anno_y]:
+        for plot in [self.heatmap, self.raw_x, self.anno_x, self.raw_y, self.anno_y, self.heatmap_x_axis, 
+                     self.heatmap_y_axis, self.anno_x_axis, self.anno_y_axis, self.heatmap_x_axis_2, 
+                     self.heatmap_y_axis_2, self.heatmap_x_axis_3, self.heatmap_y_axis_3, self.raw_x_axis, 
+                     self.raw_y_axis]:
             plot.js_on_change("visible", CustomJS(code=JS_UPDATE_LAYOUT))
-            plot.js_on_change("height", CustomJS(code=JS_UPDATE_LAYOUT))
-            plot.js_on_change("width", CustomJS(code=JS_UPDATE_LAYOUT))
+            plot.js_on_change("outer_height", CustomJS(code=JS_UPDATE_LAYOUT))
+            plot.js_on_change("outer_height", CustomJS(code=JS_UPDATE_LAYOUT))
+
+        for plot in [self.anno_y_axis, self.raw_y_axis]:
+            plot.align = "end"
 
         for plot in [self.heatmap, self.raw_y, self.anno_y, self.heatmap_x_axis]:
             plot.xgrid.ticker = self.ticker_x
@@ -3070,8 +3086,10 @@ class MainLayout:
                 sys.exit()
 
         quit_ti.on_change("value", close_server)
+        self.re_layout = Div(text="")
+        self.re_layout.js_on_change("text", CustomJS(code=JS_UPDATE_LAYOUT))
 
-        communication = row([quit_ti], name="communication")
+        communication = row([quit_ti, self.re_layout], name="communication")
         communication.visible = False
 
         self.curdoc.add_root(self.heatmap)
@@ -3088,7 +3106,7 @@ class MainLayout:
         self.curdoc.add_root(self.anno_y)
         self.curdoc.add_root(self.anno_y_axis)
         self.curdoc.add_root(self.raw_y)
-        self.curdoc.add_root(self.raw_y_axis)
+        self.curdoc.add_root(column([self.raw_y_axis], name="raw_y_axis", sizing_mode="stretch_width"))
         self.curdoc.add_root(self.settings_row)
         self.curdoc.add_root(communication)
         self.curdoc.add_root(status_bar_row)
@@ -3357,6 +3375,7 @@ class MainLayout:
 
             def callback():
                 self.spinner.css_classes = ["fade-out"]
+                self.re_layout.text = "a" if self.re_layout.text == "a" else "b"
                 if not bin.global_variables.no_save:
                     self.session.save_session()
 
