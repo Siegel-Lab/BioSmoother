@@ -1,8 +1,5 @@
 # smoother todo (ranked)
 
-- v4c viewpoint not updating for chr7_core
-- be able to import files with counts instead of raw reads
-- importing tracks 
 - max number of characters for axis labels -> properly (only on axis lables not in hover)
 
 - remove default.json from smoother_hg
