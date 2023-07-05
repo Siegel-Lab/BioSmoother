@@ -1,9 +1,9 @@
 __author__ = "Markus Schmidt"
 __email__ = "Markus.Schmidt@lmu.de"
 
-from bokeh.layouts import grid, row, column
-from bokeh.plotting import figure, curdoc
-from bokeh.models import (
+from bokeh.layouts import grid, row, column  # pyright: ignore missing import
+from bokeh.plotting import figure, curdoc  # pyright: ignore missing import
+from bokeh.models import (  # pyright: ignore missing import
     ColumnDataSource,
     Dropdown,
     Button,
@@ -25,18 +25,19 @@ from bokeh.models import (
     Spacer,
     Slope,
     CustomJS,
+    CustomJSHover,
 )
-from bokeh.transform import jitter
+from bokeh.transform import jitter  # pyright: ignore missing import
 import math
 from datetime import datetime
-from tornado import gen
-from bokeh.document import without_document_lock
+from tornado import gen  # pyright: ignore missing import
+from bokeh.document import without_document_lock  # pyright: ignore missing import
 import os
 import sys
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
-from bokeh.models.tickers import AdaptiveTicker
-from libbiosmoother import Quarry, export_tsv, export_png, export_svg, open_default_json
+from bokeh.models.tickers import AdaptiveTicker  # pyright: ignore missing import
+from libbiosmoother import Quarry, export_tsv, export_png, export_svg, open_default_json  # pyright: ignore missing import
 import json
 from bin.figure_maker import (
     FigureMaker,
@@ -45,7 +46,7 @@ from bin.figure_maker import (
 )  # pyright: ignore missing import
 from bin.extra_ticks_ticker import *  # pyright: ignore missing import
 import bin.global_variables  # pyright: ignore missing import
-import numpy as np
+import numpy as np  # pyright: ignore missing import
 
 try:
     import importlib.resources as pkg_resources
@@ -82,6 +83,9 @@ JS_UPDATE_LAYOUT = """
     }, 100);
 """
 
+JS_HOVER = """
+    return source.data.chr[value] + " " + source.data.index_left[value] + " .. " + source.data.index_right[value];
+"""
 
 class MainLayout:
     def dropdown_select_h(self, title, event, tooltip):
@@ -1104,11 +1108,15 @@ class MainLayout:
                 tooltips=[
                     (
                         "(x, y)",
-                        "(@chr_x @index_left .. @index_right, @chr_y @index_bottom .. @index_top)",
+                        "(@bin_id_x{custom}, @bin_id_y{custom})",
                     ),
                     ("score", "@score_total"),
                     ("reads by group", "A: @score_a, B: @score_b"),
-                ]
+                ],
+                formatters={
+                    "@bin_id_x": CustomJSHover(code=JS_HOVER, args={"source": self.custom_hover_x_data}),
+                    "@bin_id_y": CustomJSHover(code=JS_HOVER, args={"source": self.custom_hover_y_data}),
+                }
             )
         )
         color_figure.hover.renderers = [scatter]
@@ -1541,6 +1549,9 @@ class MainLayout:
         self.v4c_col = None
         self.v4c_row_expected = ""
         self.v4c_row = None
+        d = {"chr": [], "index_left": [], "index_right": []}
+        self.custom_hover_x_data = ColumnDataSource(data=d)
+        self.custom_hover_y_data = ColumnDataSource(data=d)
 
         self.do_layout()
 
@@ -1602,11 +1613,15 @@ class MainLayout:
                 tooltips=[
                     (
                         "(x, y)",
-                        "(@chr_x @index_left .. @index_right, @chr_y @index_bottom .. @index_top)",
+                        "(@bin_id_x{custom}, @bin_id_y{custom})",
                     ),
                     ("score", "@score_total"),
                     ("reads by group", "A: @score_a, B: @score_b"),
-                ]
+                ],
+                formatters={
+                    "@bin_id_x": CustomJSHover(code=JS_HOVER, args={"source": self.custom_hover_x_data}),
+                    "@bin_id_y": CustomJSHover(code=JS_HOVER, args={"source": self.custom_hover_y_data}),
+                }
             )
         )
 
@@ -3320,6 +3335,8 @@ class MainLayout:
                 ticks_y = self.session.get_ticks(False, self.print)
                 contig_ticks_x = self.session.get_contig_ticks(True, self.print)
                 contig_ticks_y = self.session.get_contig_ticks(False, self.print)
+                bin_coords_x = self.session.get_bin_coords_cds(True, self.print)
+                bin_coords_y = self.session.get_bin_coords_cds(False, self.print)
 
                 palette = self.session.get_palette(self.print)
 
@@ -3443,6 +3460,9 @@ class MainLayout:
                     self.ranked_columns_data.data = ranked_slice_y
                     self.ranked_rows_data.data = ranked_slice_x
                     self.dist_dep_dec_plot_data.data = dist_dep_dec_plot_data
+
+                    self.custom_hover_x_data.data = bin_coords_x
+                    self.custom_hover_y_data.data = bin_coords_y
 
                     self.set_area_range()
 
