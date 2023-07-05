@@ -1,36 +1,8 @@
 # smoother todo (ranked)
 
 - max number of characters for axis labels -> properly (only on axis lables not in hover)
+- track exporting and displaying should be combined into one system
 
 - remove default.json from smoother_hg
 - sort session .json into static values & parameters
     -  exclude static values form undo & redo
-
-# presentation
-
-- published data, that's not tryps (cancer, human)
-    - hi-c & radicl-seq
-- structure also for other purposes
-    - in databases (plain computer science)
-    - for a chip seq viewer?
-    - other live sciences?
-    - e.g. google maps / other heatmaps
-- one main figure about the algorithmmics
-- why is this needed (as a figure)
-    - advantages of the tool
-- 
-
-
-# Reference organisms by genome size:
-
-- e. coli:                   5.5 Mb     OK
-- budding yeast:            12   Mb     OK
-(- plasmodium:              24   Mb)
-- tryps:                    35   Mb     OK
-(- c. elegans:             100   Mb)
-- drosophila:              140   Mb     OK
-(- rice:                   430   Mb)
-(- chicken:               1000   Mb)
-(- zebrafish:             1412   Mb)
-(- mouse:                 2800   Mb)
-- human:                  3200   Mb     OK

@@ -2135,6 +2135,8 @@ class MainLayout:
             ("Count MMR if bottom left mapping loci is within a bin", "first"),
             ("Count MMR if top right mapping loci is within a bin", "last"),
             ("Ignore MMRs", "points_only"),
+            ("Count MMR if all mapping loci are within the same bin and ignore non-MMRs", "enclosed_only"),
+            ("Count MMR if mapping loci minimum bounding-box overlaps bin and ignore non-MMRs", "overlaps_only"),
             active_item=["settings", "filters", "ambiguous_mapping"],
         )
         directionality = self.dropdown_select(
