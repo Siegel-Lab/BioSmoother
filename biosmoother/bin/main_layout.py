@@ -2601,7 +2601,7 @@ class MainLayout:
 
         export_button = Button(
             label="Export",
-            width=SETTINGS_WIDTH - 25,
+            width=SETTINGS_WIDTH - 37,
             sizing_mode="fixed",
             css_classes=["other_button", "tooltip", "tooltip_export"],
             height=DROPDOWN_HEIGHT,
