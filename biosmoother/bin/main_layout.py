@@ -39,7 +39,7 @@ from concurrent.futures import ThreadPoolExecutor
 from bokeh.models.tickers import AdaptiveTicker  # pyright: ignore missing import
 from libbiosmoother import Quarry, export_tsv, export_png, export_svg, open_default_json  # pyright: ignore missing import
 import json
-from bin.figure_maker import (
+from bin.figure_maker import (  # pyright: ignore missing import
     FigureMaker,
     DROPDOWN_HEIGHT,
     FONT,
@@ -2436,8 +2436,10 @@ class MainLayout:
 
         power_tick = FuncTickFormatter(
             code="""
-            if (tick / 9 >= 7)
+            if (tick / 9 >= 9)
                 return Math.ceil((1 + tick % 9)) + "*10^" + Math.floor(tick / 9) + "bp";
+            else if (tick / 9 >= 6)
+                return Math.ceil((1 + tick % 9) * Math.pow(10, Math.floor(tick / 9)-6)) + "mbp";
             else if (tick / 9 >= 3)
                 return Math.ceil((1 + tick % 9) * Math.pow(10, Math.floor(tick / 9)-3)) + "kbp";
             else
@@ -2599,7 +2601,7 @@ class MainLayout:
 
         export_button = Button(
             label="Export",
-            width=SETTINGS_WIDTH,
+            width=SETTINGS_WIDTH - 25,
             sizing_mode="fixed",
             css_classes=["other_button", "tooltip", "tooltip_export"],
             height=DROPDOWN_HEIGHT,
@@ -2721,11 +2723,11 @@ class MainLayout:
         reset_session.on_click(reset_event)
 
         self.ticker_x = ExtraTicksTicker(extra_ticks=[])  # pyright: ignore type
-        self.ticker_x_2 = IntermediateTicksTicker(
+        self.ticker_x_2 = IntermediateTicksTicker(  # pyright: ignore missing import
             extra_ticks=[]
         )  # pyright: ignore type
         self.ticker_y = ExtraTicksTicker(extra_ticks=[])  # pyright: ignore type
-        self.ticker_y_2 = IntermediateTicksTicker(
+        self.ticker_y_2 = IntermediateTicksTicker(  # pyright: ignore missing import
             extra_ticks=[]
         )  # pyright: ignore type
 
@@ -2934,7 +2936,7 @@ class MainLayout:
                 export_coords_size,
                 export_contigs_size,
                 export_axis_size,
-                export_button,
+                row([self.spinner, export_button]),
             ]
 
         do_v4c_col = self.make_checkbox(

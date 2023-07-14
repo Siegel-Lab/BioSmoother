@@ -150,6 +150,9 @@ button {
     border-color: transparent;
     font-weight: inherit;
 }
+.bk-tooltip>div:not(:first-child) {
+    display: none;
+}
 
 .bk-root .bk-btn:active,
 .bk-root .bk-btn.bk-active {

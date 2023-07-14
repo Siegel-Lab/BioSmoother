@@ -1,8 +1,6 @@
 # smoother todo (ranked)
 
-- max number of characters for axis labels -> properly (only on axis lables not in hover)
-- track exporting and displaying should be combined into one system
+- when loading count matrix file abort if resolution does not match index
 
 - remove default.json from smoother_hg
-- sort session .json into static values & parameters
-    -  exclude static values form undo & redo
+- slices normalisation not working with mouse radicl-seq dataset
