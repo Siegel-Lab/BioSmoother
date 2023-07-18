@@ -130,12 +130,13 @@ class MainLayout:
         ret.on_click(_event)
         return ret, set_menu
 
-    def dropdown_select(self, title, tooltip, *options, active_item=None, event=None):
+    def dropdown_select(self, title, tooltip, *options, active_item=None, event=None, trigger_render=True):
         if event is None:
 
             def default_event(e):
                 self.session.set_value(active_item, e)
-                self.trigger_render()
+                if trigger_render:
+                    self.trigger_render()
 
             event = default_event
         ret, set_menu = self.dropdown_select_h(title, event, tooltip)
@@ -599,12 +600,14 @@ class MainLayout:
         spinner_width=80,
         sizing_mode="stretch_width",
         js_on_change=None,
+        trigger_render=True,
     ):
         if on_change is None:
 
             def default_on_change(val):
                 self.session.set_value(settings + ["val"], val)
-                self.trigger_render()
+                if trigger_render:
+                    self.trigger_render()
 
             on_change = default_on_change
         spinner = Spinner(width=spinner_width)
@@ -2343,6 +2346,7 @@ class MainLayout:
             settings=["settings", "export", "coords"],
             title="Coordinate size",
             sizing_mode="stretch_width",
+            trigger_render=False,
         )
         axis_label_max_char = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
@@ -2357,6 +2361,7 @@ class MainLayout:
             settings=["settings", "export", "contigs"],
             title="Contig size",
             sizing_mode="stretch_width",
+            trigger_render=False,
         )
         export_axis_size = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
@@ -2364,6 +2369,7 @@ class MainLayout:
             settings=["settings", "export", "axis"],
             title="Secondary Axis size",
             sizing_mode="stretch_width",
+            trigger_render=False,
         )
         grid_seq_display_background = self.make_checkbox(
             "Display Background as Secondary Data",
@@ -2619,6 +2625,7 @@ class MainLayout:
             ("SVG-picture", "svg"),
             ("PNG-picture", "png"),
             active_item=["settings", "export", "export_format"],
+            trigger_render=False,
         )
 
         # export_full = self.make_checkbox("Export full matrix instead", "tooltip_full_matrix",

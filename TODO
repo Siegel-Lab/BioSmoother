@@ -1,6 +1,8 @@
 # smoother todo (ranked)
 
-- when loading count matrix file abort if resolution does not match index
-
+- V4C segfault w/ interative correction
+    - also for x-axis V4C the values are just 0
+    - also V4C annotation label does not update properly
+- how does DDD norm interact with ICE? (ddd should be first!)
 - remove default.json from smoother_hg
 - slices normalisation not working with mouse radicl-seq dataset
