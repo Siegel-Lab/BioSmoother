@@ -1155,7 +1155,7 @@ class MainLayout:
         if x == 0:
             label = "0 bp"
         elif x % 1000000 == 0:
-            label = "{:,}".format(x // 1000000) + " mbp"
+            label = "{:,}".format(x // 1000000) + " Mbp"
         elif x % 1000 == 0:
             label = "{:,}".format(x // 1000) + " kbp"
         else:
@@ -1902,7 +1902,7 @@ class MainLayout:
                     if(tick == 0)
                         tick_label = "0 bp"
                     else if(tick % 1000000 == 0)
-                        tick_label = numberWithCommas(tick / 1000000) + " mbp";
+                        tick_label = numberWithCommas(tick / 1000000) + " Mbp";
                     else if (tick % 1000 == 0)
                         tick_label = numberWithCommas(tick / 1000) + " kbp";
                     else
@@ -2439,7 +2439,7 @@ class MainLayout:
             if (tick / 9 >= 9)
                 return Math.ceil((1 + tick % 9)) + "*10^" + Math.floor(tick / 9) + "bp";
             else if (tick / 9 >= 6)
-                return Math.ceil((1 + tick % 9) * Math.pow(10, Math.floor(tick / 9)-6)) + "mbp";
+                return Math.ceil((1 + tick % 9) * Math.pow(10, Math.floor(tick / 9)-6)) + "Mbp";
             else if (tick / 9 >= 3)
                 return Math.ceil((1 + tick % 9) * Math.pow(10, Math.floor(tick / 9)-3)) + "kbp";
             else
@@ -2753,7 +2753,7 @@ class MainLayout:
                             if(tick_pos == 0)
                                 tick_label = "0 bp"
                             else if(tick_pos % 1000000 == 0)
-                                tick_label = numberWithCommas(tick_pos / 1000000) + " mbp";
+                                tick_label = numberWithCommas(tick_pos / 1000000) + " Mbp";
                             else if (tick_pos % 1000 == 0)
                                 tick_label = numberWithCommas(tick_pos / 1000) + " kbp";
                             else
@@ -3290,7 +3290,7 @@ class MainLayout:
                 return "{:,}".format(x)
 
             if l % 1000000 == 0:
-                return str(add_commas(l // 1000000)) + "mbp"
+                return str(add_commas(l // 1000000)) + "Mbp"
             elif l % 1000 == 0:
                 return str(add_commas(l // 1000)) + "kbp"
             else:
