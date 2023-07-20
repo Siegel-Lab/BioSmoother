@@ -2396,6 +2396,11 @@ class MainLayout:
             "tooltip_intersect_repl",
             settings=["settings", "normalization", "grid_seq_filter_intersection"],
         )
+        grid_seq_ignore_cis = self.make_checkbox(
+            "Ignore cis interactions",
+            "@todo",
+            settings=["settings", "normalization", "grid_seq_ignore_cis"],
+        )
         grid_seq_anno = self.dropdown_select_session(
             "Annotation type",
             "tooltip_anno_type",
@@ -3038,6 +3043,7 @@ class MainLayout:
                                         grid_seq_anno,
                                         grid_seq_display_background,
                                         grid_seq_intersection,
+                                        grid_seq_ignore_cis,
                                         grid_seq_rna_filter_l,
                                         self.ranked_columns,
                                         grid_seq_dna_filter_l,
