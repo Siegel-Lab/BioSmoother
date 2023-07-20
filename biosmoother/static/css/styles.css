@@ -4,8 +4,12 @@ textarea {
 
 .options_panel {
     border-left: 1px solid #D3D3D3 !important;
+}
+
+.scroll_y{
     overflow-y: auto !important;
     overflow-x: hidden !important;
+    height: 100% !important;
 }
 
 .scroll_y2 {
@@ -169,6 +173,40 @@ button {
     font-size: 11px !important;
 }
 
+.tab-header{
+    width: 100%;
+    overflow: hidden;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.mainTab{
+    top: 40px !important; 
+    bottom: 26px !important;
+    position: absolute !important;
+}
+
+.tab-button{
+    white-space: normal;
+    padding: 8px 8px;
+    float: left;
+    width: auto;
+    border: none;
+    display: block;
+    outline: 0;
+    background-color: white;
+    font-family: Consolas, 'Courier New', monospace !important;
+    font-size: 11px !important;
+}
+
+.tab-button-active {
+    border: solid;
+    border-width: 3px 1px 0px 1px;
+    border-color: #e6e6e6;
+}
+
+.tab-button:hover{
+    background-color: #f2f2f2;
+}
 
 .lds-spinner {
     color: official;

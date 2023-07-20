@@ -979,9 +979,6 @@ class MainLayout:
         )
         self.anno_y_axis.visible = self.anno_y.visible
 
-        if not self.unhide_button is None:
-            if self.unhide_button.visible == self.show_hide["tools"]:
-                self.unhide_button.visible = not self.show_hide["tools"]
         cx = "lightgrey" if self.show_hide["contig_borders"] else None
         cx2 = "lightgrey" if self.show_hide["grid_lines"] else None
         cy = "lightgrey" if self.show_hide["contig_borders"] else None
@@ -1008,7 +1005,7 @@ class MainLayout:
         menu = []
         for name, key in self.names:
             menu.append(
-                (("☑ " if self.show_hide[key] or key == "tools" else "☐ ") + name, key)
+                (("☑ " if self.show_hide[key] else "☐ ") + name, key)
             )
         menu.append(
             (
@@ -1032,9 +1029,7 @@ class MainLayout:
 
     def make_show_hide_dropdown(self, session_key, *names):
         for _, key in names:
-            if key == "tools":
-                self.show_hide[key] = True
-            elif key not in self.show_hide:
+            if key not in self.show_hide:
                 self.show_hide[key] = False
         self.names = names
 
@@ -1064,23 +1059,6 @@ class MainLayout:
             self.show_hide[key] = settings[key]
         self.show_hide_dropdown.menu = self.make_show_hide_menu()
         self.update_visibility()
-
-    def reshow_settings(self):
-        self.unhide_button = Button(
-            label="<", width=40, height=40, css_classes=["other_button"]
-        )
-        self.unhide_button.sizing_mode = "fixed"
-        self.unhide_button.visible = False
-
-        def event(e):
-            if self.session is not None:
-                self.session.set_value(
-                    ["settings", "interface", "show_hide", "tools"], True
-                )
-            self.toggle_hide("tools")
-
-        self.unhide_button.on_click(event)
-        return self.unhide_button
 
     def make_color_figure(self, palette):
         def hex_to_rgb(value):
@@ -1356,12 +1334,8 @@ class MainLayout:
         if not self.session is None:
             self.session.set_value(["settings", "active_tools"], tools.split(";"))
 
-    def make_tabs(self, tabs, sizing_mode="stretch_both", outer=False):
-        t = Tabs(tabs=tabs, sizing_mode=sizing_mode)
-        return t
-
-    def make_panel(self, title, tooltip="", children=[], inner=True):
-        return Panel(title=title, child=column(children, visible=True))
+    def make_panel(self, name, tooltip="", children=[]):
+        self.curdoc.add_root(column(children, name=name))
 
     @gen.coroutine
     @without_document_lock
@@ -1403,7 +1377,6 @@ class MainLayout:
         }
         self.hidable_plots = []
         self.grid_line_plots = []
-        self.unhide_button = None
         self.render_areas = {}
         self.slope = None
         self.show_hide_dropdown = None
@@ -1844,7 +1817,7 @@ class MainLayout:
             tools="pan,wheel_zoom,box_zoom,crosshair",
             y_axis_type="log",
             height=200,
-            width=SETTINGS_WIDTH,
+            width=SETTINGS_WIDTH - 10,
         )
         tollbars.append(self.ranked_columns.toolbar)
         self.ranked_columns.dot(
@@ -1858,7 +1831,7 @@ class MainLayout:
             tools="pan,wheel_zoom,box_zoom,crosshair",
             y_axis_type="log",
             height=200,
-            width=SETTINGS_WIDTH,
+            width=SETTINGS_WIDTH - 10,
         )
         self.ranked_rows.toolbar_location = None
         self.ranked_rows.dot(
@@ -1873,7 +1846,7 @@ class MainLayout:
             tools="pan,wheel_zoom,box_zoom,crosshair",
             y_axis_type="log",
             height=200,
-            width=SETTINGS_WIDTH,
+            width=SETTINGS_WIDTH - 10,
         )
         self.dist_dep_dec_plot.xaxis.axis_label = "manhatten distance from diagonal"
         self.dist_dep_dec_plot.yaxis.axis_label = "reads per kbp^2"
@@ -1938,7 +1911,6 @@ class MainLayout:
             ("Regions", "regs"),
             (RAW_PLOT_NAME, "raw"),
             (ANNOTATION_PLOT_NAME, "annotation"),
-            ("Options Panel", "tools"),
         )
 
         in_group = self.dropdown_select(
@@ -2984,228 +2956,160 @@ class MainLayout:
         )
         self.v4c_row.on_change("value", lambda x, y, z: self.parse_v4c())
 
-        _settings = self.make_tabs(
-            tabs=[
-                self.make_panel(
-                    "File",
-                    children=[
-                        Spacer(height=5),
-                        self.make_tabs(
-                            tabs=[
-                                self.make_panel("Presetting", "", [*quick_configs]),
-                                self.make_panel("Export", "", export_panel),
-                                self.make_panel(
-                                    "Info",
-                                    "",
-                                    [version_info, index_info, log_div, self.log_div],
-                                ),
-                            ]
-                        ),
-                    ],
-                    inner=False,
-                ),
-                self.make_panel(
-                    "Normalize",
-                    children=[
-                        Spacer(height=5),
-                        normalization,
-                        normalization_cov,
-                        self.make_tabs(
-                            tabs=[
-                                self.make_panel(
-                                    "Binominal Test",
-                                    "",
-                                    [
-                                        rsa_l,
-                                        radicl_seq_display_coverage,
-                                        radicl_seq_column,
-                                        radicl_seq_samples_l,
-                                    ],
-                                ),
-                                self.make_panel(
-                                    "Dist. Dep. Dec.",
-                                    "",
-                                    [
-                                        ddd,
-                                        ddd_show,
-                                        ddd_sam_l,
-                                        ddd_ex_l,
-                                        self.dist_dep_dec_plot,
-                                    ],
-                                ),
-                                self.make_panel(
-                                    "Associated slices",
-                                    "",
-                                    [
-                                        grid_seq_samples_l,
-                                        bsmcq_l,
-                                        grid_seq_column,
-                                        grid_seq_anno,
-                                        grid_seq_display_background,
-                                        grid_seq_intersection,
-                                        grid_seq_ignore_cis,
-                                        grid_seq_rna_filter_l,
-                                        self.ranked_columns,
-                                        grid_seq_dna_filter_l,
-                                        self.ranked_rows,
-                                    ],
-                                ),
-                                self.make_panel(
-                                    "ICE",
-                                    "",
-                                    [
-                                        ice_sparse_filter,
-                                        ice_num_samples,
-                                        ice_show_bias,
-                                        ice_local,
-                                    ],
-                                ),
-                            ]
-                        ),
-                    ],
-                    inner=False,
-                ),
-                self.make_panel(
-                    "Filter",
-                    children=[
-                        Spacer(height=5),
-                        self.make_tabs(
-                            tabs=[
-                                self.make_panel(
-                                    "Datapools",
-                                    "",
-                                    [
-                                        in_group,
-                                        betw_group,
-                                        group_layout,
-                                        ibs_l,
-                                        norm_layout,
-                                    ],
-                                ),
-                                self.make_panel(
-                                    "Mapping",
-                                    "",
-                                    [
-                                        ms_l,
-                                        ms_l_2,
-                                        incomp_align_layout,
-                                        multi_mapping,
-                                        directionality,
-                                    ],
-                                ),
-                                self.make_panel(
-                                    "Coordinates",
-                                    "",
-                                    [
-                                        dds_l,
-                                        anno_coords,
-                                        coords_x,
-                                        coords_y,
-                                        symmetrie,
-                                        chrom_layout,
-                                    ],
-                                ),
-                                self.make_panel(
-                                    "Annotations",
-                                    "",
-                                    [
-                                        annos_layout,
-                                        multiple_anno_per_bin,
-                                        multiple_bin_per_anno,
-                                        anno_read_filter,
-                                        anno_read_filter_x,
-                                        anno_read_filter_y,
-                                    ],
-                                ),
-                            ]
-                        ),
-                    ],
-                    inner=False,
-                ),
-                self.make_panel(
-                    "View",
-                    children=[
-                        Spacer(height=5),
-                        self.make_tabs(
-                            tabs=[
-                                self.make_panel(
-                                    "Color",
-                                    "",
-                                    [
-                                        self.color_layout,
-                                        crs_l,
-                                        is_l,
-                                        color_scale,
-                                        color_picker,
-                                        self.low_color,
-                                        self.high_color,
-                                    ],
-                                ),
-                                self.make_panel(
-                                    "Panels",
-                                    "",
-                                    [
-                                        show_hide,
-                                        ass_l,
-                                        rss2_l,
-                                        axis_lables,
-                                        axis_label_max_char,
-                                    ],
-                                ),
-                                self.make_panel(
-                                    "Bins",
-                                    "",
-                                    [
-                                        nb_l,
-                                        mmbs_l,
-                                        square_bins,
-                                        power_ten_bin,
-                                        last_bin_in_contig,
-                                        contig_smaller_than_bin,
-                                    ],
-                                ),
-                                self.make_panel(
-                                    "Virtual4C",
-                                    "",
-                                    [
-                                        do_v4c_col,
-                                        v4c_col_label,
-                                        self.v4c_col,
-                                        do_v4c_row,
-                                        v4c_row_label,
-                                        self.v4c_row,
-                                    ],
-                                ),
-                                self.make_panel(
-                                    "Rendering",
-                                    "",
-                                    [ufs_l, rs_l, aas_l, do_redraw, render_now],
-                                ),
-                            ]
-                        ),
-                    ],
-                    inner=False,
-                ),
-            ],
-            outer=True,
+        self.make_panel("presetting", "", [*quick_configs])
+        self.make_panel("export", "", export_panel)
+        self.make_panel(
+            "info",
+            "",
+            [version_info, index_info, log_div, self.log_div],
         )
-
-        _settings_n_info = column([Spacer(height=5), _settings])
-        _settings_n_info.width = SETTINGS_WIDTH + 25
-        _settings_n_info.width_policy = "fixed"
-
-        self.hidable_plots.append((_settings_n_info, ["tools"]))
-        self.settings_row = row(
+        self.make_panel(
+            "bintest",
+            "",
             [
-                Spacer(sizing_mode="stretch_both"),
-                _settings_n_info,
-                self.reshow_settings(),
+                rsa_l,
+                radicl_seq_display_coverage,
+                radicl_seq_column,
+                radicl_seq_samples_l,
             ],
-            name="settings_row",
-            sizing_mode="stretch_height",
         )
-        self.settings_row.width = SETTINGS_WIDTH + 25
-        self.settings_row.width_policy = "fixed"
+        self.make_panel(
+            "ddd",
+            "",
+            [
+                ddd,
+                ddd_show,
+                ddd_sam_l,
+                ddd_ex_l,
+                self.dist_dep_dec_plot,
+            ],
+        )
+        self.make_panel(
+            "slices",
+            "",
+            [
+                grid_seq_samples_l,
+                bsmcq_l,
+                grid_seq_column,
+                grid_seq_anno,
+                grid_seq_display_background,
+                grid_seq_intersection,
+                grid_seq_ignore_cis,
+                grid_seq_rna_filter_l,
+                self.ranked_columns,
+                grid_seq_dna_filter_l,
+                self.ranked_rows,
+            ],
+        )
+        self.make_panel(
+            "ice",
+            "",
+            [
+                ice_sparse_filter,
+                ice_num_samples,
+                ice_show_bias,
+                ice_local,
+            ],
+        )
+        self.make_panel(
+            "datapools",
+            "",
+            [
+                in_group,
+                betw_group,
+                group_layout,
+                ibs_l,
+                norm_layout,
+            ],
+        )
+        self.make_panel(
+            "mapping",
+            "",
+            [
+                ms_l,
+                ms_l_2,
+                incomp_align_layout,
+                multi_mapping,
+                directionality,
+            ],
+        )
+        self.make_panel(
+            "coordinates",
+            "",
+            [
+                dds_l,
+                anno_coords,
+                coords_x,
+                coords_y,
+                symmetrie,
+                chrom_layout,
+            ],
+        )
+        self.make_panel(
+            "annotation",
+            "",
+            [
+                annos_layout,
+                multiple_anno_per_bin,
+                multiple_bin_per_anno,
+                anno_read_filter,
+                anno_read_filter_x,
+                anno_read_filter_y,
+            ],
+        )
+        self.make_panel(
+            "color",
+            "",
+            [
+                self.color_layout,
+                crs_l,
+                is_l,
+                color_scale,
+                color_picker,
+                self.low_color,
+                self.high_color,
+            ],
+        )
+        self.make_panel(
+            "panels",
+            "",
+            [
+                show_hide,
+                ass_l,
+                rss2_l,
+                axis_lables,
+                axis_label_max_char,
+            ],
+        )
+        self.make_panel(
+            "bins",
+            "",
+            [
+                nb_l,
+                mmbs_l,
+                square_bins,
+                power_ten_bin,
+                last_bin_in_contig,
+                contig_smaller_than_bin,
+            ],
+        )
+        self.make_panel(
+            "virtual4c",
+            "",
+            [
+                do_v4c_col,
+                v4c_col_label,
+                self.v4c_col,
+                do_v4c_row,
+                v4c_row_label,
+                self.v4c_row,
+            ],
+        )
+        self.make_panel(
+            "rendering",
+            "",
+            [ufs_l, rs_l, aas_l, do_redraw, render_now],
+        )
 
         quit_ti = TextInput(value="keepalive", name="quit_ti", visible=False)
 
@@ -3244,7 +3148,6 @@ class MainLayout:
         self.curdoc.add_root(
             column([self.raw_y_axis], name="raw_y_axis", sizing_mode="stretch_width")
         )
-        self.curdoc.add_root(self.settings_row)
         self.curdoc.add_root(communication)
         self.curdoc.add_root(status_bar_row)
         self.curdoc.add_root(tools_bar)

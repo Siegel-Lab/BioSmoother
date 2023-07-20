@@ -23,6 +23,24 @@
             Bokeh.documents[0].get_model_by_name('quit_ti').value = "shutdown";
         };
         let layout_needed = true;
+
+        function openTab(tabName, className)
+        {
+            var i;
+            var x = document.getElementsByClassName(className + "Tab");
+            for (i = 0; i < x.length; i++)
+            {
+                x[i].style.display = "none";
+            }
+            document.getElementById(tabName + "Tab").style.display = "block";
+            
+            var x = document.getElementsByClassName(className + "Button");
+            for (i = 0; i < x.length; i++)
+            {
+                x[i].classList.remove("tab-button-active");
+            }
+            document.getElementById(tabName + "Button").classList.add("tab-button-active");
+        }
     </script>
     {%- endblock js_resources %}
     {% endblock resources %}
@@ -76,9 +94,143 @@
         </div>
     </div>
     <div style="position:absolute; width: 425px; top: 40px; bottom: 26px; right: 0;" class="options_panel">
-        {{ embed(doc.roots.settings_row) }}
+        <div class="tab-header">
+            <button class="tab-button mainButton tab-button-active" id="FileButton" onclick="openTab('File', 'main')">
+                File
+            </button>
+            <button class="tab-button mainButton" id="NormalizeButton" onclick="openTab('Normalize', 'main')">
+                Normalize
+            </button>
+            <button class="tab-button mainButton" id="FilterButton" onclick="openTab('Filter', 'main')">
+                Filter
+            </button>
+            <button class="tab-button mainButton" id="ViewButton" onclick="openTab('View', 'main')">
+                View
+            </button>
+        </div>
+
+        <div id="FileTab" class="mainTab" style="display:block">
+            <div class="tab-header">
+                <button class="tab-button fileButton tab-button-active" id="PresettingButton" onclick="openTab('Presetting', 'file')">
+                    Presetting
+                </button>
+                <button class="tab-button fileButton" id="ExportButton" onclick="openTab('Export', 'file')">
+                    Export
+                </button>
+                <button class="tab-button fileButton" id="InfoButton" onclick="openTab('Info', 'file')">
+                    Info
+                </button>
+            </div>
+
+            <div id="PresettingTab" class="fileTab scroll_y" style="display:block">
+                {{ embed(doc.roots.presetting) }}
+            </div>
+            <div id="ExportTab" class="fileTab scroll_y" style="display:none">
+                {{ embed(doc.roots.export) }}
+            </div>
+            <div id="InfoTab" class="fileTab scroll_y" style="display:none">
+                {{ embed(doc.roots.info) }}
+            </div>
+        </div>
+
+        <div id="NormalizeTab" class="mainTab" style="display:none">
+            <div class="tab-header">
+                <button class="tab-button normButton tab-button-active" id="bintestButton" onclick="openTab('bintest', 'norm')">
+                    Binominal Test
+                </button>
+                <button class="tab-button normButton" id="dddButton" onclick="openTab('ddd', 'norm')">
+                    Dist. Dep. Dec.
+                </button>
+                <button class="tab-button normButton" id="slicesButton" onclick="openTab('slices', 'norm')">
+                    Associated slices
+                </button>
+                <button class="tab-button normButton" id="iceButton" onclick="openTab('ice', 'norm')">
+                    ICE
+                </button>
+            </div>
+
+            <div id="bintestTab" class="normTab scroll_y" style="display:block">
+                {{ embed(doc.roots.bintest) }}
+            </div>
+            <div id="dddTab" class="normTab scroll_y" style="display:none">
+                {{ embed(doc.roots.ddd) }}
+            </div>
+            <div id="slicesTab" class="normTab scroll_y" style="display:none">
+                {{ embed(doc.roots.slices) }}
+            </div>
+            <div id="iceTab" class="normTab scroll_y" style="display:none">
+                {{ embed(doc.roots.ice) }}
+            </div>
+        </div>
+
+        <div id="FilterTab" class="mainTab" style="display:none">
+            <div class="tab-header">
+                <button class="tab-button filterButton tab-button-active" id="DatapoolsButton" onclick="openTab('Datapools', 'filter')">
+                    Datapools
+                </button>
+                <button class="tab-button filterButton" id="MappingButton" onclick="openTab('Mapping', 'filter')">
+                    Mapping
+                </button>
+                <button class="tab-button filterButton" id="CoordinatesButton" onclick="openTab('Coordinates', 'filter')">
+                    Coordinates
+                </button>
+                <button class="tab-button filterButton" id="AnnotationsButton" onclick="openTab('Annotations', 'filter')">
+                    Annotations
+                </button>
+            </div>
+
+            <div id="DatapoolsTab" class="filterTab scroll_y" style="display:block">
+                {{ embed(doc.roots.datapools) }}
+            </div>
+            <div id="MappingTab" class="filterTab scroll_y" style="display:none">
+                {{ embed(doc.roots.mapping) }}
+            </div>
+            <div id="CoordinatesTab" class="filterTab scroll_y" style="display:none">
+                {{ embed(doc.roots.coordinates) }}
+            </div>
+            <div id="AnnotationsTab" class="filterTab scroll_y" style="display:none">
+                {{ embed(doc.roots.annotation) }}
+            </div>
+        </div>
+
+        <div id="ViewTab" class="mainTab" style="display:none">
+            <div class="tab-header">
+                <button class="tab-button viewButton tab-button-active" id="ColorButton" onclick="openTab('Color', 'view')">
+                    Color
+                </button>
+                <button class="tab-button viewButton" id="PanelsButton" onclick="openTab('Panels', 'view')">
+                    Panels
+                </button>
+                <button class="tab-button viewButton" id="BinsButton" onclick="openTab('Bins', 'view')">
+                    Bins
+                </button>
+                <button class="tab-button viewButton" id="Virtual4CButton" onclick="openTab('Virtual4C', 'view')">
+                    Virtual4C
+                </button>
+                <button class="tab-button viewButton" id="RenderingButton" onclick="openTab('Rendering', 'view')">
+                    Rendering
+                </button>
+            </div>
+
+            <div id="ColorTab" class="viewTab scroll_y" style="display:block">
+                {{ embed(doc.roots.color) }}
+            </div>
+            <div id="PanelsTab" class="viewTab scroll_y" style="display:none">
+                {{ embed(doc.roots.panels) }}
+            </div>
+            <div id="BinsTab" class="viewTab scroll_y" style="display:none">
+                {{ embed(doc.roots.bins) }}
+            </div>
+            <div id="Virtual4CTab" class="viewTab scroll_y" style="display:none">
+                {{ embed(doc.roots.virtual4c) }}
+            </div>
+            <div id="RenderingTab" class="viewTab scroll_y" style="display:none">
+                {{ embed(doc.roots.rendering) }}
+            </div>
+        </div>
+
     </div>
-    <div style="position:absolute; height: 26px; left: 0; bottom: 0; right: 0; justify-content: center; display: flex">
+    <div style="position:absolute; height: 26px; left: 0; bottom: 0; right: 0; justify-content: center; display: flex; background-color: white">
         {{ embed(doc.roots.status_bar) }}
     </div>
 
