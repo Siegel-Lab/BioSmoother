@@ -285,7 +285,7 @@ class MainLayout:
                     filter_t_in.value.lower() in name.lower()
                     or len(filter_t_in.value) == 0
                 ):
-                    source["idx"].append(str(idx))
+                    source["idx"].append(str(idx + 1))
                     if orderable:
                         source["up"].append("▲" if idx > 0 else "")
                         source["down"].append("▼" if idx < len(labels) - 1 else "")
@@ -323,10 +323,9 @@ class MainLayout:
 
         def get_select():
             sp = select_ret.value.split()
-            print(sp)
             if len(sp) > 0:
                 if sp[0] != "slick-cell":
-                    y = int(sp[0])
+                    y = int(sp[0]) - 1
                 else:
                     y = None
                 for s in sp[1:]:
@@ -389,11 +388,15 @@ class MainLayout:
             return
             x, y = get_select()
             print("change", x, y)
-            if orderable and x == -4:
-                r_opt = self.reset_options[label][1]
-                self.reset_options[label][1] = r_opt
-            # print(new)
-            pass
+            if not (x is None or y is None):
+                if len(labels) > 1:
+                    y += 1
+                print("change", x, y, new["names"][y])
+                # if orderable and x == -4:
+                    # r_opt = self.reset_options[label][1]
+                    # self.reset_options[label][1] = r_opt
+                # print(new)
+            data_table.source.selected.update(indices=[])
 
         data_table.source.on_change("data", on_change_rename)
 
@@ -422,9 +425,10 @@ class MainLayout:
         callback=None,
         orderable=True,
         title="",
+        renamable=False,
     ):
         set_options, layout = self.multi_choice(
-            label, tooltip, checkboxes, session_key, callback, orderable, title=title
+            label, tooltip, checkboxes, session_key, callback, orderable, title=title, renamable=renamable
         )
         self.multi_choice_config.append((set_options, session_key, checkboxes))
         return layout

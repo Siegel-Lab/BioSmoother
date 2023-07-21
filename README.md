@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/Siegel-Lab/Smoother/master/smoother/static/favicon.png" align="center" width="90">
+<img src="https://raw.githubusercontent.com/Siegel-Lab/BioSmoother/master/biosmoother/static/favicon.png" align="center" width="90">
 
 # Smoother
 
