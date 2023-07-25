@@ -2028,6 +2028,11 @@ class MainLayout:
             "tooltip_ddd",
             settings=["settings", "normalization", "ddd"],
         )
+        ploidy_correct = self.make_checkbox(
+            "do correct",
+            "tooltip_ploidy_correct",
+            settings=["settings", "normalization", "ploidy_correct"],
+        )
         ddd_show = self.make_checkbox(
             "Display",
             "tooltip_ddd_show",
@@ -3034,6 +3039,7 @@ class MainLayout:
             "ploidy",
             "",
             [
+                ploidy_correct
             ],
         )
         self.make_panel(
