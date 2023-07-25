@@ -2960,6 +2960,8 @@ class MainLayout:
         )
         self.v4c_row.on_change("value", lambda x, y, z: self.parse_v4c())
 
+        #self.curdoc.add_root(column([normalization, normalization_cov], name="norm_by"))
+
         self.make_panel("presetting", "", [*quick_configs])
         self.make_panel("export", "", export_panel)
         self.make_panel(
@@ -2971,6 +2973,8 @@ class MainLayout:
             "bintest",
             "",
             [
+                normalization,
+                normalization_cov,
                 rsa_l,
                 radicl_seq_display_coverage,
                 radicl_seq_column,
@@ -2981,6 +2985,8 @@ class MainLayout:
             "ddd",
             "",
             [
+                normalization,
+                normalization_cov,
                 ddd,
                 ddd_show,
                 ddd_sam_l,
@@ -2992,6 +2998,8 @@ class MainLayout:
             "slices",
             "",
             [
+                normalization,
+                normalization_cov,
                 grid_seq_samples_l,
                 bsmcq_l,
                 grid_seq_column,
@@ -3009,6 +3017,8 @@ class MainLayout:
             "ice",
             "",
             [
+                normalization,
+                normalization_cov,
                 ice_sparse_filter,
                 ice_num_samples,
                 ice_show_bias,
