@@ -998,6 +998,16 @@ class MainLayout:
             if plot.ygrid.minor_grid_line_color != cy2:
                 plot.ygrid.minor_grid_line_color = cy2
 
+
+        def set_norm_visibility(col, norm):
+            c = [*col.children]
+            col.children = []
+            col.visible = self.session.get_value(["settings", "normalization", "normalize_by"]) == norm
+            col.children = c
+        set_norm_visibility(self.bin_test_norm, "radicl-seq")
+        set_norm_visibility(self.ice_norm, "ice")
+        set_norm_visibility(self.slices_norm, "grid-seq")
+
     def toggle_hide(self, key):
         self.show_hide[key] = not self.show_hide[key]
         self.update_visibility()
@@ -1532,6 +1542,9 @@ class MainLayout:
         d = {"chr": [], "index_left": [], "index_right": []}
         self.custom_hover_x_data = ColumnDataSource(data=d)
         self.custom_hover_y_data = ColumnDataSource(data=d)
+        self.bin_test_norm = None
+        self.ice_norm = None
+        self.slices_norm = None
 
         self.do_layout()
 
@@ -1980,12 +1993,6 @@ class MainLayout:
         if Quarry.has_cooler_icing():
             norm_sele.append((("Cooler Iterative Correction", "cool-ice")))
 
-        normalization = self.dropdown_select(
-            "Normalize heatmap by",
-            "tooltip_normalize_by",
-            *norm_sele,
-            active_item=["settings", "normalization", "normalize_by"],
-        )
         normalization_cov = self.dropdown_select(
             "Normalize coverage by",
             "tooltip_normalize_by_coverage",
@@ -2969,37 +2976,22 @@ class MainLayout:
             "",
             [version_info, index_info, log_div, self.log_div],
         )
-        self.make_panel(
-            "bintest",
-            "",
-            [
-                normalization,
-                normalization_cov,
+
+        self.bin_test_norm = column([
                 rsa_l,
                 radicl_seq_display_coverage,
                 radicl_seq_column,
                 radicl_seq_samples_l,
-            ],
-        )
-        self.make_panel(
-            "ddd",
-            "",
-            [
-                normalization,
-                normalization_cov,
-                ddd,
-                ddd_show,
-                ddd_sam_l,
-                ddd_ex_l,
-                self.dist_dep_dec_plot,
-            ],
-        )
-        self.make_panel(
-            "slices",
-            "",
-            [
-                normalization,
-                normalization_cov,
+        ])
+
+        self.ice_norm = column([
+                ice_sparse_filter,
+                ice_num_samples,
+                ice_show_bias,
+                ice_local,
+        ])
+
+        self.slices_norm = column([
                 grid_seq_samples_l,
                 bsmcq_l,
                 grid_seq_column,
@@ -3011,18 +3003,48 @@ class MainLayout:
                 self.ranked_columns,
                 grid_seq_dna_filter_l,
                 self.ranked_rows,
-            ],
+        ])
+
+        def norm_event(e):
+            self.session.set_value(["settings", "normalization", "normalize_by"], e)
+            self.update_visibility()
+            self.trigger_render()
+        
+        normalization = self.dropdown_select(
+            "Normalize heatmap by",
+            "tooltip_normalize_by",
+            *norm_sele,
+            active_item=["settings", "normalization", "normalize_by"],
+            event=norm_event
         )
+
         self.make_panel(
-            "ice",
+            "mainNorm",
             "",
             [
                 normalization,
                 normalization_cov,
-                ice_sparse_filter,
-                ice_num_samples,
-                ice_show_bias,
-                ice_local,
+
+                self.bin_test_norm,
+                self.ice_norm,
+                self.slices_norm,
+            ],
+        )
+        self.make_panel(
+            "ploidy",
+            "",
+            [
+            ],
+        )
+        self.make_panel(
+            "ddd",
+            "",
+            [
+                ddd,
+                ddd_show,
+                ddd_sam_l,
+                ddd_ex_l,
+                self.dist_dep_dec_plot,
             ],
         )
         self.make_panel(

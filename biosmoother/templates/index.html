@@ -136,31 +136,25 @@
 
         <div id="NormalizeTab" class="mainTab" style="display:none">
             <div class="tab-header">
-                <button class="tab-button normButton tab-button-active" id="bintestButton" onclick="openTab('bintest', 'norm')">
-                    Binominal Test
+                <button class="tab-button normButton tab-button-active" id="mainNormButton" onclick="openTab('mainNorm', 'norm')">
+                    Main
                 </button>
                 <button class="tab-button normButton" id="dddButton" onclick="openTab('ddd', 'norm')">
                     Dist. Dep. Dec.
                 </button>
-                <button class="tab-button normButton" id="slicesButton" onclick="openTab('slices', 'norm')">
-                    Associated slices
-                </button>
-                <button class="tab-button normButton" id="iceButton" onclick="openTab('ice', 'norm')">
-                    ICE
+                <button class="tab-button normButton" id="ploidyButton" onclick="openTab('ploidy', 'norm')">
+                    Ploidy
                 </button>
             </div>
 
-            <div id="bintestTab" class="normTab scroll_y" style="display:block">
-                {{ embed(doc.roots.bintest) }}
+            <div id="mainNormTab" class="normTab scroll_y" style="display:block">
+                {{ embed(doc.roots.mainNorm) }}
             </div>
             <div id="dddTab" class="normTab scroll_y" style="display:none">
                 {{ embed(doc.roots.ddd) }}
             </div>
-            <div id="slicesTab" class="normTab scroll_y" style="display:none">
-                {{ embed(doc.roots.slices) }}
-            </div>
-            <div id="iceTab" class="normTab scroll_y" style="display:none">
-                {{ embed(doc.roots.ice) }}
+            <div id="ploidyTab" class="normTab scroll_y" style="display:none">
+                {{ embed(doc.roots.ploidy) }}
             </div>
         </div>
 
