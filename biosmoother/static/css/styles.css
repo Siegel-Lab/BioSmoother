@@ -177,10 +177,11 @@ button {
     width: 100%;
     overflow: hidden;
     border-bottom: 1px solid #e6e6e6;
+    margin-top: 5px;
 }
 
-.mainTab{
-    top: 40px !important; 
+.mainTab {
+    top: 34px !important; 
     bottom: 26px !important;
     position: absolute !important;
 }
