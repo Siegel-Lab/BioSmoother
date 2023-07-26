@@ -1,6 +1,8 @@
 # smoother todo (ranked)
 
-- profile biosmoother repl -> something about loading the files is extremely slow (maybe writing the temp files?)
+- ploidy: 
+    - import new ploidy file in interface
+    - GUI for ploidy?
 - how about a RPKB (reads per kilobase) normalization?
 - remove default.json from smoother_hg
 - slices normalisation not working with mouse radicl-seq dataset

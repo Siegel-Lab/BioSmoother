@@ -1007,6 +1007,8 @@ class MainLayout:
         set_norm_visibility(self.bin_test_norm, "radicl-seq")
         set_norm_visibility(self.ice_norm, "ice")
         set_norm_visibility(self.slices_norm, "grid-seq")
+        self.chrom_layout_ploidy.visible = self.session.get_value(["settings", "normalization", "ploidy_coords"])
+        self.chrom_layout.visible = not self.session.get_value(["settings", "normalization", "ploidy_coords"])
 
     def toggle_hide(self, key):
         self.show_hide[key] = not self.show_hide[key]
@@ -1545,6 +1547,8 @@ class MainLayout:
         self.bin_test_norm = None
         self.ice_norm = None
         self.slices_norm = None
+        self.chrom_layout = None
+        self.chrom_layout_ploidy = None
 
         self.do_layout()
 
@@ -2032,6 +2036,16 @@ class MainLayout:
             "do correct",
             "tooltip_ploidy_correct",
             settings=["settings", "normalization", "ploidy_correct"],
+        )
+        def ploidy_coords_event(e):
+            self.session.set_value(["settings", "normalization", "ploidy_coords"], e)
+            self.update_visibility()
+            self.trigger_render()
+        ploidy_coords = self.make_checkbox(
+            "use ploidy corrected contigs",
+            "tooltip_ploidy_coords",
+            settings=["settings", "normalization", "ploidy_coords"],
+            on_change=ploidy_coords_event,
         )
         ddd_show = self.make_checkbox(
             "Display",
@@ -2563,12 +2577,22 @@ class MainLayout:
             settings=["settings", "filters", "anno_filter_row"],
         )
 
-        chrom_layout = self.multi_choice_auto(
+        self.chrom_layout = self.multi_choice_auto(
             "Contig Name",
             "tooltip_chromosomes",
             [
                 [["contigs", "displayed_on_x"], "Column"],
                 [["contigs", "displayed_on_y"], "Row"],
+            ],
+            ["contigs", "list"],
+            title="Active Contigs",
+        )
+        self.chrom_layout_ploidy = self.multi_choice_auto(
+            "Contig Name",
+            "tooltip_chromosomes",
+            [
+                [["contigs", "displayed_on_x_ploidy"], "Column"],
+                [["contigs", "displayed_on_y_ploidy"], "Row"],
             ],
             ["contigs", "list"],
             title="Active Contigs",
@@ -3039,7 +3063,8 @@ class MainLayout:
             "ploidy",
             "",
             [
-                ploidy_correct
+                ploidy_correct,
+                ploidy_coords
             ],
         )
         self.make_panel(
@@ -3084,7 +3109,8 @@ class MainLayout:
                 coords_x,
                 coords_y,
                 symmetrie,
-                chrom_layout,
+                self.chrom_layout,
+                self.chrom_layout_ploidy,
             ],
         )
         self.make_panel(
