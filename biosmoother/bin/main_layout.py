@@ -26,6 +26,7 @@ from bokeh.models import (  # pyright: ignore missing import
     Slope,
     CustomJS,
     CustomJSHover,
+    FileInput,
 )
 from bokeh.transform import jitter  # pyright: ignore missing import
 import math
@@ -54,6 +55,8 @@ except ImportError:
     # Try backported to PY<37 `importlib_resources`.
     import importlib_resources as pkg_resources  # pyright: ignore missing import
 from pathlib import Path
+from pybase64 import b64decode
+import io
 
 SETTINGS_WIDTH = 400
 BUTTON_HEIGHT = 30
@@ -1007,8 +1010,8 @@ class MainLayout:
         set_norm_visibility(self.bin_test_norm, "radicl-seq")
         set_norm_visibility(self.ice_norm, "ice")
         set_norm_visibility(self.slices_norm, "grid-seq")
-        self.chrom_layout_ploidy.visible = self.session.get_value(["settings", "normalization", "ploidy_coords"])
-        self.chrom_layout.visible = not self.session.get_value(["settings", "normalization", "ploidy_coords"])
+        self.chrom_layout_ploidy.visible = not self.session.get_value(["settings", "normalization", "ploidy_coords"])
+        self.chrom_layout.visible = self.session.get_value(["settings", "normalization", "ploidy_coords"])
 
     def toggle_hide(self, key):
         self.show_hide[key] = not self.show_hide[key]
@@ -1549,6 +1552,7 @@ class MainLayout:
         self.slices_norm = None
         self.chrom_layout = None
         self.chrom_layout_ploidy = None
+        self.ploidy_file_in = None
 
         self.do_layout()
 
@@ -2230,6 +2234,16 @@ class MainLayout:
             sizing_mode="stretch_width",
         )
 
+        self.ploidy_file_in = FileInput(
+            #title="upload new ploidy file",
+            disabled=bin.global_variables.no_save
+        )
+        def ploidy_file_upload(a, o, n):
+            self.session.set_ploidy_itr(b64decode(n).decode("utf-8").split("\n"))
+            self.update_visibility()
+            self.trigger_render()
+        self.ploidy_file_in.on_change("value", ploidy_file_upload)
+
         is_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
             tooltip="tooltip_color_scale_log_base",
@@ -2594,7 +2608,7 @@ class MainLayout:
                 [["contigs", "displayed_on_x_ploidy"], "Column"],
                 [["contigs", "displayed_on_y_ploidy"], "Row"],
             ],
-            ["contigs", "list"],
+            ["contigs", "ploidy_list"],
             title="Active Contigs",
         )
 
@@ -3064,7 +3078,9 @@ class MainLayout:
             "",
             [
                 ploidy_correct,
-                ploidy_coords
+                ploidy_coords,
+                Div(text="replace ploidy file:"),
+                self.ploidy_file_in
             ],
         )
         self.make_panel(

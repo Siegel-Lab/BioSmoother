@@ -3,7 +3,7 @@ import os
 from setuptools import find_packages
 import subprocess
 
-VERSION = "0.5.0"
+VERSION = "0.5.1"
 
 # conf version file
 def conf_version(in_file_name, cmake_version, out_file_name):
@@ -85,6 +85,7 @@ setup(
         'libbiosmoother',
         'bokeh==2.3.2', # specific version is necessary for now -> with newer versions the layout starts glitching
         'psutil',
+        'pybase64',
     ],
     entry_points={
         'console_scripts': [
