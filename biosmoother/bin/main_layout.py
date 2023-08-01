@@ -973,16 +973,16 @@ class MainLayout:
 
         x_visible = len(self.raw_data_x.data["values"]) > 0
         self.raw_x.visible = self.show_hide["raw"] and x_visible
-        self.raw_x_axis.visible = self.show_hide["raw"] and x_visible
+        self.raw_x_axis.visible = self.show_hide["raw"] and x_visible and self.show_hide["axis"]
         y_visible = len(self.raw_data_y.data["values"]) > 0
         self.raw_y.visible = self.show_hide["raw"] and y_visible
-        self.raw_y_axis.visible = self.show_hide["raw"] and y_visible
+        self.raw_y_axis.visible = self.show_hide["raw"] and y_visible and self.show_hide["axis"]
         self.anno_x.visible = (
-            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"]
+            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"] and self.show_hide["axis"]
         )
         self.anno_x_axis.visible = self.anno_x.visible
         self.anno_y.visible = (
-            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"]
+            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"] and self.show_hide["axis"]
         )
         self.anno_y_axis.visible = self.anno_y.visible
 
