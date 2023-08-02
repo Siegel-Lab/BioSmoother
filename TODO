@@ -1,5 +1,12 @@
 # smoother todo (ranked)
 
+- V4C:
+    - x-axis indicator not updating
+    - x-axis track giving different results that y-axis (x-axis seems wired...)
+- coordinate picker is messed up for anno coords and in general as well?
+- export: font size, stroke widths, whitespace distances should all go in config
+    - some should effect viewer as well
+- annotation panel not visible if contigs not shown and only v4c active 
 - change visibility on contigs: click hits wrong cell
 - how about a RPKB (reads per kilobase) normalization?
 - remove default.json from smoother_hg

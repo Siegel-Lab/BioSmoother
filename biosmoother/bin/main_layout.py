@@ -2387,6 +2387,14 @@ class MainLayout:
             sizing_mode="stretch_width",
             trigger_render=False,
         )
+        export_stroke_width_secondary = self.make_slider_spinner(
+            width=SETTINGS_WIDTH,
+            tooltip="tooltip_export_stroke_width",
+            settings=["settings", "export", "secondary_stroke_width"],
+            title="Secondary Stroke Width",
+            sizing_mode="stretch_width",
+            trigger_render=False,
+        )
         grid_seq_display_background = self.make_checkbox(
             "Display Background as Secondary Data",
             "tooltip_backg_as_sec_data",
@@ -2974,6 +2982,7 @@ class MainLayout:
                 export_coords_size,
                 export_contigs_size,
                 export_axis_size,
+                export_stroke_width_secondary,
                 row([self.spinner, export_button]),
             ]
 
