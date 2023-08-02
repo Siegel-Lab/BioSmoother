@@ -243,10 +243,11 @@ class MainLayout:
             tags=["blub"],
             height=150,
             sortable=False,
+            css_classes=[str(self.next_element_id)]
         )
 
         source_code = """
-            var grids = document.getElementsByClassName('grid-canvas');
+            var grids = document.getElementsByClassName(element_id).getElementsByClassName('grid-canvas');
             for (var k = 0,kmax = grids.length; k < kmax; k++){
                 if(grids[k].outerHTML.includes('active')){
                     var grid = grids[k].children;
@@ -261,7 +262,9 @@ class MainLayout:
                 }
             }
         """
-        js_callback = CustomJS(args={"select_ret": select_ret}, code=source_code)
+        js_callback = CustomJS(args={"select_ret": select_ret, "element_id": str(self.next_element_id)}, 
+                               code=source_code)
+        self.next_element_id += 1
 
         self.reset_options[label] = [{}, []]
 
@@ -1553,6 +1556,7 @@ class MainLayout:
         self.chrom_layout = None
         self.chrom_layout_ploidy = None
         self.ploidy_file_in = None
+        self.next_element_id = 0
 
         self.do_layout()
 
