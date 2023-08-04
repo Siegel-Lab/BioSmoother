@@ -6,7 +6,9 @@
 - coordinate picker is messed up for anno coords and in general as well?
 - export: font size, stroke widths, whitespace distances should all go in config
     - some should effect viewer as well
+- ploidy & contig lables does not work together (extremely short labels)
+- dots in contig names do not work with search
 - annotation panel not visible if contigs not shown and only v4c active 
-- change visibility on contigs: click hits wrong cell
+- ploidy correction: add more options
 - how about a RPKB (reads per kilobase) normalization?
 - remove default.json from smoother_hg
