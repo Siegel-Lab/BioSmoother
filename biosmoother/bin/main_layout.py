@@ -30,11 +30,11 @@ from bokeh.models import (  # pyright: ignore missing import
 )
 from bokeh.transform import jitter  # pyright: ignore missing import
 import math
-from datetime import datetime
 from tornado import gen  # pyright: ignore missing import
 from bokeh.document import without_document_lock  # pyright: ignore missing import
 import os
 import sys
+import time
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from bokeh.models.tickers import AdaptiveTicker  # pyright: ignore missing import
@@ -3277,6 +3277,7 @@ class MainLayout:
         return b_xs < a_xs or b_ys < a_ys or b_xe > a_xe or b_ye > a_ye
 
     def print(self, s):
+        s = datetime.now().strftime("[%H:%M:%S] ") + s
         if not bin.global_variables.quiet:
             print(s)
         self.log_div_text += s.replace("\n", "<br>") + "<br>"
@@ -3322,7 +3323,7 @@ class MainLayout:
 
                 self.curdoc.add_next_tick_callback(callback)
 
-                start_time = datetime.now()
+                start_time = time.perf_counter()
 
                 self.session.update_cds(self.print)
 
@@ -3372,7 +3373,8 @@ class MainLayout:
 
                 error = self.session.get_error()
                 error_text = "None" if len(error) == 0 else error.replace("\n", "; ")
-                end_time = datetime.now()
+                end_time = time.perf_counter()
+                start_render_time = time.perf_counter()
 
                 @gen.coroutine
                 def callback():
@@ -3395,15 +3397,6 @@ class MainLayout:
                                 m = x
                         return m
 
-                    end_text = (
-                        "Rendering Done.\nCurrent Bin Size: "
-                        + self.get_readable_bin_size()
-                        + ".\nRuntime: "
-                        + str(end_time - start_time)
-                        + ".\nDisplaying "
-                        + str(len(d_heatmap["color"]))
-                        + " bins."
-                    )
 
                     new_x_bounds = (
                         min_max_tracks_x[0],
@@ -3517,7 +3510,17 @@ class MainLayout:
                         plot.yaxis.bounds = (0, canvas_size_y)
 
                     self.curdoc.unhold()
-                    self.print_status(end_text + " | Errors: " + error_text)
+                    end_render_time = time.perf_counter()
+                    process_time = "{:,}".format(int(1000 * (end_time - start_time)))
+                    render_time = "{:,}".format(int(1000 * (end_render_time - start_render_time)))
+                    self.print("Rendering done.")
+                    end_text = (
+                        "Bin Size: " + self.get_readable_bin_size() #
+                        + ".\nTime (Process/Render): " + process_time + "ms/" + render_time #
+                        + "ms.\nDisplaying " + '{:,}'.format(len(d_heatmap["color"])) + " bins" #
+                        + ".\nErrors: " + error_text #
+                    )
+                    self.print_status(end_text)
                     self.curdoc.add_timeout_callback(
                         lambda: self.render_callback(),
                         self.session.get_value(

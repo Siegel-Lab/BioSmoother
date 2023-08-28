@@ -4,6 +4,10 @@
     - x-axis indicator not updating
     - x-axis track giving different results that y-axis (x-axis seems wired...)
 - coordinate picker is messed up for anno coords and in general as well?
+- binominal test is fucked up for sure -> should reach zero deviance in experiment
+- annotation filter dimensions do not make sense right now
+  - should rather have one dimension per filterable annotation
+  - more flexibility
 - export: font size, stroke widths, whitespace distances should all go in config
     - some should effect viewer as well
 - ploidy & contig lables does not work together (extremely short labels)
