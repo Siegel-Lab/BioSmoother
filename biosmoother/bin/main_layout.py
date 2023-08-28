@@ -3515,12 +3515,12 @@ class MainLayout:
                     end_render_time = time.perf_counter()
                     process_time = "{:,}".format(int(1000 * (end_time - start_time)))
                     render_time = "{:,}".format(int(1000 * (end_render_time - start_render_time)))
-                    self.print("Rendering done.")
+                    self.print("Rendering done")
                     end_text = (
                         "Bin Size: " + self.get_readable_bin_size() #
-                        + ".\nTime (Process/Render): " + process_time + "ms/" + render_time #
-                        + "ms.\nDisplaying " + '{:,}'.format(len(d_heatmap["color"])) + " bins" #
-                        + ".\nErrors: " + error_text #
+                        + "\nTime (Process/Render): " + process_time + "ms/" + render_time #
+                        + "ms\nDisplaying " + '{:,}'.format(len(d_heatmap["color"])) + " bins" #
+                        + "\nErrors: " + error_text #
                     )
                     self.print_status(end_text)
                     self.curdoc.add_timeout_callback(
