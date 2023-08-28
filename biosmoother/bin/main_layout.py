@@ -243,7 +243,7 @@ class MainLayout:
             tags=["blub"],
             height=150,
             sortable=False,
-            css_classes=["multichoice_element_id_" + str(self.next_element_id)]
+            css_classes=["multichoice_element_id_" + str(self.next_element_id), "white_background"]
         )
 
         source_code = """
@@ -2943,7 +2943,7 @@ class MainLayout:
 
         log_div = Div(text="Log:", sizing_mode="stretch_width")
         self.log_div = Div(
-            css_classes=["scroll_y2"],
+            css_classes=["scroll_y2", "white_background"],
             width=SETTINGS_WIDTH,
             max_height=400,
             sizing_mode="stretch_height",
@@ -3311,6 +3311,8 @@ class MainLayout:
             else:
                 return str(add_commas(l)) + "bp"
 
+        if w_bin == h_bin:
+            return readable_display(w_bin)
         return readable_display(w_bin) + " x " + readable_display(h_bin)
 
     @gen.coroutine
@@ -3596,14 +3598,14 @@ class MainLayout:
                     and self.session.get_value(["settings", "interface", "do_redraw"])
                 ) or self.force_render:
                     if curr_area_size / self.curr_area_size < min_change:
-                        self.print_status("rendering due to zoom in.")
+                        self.print_status("Rendering was triggered by zoom-in.")
                         zoom_in_render = True
                     elif self.force_render:
-                        self.print_status("rendering due to parameter change.")
+                        self.print_status("Rendering was triggered by parameter change.")
                     elif MainLayout.area_outside(self.last_drawing_area, curr_area):
-                        self.print_status("rendering due to pan or zoom out.")
+                        self.print_status("Rendering was triggered by panning or zoom-out.")
                     else:
-                        self.print_status("rendering.")
+                        self.print_status("Rendering.")
                     self.force_render = False
                     self.curr_area_size = curr_area_size
 

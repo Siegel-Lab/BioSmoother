@@ -108,6 +108,10 @@ textarea {
     background-size: cover;
 }
 
+.white_background {
+    background-color: white !important;
+}
+
 body {
     margin: 0
 }
