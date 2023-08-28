@@ -2046,6 +2046,26 @@ class MainLayout:
             "tooltip_ploidy_correct",
             settings=["settings", "normalization", "ploidy_correct"],
         )
+        ploidy_keep_distinct_group = self.make_checkbox(
+            "Keep interactions from contig-pairs that never occur in the same group",
+            "tooltip_ploidy_keep_distinct_group",
+            settings=["settings", "normalization", "ploidy_keep_distinct_group"],
+        )
+        ploidy_keep_inter_group = self.make_checkbox(
+            "Keep interactions from contig-pairs that are in the same group",
+            "tooltip_ploidy_keep_inter_group",
+            settings=["settings", "normalization", "ploidy_keep_inter_group"],
+        )
+        ploidy_remove_others = self.make_checkbox(
+            "Remove interactions that are not explicitly kept by the options above",
+            "tooltip_ploidy_remove_others",
+            settings=["settings", "normalization", "ploidy_remove_others"],
+        )
+        ploidy_remove_intra_instance_contig = self.make_checkbox(
+            "Remove inter-contig, intra-instance interactions",
+            "tooltip_ploidy_remove_intra_instance_contig",
+            settings=["settings", "normalization", "ploidy_remove_intra_instance_contig"],
+        )
         def ploidy_coords_event(e):
             self.session.set_value(["settings", "normalization", "ploidy_coords"], e)
             self.update_visibility()
@@ -3093,6 +3113,10 @@ class MainLayout:
             [
                 ploidy_correct,
                 ploidy_coords,
+                ploidy_remove_intra_instance_contig,
+                ploidy_keep_inter_group,
+                ploidy_keep_distinct_group,
+                ploidy_remove_others,
                 Div(text="replace ploidy file:"),
                 self.ploidy_file_in
             ],
