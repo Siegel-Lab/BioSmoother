@@ -1,10 +1,6 @@
 <img src="https://raw.githubusercontent.com/Siegel-Lab/BioSmoother/master/biosmoother/static/favicon.png" align="center" width="90">
 
-# Smoother
-
-@todo
-
-## Abstract-like hook
+Smoother is still under development. More information will be added soon.
 
 ## Quick Start
 
@@ -17,6 +13,7 @@ conda activate smoother
 Install smoother (and all requirements) using pip.
 ```
 pip install biosmoother
+conda install -y nodejs # pip cannot install nodejs, so we use conda
 ```
 
 Download 2 example smoother indices.
@@ -31,21 +28,6 @@ unzip micro-c.smoother_index.zip
 
 View one of the indices
 ```
-smoother serve micro-c --show
-#smoother serve radicl --show
+biosmoother serve micro-c --show
+#biosmoother serve radicl --show
 ```
-
-## Web-version
-
-
-## Usage
-
-
-## Quick config Buttons
-
-## Manual
-
-## Citing Smoother
-
-## References
-
