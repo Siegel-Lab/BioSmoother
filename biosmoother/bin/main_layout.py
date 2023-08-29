@@ -3424,23 +3424,34 @@ class MainLayout:
                         return m
 
 
+                    RANGE_PADDING = 0.1
+                    range_padding_x = RANGE_PADDING * (min_max_tracks_x[1] - min_max_tracks_x[0])
+                    min_max_tracks_x[0] -= range_padding_x
+                    min_max_tracks_x[1] += range_padding_x
                     new_x_bounds = (
                         min_max_tracks_x[0],
                         min_max_tracks_x[1],
                     )
-                    if not self.raw_x_axis.xaxis.bounds == new_x_bounds:
-                        self.raw_x_axis.x_range.start = new_x_bounds[0]
-                        self.raw_x_axis.x_range.end = new_x_bounds[1]
-                    self.raw_x_axis.xaxis.bounds = new_x_bounds
+                    if math.isfinite(new_x_bounds[0]) and math.isfinite(new_x_bounds[1]):
+                        if not self.raw_x_axis.xaxis.bounds == new_x_bounds:
+                            print(new_x_bounds)
+                            self.raw_x_axis.x_range.start = new_x_bounds[0]
+                            self.raw_x_axis.x_range.end = new_x_bounds[1]
+                        self.raw_x_axis.xaxis.bounds = new_x_bounds
 
+                    range_padding_y = RANGE_PADDING * (min_max_tracks_y[1] - min_max_tracks_y[0])
+                    min_max_tracks_y[0] -= range_padding_y
+                    min_max_tracks_y[1] += range_padding_y
                     new_y_bounds = (
                         min_max_tracks_y[0],
                         min_max_tracks_y[1],
                     )
-                    if not self.raw_y_axis.yaxis.bounds == new_y_bounds:
-                        self.raw_y_axis.y_range.start = new_y_bounds[0]
-                        self.raw_y_axis.y_range.end = new_y_bounds[1]
-                    self.raw_y_axis.yaxis.bounds = new_y_bounds
+                    if math.isfinite(new_y_bounds[0]) and math.isfinite(new_y_bounds[1]):
+                        if not self.raw_y_axis.yaxis.bounds == new_y_bounds:
+                            print(new_y_bounds)
+                            self.raw_y_axis.y_range.start = new_y_bounds[0]
+                            self.raw_y_axis.y_range.end = new_y_bounds[1]
+                        self.raw_y_axis.yaxis.bounds = new_y_bounds
 
                     def set_bounds(
                         plot, left=None, right=None, top=None, bottom=None, color=None
@@ -3453,12 +3464,14 @@ class MainLayout:
                         if not color is None:
                             ra.fill_color = color
 
-                    set_bounds(
-                        self.raw_x, left=min_max_tracks_x[0], right=min_max_tracks_x[1]
-                    )
-                    set_bounds(
-                        self.raw_y, bottom=min_max_tracks_y[0], top=min_max_tracks_y[1]
-                    )
+                    if math.isfinite(min_max_tracks_x[0]) and math.isfinite(min_max_tracks_x[1]):
+                        set_bounds(
+                            self.raw_x, left=min_max_tracks_x[0], right=min_max_tracks_x[1]
+                        )
+                    if math.isfinite(min_max_tracks_y[0]) and math.isfinite(min_max_tracks_y[1]):
+                        set_bounds(
+                            self.raw_y, bottom=min_max_tracks_y[0], top=min_max_tracks_y[1]
+                        )
                     set_bounds(self.anno_x, left=0, right=len(displayed_annos_x))
                     set_bounds(self.anno_y, bottom=0, top=len(displayed_annos_y))
 
