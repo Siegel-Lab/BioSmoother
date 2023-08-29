@@ -3,7 +3,7 @@ import os
 from setuptools import find_packages
 import subprocess
 
-VERSION = "0.5.1"
+VERSION = "0.6.0"
 
 # conf version file
 def conf_version(in_file_name, cmake_version, out_file_name):
@@ -62,9 +62,9 @@ setup(
     author_email='markus.rainer.schmidt@gmail.com',
     license='MIT',
     url='https://github.com/Siegel-Lab/biosmoother',
-    description="On-the-fly processing and visualization of contact mapping data",
+    description="On-the-fly processing and visualization of interactome data",
     long_description="""
-        On-the-fly processing and visualization of contact mapping data
+Biosmother is a tool to process and visualize interactome data on-the-fly.
     """,
     py_modules=["cli"],
     packages=find_packages(where='.'),
@@ -77,6 +77,8 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: Microsoft :: Windows',
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.9',

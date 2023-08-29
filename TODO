@@ -1,16 +1,14 @@
 # smoother todo (ranked)
 
-- V4C:
-    - x-axis indicator not updating
-    - x-axis track giving different results that y-axis (x-axis seems wired...)
 - binominal test is fucked up for sure -> should reach zero deviance in experiment
 - annotation filter dimensions do not make sense right now
   - should rather have one dimension per filterable annotation
   - more flexibility
+- remove default.json from smoother_hg
+
+
+--- cutoff ---
+
+- how about a RPKB (reads per kilobase) normalization?
 - export: font size, stroke widths, whitespace distances should all go in config
     - some should effect viewer as well
-- annotation panel not visible if contigs not shown and only v4c active 
-- ploidy correction: add more options
-- how about a RPKB (reads per kilobase) normalization?
-
-- remove default.json from smoother_hg

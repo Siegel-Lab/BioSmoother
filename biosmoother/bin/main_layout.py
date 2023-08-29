@@ -1414,7 +1414,6 @@ class MainLayout:
         self.biosmoother_version = "?"
         self.reset_options = {}
         self.session = Quarry(bin.global_variables.biosmoother_index)
-        # self.session.verbosity = 5
         if not os.path.exists(biosmoother_home_folder + "/conf/"):
             os.makedirs(biosmoother_home_folder + "/conf/")
         if not os.path.exists(biosmoother_home_folder + "/conf/default.json"):
