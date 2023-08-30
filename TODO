@@ -1,11 +1,18 @@
 # smoother todo (ranked)
 
+- secondary data panel: lines should always to down to zero
+- bin test on rows is messed up
+
 - binominal test is fucked up for sure -> should reach zero deviance in experiment
 - annotation filter dimensions do not make sense right now
   - should rather have one dimension per filterable annotation
   - more flexibility
 - remove default.json from smoother_hg
 
+- changing some parameters should trigger other parameters to change:
+    - changing to subtraction should adjust color scale to [-1,1] and scaling of values to absolute max
+    - going to binom test should set comparison to min is comp was set to sum
+    - also there should be a system to change the parameters back...
 
 --- cutoff ---
 

@@ -18,8 +18,8 @@ conda install -y nodejs # pip cannot install nodejs, so we use conda
 
 Download 2 example smoother indices.
 ```
-wget https://syncandshare.lrz.de/dl/fiFPBw32Rc3cJs1qfsYkKa/radicl.smoother_index.zip
-wget https://syncandshare.lrz.de/dl/fi8q6iroKx49azsZLHxeYB/micro-c.smoother_index.zip
+wget @todo
+wget @todo
 
 conda install unzip
 unzip radicl.smoother_index.zip

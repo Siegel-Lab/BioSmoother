@@ -2188,6 +2188,11 @@ class MainLayout:
             self.heatmap_y_axis_2.yaxis.axis_label = e.split("_")[0]
             self.heatmap_x_axis_2.xaxis.axis_label = e.split("_")[1]
 
+            
+        default_label = self.session.get_value(["settings", "interface", "axis_lables"])
+        self.heatmap_y_axis_2.yaxis.axis_label = default_label.split("_")[0]
+        self.heatmap_x_axis_2.xaxis.axis_label = default_label.split("_")[1]
+
         axis_lables = self.dropdown_select(
             "Axis Labels",
             "tooltip_y_axis_label",
