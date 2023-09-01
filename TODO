@@ -5,9 +5,10 @@
   - more flexibility
 - remove default.json from smoother_hg
 
-- store in index what filters are active / inactive
+- store in index what filters are active / inactive (data is now stored)
   - enable/disable appropriate filters
   - filters can be activated on a per replicate basis -> rather store proper default values for each deactivated filter
+  - if no replicate contains a certain filter, disable the button
 
 --- cutoff ---
 

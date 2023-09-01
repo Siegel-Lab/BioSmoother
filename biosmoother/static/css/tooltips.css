@@ -35,6 +35,122 @@
     content: "area that is displayed in the heatmap. Edit the value of this field to jup to a certain locus";
 }
 
+.tooltip_contig_smaller_than_bin:after {
+    content: "Place a bin in contigs that are smaller than the bin-size. With many small contigs, this might slow down smoother significantly.";
+}
+
+.tooltip_ploidy_correct:after {
+    content: "Apply ploidy correction to the heatmap data.";
+}
+
+.tooltip_ploidy_keep_distinct_group:after {
+    content: "During ploidy correction: Keep interactions from contig-pairs, where the two contigs never appear in the same ploidy group. ";
+}
+
+.tooltip_ploidy_keep_inter_group:after {
+    content: "During ploidy correction: Keep interactions from instance-pairs, where the two instances are in the same group.";
+}
+
+.tooltip_ploidy_remove_others:after {
+    content: "During ploidy correction: Remove interactions that are not explicitly kept/removed by any of the other options.";
+}
+
+.tooltip_ploidy_remove_intra_instance_contig:after {
+    content: "During ploidy correction: Remove interactions that are between two different instances of the same contig.";
+}
+
+.tooltip_ploidy_coords:after {
+    content: "Use the contig order defined by the ploidy file. Otherwise the contig order defined by the sizes file is used.";
+}
+
+.tooltip_ice_num_samples:after {
+    content: "The number of samples to compute during ICE normalization.";
+}
+
+.tooltip_ice_show_bias:after {
+    content: "Display the ICE bias as a track.";
+}
+
+.tooltip_local_ice:after {
+    content: "Only use the visible bins to compute the ICE bias.";
+}
+
+.tooltip_do_redraw:after {
+    content: "Automatically redraw the heatmap when panning or zooming.";
+}
+
+.tooltip_render_now:after {
+    content: "redraw the heatmap now.";
+}
+
+.tooltip_directionality:after {
+    content: "Filter interactions by directionality.";
+}
+
+.tooltip_center_tracks_on_bins:after {
+    content: "For the secondary data panel: place the points of the line at the center of bins. If this is disabled, two line-points are drawn for every bin, one at the start one at the end.";
+}
+
+.tooltip_zero_track_at_ends:after {
+    content: "For the secondary data panel: draw an additional line-point at (0/0) and (0/end).";
+}
+
+.tooltip_connect_tracks_over_contig_borders:after {
+    content: "For the secondary data panel: connect the lines over contig borders.";
+}
+
+.tooltip_tracks_log_scale:after {
+    content: "For the secondary data panel: display the values on a log-scale";
+}
+
+.tooltip_export_stroke_width:after {
+    content: "For the secondary data panel: set the stroke width of lines in the exported image.";
+}
+
+.tooltip_v4c_do_column:after {
+    content: "Compute a Virtual 4C track for the columns of the heatmap.";
+}
+
+.tooltip_v4c_column:after {
+    content: "Set the Viewpoint (on the y-axis) for the Virtual 4C track of the columns.";
+}
+
+.tooltip_v4c_do_row:after {
+    content: "Compute a Virtual 4C track for the rows of the heatmap.";
+}
+
+.tooltip_v4c_row:after {
+    content: "Set the Viewpoint (on the x-axis) for the Virtual 4C track of the rows.";
+}
+
+.tooltip_max_char_of_labels:after {
+    content: "Truncate labels to this many characters.";
+}
+
+.tooltip_ignore_cis:after {
+    content: "Ignore cis interactions during the computation of associated slices.";
+}
+
+.tooltip_anno_coordinates_col:after {
+    content: "Use annotation coordinates for the columns of the heatmap. Then, each column corresponds to a gene.";
+}
+
+.tooltip_anno_coordinates_row:after {
+    content: "Use annotation coordinates for the rows of the heatmap. Then, each row corresponds to a gene.";
+}
+
+.tooltip_annotation_filter:after {
+    content: "Pick the annotation that is filtered for.";
+}
+
+.tooltip_annotation_filter_col:after {
+    content: "Apply the annotation filter to the columns. Then only interactions that overlap the picked annotation  on the x-axis are displayed.";
+}
+
+.tooltip_annotation_filter_row:after {
+    content: "Apply the annotation filter to the rows. Then only interactions that overlap the picked annotation  on the y-axis are displayed.";
+}
+
 .tooltip_meta_file:after {
     content: "path to the opened index";
 }

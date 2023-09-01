@@ -2074,7 +2074,7 @@ class MainLayout:
         )
         contig_smaller_than_bin = self.make_checkbox(
             "Fill contigs that are smaller than one bin",
-            "tooltip_cibtug_snakker_than_bin",  # @todo
+            "tooltip_contig_smaller_than_bin",
             settings=["settings", "filters", "show_contig_smaller_than_bin"],
         )
 
@@ -2180,19 +2180,19 @@ class MainLayout:
         )
         ice_num_samples = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_ice_num_samples",  # @todo
+            tooltip="tooltip_ice_num_samples",
             title="Number of samples",
             settings=["settings", "normalization", "num_ice_bins"],
             sizing_mode="stretch_width",
         )
         ice_show_bias = self.make_checkbox(
             "Show Bias",
-            "tooltip_ice_show_bias",  # @todo
+            "tooltip_ice_show_bias",
             settings=["settings", "normalization", "ice_show_bias"],
         )
         ice_local = self.make_checkbox(
             "Local Ice",
-            "tooltip_local_ice",  # @todo
+            "tooltip_local_ice",
             settings=["settings", "normalization", "ice_local"],
         )
         ddd_sam_l = self.make_range_slider_spinner(
@@ -2210,14 +2210,14 @@ class MainLayout:
         )
         do_redraw = self.make_checkbox(
             "Auto Render",
-            "tooltip_do_redraw",  # @todo
+            "tooltip_do_redraw",
             settings=["settings", "interface", "do_redraw"],
         )
         render_now = Button(
             label="Render Now",
             width=SETTINGS_WIDTH,
             sizing_mode="fixed",
-            css_classes=["other_button", "tooltip", "tooltip_render_now"],  # @todo
+            css_classes=["other_button", "tooltip", "tooltip_render_now"],
             height=DROPDOWN_HEIGHT,
         )
 
@@ -2484,24 +2484,24 @@ class MainLayout:
         )
         axis_label_max_char = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="@todo",
+            tooltip="tooltip_max_char_of_labels",
             settings=["settings", "interface", "axis_label_max_char"],
             title="Maximal Character of Labels",
             sizing_mode="stretch_width",
         )
         center_tracks_on_bins = self.make_checkbox(
             "Center Tracks on Bins",
-            "tooltip_center_tracks_on_bins", # @todo
+            "tooltip_center_tracks_on_bins",
             settings=["settings", "interface", "center_tracks_on_bins"],
         )
         zero_track_at_ends = self.make_checkbox(
             "Zero Track at Ends",
-            "tooltip_zero_track_at_ends", # @todo
+            "tooltip_zero_track_at_ends",
             settings=["settings", "interface", "zero_track_at_ends"],
         )
         connect_tracks_over_contig_borders = self.make_checkbox(
             "Connect Tracks over Contig Borders",
-            "tooltip_connect_tracks_over_contig_borders", # @todo
+            "tooltip_connect_tracks_over_contig_borders",
             settings=["settings", "interface", "connect_tracks_over_contig_borders"],
         )
         def tracks_log_scale_change(active):
@@ -2509,7 +2509,7 @@ class MainLayout:
             self.update_visibility()
         tracks_log_scale = self.make_checkbox(
             "Display Tracks on a Log Scale",
-            "tooltip_tracks_log_scale", # @todo
+            "tooltip_tracks_log_scale",
             settings=["settings", "interface", "tracks_log_scale"],
             on_change=tracks_log_scale_change,
         )
@@ -2564,7 +2564,7 @@ class MainLayout:
         )
         grid_seq_ignore_cis = self.make_checkbox(
             "Ignore cis interactions",
-            "@todo",
+            "tooltip_ignore_cis",
             settings=["settings", "normalization", "grid_seq_ignore_cis"],
         )
         grid_seq_anno = self.dropdown_select_session(
@@ -2715,29 +2715,29 @@ class MainLayout:
         )
         coords_x = self.make_checkbox(
             "Use Annotation Coordinates for the columns",
-            "@todo",
+            "tooltip_anno_coordinates_col",
             settings=["settings", "filters", "anno_coords_col"],
         )
         coords_y = self.make_checkbox(
             "Use Annotation Coordinates for the rows",
-            "@todo",
+            "tooltip_anno_coordinates_row",
             settings=["settings", "filters", "anno_coords_row"],
         )
 
         anno_read_filter = self.dropdown_select_session(
             "Only show reads that overlap with a",
-            "@todo",
+            "tooltip_annotation_filter",
             ["annotation", "filterable"],
             ["annotation", "filter"],
         )
         anno_read_filter_x = self.make_checkbox(
             "Apply Annotation filter to columns",
-            "@todo",
+            "tooltip_annotation_filter_col",
             settings=["settings", "filters", "anno_filter_col"],
         )
         anno_read_filter_y = self.make_checkbox(
             "Apply Annotation filter to rows",
-            "@todo",
+            "tooltip_annotation_filter_row",
             settings=["settings", "filters", "anno_filter_row"],
         )
 
@@ -3139,7 +3139,7 @@ class MainLayout:
         )
 
         v4c_col_label = Div(
-            text="Column Range", css_classes=["tooltip", "tooltip_v4c_column"]
+            text="Column Viewpoint", css_classes=["tooltip", "tooltip_v4c_column"]
         )
         v4c_col_label.margin = DIV_MARGIN
         self.v4c_col = TextInput(
@@ -3155,11 +3155,11 @@ class MainLayout:
             settings=["settings", "interface", "v4c", "do_row"],
         )
         v4c_row_label = Div(
-            text="Row Range", css_classes=["tooltip", "tooltip_v4c_column"]
+            text="Row Viewpoint", css_classes=["tooltip", "tooltip_v4c_row"]
         )
         v4c_row_label.margin = DIV_MARGIN
         self.v4c_row = TextInput(
-            css_classes=["tooltip", "tooltip_v4c_column"],
+            css_classes=["tooltip", "tooltip_v4c_row"],
             height=DEFAULT_TEXT_INPUT_HEIGHT,
             width=SETTINGS_WIDTH,
         )
@@ -3754,7 +3754,6 @@ class MainLayout:
         self.force_render = True
 
     def render_callback(self):
-        # @todo update contig name cycling
         self.update_log_div()
         if not self.session is None:
             if not None in (
