@@ -37,7 +37,7 @@ import sys
 import time
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
-from bokeh.models.tickers import AdaptiveTicker  # pyright: ignore missing import
+from bokeh.models.tickers import AdaptiveTicker, LogTicker  # pyright: ignore missing import
 from libbiosmoother import Quarry, export_tsv, export_png, export_svg, open_default_json  # pyright: ignore missing import
 import json
 from bin.figure_maker import (  # pyright: ignore missing import
@@ -975,12 +975,18 @@ class MainLayout:
             if plot.visible != visible:
                 plot.visible = visible
 
+        
+        log_axis = self.session.get_value(["settings", "interface", "tracks_log_scale"])
         x_visible = len(self.raw_data_x.data["values"]) > 0
-        self.raw_x.visible = self.show_hide["raw"] and x_visible
-        self.raw_x_axis.visible = self.show_hide["raw"] and x_visible and self.show_hide["axis"]
+        self.raw_x.visible = self.show_hide["raw"] and x_visible and not log_axis
+        self.raw_x_axis.visible = self.show_hide["raw"] and x_visible and self.show_hide["axis"] and not log_axis
+        self.raw_x_log.visible = self.show_hide["raw"] and x_visible and log_axis
+        self.raw_x_axis_log.visible = self.show_hide["raw"] and x_visible and self.show_hide["axis"] and log_axis
         y_visible = len(self.raw_data_y.data["values"]) > 0
-        self.raw_y.visible = self.show_hide["raw"] and y_visible
-        self.raw_y_axis.visible = self.show_hide["raw"] and y_visible and self.show_hide["axis"]
+        self.raw_y.visible = self.show_hide["raw"] and y_visible and not log_axis
+        self.raw_y_axis.visible = self.show_hide["raw"] and y_visible and self.show_hide["axis"] and not log_axis
+        self.raw_y_log.visible = self.show_hide["raw"] and y_visible and log_axis
+        self.raw_y_axis_log.visible = self.show_hide["raw"] and y_visible and self.show_hide["axis"] and log_axis
         self.anno_x.visible = (
             len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"] and self.show_hide["axis"]
         )
@@ -1457,6 +1463,10 @@ class MainLayout:
         self.raw_x_axis = None
         self.raw_y = None
         self.raw_y_axis = None
+        self.raw_x_log = None
+        self.raw_x_axis_log = None
+        self.raw_y_log = None
+        self.raw_y_axis_log = None
         d_x = {
             "chrs": [],
             "index_start": [],
@@ -1697,6 +1707,7 @@ class MainLayout:
             mode="vline",
         )
 
+        # normal figures
         self.raw_x = (
             FigureMaker()
             .w(DEFAULT_SIZE)
@@ -1704,15 +1715,14 @@ class MainLayout:
             .hidden()
             .hide_on("raw", self)
             .combine_tools(tollbars)
-            .name("raw_x")
             .get(self)
         )
+
         self.raw_x.add_tools(raw_hover_x)
         self.raw_x_axis = (
             FigureMaker()
             .x_axis_of(self.raw_x, self)
             .combine_tools(tollbars)
-            .name("raw_x_axis")
             .get(self)
         )
         self.raw_x_axis.xaxis.ticker = AdaptiveTicker(
@@ -1730,7 +1740,6 @@ class MainLayout:
             .hidden()
             .hide_on("raw", self)
             .combine_tools(tollbars)
-            .name("raw_y")
             .get(self)
         )
         self.raw_y.add_tools(raw_hover_y)
@@ -1738,7 +1747,6 @@ class MainLayout:
             FigureMaker()
             .y_axis_of(self.raw_y, self)
             .combine_tools(tollbars)
-            .name("raw_y_axis")
             .get(self)
         )
         self.raw_y_axis.yaxis.ticker = AdaptiveTicker(
@@ -1753,6 +1761,67 @@ class MainLayout:
             xs="values", ys="screen_pos", source=self.raw_data_x, line_color="colors"
         )  # , level="image"
         self.raw_y.multi_line(
+            xs="screen_pos", ys="values", source=self.raw_data_y, line_color="colors"
+        )  # , level="image"
+
+        # log figures
+        self.raw_x_log = (
+            FigureMaker()
+            .w(DEFAULT_SIZE)
+            .link_y(self.heatmap)
+            .hidden()
+            .hide_on("raw", self)
+            .combine_tools(tollbars)
+            .log_x()
+            .get(self)
+        )
+
+        self.raw_x_log.add_tools(raw_hover_x)
+        self.raw_x_axis_log = (
+            FigureMaker()
+            .x_axis_of(self.raw_x_log, self)
+            .log_x()
+            .combine_tools(tollbars)
+            .get(self)
+        )
+        self.raw_x_axis_log.xaxis.ticker = LogTicker(
+            desired_num_ticks=3, num_minor_ticks=0
+        )
+        self.raw_x_log.xgrid.ticker = LogTicker(desired_num_ticks=3, num_minor_ticks=1)
+        self.raw_x_log.xgrid.grid_line_alpha = 0
+        self.raw_x_log.xgrid.minor_grid_line_alpha = 0.5
+        self.raw_x_log.ygrid.minor_grid_line_alpha = 0.5
+
+        self.raw_y_log = (
+            FigureMaker()
+            .h(DEFAULT_SIZE)
+            .link_x(self.heatmap)
+            .hidden()
+            .hide_on("raw", self)
+            .combine_tools(tollbars)
+            .log_y()
+            .get(self)
+        )
+        self.raw_y_log.add_tools(raw_hover_y)
+        self.raw_y_axis_log = (
+            FigureMaker()
+            .y_axis_of(self.raw_y_log, self)
+            .log_y()
+            .combine_tools(tollbars)
+            .get(self)
+        )
+        self.raw_y_axis_log.yaxis.ticker = LogTicker(
+            desired_num_ticks=3, num_minor_ticks=0
+        )
+        self.raw_y_log.ygrid.ticker = LogTicker(desired_num_ticks=3, num_minor_ticks=1)
+        self.raw_y_log.ygrid.grid_line_alpha = 0
+        self.raw_y_log.ygrid.minor_grid_line_alpha = 0.5
+        self.raw_y_log.xgrid.minor_grid_line_alpha = 0.5
+
+        self.raw_x_log.multi_line(
+            xs="values", ys="screen_pos", source=self.raw_data_x, line_color="colors"
+        )  # , level="image"
+        self.raw_y_log.multi_line(
             xs="screen_pos", ys="values", source=self.raw_data_y, line_color="colors"
         )  # , level="image"
 
@@ -1926,10 +1995,10 @@ class MainLayout:
         )
 
         crosshair = CrosshairTool(dimensions="width", line_color="lightgrey")
-        for fig in [self.anno_x, self.raw_x, self.heatmap]:
+        for fig in [self.anno_x, self.raw_x, self.raw_x_log, self.heatmap]:
             fig.add_tools(crosshair)
         crosshair = CrosshairTool(dimensions="height", line_color="lightgrey")
-        for fig in [self.anno_y, self.raw_y, self.heatmap]:
+        for fig in [self.anno_y, self.raw_y, self.raw_y_log, self.heatmap]:
             fig.add_tools(crosshair)
 
         tool_bar = FigureMaker.get_tools(tollbars)
@@ -2337,8 +2406,13 @@ class MainLayout:
             self.session.set_value(["settings", "interface", "raw_size", "val"], val)
             self.raw_x.width = val
             self.raw_x_axis.width = val
+            self.raw_x_log.width = val
+            self.raw_x_axis_log.width = val
+
             self.raw_y.height = val
             self.raw_y_axis.height = val
+            self.raw_y_log.height = val
+            self.raw_y_axis_log.height = val
 
         rss2_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
@@ -2399,6 +2473,30 @@ class MainLayout:
             settings=["settings", "interface", "axis_label_max_char"],
             title="Maximal Character of Labels",
             sizing_mode="stretch_width",
+        )
+        center_tracks_on_bins = self.make_checkbox(
+            "Center Tracks on Bins",
+            "tooltip_center_tracks_on_bins", # @todo
+            settings=["settings", "interface", "center_tracks_on_bins"],
+        )
+        zero_track_at_ends = self.make_checkbox(
+            "Zero Track at Ends",
+            "tooltip_zero_track_at_ends", # @todo
+            settings=["settings", "interface", "zero_track_at_ends"],
+        )
+        connect_tracks_over_contig_borders = self.make_checkbox(
+            "Connect Tracks over Contig Borders",
+            "tooltip_connect_tracks_over_contig_borders", # @todo
+            settings=["settings", "interface", "connect_tracks_over_contig_borders"],
+        )
+        def tracks_log_scale_change(active):
+            self.session.set_value(["settings", "interface", "tracks_log_scale"], active)
+            self.update_visibility()
+        tracks_log_scale = self.make_checkbox(
+            "Display Tracks on a Log Scale",
+            "tooltip_tracks_log_scale", # @todo
+            settings=["settings", "interface", "tracks_log_scale"],
+            on_change=tracks_log_scale_change,
         )
         export_contigs_size = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
@@ -2935,8 +3033,10 @@ class MainLayout:
         for plot in [
             self.heatmap,
             self.raw_x,
+            self.raw_x_log,
             self.anno_x,
             self.raw_y,
+            self.raw_y_log,
             self.anno_y,
             self.heatmap_x_axis,
             self.heatmap_y_axis,
@@ -2948,6 +3048,8 @@ class MainLayout:
             self.heatmap_y_axis_3,
             self.raw_x_axis,
             self.raw_y_axis,
+            self.raw_x_axis_log,
+            self.raw_y_axis_log,
         ]:
             plot.js_on_change("visible", CustomJS(code=JS_UPDATE_LAYOUT))
             plot.js_on_change("outer_height", CustomJS(code=JS_UPDATE_LAYOUT))
@@ -2956,11 +3058,11 @@ class MainLayout:
         for plot in [self.anno_y_axis, self.raw_y_axis]:
             plot.align = "end"
 
-        for plot in [self.heatmap, self.raw_y, self.anno_y, self.heatmap_x_axis]:
+        for plot in [self.heatmap, self.raw_y, self.raw_y_log, self.anno_y, self.heatmap_x_axis]:
             plot.xgrid.ticker = self.ticker_x
             plot.xaxis.major_label_text_align = "left"
             plot.xaxis.ticker.min_interval = 1
-        for plot in [self.heatmap, self.raw_x, self.anno_x, self.heatmap_y_axis]:
+        for plot in [self.heatmap, self.raw_x, self.raw_x_log, self.anno_x, self.heatmap_y_axis]:
             plot.ygrid.ticker = self.ticker_y
             plot.yaxis.major_label_text_align = "right"
             plot.yaxis.ticker.min_interval = 1
@@ -3205,6 +3307,10 @@ class MainLayout:
                 rss2_l,
                 axis_lables,
                 axis_label_max_char,
+                center_tracks_on_bins,
+                zero_track_at_ends,
+                connect_tracks_over_contig_borders,
+                tracks_log_scale
             ],
         )
         self.make_panel(
@@ -3266,14 +3372,12 @@ class MainLayout:
         self.curdoc.add_root(self.heatmap_x_axis_3)
         self.curdoc.add_root(self.anno_x)
         self.curdoc.add_root(self.anno_x_axis)
-        self.curdoc.add_root(self.raw_x)
-        self.curdoc.add_root(self.raw_x_axis)
+        self.curdoc.add_root(column([self.raw_x, self.raw_x_log], name="raw_x"))
+        self.curdoc.add_root(column([self.raw_x_axis, self.raw_x_axis_log], name="raw_x_axis"))
         self.curdoc.add_root(self.anno_y)
         self.curdoc.add_root(self.anno_y_axis)
-        self.curdoc.add_root(self.raw_y)
-        self.curdoc.add_root(
-            column([self.raw_y_axis], name="raw_y_axis", sizing_mode="stretch_width")
-        )
+        self.curdoc.add_root(row([self.raw_y, self.raw_y_log], name="raw_y"))
+        self.curdoc.add_root(row([self.raw_y_axis, self.raw_y_axis_log], name="raw_y_axis"))
         self.curdoc.add_root(communication)
         self.curdoc.add_root(status_bar_row)
         self.curdoc.add_root(tools_bar)
@@ -3429,33 +3533,38 @@ class MainLayout:
 
 
                     RANGE_PADDING = 0.1
+                    LOG_PADDING = 0.5
+                    min_max_tracks_x_log = (min_max_tracks_x[0]*LOG_PADDING, min_max_tracks_x[1]/LOG_PADDING)
                     range_padding_x = RANGE_PADDING * (min_max_tracks_x[1] - min_max_tracks_x[0])
                     min_max_tracks_x[0] -= range_padding_x
                     min_max_tracks_x[1] += range_padding_x
-                    new_x_bounds = (
-                        min_max_tracks_x[0],
-                        min_max_tracks_x[1],
-                    )
-                    if math.isfinite(new_x_bounds[0]) and math.isfinite(new_x_bounds[1]):
-                        if not self.raw_x_axis.xaxis.bounds == new_x_bounds:
-                            print(new_x_bounds)
-                            self.raw_x_axis.x_range.start = new_x_bounds[0]
-                            self.raw_x_axis.x_range.end = new_x_bounds[1]
-                        self.raw_x_axis.xaxis.bounds = new_x_bounds
+                    if math.isfinite(min_max_tracks_x[0]) and math.isfinite(min_max_tracks_x[1]):
+                        if not self.raw_x_axis.xaxis.bounds == tuple(min_max_tracks_x):
+                            self.raw_x_axis.x_range.start = min_max_tracks_x[0]
+                            self.raw_x_axis.x_range.end = min_max_tracks_x[1]
+                        self.raw_x_axis.xaxis.bounds = tuple(min_max_tracks_x)
+                    if math.isfinite(min_max_tracks_x_log[0]) and math.isfinite(min_max_tracks_x_log[1]):
+                        if not self.raw_x_axis_log.xaxis.bounds == tuple(min_max_tracks_x_log):
+                            if min_max_tracks_x_log[0] > 0:
+                                self.raw_x_axis_log.x_range.start = min_max_tracks_x_log[0]
+                            self.raw_x_axis_log.x_range.end = min_max_tracks_x_log[1]
+                        self.raw_x_axis_log.xaxis.bounds = tuple(min_max_tracks_x_log)
 
+                    min_max_tracks_y_log = (min_max_tracks_y[0]*LOG_PADDING, min_max_tracks_y[1]/LOG_PADDING)
                     range_padding_y = RANGE_PADDING * (min_max_tracks_y[1] - min_max_tracks_y[0])
                     min_max_tracks_y[0] -= range_padding_y
                     min_max_tracks_y[1] += range_padding_y
-                    new_y_bounds = (
-                        min_max_tracks_y[0],
-                        min_max_tracks_y[1],
-                    )
-                    if math.isfinite(new_y_bounds[0]) and math.isfinite(new_y_bounds[1]):
-                        if not self.raw_y_axis.yaxis.bounds == new_y_bounds:
-                            print(new_y_bounds)
-                            self.raw_y_axis.y_range.start = new_y_bounds[0]
-                            self.raw_y_axis.y_range.end = new_y_bounds[1]
-                        self.raw_y_axis.yaxis.bounds = new_y_bounds
+                    if math.isfinite(min_max_tracks_y[0]) and math.isfinite(min_max_tracks_y[1]):
+                        if not self.raw_y_axis.yaxis.bounds == tuple(min_max_tracks_y):
+                            self.raw_y_axis.y_range.start = min_max_tracks_y[0]
+                            self.raw_y_axis.y_range.end = min_max_tracks_y[1]
+                        self.raw_y_axis.yaxis.bounds = tuple(min_max_tracks_y)
+                    if math.isfinite(min_max_tracks_y_log[0]) and math.isfinite(min_max_tracks_y_log[1]):
+                        if not self.raw_y_axis_log.yaxis.bounds == tuple(min_max_tracks_y_log):
+                            if min_max_tracks_y_log[0] > 0:
+                                self.raw_y_axis_log.y_range.start = min_max_tracks_y_log[0]
+                            self.raw_y_axis_log.y_range.end = min_max_tracks_y_log[1]
+                        self.raw_y_axis_log.yaxis.bounds = tuple(min_max_tracks_y_log)
 
                     def set_bounds(
                         plot, left=None, right=None, top=None, bottom=None, color=None
@@ -3472,10 +3581,28 @@ class MainLayout:
                         set_bounds(
                             self.raw_x, left=min_max_tracks_x[0], right=min_max_tracks_x[1]
                         )
+                    if math.isfinite(min_max_tracks_x_log[0]) and math.isfinite(min_max_tracks_x_log[1]):
+                        if min_max_tracks_x_log[0] > 0:
+                            set_bounds(
+                                self.raw_x_log, left=min_max_tracks_x_log[0], right=min_max_tracks_x_log[1]
+                            )
+                        else:
+                            set_bounds(
+                                self.raw_x_log, right=min_max_tracks_x_log[1]
+                            )
                     if math.isfinite(min_max_tracks_y[0]) and math.isfinite(min_max_tracks_y[1]):
                         set_bounds(
                             self.raw_y, bottom=min_max_tracks_y[0], top=min_max_tracks_y[1]
                         )
+                    if math.isfinite(min_max_tracks_y_log[0]) and math.isfinite(min_max_tracks_y_log[1]):
+                        if min_max_tracks_y_log[0] > 0:
+                            set_bounds(
+                                self.raw_y_log, bottom=min_max_tracks_y_log[0], top=min_max_tracks_y_log[1]
+                            )
+                        else:
+                            set_bounds(
+                                self.raw_y_log, top=min_max_tracks_y_log[1]
+                            )
                     set_bounds(self.anno_x, left=0, right=len(displayed_annos_x))
                     set_bounds(self.anno_y, bottom=0, top=len(displayed_annos_y))
 
@@ -3483,13 +3610,18 @@ class MainLayout:
 
                     self.heatmap_data.data = d_heatmap
                     self.raw_data_x.data = raw_data_x
+                    log_axis = self.session.get_value(["settings", "interface", "tracks_log_scale"])
                     x_visible = len(raw_data_x["values"]) > 0
-                    self.raw_x.visible = self.show_hide["raw"] and x_visible
-                    self.raw_x_axis.visible = self.show_hide["raw"] and x_visible
+                    self.raw_x.visible = self.show_hide["raw"] and x_visible and not log_axis
+                    self.raw_x_axis.visible = self.show_hide["raw"] and x_visible and not log_axis
+                    self.raw_x_log.visible = self.show_hide["raw"] and x_visible and log_axis
+                    self.raw_x_axis_log.visible = self.show_hide["raw"] and x_visible and log_axis
                     self.raw_data_y.data = raw_data_y
                     y_visible = len(raw_data_y["values"]) > 0
-                    self.raw_y.visible = self.show_hide["raw"] and y_visible
-                    self.raw_y_axis.visible = self.show_hide["raw"] and y_visible
+                    self.raw_y.visible = self.show_hide["raw"] and y_visible and not log_axis
+                    self.raw_y_axis.visible = self.show_hide["raw"] and y_visible and not log_axis
+                    self.raw_y_log.visible = self.show_hide["raw"] and y_visible and log_axis
+                    self.raw_y_axis_log.visible = self.show_hide["raw"] and y_visible and log_axis
 
                     if self.anno_x.x_range.factors != displayed_annos_x:
                         self.anno_x.x_range.bounds = "auto"
@@ -3536,6 +3668,7 @@ class MainLayout:
                     for plot in [
                         self.heatmap,
                         self.raw_y,
+                        self.raw_y_log,
                         self.anno_y,
                         self.heatmap_x_axis,
                         self.heatmap_x_axis_3,
@@ -3545,6 +3678,7 @@ class MainLayout:
                     for plot in [
                         self.heatmap,
                         self.raw_x,
+                        self.raw_x_log,
                         self.anno_x,
                         self.heatmap_y_axis,
                         self.heatmap_y_axis_3,

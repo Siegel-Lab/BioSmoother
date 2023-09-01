@@ -25,7 +25,7 @@ class FigureMaker:
 
     def get(self, register):
         ret = figure(tools="pan,wheel_zoom,box_zoom", **self.args)
-        ret.x(x=0, y=0, line_color=None)
+        ret.x(x=1, y=1, line_color=None)
         ret.xaxis.visible = self.x_axis_visible
         ret.yaxis.visible = self.y_axis_visible
         ret.yaxis.axis_label = self.y_axis_label
@@ -61,7 +61,7 @@ class FigureMaker:
         ret.ygrid.level = "glyph"
         ret.background_fill_color = "lightgrey"
         render_area = BoxAnnotation(
-            fill_alpha=1, top=0, bottom=0, fill_color="white", level="image"
+            fill_alpha=1, fill_color="white", level="image"
         )
         ret.add_layout(render_area)
         if self.is_hidden:
@@ -124,6 +124,14 @@ class FigureMaker:
         self.args["width"] = 10
         self.no_border_h = True
         self.no_border_v = True
+        return self
+
+    def log_x(self):
+        self.args["x_axis_type"] = "log"
+        return self
+
+    def log_y(self):
+        self.args["y_axis_type"] = "log"
         return self
 
     def _axis_of(self, other, register, hide_keyword):
