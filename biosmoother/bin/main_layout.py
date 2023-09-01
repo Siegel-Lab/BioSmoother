@@ -2022,6 +2022,20 @@ class MainLayout:
             active_item=["settings", "replicates", "in_group"],
         )
 
+        def betw_group_event(e):
+            if self.session.get_value(["settings", "replicates", "between_group"]) == e:
+                return
+            if self.session.get_value(["settings", "replicates", "between_group"]) == "sub":
+                self.session.set_value(["settings", "normalization", "color_range", "val_min"], 0)
+                self.session.set_value(["settings", "normalization", "scale"], "max")
+                self.session.set_value(["settings", "replicates", "between_group"], e)
+                self.do_config()
+            self.session.set_value(["settings", "replicates", "between_group"], e)
+            if e == "sub":
+                self.session.set_value(["settings", "normalization", "color_range", "val_min"], -1)
+                self.session.set_value(["settings", "normalization", "scale"], "abs")
+                self.do_config()
+            self.trigger_render()
         betw_group = self.dropdown_select(
             "Compare datapools by",
             "tooltip_between_groups",
@@ -2034,6 +2048,7 @@ class MainLayout:
             ("Minimum [min(a,b)]", "min"),
             ("Maximum [max(a,b)]", "max"),
             active_item=["settings", "replicates", "between_group"],
+            event=betw_group_event
         )
 
         symmetrie = self.dropdown_select(
