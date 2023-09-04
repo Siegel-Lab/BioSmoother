@@ -68,7 +68,7 @@ DIV_MARGIN = (5, 5, 0, 5)
 BTN_MARGIN = (3, 3, 3, 3)
 BTN_MARGIN_2 = (3, 3, 3, 3)
 
-CONFIG_FILE_VERSION = 0.1
+CONFIG_FILE_VERSION = 0.2
 
 DEFAULT_TEXT_INPUT_HEIGHT = 30
 
@@ -455,12 +455,20 @@ class MainLayout:
         if not os.path.exists(out_file):
             with open(out_file, "w") as f:
                 json.dump(factory_default, f)
+
+        with open(out_file, "r") as f:
+            settings = json.load(f)
+        if factory_default["smoother_config_file_version"] > settings["smoother_config_file_version"]:
+            print("INFO: Updating the", factory_default["display_name"], "config file. This is necessary because your smoother instalattion requires a newer config file version than the one you have (maybe you updated smoother?). This deletes your saved configuration.")
+            with open(out_file, "w") as f:
+                json.dump(factory_default, f)
+
         with open(out_file, "r") as f:
             settings = json.load(f)
 
         if CONFIG_FILE_VERSION != settings["smoother_config_file_version"]:
             print(
-                "Config file version does not match: expected",
+                "WARNING: Config file version does not match: expected",
                 CONFIG_FILE_VERSION,
                 "but got",
                 settings["smoother_config_file_version"],
@@ -1422,12 +1430,27 @@ class MainLayout:
         self.session = Quarry(bin.global_variables.biosmoother_index)
         if not os.path.exists(biosmoother_home_folder + "/conf/"):
             os.makedirs(biosmoother_home_folder + "/conf/")
+        
+        # create default file if none exists
         if not os.path.exists(biosmoother_home_folder + "/conf/default.json"):
             with open_default_json() as f_in:
                 with open(biosmoother_home_folder + "/conf/default.json", "w") as f_out:
                     for l in f_in:
                         f_out.write(l)
 
+        # replace default config if version is outdated
+        with open_default_json() as f_in:
+            version_in_default = json.load(f_in)["smoother_config_file_version"]
+            with open(biosmoother_home_folder + "/conf/default.json", "r") as f_in_2:
+                version_in_file = json.load(f_in_2)["smoother_config_file_version"]
+        if version_in_default > version_in_file:
+            print("INFO: Updating the default config file. This is necessary because your smoother instalattion requires a newer config file version than the one you have (maybe you updated smoother?). This deletes your saved default configuration.")
+            with open_default_json() as f_in:
+                with open(biosmoother_home_folder + "/conf/default.json", "w") as f_out:
+                    for l in f_in:
+                        f_out.write(l)
+
+        # load default file
         with open(biosmoother_home_folder + "/conf/default.json", "r") as f:
             self.settings_default = json.load(f)
 
@@ -2903,7 +2926,7 @@ class MainLayout:
             if not path is None:
                 with open(path + "/default_session.json", "r") as f:
                     default_session = json.load(f)
-                    default_session["settings"] = self.session.get_value(["settings"])
+                    default_session["settings"] = self.settings_default
             self.session.set_session(default_session)
             self.do_config()
             self.trigger_render()

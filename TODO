@@ -10,6 +10,8 @@
   - filters can be activated on a per replicate basis -> rather store proper default values for each deactivated filter
   - if no replicate contains a certain filter, disable the button
 
+- having different contigs active in row and columns bugs out
+
 --- cutoff ---
 
 - how about a RPKB (reads per kilobase) normalization?
