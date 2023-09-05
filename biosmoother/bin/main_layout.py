@@ -68,7 +68,7 @@ DIV_MARGIN = (5, 5, 0, 5)
 BTN_MARGIN = (3, 3, 3, 3)
 BTN_MARGIN_2 = (3, 3, 3, 3)
 
-CONFIG_FILE_VERSION = 0.2
+CONFIG_FILE_VERSION = 0.3
 
 DEFAULT_TEXT_INPUT_HEIGHT = 30
 
@@ -269,7 +269,7 @@ class MainLayout:
 
         self.reset_options[label] = [{}, []]
 
-        filter_t_in = TextInput(placeholder="filter...")
+        filter_t_in = TextInput(placeholder="filter...", width=170)
 
         def set_options(labels, active_dict):
             self.reset_options[label] = [active_dict, labels]
@@ -409,7 +409,7 @@ class MainLayout:
 
         layout = column(
             [
-                row([Div(text=title), filter_t_in], sizing_mode="stretch_width"),
+                row([Div(text=title, width=SETTINGS_WIDTH-200), filter_t_in], sizing_mode="stretch_width"),
                 data_table,
             ],
             sizing_mode="stretch_width",
@@ -2627,8 +2627,8 @@ class MainLayout:
             "Annotation Name",
             "tooltip_annotations",
             [
-                [["annotation", "visible_y"], "Row"],
                 [["annotation", "visible_x"], "Column"],
+                [["annotation", "visible_y"], "Row"],
             ],
             ["annotation", "list"],
             title="Visible Annotations",
@@ -2722,7 +2722,7 @@ class MainLayout:
             "Dataset name",
             "tooltip_coverage_normalization",
             [
-                [["coverage", "in_column"], "Col"],
+                [["coverage", "in_column"], "Column"],
                 [["coverage", "in_row"], "Row"],
             ],
             ["coverage", "list"],
@@ -2747,21 +2747,27 @@ class MainLayout:
             settings=["settings", "filters", "anno_coords_row"],
         )
 
-        anno_read_filter = self.dropdown_select_session(
-            "Only show reads that overlap with a",
-            "tooltip_annotation_filter",
-            ["annotation", "filterable"],
-            ["annotation", "filter"],
-        )
-        anno_read_filter_x = self.make_checkbox(
-            "Apply Annotation filter to columns",
+        anno_read_filter_present = self.multi_choice_auto(
+            "Annotation Name",
             "tooltip_annotation_filter_col",
-            settings=["settings", "filters", "anno_filter_col"],
+            [
+                [["annotation", "filter_present_x"], "Column"],
+                [["annotation", "filter_present_y"], "Row"],
+            ],
+            ["annotation", "filterable"],
+            title="Filter out interactions that overlap annotation:",
+            orderable=False,
         )
-        anno_read_filter_y = self.make_checkbox(
-            "Apply Annotation filter to rows",
-            "tooltip_annotation_filter_row",
-            settings=["settings", "filters", "anno_filter_row"],
+        anno_read_filter_absent = self.multi_choice_auto(
+            "Annotation Name",
+            "tooltip_annotation_filter_col",
+            [
+                [["annotation", "filter_absent_x"], "Column"],
+                [["annotation", "filter_absent_y"], "Row"],
+            ],
+            ["annotation", "filterable"],
+            title="Filter out interactions that don't overlap annotation:",
+            orderable=False,
         )
 
         self.chrom_layout = self.multi_choice_auto(
@@ -3306,9 +3312,11 @@ class MainLayout:
                 anno_coords,
                 coords_x,
                 coords_y,
-                symmetrie,
+                multiple_anno_per_bin,
+                multiple_bin_per_anno,
                 self.chrom_layout,
                 self.chrom_layout_ploidy,
+                symmetrie,
             ],
         )
         self.make_panel(
@@ -3316,11 +3324,8 @@ class MainLayout:
             "",
             [
                 annos_layout,
-                multiple_anno_per_bin,
-                multiple_bin_per_anno,
-                anno_read_filter,
-                anno_read_filter_x,
-                anno_read_filter_y,
+                anno_read_filter_present,
+                anno_read_filter_absent,
             ],
         )
         self.make_panel(
