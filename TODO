@@ -10,6 +10,8 @@
   - filters can be activated on a per replicate basis -> rather store proper default values for each deactivated filter
   - if no replicate contains a certain filter, disable the button
 
+- bug: with different contigs active on x and y -> lookup of datasetid fails.
+
 --- cutoff ---
 
 - how about a RPKB (reads per kilobase) normalization?

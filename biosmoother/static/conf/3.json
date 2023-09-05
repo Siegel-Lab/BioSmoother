@@ -14,5 +14,5 @@
     "normalization": {
         "normalize_by": "ice"
     },
-    "smoother_config_file_version": 0.1
+    "smoother_config_file_version": 0.3
 }
