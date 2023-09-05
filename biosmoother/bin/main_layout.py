@@ -3666,11 +3666,7 @@ class MainLayout:
                     self.raw_y_log.visible = self.show_hide["raw"] and y_visible and log_axis
                     self.raw_y_axis_log.visible = self.show_hide["raw"] and y_visible and log_axis
 
-                    if self.anno_x.x_range.factors != displayed_annos_x:
-                        self.anno_x.x_range.bounds = "auto"
                     self.anno_x.x_range.factors = displayed_annos_x
-                    if self.anno_y.y_range.factors != displayed_annos_y[::-1]:
-                        self.anno_y.y_range.bounds = "auto"
                     self.anno_y.y_range.factors = displayed_annos_y[::-1]
 
                     self.anno_x_data.data = d_anno_x

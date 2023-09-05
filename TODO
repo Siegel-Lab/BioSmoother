@@ -1,8 +1,5 @@
 # smoother todo (ranked)
 
-- annotation filter dimensions do not make sense right now
-  - should rather have one dimension per filterable annotation
-  - more flexibility
 - remove default.json from smoother_hg
 
 - store in index what filters are active / inactive (data is now stored)
