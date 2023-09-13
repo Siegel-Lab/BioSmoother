@@ -1,7 +1,6 @@
 # smoother todo (ranked)
 
 - search bar does not place in correct position with annotation coordinates on!
-- turning annotation view on does not work 
 - remove default.json from smoother_hg
 - allow setting position by search string
 - allow getting position as formated string

@@ -998,13 +998,13 @@ class MainLayout:
         self.raw_y_log.visible = self.show_hide["raw"] and y_visible and log_axis
         self.raw_y_axis_log.visible = self.show_hide["raw"] and y_visible and self.show_hide["axis"] and log_axis
         self.anno_x.visible = (
-            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"] and self.show_hide["axis"]
+            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"] 
         )
-        self.anno_x_axis.visible = self.anno_x.visible
+        self.anno_x_axis.visible = self.anno_x.visible and self.show_hide["axis"]
         self.anno_y.visible = (
-            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"] and self.show_hide["axis"]
+            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"]
         )
-        self.anno_y_axis.visible = self.anno_y.visible
+        self.anno_y_axis.visible = self.anno_y.visible and self.show_hide["axis"]
 
         cx = "lightgrey" if self.show_hide["contig_borders"] else None
         cx2 = "lightgrey" if self.show_hide["grid_lines"] else None
