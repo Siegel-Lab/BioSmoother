@@ -1,6 +1,5 @@
 # smoother todo (ranked)
 
-- clicking on items in tables does not work right now (at least to remove annotations)
 - search bar does not place in correct position with annotation coordinates on!
 - turning annotation view on does not work 
 - remove default.json from smoother_hg

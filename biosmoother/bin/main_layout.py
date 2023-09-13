@@ -208,6 +208,8 @@ class MainLayout:
                 source[n] = []
             return source
 
+        my_id = self.next_element_id
+
         def make_columns():
             columns = []
 
@@ -255,7 +257,7 @@ class MainLayout:
                         if (grid[i].outerHTML.includes('active')){
                             for (var j = 0, jmax = grid[i].children.length; j < jmax; j++)
                                 if(grid[i].children[j].outerHTML.includes('active')) { 
-                                    select_ret.value = grid[i].children[0].textContent + " " + grid[i].children[j].className;
+                                    select_ret.value = grid[i].children[0].textContent + " " + grid[i].children[j].className + " " + element_id;
                                 }
                         }
                     }
@@ -267,12 +269,12 @@ class MainLayout:
                                code=source_code)
         self.next_element_id += 1
 
-        self.reset_options[label] = [{}, []]
+        self.reset_options[my_id] = [{}, []]
 
         filter_t_in = TextInput(placeholder="filter...", width=170)
 
         def set_options(labels, active_dict):
-            self.reset_options[label] = [active_dict, labels]
+            self.reset_options[my_id] = [active_dict, labels]
             source = make_source()
             if len(labels) > 1:
                 source["idx"].append("")
@@ -307,17 +309,17 @@ class MainLayout:
         filter_t_in.on_change(
             "value",
             lambda _x, _y, _z: set_options(
-                self.reset_options[label][1], self.reset_options[label][0]
+                self.reset_options[my_id][1], self.reset_options[my_id][0]
             ),
         )
 
         def trigger_callback():
             cb = {}
-            order = self.reset_options[label][1]
+            order = self.reset_options[my_id][1]
             for k, n in checkboxes:
                 cb[n] = (k, [])
                 for opt in order:
-                    if opt in self.reset_options[label][0][n]:
+                    if opt in self.reset_options[my_id][0][n]:
                         cb[n][1].append(opt)
             callback(order, cb)
 
@@ -345,45 +347,45 @@ class MainLayout:
             if new != []:
                 x, y = get_select()
                 if orderable and x == -3 and not y is None:
-                    self.reset_options[label][1] = move_element(
-                        self.reset_options[label][1], y, True
+                    self.reset_options[my_id][1] = move_element(
+                        self.reset_options[my_id][1], y, True
                     )
                     set_options(
-                        self.reset_options[label][1], self.reset_options[label][0]
+                        self.reset_options[my_id][1], self.reset_options[my_id][0]
                     )
                     trigger_callback()
                 elif orderable and x == -2 and not y is None:
-                    self.reset_options[label][1] = move_element(
-                        self.reset_options[label][1], y, False
+                    self.reset_options[my_id][1] = move_element(
+                        self.reset_options[my_id][1], y, False
                     )
                     set_options(
-                        self.reset_options[label][1], self.reset_options[label][0]
+                        self.reset_options[my_id][1], self.reset_options[my_id][0]
                     )
                     trigger_callback()
                 elif x >= 0:
                     if y is None:
                         n = checkboxes[x][1]
                         bools = [
-                            not name in self.reset_options[label][0][n]
-                            for name in self.reset_options[label][1]
+                            not name in self.reset_options[my_id][0][n]
+                            for name in self.reset_options[my_id][1]
                         ]
                         if all(bools):
                             # nothing is activate -> set everything active
-                            self.reset_options[label][0][n] = self.reset_options[label][
+                            self.reset_options[my_id][0][n] = self.reset_options[my_id][
                                 1
                             ]
                         else:  # none(bools) or some(bools)
                             # some things are active -> set everything inactive
-                            self.reset_options[label][0][n] = []
+                            self.reset_options[my_id][0][n] = []
                     else:
-                        local_label = self.reset_options[label][1][y]
+                        local_label = self.reset_options[my_id][1][y]
                         n = checkboxes[x][1]
-                        if local_label in self.reset_options[label][0][n]:
-                            self.reset_options[label][0][n].remove(local_label)
+                        if local_label in self.reset_options[my_id][0][n]:
+                            self.reset_options[my_id][0][n].remove(local_label)
                         else:
-                            self.reset_options[label][0][n].append(local_label)
+                            self.reset_options[my_id][0][n].append(local_label)
                     set_options(
-                        self.reset_options[label][1], self.reset_options[label][0]
+                        self.reset_options[my_id][1], self.reset_options[my_id][0]
                     )
                     trigger_callback()
             data_table.source.selected.update(indices=[])
@@ -400,8 +402,8 @@ class MainLayout:
                     y += 1
                 print("change", x, y, new["names"][y])
                 # if orderable and x == -4:
-                    # r_opt = self.reset_options[label][1]
-                    # self.reset_options[label][1] = r_opt
+                    # r_opt = self.reset_options[my_id][1]
+                    # self.reset_options[my_id][1] = r_opt
                 # print(new)
             data_table.source.selected.update(indices=[])
 
@@ -417,7 +419,7 @@ class MainLayout:
         )
 
         def update():
-            set_options(self.reset_options[label][1], self.reset_options[label][0])
+            set_options(self.reset_options[my_id][1], self.reset_options[my_id][0])
 
         self.updatable_multi_choice[layout] = update
 
