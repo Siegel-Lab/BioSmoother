@@ -68,7 +68,7 @@ DIV_MARGIN = (5, 5, 0, 5)
 BTN_MARGIN = (3, 3, 3, 3)
 BTN_MARGIN_2 = (3, 3, 3, 3)
 
-CONFIG_FILE_VERSION = 0.3
+CONFIG_FILE_VERSION = 0.4
 
 DEFAULT_TEXT_INPUT_HEIGHT = 30
 
@@ -849,19 +849,17 @@ class MainLayout:
             set_options(ele_list, d)
 
     def set_v4c_range(self):
-        self.v4c_col_expected = self.get_readable_range(
+        self.v4c_col_expected = self.session.get_readable_range(
             self.session.get_value(["settings", "interface", "v4c", "col_from"]),
             self.session.get_value(["settings", "interface", "v4c", "col_to"]),
-            False,
-            genomic_coords=True,
+            True,
         )
         self.v4c_col.value = self.v4c_col_expected
 
-        self.v4c_row_expected = self.get_readable_range(
+        self.v4c_row_expected = self.session.get_readable_range(
             self.session.get_value(["settings", "interface", "v4c", "row_from"]),
             self.session.get_value(["settings", "interface", "v4c", "row_to"]),
-            True,
-            genomic_coords=True,
+            False,
         )
         self.v4c_row.value = self.v4c_row_expected
         self.trigger_render()
@@ -869,8 +867,8 @@ class MainLayout:
     def parse_v4c(self):
         change = False
         if self.v4c_col.value != self.v4c_col_expected:
-            col_start, col_end = self.interpret_range(
-                self.v4c_col.value, False, genomic_coords=True
+            col_start, col_end = self.session.interpret_range(
+                self.v4c_col.value, True
             )
             change = True
             if not col_start is None:
@@ -883,8 +881,8 @@ class MainLayout:
                 )
 
         if self.v4c_row.value != self.v4c_row_expected:
-            row_start, row_end = self.interpret_range(
-                self.v4c_row.value, True, genomic_coords=True
+            row_start, row_end = self.session.interpret_range(
+                self.v4c_row.value, False
             )
             change = True
             if not row_start is None:
@@ -1151,222 +1149,28 @@ class MainLayout:
 
         return color_figure
 
-    def to_readable_pos(self, x, genome_end, contig_names, contig_starts, lcs=0):
-        if len(contig_names) == 0 or len(contig_starts) == 0:
-            return "n/a"
-        x = int(x)
-        oob = x > genome_end * self.session.get_value(["dividend"]) or x < 0
-        if x < 0:
-            idx = 0
-        elif x >= genome_end * self.session.get_value(["dividend"]):
-            idx = len(contig_names) - 1
-            x -= contig_starts[-1] * self.session.get_value(["dividend"])
-        else:
-            idx = 0
-            for idx, (start, end) in enumerate(
-                zip(contig_starts, contig_starts[1:] + [genome_end])
-            ):
-                if x >= start * self.session.get_value(
-                    ["dividend"]
-                ) and x < end * self.session.get_value(["dividend"]):
-                    x -= start * self.session.get_value(["dividend"])
-                    break
-
-        if x == 0:
-            label = "0 bp"
-        elif x % 1000000 == 0:
-            label = "{:,}".format(x // 1000000) + " Mbp"
-        elif x % 1000 == 0:
-            label = "{:,}".format(x // 1000) + " kbp"
-        else:
-            label = "{:,}".format(x) + " bp"
-
-        if idx >= len(contig_names):
-            return "n/a"
-
-        if lcs != 0:
-            n = contig_names[idx][:-lcs]
-        else:
-            n = contig_names[idx]
-        return n + ": " + label
-
-    def get_readable_range(self, start, end, x_y, genomic_coords=False):
-        lcs = self.session.get_longest_common_suffix(self.print)
-        contig_names = self.session.get_annotation_list(x_y, self.print)
-        if genomic_coords:
-            contig_starts = self.session.get_contig_start_list(x_y, self.print)
-        else:
-            contig_starts = self.session.get_tick_list(x_y, self.print)
-        if len(contig_starts) > 0:
-            return (
-                self.to_readable_pos(
-                    start * int(self.session.get_value(["dividend"])),
-                    contig_starts[-1],
-                    contig_names,
-                    contig_starts[:-1],
-                    lcs,
-                )
-                + " .. "
-                + self.to_readable_pos(
-                    end * int(self.session.get_value(["dividend"])),
-                    contig_starts[-1],
-                    contig_names,
-                    contig_starts[:-1],
-                    lcs,
-                )
-            )
-        else:
-            return "n/a"
 
     def set_area_range(self):
-        self.area_range_expected = (
-            "X=["
-            + self.get_readable_range(
+        self.area_range_expected = self.session.get_readable_area(
                 int(math.floor(self.heatmap.x_range.start)),
-                int(math.ceil(self.heatmap.x_range.end)),
-                True,
-            )
-            + "] Y=["
-            + self.get_readable_range(
                 int(math.floor(self.heatmap.y_range.start)),
+                int(math.ceil(self.heatmap.x_range.end)),
                 int(math.ceil(self.heatmap.y_range.end)),
-                False,
-            )
-            + "]"
         )
         self.area_range.value = self.area_range_expected
 
-    def isint(self, num):
-        try:
-            int(num)
-            return True
-        except ValueError:
-            return False
-
-    def interpret_number(self, s):
-        if s[-1:] == "b":
-            s = s[:-1]
-        elif s[-2:] == "bp":
-            s = s[:-2]
-        fac = 1
-        if len(s) > 0 and s[-1] == "m":
-            fac = 1000000
-            s = s[:-1]
-        if len(s) > 0 and s[-1] == "k":
-            fac = 1000
-            s = s[:-1]
-        s = s.replace(",", "")
-        if self.isint(s):
-            return (int(s) * fac) // self.session.get_value(["dividend"])
-        return None
-
-    def interpret_position(self, s, x_y, bot=True, genomic_coords=False):
-        if s.count(":") == 0 and s.count("+-") == 1:
-            x, y = s.split("+-")
-            c = self.interpret_number(y)
-            if not c is None and bot:
-                c = -c
-            a = self.session.interpret_name(x, x_y, bot, genomic_coords)
-            if not a is None and not c is None:
-                return [a + c]
-        elif s.count(":") == 1:
-            x, y = s.split(":")
-            if "+-" in y:
-                y1, y2 = y.split("+-")
-                if len(y1) == 0:
-                    b = 0
-                else:
-                    b = self.interpret_number(y1)
-                c = self.interpret_number(y2)
-                if not c is None and bot:
-                    c = -c
-                a = self.session.interpret_name(
-                    x, x_y, bot if len(y1) == 0 else True, genomic_coords
-                )
-                if not a is None and not b is None and not c is None:
-                    return [a + b + c]
-            b = self.interpret_number(y)
-            a = self.session.interpret_name(x, x_y, True, genomic_coords)
-            if not a is None and not b is None:
-                return [a + b]
-
-        a = self.interpret_number(s)
-        if not a is None:
-            return [a]
-
-        if not s is None:
-            a = self.session.interpret_name(s, x_y, bot, genomic_coords)
-            if not a is None:
-                return [a]
-
-        return [None]
-
-    def interpret_range(self, s, x_y, genomic_coords=False):
-        s = "".join(s.lower().split())
-        if s.count("..") == 1 and s.count("[") <= 1 and s.count("]") <= 1:
-            x, y = s.split("..")
-            if x[:1] == "[":
-                x = x[1:]
-            if y[-1:] == "]":
-                y = y[:-1]
-
-            return self.interpret_position(
-                x, x_y, True, genomic_coords=genomic_coords
-            ) + self.interpret_position(y, x_y, False, genomic_coords=genomic_coords)
-        if s[:1] == "[":
-            s = s[1:]
-        if s[-1:] == "]":
-            s = s[:-1]
-        return self.interpret_position(
-            s, x_y, True, genomic_coords=genomic_coords
-        ) + self.interpret_position(s, x_y, False, genomic_coords=genomic_coords)
-
-    def interpret_area(self, s):
-        # remove all space-like characters
-        s = "".join(s.lower().split())
-        if s.count(";") == 1 and s.count("x=") == 0 and s.count("y=") == 0:
-            x, y = s.split(";")
-            return self.interpret_range(x, True) + self.interpret_range(y, False)
-
-        if s.count("x=") == 1 and s[:2] == "x=" and s.count("y=") == 0:
-            s = s[2:]
-            return self.interpret_range(s, True) + [
-                self.heatmap.y_range.start,
-                self.heatmap.y_range.end,
-            ]
-
-        if s.count("x=") == 0 and s.count("y=") == 1 and s[:2] == "y=":
-            s = s[2:]
-            return [
-                self.heatmap.x_range.start,
-                self.heatmap.x_range.end,
-            ] + self.interpret_range(s, True)
-
-        if s.count("x=") == 1 and s.count("y=") == 1:
-            x_pos = s.find("x=")
-            y_pos = s.find("y=")
-            x = s[x_pos + 2 : y_pos] if x_pos < y_pos else s[x_pos + 2 :]
-            y = s[y_pos + 2 : x_pos] if y_pos < x_pos else s[y_pos + 2 :]
-            return self.interpret_range(x, True) + self.interpret_range(y, False)
-
-        return self.interpret_range(s, True) + self.interpret_range(s, False)
-
     def parse_area_range(self):
         if self.area_range_expected != self.area_range.value:
-            i = self.interpret_area(self.area_range.value)
-            if not i[0] is None and not i[1] is None:
-                self.heatmap.x_range.start = min(i[0], i[1])
-                self.heatmap.x_range.end = max(i[0], i[1], min(i[0], i[1]) + 1)
-            elif not i[0] is None:
+            i = self.session.interpret_area(self.area_range.value, 
+                                           self.heatmap.x_range.start, self.heatmap.y_range.start,
+                                           self.heatmap.x_range.end, self.heatmap.y_range.end)
+            if not i[0] is None:
                 self.heatmap.x_range.start = i[0]
-            elif not i[1] is None:
+            if not i[1] is None:
                 self.heatmap.x_range.end = i[1]
-            if not i[2] is None and not i[3] is None:
-                self.heatmap.y_range.start = min(i[2], i[3])
-                self.heatmap.y_range.end = max(i[2], i[3], min(i[2], i[3]) + 1)
-            elif not i[2] is None:
+            if not i[2] is None:
                 self.heatmap.y_range.start = i[2]
-            elif not i[3] is None:
+            if not i[3] is None:
                 self.heatmap.y_range.end = i[3]
 
     def save_tools(self, tools):
@@ -3163,6 +2967,12 @@ class MainLayout:
                 row([self.spinner, export_button]),
             ]
 
+        v4c_norm_viewpoint_size = self.make_checkbox(
+            "Normalize by viewpoint size",
+            "tooltip_v4c_norm_viewpoint_size",
+            settings=["settings", "interface", "v4c", "norm_by_viewpoint_size"],
+        )
+
         do_v4c_col = self.make_checkbox(
             "Compute for columns",
             "tooltip_v4c_do_column",
@@ -3380,6 +3190,7 @@ class MainLayout:
                 do_v4c_row,
                 v4c_row_label,
                 self.v4c_row,
+                v4c_norm_viewpoint_size,
             ],
         )
         self.make_panel(

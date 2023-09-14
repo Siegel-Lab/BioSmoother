@@ -1,15 +1,11 @@
 # smoother todo (ranked)
 
-- search bar does not place in correct position with annotation coordinates on!
 - remove default.json from smoother_hg
-- allow setting position by search string
-- allow getting position as formated string
 - binom. test norm: what is going wrong?
 - store in index what filters are active / inactive (data is now stored)
   - enable/disable appropriate filters (on a per dataset bases & disable button if no dataset contains the filter)
   - filters can be activated on a per replicate basis -> rather store proper default values for each deactivated filter
   - if no replicate contains a certain filter, disable the button
-- virtual 4 c add option to devide number by viewpoint size
 
 --- cutoff ---
 
