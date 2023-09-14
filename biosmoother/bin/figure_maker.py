@@ -108,8 +108,6 @@ class FigureMaker:
 
     def stretch(self):
         self.args["sizing_mode"] = "stretch_both"
-        # self.args["width_policy"] = "fit"
-        # self.args["height_policy"] = "max"
         self.args["height"] = 10
         self.args["width"] = 10
         self.no_border_h = True
@@ -117,9 +115,7 @@ class FigureMaker:
         return self
 
     def scale(self):
-        # self.args["sizing_mode"] = "fixed"
-        self.args["width_policy"] = "max"
-        self.args["height_policy"] = "max"
+        self.args["sizing_mode"] = "scale_both"
         self.args["height"] = 10
         self.args["width"] = 10
         self.no_border_h = True
