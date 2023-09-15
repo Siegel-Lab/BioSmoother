@@ -2014,6 +2014,27 @@ class MainLayout:
             settings=["settings", "normalization", "num_ice_bins"],
             sizing_mode="stretch_width",
         )
+        ice_mad_max = self.make_slider_spinner(
+            width=SETTINGS_WIDTH,
+            tooltip="tooltip_ice_mad_max",
+            title="Mad Max filter",
+            settings=["settings", "normalization", "ice_mad_max"],
+            sizing_mode="stretch_width",
+        )
+        ice_min_nz = self.make_slider_spinner(
+            width=SETTINGS_WIDTH,
+            tooltip="tooltip_ice_min_nz",
+            title="Minimal number of non-zero bins per slice",
+            settings=["settings", "normalization", "ice_min_nz"],
+            sizing_mode="stretch_width",
+        )
+        ice_ignore_n_diags = self.make_slider_spinner(
+            width=SETTINGS_WIDTH,
+            tooltip="tooltip_ice_ignore_n_diags",
+            title="Ignore first n bins next to the diagonal",
+            settings=["settings", "normalization", "ice_ignore_n_diags"],
+            sizing_mode="stretch_width",
+        )
         ice_show_bias = self.make_checkbox(
             "Show Bias",
             "tooltip_ice_show_bias",
@@ -3028,6 +3049,9 @@ class MainLayout:
                 ice_num_samples,
                 ice_show_bias,
                 ice_local,
+                ice_mad_max,
+                ice_min_nz,
+                ice_ignore_n_diags
         ])
 
         self.slices_norm = column([
