@@ -3,7 +3,7 @@ import os
 from setuptools import find_packages
 import subprocess
 
-VERSION = "0.7.2"
+VERSION = "0.7.3"
 
 # conf version file
 def conf_version(in_file_name, cmake_version, out_file_name):

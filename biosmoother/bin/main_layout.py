@@ -1704,7 +1704,7 @@ class MainLayout:
             bottom="screen_start",
             width="size",
             fill_color="color",
-            line_color=None,
+            line_color="color",
             source=self.anno_x_data,
         )
         self.anno_y.hbar(
@@ -1713,7 +1713,7 @@ class MainLayout:
             left="screen_start",
             height="size",
             fill_color="color",
-            line_color=None,
+            line_color="color",
             source=self.anno_y_data,
         )
 
