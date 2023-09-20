@@ -1,5 +1,8 @@
 # smoother todo (ranked)
 
+- in export there is a bug -> see exporting annotations & chip-seq data
+- in export put top bar with coordinates
+- log rendering is messed up!
 - remove default.json from smoother_hg
 - binom. test norm: what is going wrong?
 - store in index what filters are active / inactive (data is now stored)
