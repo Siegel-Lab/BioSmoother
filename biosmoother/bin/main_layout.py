@@ -3687,7 +3687,7 @@ class MainLayout:
             self.curdoc.add_timeout_callback(lambda: self.render_callback(), 1000)
 
     def set_root(self):
-        self.curdoc.title = "BioSmoother"
+        self.curdoc.title = "Smoother"
         self.force_render = True
         self.do_config()
         self.render_callback()
