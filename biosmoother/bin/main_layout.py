@@ -2665,8 +2665,8 @@ class MainLayout:
             trigger_render=False,
         )
 
-        # export_full = self.make_checkbox("Export full matrix instead", "tooltip_full_matrix",
-        #                                    settings=["settings", "export", "do_export_full"])
+        export_full = self.make_checkbox("Export full matrix instead of visible region", "tooltip_full_matrix",
+                                            settings=["settings", "export", "do_export_full"])
 
         export_label = Div(
             text="Output Prefix:", css_classes=["tooltip", "tooltip_export_prefix"]
@@ -2981,6 +2981,7 @@ class MainLayout:
                 export_label,
                 self.export_file,
                 export_format,
+                export_full,
                 export_coords_size,
                 export_contigs_size,
                 export_axis_size,

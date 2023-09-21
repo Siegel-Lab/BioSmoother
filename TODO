@@ -1,6 +1,8 @@
 # smoother todo (ranked)
 
 - opening a read only index causes segmentation faults
+- opening biosmoother in safari, the layout fails
+- configure presettings
 - in export there is a bug -> see exporting annotations & chip-seq data
 - in export put top bar with coordinates
 - log rendering is messed up!
