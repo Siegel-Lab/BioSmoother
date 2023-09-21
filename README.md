@@ -57,7 +57,7 @@ Parameters that can be changed include:
 
 | <h3> Analysis </h3> | |
 |-|-|
-| <p align="center"><img src="./docs_conf/features/v4c.png"  width="200"></p> | <h4 align="center">Compare two conditions</h4><p align="center"><img src="./docs_conf/features/compare_datasets.png" width="200"></p><p align="center">Smoother can compare two datasets.</p> |
+| <h4 align="center">Virtual 4C</h4><p align="center"><img src="./docs_conf/features/v4c.gif" width="200"></p><p align="center">Smoother computes virtual 4C graphs on-the-fly.</p> | <h4 align="center">Compare two conditions</h4><p align="center"><img src="./docs_conf/features/compare_datasets.png" width="200"></p><p align="center">Smoother can compare two datasets.</p> |
 
 
 ## Loading your own data
