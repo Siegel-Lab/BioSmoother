@@ -44,7 +44,7 @@ In Smoother, parameters can be changed on-the-fly.
 This means, a user can click a button or move a slider and will immediately see the effect of that parameter change on screen.
 Parameters that can be changed include:
 
-<img src="./docs_conf/features/full_animation.gif">
+<img src="./docs_conf/static/all_features.gif">
 
 ## Loading your own data
 

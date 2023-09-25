@@ -19,3 +19,4 @@ preprocess.sh
 biosmoother.egg-info/
 build/
 dist/
+docs/*

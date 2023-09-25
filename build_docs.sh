@@ -1,10 +1,5 @@
 #!/bin/bash
 
-source activate smoother_docs
-
-./bin/conf_version.sh
-
-
 SPHINX_EXECUTABLE=sphinx-build
 SPHINX_HTML_DIR=docs
 BINARY_BUILD_DIR=docs_conf
@@ -21,12 +16,16 @@ ${SPHINX_EXECUTABLE} \
     ${SPHINX_HTML_DIR}
 
 # fix missing static files
-cp -r static docs/static
+mkdir -p docs/docs_conf/static
+cp -r docs_conf/static/* docs/docs_conf/static
 
-${SPHINX_EXECUTABLE} \
-    -E -a -q -b latex \
-    -d ${SPHINX_CACHE_DIR} \
-    ${BINARY_BUILD_DIR} \
-    ${SPHINX_TEX_DIR}
+mkdir -p docs/biosmoother/static
+cp biosmoother/static/favicon.* docs/biosmoother/static
 
-tectonic tex/*.tex
+# ${SPHINX_EXECUTABLE} \
+#     -E -a -q -b latex \
+#     -d ${SPHINX_CACHE_DIR} \
+#     ${BINARY_BUILD_DIR} \
+#     ${SPHINX_TEX_DIR}
+
+# tectonic tex/*.tex

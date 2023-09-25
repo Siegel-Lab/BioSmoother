@@ -60,9 +60,7 @@ class FigureMaker:
         ret.xgrid.level = "glyph"
         ret.ygrid.level = "glyph"
         ret.background_fill_color = "lightgrey"
-        render_area = BoxAnnotation(
-            fill_alpha=1, fill_color="white", level="image"
-        )
+        render_area = BoxAnnotation(fill_alpha=1, fill_color="white", level="image")
         ret.add_layout(render_area)
         if self.is_hidden:
             ret.visible = False

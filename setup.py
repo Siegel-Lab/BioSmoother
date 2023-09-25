@@ -59,14 +59,13 @@ setup(
     name="biosmoother",
     version=VERSION,
     author='Markus Schmidt',
-    author_email='markus.rainer.schmidt@gmail.com',
     license='MIT',
     url='https://github.com/Siegel-Lab/biosmoother',
     description="On-the-fly processing and visualization of interactome data",
     long_description="""
 Biosmother is a tool to process and visualize interactome data on-the-fly.
     """,
-    py_modules=["cli"],
+    py_modules=["biosmoother.cli"],
     packages=find_packages(where='.'),
     package_data={'biosmoother': extra_files},
     include_package_data=True,
@@ -91,7 +90,7 @@ Biosmother is a tool to process and visualize interactome data on-the-fly.
     ],
     entry_points={
         'console_scripts': [
-            'biosmoother = cli:main',
+            'biosmoother = biosmoother.cli:main',
         ],
     },
 )

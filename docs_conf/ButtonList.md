@@ -30,7 +30,7 @@ It is recommended to use these normalizations merely as an exploratory tool but 
 | Row Sum | | Divide the number of interactions in each bin by the number of interactions in the complete row that bin belongs to. | | ✔️ | ✔️ |
 | Coverage of Normalization Reads (Absolute) | | Divide the number of interactions in each bin by the coverage of the normalization datasets. With the 'Normalization Rows' and 'Normalization Columns' pickers, you can decide what datasets should be used for the columns and rows. | ✔️ | ✔️ | ✔️ |
 | Coverage of Normalization Reads (Scaled) | | Same as the absolute version, but makes sure the complete colorscale is used. | ✔️ | ✔️ | |
-| Binominal Test | | Use a binominal test to determine weather each bin is statistically significant, in it's row. This strategy was created by Bonetti et al. for RADICL-seq RNA-DNA interaction data [3]. The acceptance p-value can be modified with a slider. \*For views that do not show the entire genome, we use an approximation for the p-value adjustment that is performed after the binominal test. | | ✔️ | ✔️* |
+| Binominal Test | | Use a binominal test to determine weather each bin is statistically significant, in it's row. This strategy was created by Bonetti et al. for RADICL-seq RNA-DNA interaction data [3]. The acceptance p-value can be modified with a slider. \*For views that do not show the entire genome, we use an approximation for the p-value adjustment that is performed after the binominal test. | | ✔️ | ✔️ \* |
 | Iterative Correction | | Use the iterative correction approach developed for Hi-C data by Imakaev et al. [4]. @todo this is ICE correct? | ✔️ | | ✔️ |
 
 Since smoother is capable of normalizing data on the fly, you can zoom in to a region of interest and then dynamically change the normalization strategy.
@@ -57,7 +57,7 @@ This option subtracts from the raw number of interactions; it is applied before 
 
 In detail, the function we use is:
 
-<img src="../static/log_scale.png"/>
+<img src="docs_conf/static/log_scale.png"/>
 
 , where *x* and *y* are the un-normalized and normalized interaction frequencies while *a* is the log base parameter.
 With varying values for *a*, this function always satisfies *f(0)=0* and *f(1)=1*.
@@ -66,4 +66,4 @@ for *a=0* the function is undefined but approaches the 45-degree diagonal, so we
 
 ### Quick Config Buttons (_Anna_)
 
-what do they change
+what do they change.

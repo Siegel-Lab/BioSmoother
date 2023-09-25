@@ -7,4 +7,10 @@ Contents
 
    Readme
    Manual
-   Preprocess
+   Installation
+   ImportingData
+   ButtonList
+   Examples
+   Algorithmics
+   Cli
+   Epilogue

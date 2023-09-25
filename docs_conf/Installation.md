@@ -29,7 +29,8 @@ For installing smoother via github, run the following commands:
     # create the required conda environment
     ./conda_env/create_smoother_env.sh
 
-    # @todo run the install commands -> see bioconda integration
+    # install using pip
+    pip install -e .
 
 
 ## Setting up a Webserver

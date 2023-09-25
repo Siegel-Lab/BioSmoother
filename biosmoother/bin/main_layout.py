@@ -37,8 +37,17 @@ import sys
 import time
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
-from bokeh.models.tickers import AdaptiveTicker, LogTicker  # pyright: ignore missing import
-from libbiosmoother import Quarry, export_tsv, export_png, export_svg, open_default_json  # pyright: ignore missing import
+from bokeh.models.tickers import (
+    AdaptiveTicker,
+    LogTicker,
+)  # pyright: ignore missing import
+from libbiosmoother import (
+    Quarry,
+    export_tsv,
+    export_png,
+    export_svg,
+    open_default_json,
+)  # pyright: ignore missing import
 import json
 from bin.figure_maker import (  # pyright: ignore missing import
     FigureMaker,
@@ -90,6 +99,7 @@ JS_HOVER = """
     return source.data.chr[value] + " " + source.data.index_left[value] + " .. " + source.data.index_right[value];
 """
 
+
 class MainLayout:
     def dropdown_select_h(self, title, event, tooltip):
         ret = Dropdown(
@@ -133,7 +143,15 @@ class MainLayout:
         ret.on_click(_event)
         return ret, set_menu
 
-    def dropdown_select(self, title, tooltip, *options, active_item=None, event=None, trigger_render=True):
+    def dropdown_select(
+        self,
+        title,
+        tooltip,
+        *options,
+        active_item=None,
+        event=None,
+        trigger_render=True
+    ):
         if event is None:
 
             def default_event(e):
@@ -245,7 +263,10 @@ class MainLayout:
             tags=["blub"],
             height=150,
             sortable=False,
-            css_classes=["multichoice_element_id_" + str(self.next_element_id), "white_background"]
+            css_classes=[
+                "multichoice_element_id_" + str(self.next_element_id),
+                "white_background",
+            ],
         )
 
         source_code = """
@@ -264,9 +285,13 @@ class MainLayout:
                 }
             }
         """
-        js_callback = CustomJS(args={"select_ret": select_ret, 
-                                     "element_id": "multichoice_element_id_" + str(self.next_element_id)}, 
-                               code=source_code)
+        js_callback = CustomJS(
+            args={
+                "select_ret": select_ret,
+                "element_id": "multichoice_element_id_" + str(self.next_element_id),
+            },
+            code=source_code,
+        )
         self.next_element_id += 1
 
         self.reset_options[my_id] = [{}, []]
@@ -402,8 +427,8 @@ class MainLayout:
                     y += 1
                 print("change", x, y, new["names"][y])
                 # if orderable and x == -4:
-                    # r_opt = self.reset_options[my_id][1]
-                    # self.reset_options[my_id][1] = r_opt
+                # r_opt = self.reset_options[my_id][1]
+                # self.reset_options[my_id][1] = r_opt
                 # print(new)
             data_table.source.selected.update(indices=[])
 
@@ -411,7 +436,10 @@ class MainLayout:
 
         layout = column(
             [
-                row([Div(text=title, width=SETTINGS_WIDTH-200), filter_t_in], sizing_mode="stretch_width"),
+                row(
+                    [Div(text=title, width=SETTINGS_WIDTH - 200), filter_t_in],
+                    sizing_mode="stretch_width",
+                ),
                 data_table,
             ],
             sizing_mode="stretch_width",
@@ -437,7 +465,14 @@ class MainLayout:
         renamable=False,
     ):
         set_options, layout = self.multi_choice(
-            label, tooltip, checkboxes, session_key, callback, orderable, title=title, renamable=renamable
+            label,
+            tooltip,
+            checkboxes,
+            session_key,
+            callback,
+            orderable,
+            title=title,
+            renamable=renamable,
         )
         self.multi_choice_config.append((set_options, session_key, checkboxes))
         return layout
@@ -460,8 +495,15 @@ class MainLayout:
 
         with open(out_file, "r") as f:
             settings = json.load(f)
-        if factory_default["smoother_config_file_version"] > settings["smoother_config_file_version"]:
-            print("INFO: Updating the", factory_default["display_name"], "config file. This is necessary because your smoother instalattion requires a newer config file version than the one you have (maybe you updated smoother?). This deletes your saved configuration.")
+        if (
+            factory_default["smoother_config_file_version"]
+            > settings["smoother_config_file_version"]
+        ):
+            print(
+                "INFO: Updating the",
+                factory_default["display_name"],
+                "config file. This is necessary because your smoother instalattion requires a newer config file version than the one you have (maybe you updated smoother?). This deletes your saved configuration.",
+            )
             with open(out_file, "w") as f:
                 json.dump(factory_default, f)
 
@@ -867,9 +909,7 @@ class MainLayout:
     def parse_v4c(self):
         change = False
         if self.v4c_col.value != self.v4c_col_expected:
-            col_start, col_end = self.session.interpret_range(
-                self.v4c_col.value, True
-            )
+            col_start, col_end = self.session.interpret_range(self.v4c_col.value, True)
             change = True
             if not col_start is None:
                 self.session.set_value(
@@ -881,9 +921,7 @@ class MainLayout:
                 )
 
         if self.v4c_row.value != self.v4c_row_expected:
-            row_start, row_end = self.session.interpret_range(
-                self.v4c_row.value, False
-            )
+            row_start, row_end = self.session.interpret_range(self.v4c_row.value, False)
             change = True
             if not row_start is None:
                 self.session.set_value(
@@ -983,20 +1021,33 @@ class MainLayout:
             if plot.visible != visible:
                 plot.visible = visible
 
-        
         log_axis = self.session.get_value(["settings", "interface", "tracks_log_scale"])
         x_visible = len(self.raw_data_x.data["values"]) > 0
         self.raw_x.visible = self.show_hide["raw"] and x_visible and not log_axis
-        self.raw_x_axis.visible = self.show_hide["raw"] and x_visible and self.show_hide["axis"] and not log_axis
+        self.raw_x_axis.visible = (
+            self.show_hide["raw"]
+            and x_visible
+            and self.show_hide["axis"]
+            and not log_axis
+        )
         self.raw_x_log.visible = self.show_hide["raw"] and x_visible and log_axis
-        self.raw_x_axis_log.visible = self.show_hide["raw"] and x_visible and self.show_hide["axis"] and log_axis
+        self.raw_x_axis_log.visible = (
+            self.show_hide["raw"] and x_visible and self.show_hide["axis"] and log_axis
+        )
         y_visible = len(self.raw_data_y.data["values"]) > 0
         self.raw_y.visible = self.show_hide["raw"] and y_visible and not log_axis
-        self.raw_y_axis.visible = self.show_hide["raw"] and y_visible and self.show_hide["axis"] and not log_axis
+        self.raw_y_axis.visible = (
+            self.show_hide["raw"]
+            and y_visible
+            and self.show_hide["axis"]
+            and not log_axis
+        )
         self.raw_y_log.visible = self.show_hide["raw"] and y_visible and log_axis
-        self.raw_y_axis_log.visible = self.show_hide["raw"] and y_visible and self.show_hide["axis"] and log_axis
+        self.raw_y_axis_log.visible = (
+            self.show_hide["raw"] and y_visible and self.show_hide["axis"] and log_axis
+        )
         self.anno_x.visible = (
-            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"] 
+            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"]
         )
         self.anno_x_axis.visible = self.anno_x.visible and self.show_hide["axis"]
         self.anno_y.visible = (
@@ -1019,17 +1070,24 @@ class MainLayout:
             if plot.ygrid.minor_grid_line_color != cy2:
                 plot.ygrid.minor_grid_line_color = cy2
 
-
         def set_norm_visibility(col, norm):
             c = [*col.children]
             col.children = []
-            col.visible = self.session.get_value(["settings", "normalization", "normalize_by"]) == norm
+            col.visible = (
+                self.session.get_value(["settings", "normalization", "normalize_by"])
+                == norm
+            )
             col.children = c
+
         set_norm_visibility(self.bin_test_norm, "radicl-seq")
         set_norm_visibility(self.ice_norm, "ice")
         set_norm_visibility(self.slices_norm, "grid-seq")
-        self.chrom_layout_ploidy.visible = not self.session.get_value(["settings", "normalization", "ploidy_coords"])
-        self.chrom_layout.visible = self.session.get_value(["settings", "normalization", "ploidy_coords"])
+        self.chrom_layout_ploidy.visible = not self.session.get_value(
+            ["settings", "normalization", "ploidy_coords"]
+        )
+        self.chrom_layout.visible = self.session.get_value(
+            ["settings", "normalization", "ploidy_coords"]
+        )
 
     def toggle_hide(self, key):
         self.show_hide[key] = not self.show_hide[key]
@@ -1041,9 +1099,7 @@ class MainLayout:
     def make_show_hide_menu(self):
         menu = []
         for name, key in self.names:
-            menu.append(
-                (("☑ " if self.show_hide[key] else "☐ ") + name, key)
-            )
+            menu.append((("☑ " if self.show_hide[key] else "☐ ") + name, key))
         menu.append(
             (
                 ("☑ " if self.show_hide["grid_lines"] else "☐ ") + "Grid Lines",
@@ -1132,9 +1188,13 @@ class MainLayout:
                     ("reads by group", "A: @score_a, B: @score_b"),
                 ],
                 formatters={
-                    "@bin_id_x": CustomJSHover(code=JS_HOVER, args={"source": self.custom_hover_x_data}),
-                    "@bin_id_y": CustomJSHover(code=JS_HOVER, args={"source": self.custom_hover_y_data}),
-                }
+                    "@bin_id_x": CustomJSHover(
+                        code=JS_HOVER, args={"source": self.custom_hover_x_data}
+                    ),
+                    "@bin_id_y": CustomJSHover(
+                        code=JS_HOVER, args={"source": self.custom_hover_y_data}
+                    ),
+                },
             )
         )
         color_figure.hover.renderers = [scatter]
@@ -1149,21 +1209,24 @@ class MainLayout:
 
         return color_figure
 
-
     def set_area_range(self):
         self.area_range_expected = self.session.get_readable_area(
-                int(math.floor(self.heatmap.x_range.start)),
-                int(math.floor(self.heatmap.y_range.start)),
-                int(math.ceil(self.heatmap.x_range.end)),
-                int(math.ceil(self.heatmap.y_range.end)),
+            int(math.floor(self.heatmap.x_range.start)),
+            int(math.floor(self.heatmap.y_range.start)),
+            int(math.ceil(self.heatmap.x_range.end)),
+            int(math.ceil(self.heatmap.y_range.end)),
         )
         self.area_range.value = self.area_range_expected
 
     def parse_area_range(self):
         if self.area_range_expected != self.area_range.value:
-            i = self.session.interpret_area(self.area_range.value, 
-                                           self.heatmap.x_range.start, self.heatmap.y_range.start,
-                                           self.heatmap.x_range.end, self.heatmap.y_range.end)
+            i = self.session.interpret_area(
+                self.area_range.value,
+                self.heatmap.x_range.start,
+                self.heatmap.y_range.start,
+                self.heatmap.x_range.end,
+                self.heatmap.y_range.end,
+            )
             if not i[0] is None:
                 self.heatmap.x_range.start = i[0]
             if not i[1] is None:
@@ -1236,7 +1299,7 @@ class MainLayout:
         self.session = Quarry(bin.global_variables.biosmoother_index)
         if not os.path.exists(biosmoother_home_folder + "/conf/"):
             os.makedirs(biosmoother_home_folder + "/conf/")
-        
+
         # create default file if none exists
         if not os.path.exists(biosmoother_home_folder + "/conf/default.json"):
             with open_default_json() as f_in:
@@ -1250,7 +1313,9 @@ class MainLayout:
             with open(biosmoother_home_folder + "/conf/default.json", "r") as f_in_2:
                 version_in_file = json.load(f_in_2)["smoother_config_file_version"]
         if version_in_default > version_in_file:
-            print("INFO: Updating the default config file. This is necessary because your smoother instalattion requires a newer config file version than the one you have (maybe you updated smoother?). This deletes your saved default configuration.")
+            print(
+                "INFO: Updating the default config file. This is necessary because your smoother instalattion requires a newer config file version than the one you have (maybe you updated smoother?). This deletes your saved default configuration."
+            )
             with open_default_json() as f_in:
                 with open(biosmoother_home_folder + "/conf/default.json", "w") as f_out:
                     for l in f_in:
@@ -1463,9 +1528,13 @@ class MainLayout:
                     ("reads by group", "A: @score_a, B: @score_b"),
                 ],
                 formatters={
-                    "@bin_id_x": CustomJSHover(code=JS_HOVER, args={"source": self.custom_hover_x_data}),
-                    "@bin_id_y": CustomJSHover(code=JS_HOVER, args={"source": self.custom_hover_y_data}),
-                }
+                    "@bin_id_x": CustomJSHover(
+                        code=JS_HOVER, args={"source": self.custom_hover_x_data}
+                    ),
+                    "@bin_id_y": CustomJSHover(
+                        code=JS_HOVER, args={"source": self.custom_hover_y_data}
+                    ),
+                },
             )
         )
 
@@ -1549,10 +1618,7 @@ class MainLayout:
 
         self.raw_x.add_tools(raw_hover_x)
         self.raw_x_axis = (
-            FigureMaker()
-            .x_axis_of(self.raw_x, self)
-            .combine_tools(tollbars)
-            .get(self)
+            FigureMaker().x_axis_of(self.raw_x, self).combine_tools(tollbars).get(self)
         )
         self.raw_x_axis.xaxis.ticker = AdaptiveTicker(
             desired_num_ticks=3, num_minor_ticks=0
@@ -1573,10 +1639,7 @@ class MainLayout:
         )
         self.raw_y.add_tools(raw_hover_y)
         self.raw_y_axis = (
-            FigureMaker()
-            .y_axis_of(self.raw_y, self)
-            .combine_tools(tollbars)
-            .get(self)
+            FigureMaker().y_axis_of(self.raw_y, self).combine_tools(tollbars).get(self)
         )
         self.raw_y_axis.yaxis.ticker = AdaptiveTicker(
             desired_num_ticks=3, num_minor_ticks=0
@@ -1854,17 +1917,25 @@ class MainLayout:
         def betw_group_event(e):
             if self.session.get_value(["settings", "replicates", "between_group"]) == e:
                 return
-            if self.session.get_value(["settings", "replicates", "between_group"]) == "sub":
-                self.session.set_value(["settings", "normalization", "color_range", "val_min"], 0)
+            if (
+                self.session.get_value(["settings", "replicates", "between_group"])
+                == "sub"
+            ):
+                self.session.set_value(
+                    ["settings", "normalization", "color_range", "val_min"], 0
+                )
                 self.session.set_value(["settings", "normalization", "scale"], "max")
                 self.session.set_value(["settings", "replicates", "between_group"], e)
                 self.do_config()
             self.session.set_value(["settings", "replicates", "between_group"], e)
             if e == "sub":
-                self.session.set_value(["settings", "normalization", "color_range", "val_min"], -1)
+                self.session.set_value(
+                    ["settings", "normalization", "color_range", "val_min"], -1
+                )
                 self.session.set_value(["settings", "normalization", "scale"], "abs")
                 self.do_config()
             self.trigger_render()
+
         betw_group = self.dropdown_select(
             "Compare datapools by",
             "tooltip_between_groups",
@@ -1877,7 +1948,7 @@ class MainLayout:
             ("Minimum [min(a,b)]", "min"),
             ("Maximum [max(a,b)]", "max"),
             active_item=["settings", "replicates", "between_group"],
-            event=betw_group_event
+            event=betw_group_event,
         )
 
         symmetrie = self.dropdown_select(
@@ -1976,12 +2047,18 @@ class MainLayout:
         ploidy_remove_intra_instance_contig = self.make_checkbox(
             "Remove inter-contig, intra-instance interactions",
             "tooltip_ploidy_remove_intra_instance_contig",
-            settings=["settings", "normalization", "ploidy_remove_intra_instance_contig"],
+            settings=[
+                "settings",
+                "normalization",
+                "ploidy_remove_intra_instance_contig",
+            ],
         )
+
         def ploidy_coords_event(e):
             self.session.set_value(["settings", "normalization", "ploidy_coords"], e)
             self.update_visibility()
             self.trigger_render()
+
         ploidy_coords = self.make_checkbox(
             "use ploidy corrected contigs",
             "tooltip_ploidy_coords",
@@ -2102,8 +2179,14 @@ class MainLayout:
             ("Count MMR if bottom left mapping loci is within a bin", "first"),
             ("Count MMR if top right mapping loci is within a bin", "last"),
             ("Ignore MMRs", "points_only"),
-            ("Count MMR if all mapping loci are within the same bin and ignore non-MMRs", "enclosed_only"),
-            ("Count MMR if mapping loci minimum bounding-box overlaps bin and ignore non-MMRs", "overlaps_only"),
+            (
+                "Count MMR if all mapping loci are within the same bin and ignore non-MMRs",
+                "enclosed_only",
+            ),
+            (
+                "Count MMR if mapping loci minimum bounding-box overlaps bin and ignore non-MMRs",
+                "overlaps_only",
+            ),
             active_item=["settings", "filters", "ambiguous_mapping"],
         )
         directionality = self.dropdown_select(
@@ -2122,7 +2205,6 @@ class MainLayout:
             self.heatmap_y_axis_2.yaxis.axis_label = e.split("_")[0]
             self.heatmap_x_axis_2.xaxis.axis_label = e.split("_")[1]
 
-            
         default_label = self.session.get_value(["settings", "interface", "axis_lables"])
         self.heatmap_y_axis_2.yaxis.axis_label = default_label.split("_")[0]
         self.heatmap_x_axis_2.xaxis.axis_label = default_label.split("_")[1]
@@ -2198,13 +2280,15 @@ class MainLayout:
         )
 
         self.ploidy_file_in = FileInput(
-            #title="upload new ploidy file",
+            # title="upload new ploidy file",
             disabled=bin.global_variables.no_save
         )
+
         def ploidy_file_upload(a, o, n):
             self.session.set_ploidy_itr(b64decode(n).decode("utf-8").split("\n"))
             self.update_visibility()
             self.trigger_render()
+
         self.ploidy_file_in.on_change("value", ploidy_file_upload)
 
         is_l = self.make_slider_spinner(
@@ -2354,9 +2438,13 @@ class MainLayout:
             "tooltip_connect_tracks_over_contig_borders",
             settings=["settings", "interface", "connect_tracks_over_contig_borders"],
         )
+
         def tracks_log_scale_change(active):
-            self.session.set_value(["settings", "interface", "tracks_log_scale"], active)
+            self.session.set_value(
+                ["settings", "interface", "tracks_log_scale"], active
+            )
             self.update_visibility()
+
         tracks_log_scale = self.make_checkbox(
             "Display Tracks on a Log Scale",
             "tooltip_tracks_log_scale",
@@ -2665,8 +2753,11 @@ class MainLayout:
             trigger_render=False,
         )
 
-        export_full = self.make_checkbox("Export full matrix instead of visible region", "tooltip_full_matrix",
-                                            settings=["settings", "export", "do_export_full"])
+        export_full = self.make_checkbox(
+            "Export full matrix instead of visible region",
+            "tooltip_full_matrix",
+            settings=["settings", "export", "do_export_full"],
+        )
 
         export_label = Div(
             text="Output Prefix:", css_classes=["tooltip", "tooltip_export_prefix"]
@@ -2929,11 +3020,23 @@ class MainLayout:
         for plot in [self.anno_y_axis, self.raw_y_axis]:
             plot.align = "end"
 
-        for plot in [self.heatmap, self.raw_y, self.raw_y_log, self.anno_y, self.heatmap_x_axis]:
+        for plot in [
+            self.heatmap,
+            self.raw_y,
+            self.raw_y_log,
+            self.anno_y,
+            self.heatmap_x_axis,
+        ]:
             plot.xgrid.ticker = self.ticker_x
             plot.xaxis.major_label_text_align = "left"
             plot.xaxis.ticker.min_interval = 1
-        for plot in [self.heatmap, self.raw_x, self.raw_x_log, self.anno_x, self.heatmap_y_axis]:
+        for plot in [
+            self.heatmap,
+            self.raw_x,
+            self.raw_x_log,
+            self.anno_x,
+            self.heatmap_y_axis,
+        ]:
             plot.ygrid.ticker = self.ticker_y
             plot.yaxis.major_label_text_align = "right"
             plot.yaxis.ticker.min_interval = 1
@@ -3028,7 +3131,7 @@ class MainLayout:
         )
         self.v4c_row.on_change("value", lambda x, y, z: self.parse_v4c())
 
-        #self.curdoc.add_root(column([normalization, normalization_cov], name="norm_by"))
+        # self.curdoc.add_root(column([normalization, normalization_cov], name="norm_by"))
 
         self.make_panel("presetting", "", [*quick_configs])
         self.make_panel("export", "", export_panel)
@@ -3038,24 +3141,29 @@ class MainLayout:
             [version_info, index_info, log_div, self.log_div],
         )
 
-        self.bin_test_norm = column([
+        self.bin_test_norm = column(
+            [
                 rsa_l,
                 radicl_seq_display_coverage,
                 radicl_seq_column,
                 radicl_seq_samples_l,
-        ])
+            ]
+        )
 
-        self.ice_norm = column([
+        self.ice_norm = column(
+            [
                 ice_sparse_filter,
                 ice_num_samples,
                 ice_show_bias,
                 ice_local,
                 ice_mad_max,
                 ice_min_nz,
-                ice_ignore_n_diags
-        ])
+                ice_ignore_n_diags,
+            ]
+        )
 
-        self.slices_norm = column([
+        self.slices_norm = column(
+            [
                 grid_seq_samples_l,
                 bsmcq_l,
                 grid_seq_column,
@@ -3067,19 +3175,20 @@ class MainLayout:
                 self.ranked_columns,
                 grid_seq_dna_filter_l,
                 self.ranked_rows,
-        ])
+            ]
+        )
 
         def norm_event(e):
             self.session.set_value(["settings", "normalization", "normalize_by"], e)
             self.update_visibility()
             self.trigger_render()
-        
+
         normalization = self.dropdown_select(
             "Normalize heatmap by",
             "tooltip_normalize_by",
             *norm_sele,
             active_item=["settings", "normalization", "normalize_by"],
-            event=norm_event
+            event=norm_event,
         )
 
         self.make_panel(
@@ -3088,7 +3197,6 @@ class MainLayout:
             [
                 normalization,
                 normalization_cov,
-
                 self.bin_test_norm,
                 self.ice_norm,
                 self.slices_norm,
@@ -3105,7 +3213,7 @@ class MainLayout:
                 ploidy_keep_distinct_group,
                 ploidy_remove_others,
                 Div(text="replace ploidy file:"),
-                self.ploidy_file_in
+                self.ploidy_file_in,
             ],
         )
         self.make_panel(
@@ -3190,7 +3298,7 @@ class MainLayout:
                 center_tracks_on_bins,
                 zero_track_at_ends,
                 connect_tracks_over_contig_borders,
-                tracks_log_scale
+                tracks_log_scale,
             ],
         )
         self.make_panel(
@@ -3254,11 +3362,15 @@ class MainLayout:
         self.curdoc.add_root(self.anno_x)
         self.curdoc.add_root(self.anno_x_axis)
         self.curdoc.add_root(column([self.raw_x, self.raw_x_log], name="raw_x"))
-        self.curdoc.add_root(column([self.raw_x_axis, self.raw_x_axis_log], name="raw_x_axis"))
+        self.curdoc.add_root(
+            column([self.raw_x_axis, self.raw_x_axis_log], name="raw_x_axis")
+        )
         self.curdoc.add_root(self.anno_y)
         self.curdoc.add_root(self.anno_y_axis)
         self.curdoc.add_root(row([self.raw_y, self.raw_y_log], name="raw_y"))
-        self.curdoc.add_root(row([self.raw_y_axis, self.raw_y_axis_log], name="raw_y_axis"))
+        self.curdoc.add_root(
+            row([self.raw_y_axis, self.raw_y_axis_log], name="raw_y_axis")
+        )
         self.curdoc.add_root(communication)
         self.curdoc.add_root(status_bar_row)
         self.curdoc.add_root(tools_bar)
@@ -3412,38 +3524,63 @@ class MainLayout:
                                 m = x
                         return m
 
-
                     RANGE_PADDING = 0.1
                     LOG_PADDING = 0.5
-                    min_max_tracks_x_log = (min_max_tracks_x[0]*LOG_PADDING, min_max_tracks_x[1]/LOG_PADDING)
-                    range_padding_x = RANGE_PADDING * (min_max_tracks_x[1] - min_max_tracks_x[0])
+                    min_max_tracks_x_log = (
+                        min_max_tracks_x[0] * LOG_PADDING,
+                        min_max_tracks_x[1] / LOG_PADDING,
+                    )
+                    range_padding_x = RANGE_PADDING * (
+                        min_max_tracks_x[1] - min_max_tracks_x[0]
+                    )
                     min_max_tracks_x[0] -= range_padding_x
                     min_max_tracks_x[1] += range_padding_x
-                    if math.isfinite(min_max_tracks_x[0]) and math.isfinite(min_max_tracks_x[1]):
+                    if math.isfinite(min_max_tracks_x[0]) and math.isfinite(
+                        min_max_tracks_x[1]
+                    ):
                         if not self.raw_x_axis.xaxis.bounds == tuple(min_max_tracks_x):
                             self.raw_x_axis.x_range.start = min_max_tracks_x[0]
                             self.raw_x_axis.x_range.end = min_max_tracks_x[1]
                         self.raw_x_axis.xaxis.bounds = tuple(min_max_tracks_x)
-                    if math.isfinite(min_max_tracks_x_log[0]) and math.isfinite(min_max_tracks_x_log[1]):
-                        if not self.raw_x_axis_log.xaxis.bounds == tuple(min_max_tracks_x_log):
+                    if math.isfinite(min_max_tracks_x_log[0]) and math.isfinite(
+                        min_max_tracks_x_log[1]
+                    ):
+                        if not self.raw_x_axis_log.xaxis.bounds == tuple(
+                            min_max_tracks_x_log
+                        ):
                             if min_max_tracks_x_log[0] > 0:
-                                self.raw_x_axis_log.x_range.start = min_max_tracks_x_log[0]
+                                self.raw_x_axis_log.x_range.start = (
+                                    min_max_tracks_x_log[0]
+                                )
                             self.raw_x_axis_log.x_range.end = min_max_tracks_x_log[1]
                         self.raw_x_axis_log.xaxis.bounds = tuple(min_max_tracks_x_log)
 
-                    min_max_tracks_y_log = (min_max_tracks_y[0]*LOG_PADDING, min_max_tracks_y[1]/LOG_PADDING)
-                    range_padding_y = RANGE_PADDING * (min_max_tracks_y[1] - min_max_tracks_y[0])
+                    min_max_tracks_y_log = (
+                        min_max_tracks_y[0] * LOG_PADDING,
+                        min_max_tracks_y[1] / LOG_PADDING,
+                    )
+                    range_padding_y = RANGE_PADDING * (
+                        min_max_tracks_y[1] - min_max_tracks_y[0]
+                    )
                     min_max_tracks_y[0] -= range_padding_y
                     min_max_tracks_y[1] += range_padding_y
-                    if math.isfinite(min_max_tracks_y[0]) and math.isfinite(min_max_tracks_y[1]):
+                    if math.isfinite(min_max_tracks_y[0]) and math.isfinite(
+                        min_max_tracks_y[1]
+                    ):
                         if not self.raw_y_axis.yaxis.bounds == tuple(min_max_tracks_y):
                             self.raw_y_axis.y_range.start = min_max_tracks_y[0]
                             self.raw_y_axis.y_range.end = min_max_tracks_y[1]
                         self.raw_y_axis.yaxis.bounds = tuple(min_max_tracks_y)
-                    if math.isfinite(min_max_tracks_y_log[0]) and math.isfinite(min_max_tracks_y_log[1]):
-                        if not self.raw_y_axis_log.yaxis.bounds == tuple(min_max_tracks_y_log):
+                    if math.isfinite(min_max_tracks_y_log[0]) and math.isfinite(
+                        min_max_tracks_y_log[1]
+                    ):
+                        if not self.raw_y_axis_log.yaxis.bounds == tuple(
+                            min_max_tracks_y_log
+                        ):
                             if min_max_tracks_y_log[0] > 0:
-                                self.raw_y_axis_log.y_range.start = min_max_tracks_y_log[0]
+                                self.raw_y_axis_log.y_range.start = (
+                                    min_max_tracks_y_log[0]
+                                )
                             self.raw_y_axis_log.y_range.end = min_max_tracks_y_log[1]
                         self.raw_y_axis_log.yaxis.bounds = tuple(min_max_tracks_y_log)
 
@@ -3458,32 +3595,44 @@ class MainLayout:
                         if not color is None:
                             ra.fill_color = color
 
-                    if math.isfinite(min_max_tracks_x[0]) and math.isfinite(min_max_tracks_x[1]):
+                    if math.isfinite(min_max_tracks_x[0]) and math.isfinite(
+                        min_max_tracks_x[1]
+                    ):
                         set_bounds(
-                            self.raw_x, left=min_max_tracks_x[0], right=min_max_tracks_x[1]
+                            self.raw_x,
+                            left=min_max_tracks_x[0],
+                            right=min_max_tracks_x[1],
                         )
-                    if math.isfinite(min_max_tracks_x_log[0]) and math.isfinite(min_max_tracks_x_log[1]):
+                    if math.isfinite(min_max_tracks_x_log[0]) and math.isfinite(
+                        min_max_tracks_x_log[1]
+                    ):
                         if min_max_tracks_x_log[0] > 0:
                             set_bounds(
-                                self.raw_x_log, left=min_max_tracks_x_log[0], right=min_max_tracks_x_log[1]
+                                self.raw_x_log,
+                                left=min_max_tracks_x_log[0],
+                                right=min_max_tracks_x_log[1],
                             )
                         else:
-                            set_bounds(
-                                self.raw_x_log, right=min_max_tracks_x_log[1]
-                            )
-                    if math.isfinite(min_max_tracks_y[0]) and math.isfinite(min_max_tracks_y[1]):
+                            set_bounds(self.raw_x_log, right=min_max_tracks_x_log[1])
+                    if math.isfinite(min_max_tracks_y[0]) and math.isfinite(
+                        min_max_tracks_y[1]
+                    ):
                         set_bounds(
-                            self.raw_y, bottom=min_max_tracks_y[0], top=min_max_tracks_y[1]
+                            self.raw_y,
+                            bottom=min_max_tracks_y[0],
+                            top=min_max_tracks_y[1],
                         )
-                    if math.isfinite(min_max_tracks_y_log[0]) and math.isfinite(min_max_tracks_y_log[1]):
+                    if math.isfinite(min_max_tracks_y_log[0]) and math.isfinite(
+                        min_max_tracks_y_log[1]
+                    ):
                         if min_max_tracks_y_log[0] > 0:
                             set_bounds(
-                                self.raw_y_log, bottom=min_max_tracks_y_log[0], top=min_max_tracks_y_log[1]
+                                self.raw_y_log,
+                                bottom=min_max_tracks_y_log[0],
+                                top=min_max_tracks_y_log[1],
                             )
                         else:
-                            set_bounds(
-                                self.raw_y_log, top=min_max_tracks_y_log[1]
-                            )
+                            set_bounds(self.raw_y_log, top=min_max_tracks_y_log[1])
                     set_bounds(self.anno_x, left=0, right=len(displayed_annos_x))
                     set_bounds(self.anno_y, bottom=0, top=len(displayed_annos_y))
 
@@ -3491,18 +3640,36 @@ class MainLayout:
 
                     self.heatmap_data.data = d_heatmap
                     self.raw_data_x.data = raw_data_x
-                    log_axis = self.session.get_value(["settings", "interface", "tracks_log_scale"])
+                    log_axis = self.session.get_value(
+                        ["settings", "interface", "tracks_log_scale"]
+                    )
                     x_visible = len(raw_data_x["values"]) > 0
-                    self.raw_x.visible = self.show_hide["raw"] and x_visible and not log_axis
-                    self.raw_x_axis.visible = self.show_hide["raw"] and x_visible and not log_axis
-                    self.raw_x_log.visible = self.show_hide["raw"] and x_visible and log_axis
-                    self.raw_x_axis_log.visible = self.show_hide["raw"] and x_visible and log_axis
+                    self.raw_x.visible = (
+                        self.show_hide["raw"] and x_visible and not log_axis
+                    )
+                    self.raw_x_axis.visible = (
+                        self.show_hide["raw"] and x_visible and not log_axis
+                    )
+                    self.raw_x_log.visible = (
+                        self.show_hide["raw"] and x_visible and log_axis
+                    )
+                    self.raw_x_axis_log.visible = (
+                        self.show_hide["raw"] and x_visible and log_axis
+                    )
                     self.raw_data_y.data = raw_data_y
                     y_visible = len(raw_data_y["values"]) > 0
-                    self.raw_y.visible = self.show_hide["raw"] and y_visible and not log_axis
-                    self.raw_y_axis.visible = self.show_hide["raw"] and y_visible and not log_axis
-                    self.raw_y_log.visible = self.show_hide["raw"] and y_visible and log_axis
-                    self.raw_y_axis_log.visible = self.show_hide["raw"] and y_visible and log_axis
+                    self.raw_y.visible = (
+                        self.show_hide["raw"] and y_visible and not log_axis
+                    )
+                    self.raw_y_axis.visible = (
+                        self.show_hide["raw"] and y_visible and not log_axis
+                    )
+                    self.raw_y_log.visible = (
+                        self.show_hide["raw"] and y_visible and log_axis
+                    )
+                    self.raw_y_axis_log.visible = (
+                        self.show_hide["raw"] and y_visible and log_axis
+                    )
 
                     self.anno_x.x_range.factors = displayed_annos_x
                     self.anno_y.y_range.factors = displayed_annos_y[::-1]
@@ -3566,13 +3733,22 @@ class MainLayout:
                     self.curdoc.unhold()
                     end_render_time = time.perf_counter()
                     process_time = "{:,}".format(int(1000 * (end_time - start_time)))
-                    render_time = "{:,}".format(int(1000 * (end_render_time - start_render_time)))
+                    render_time = "{:,}".format(
+                        int(1000 * (end_render_time - start_render_time))
+                    )
                     self.print("Rendering done")
                     end_text = (
-                        "Bin Size: " + self.get_readable_bin_size() #
-                        + "\nTime (Process/Render): " + process_time + "ms/" + render_time #
-                        + "ms\nDisplaying " + '{:,}'.format(len(d_heatmap["color"])) + " bins" #
-                        + "\nErrors: " + error_text #
+                        "Bin Size: "
+                        + self.get_readable_bin_size()  #
+                        + "\nTime (Process/Render): "
+                        + process_time
+                        + "ms/"
+                        + render_time  #
+                        + "ms\nDisplaying "
+                        + "{:,}".format(len(d_heatmap["color"]))
+                        + " bins"  #
+                        + "\nErrors: "
+                        + error_text  #
                     )
                     self.print_status(end_text)
                     self.curdoc.add_timeout_callback(
@@ -3652,9 +3828,13 @@ class MainLayout:
                         self.print_status("Rendering was triggered by zoom-in.")
                         zoom_in_render = True
                     elif self.force_render:
-                        self.print_status("Rendering was triggered by parameter change.")
+                        self.print_status(
+                            "Rendering was triggered by parameter change."
+                        )
                     elif MainLayout.area_outside(self.last_drawing_area, curr_area):
-                        self.print_status("Rendering was triggered by panning or zoom-out.")
+                        self.print_status(
+                            "Rendering was triggered by panning or zoom-out."
+                        )
                     else:
                         self.print_status("Rendering.")
                     self.force_render = False
