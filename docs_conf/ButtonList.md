@@ -57,7 +57,7 @@ This option subtracts from the raw number of interactions; it is applied before 
 
 In detail, the function we use is:
 
-<img src="docs_conf/static/log_scale.png"/>
+<img src="./static/log_scale.png"/>
 
 , where *x* and *y* are the un-normalized and normalized interaction frequencies while *a* is the log base parameter.
 With varying values for *a*, this function always satisfies *f(0)=0* and *f(1)=1*.

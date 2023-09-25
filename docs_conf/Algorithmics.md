@@ -18,7 +18,7 @@ In brief, these are:
 libSps uses a technique called prefix sums [1] for storing interaction counts.
 With prefix sums, each cell in a matrix stores the number of interactions that can be found to its bottom-left. 
 
-<img src="docs_conf/static/algorithmics_desc/2d-prefix-sum.png" />
+<img src="./static/algorithmics_desc/2d-prefix-sum.png" />
 
 *Example prefix sum matrix.* The left picture shows the positions of individual points. The middle picture shows the matrix entries after prefix sums have been computed for the y-dimension. The right picture shows the matrix entries after prefix sums have been computed for the x and y dimension.
 
@@ -26,7 +26,7 @@ Once the prefix sums have been computed, looking up the entry at a position x/y 
 By looking up 4 entries and adding their values together, we can query and arbitrary rectangle.
 This lookup is extremely fast, as it is independent of the total number of interactions and the number of interactions in the queried rectangle.
 
-<img src="docs_conf/static/algorithmics_desc/2d-prefix-sum-query.png" />
+<img src="./static/algorithmics_desc/2d-prefix-sum-query.png" />
 
 *Querying a prefix sum matrix.* Four lookups are needed, one lookup positioned at each corner of the queried rectangle. The top-left and bottom-right corner values are subtracted from the value at the top-right to exclude the area to the left and bottom of the queried rectangle (left), respectiveley. This subtracts the area to the bottom-left of the queried rectangle twice. To make up this difference the value of the bottom-left corner lookup is added to the previous result.
 
@@ -42,7 +42,7 @@ If both reads have different mapping qualities, we use the lower value.
 
 Then we query cubes instead of rectangles, where the bottom and top of the cubes are defined by the mapping quality slider.
 
-<img src="docs_conf/static/algorithmics_desc/mapq-filter.png" width="50%" />
+<img src="./static/algorithmics_desc/mapq-filter.png" width="50%" />
 
 *Filtering mapping qualities using a 3rd dimension.*
 
@@ -61,7 +61,7 @@ In the following, we show how we solve the above problem.
 First, instead of storing the prefix sums for individual interaction points, we summarize all mapping positions of each interaction into one rectangle.
 Here, the rectangle is placed so that it encompasses all mapping positions.
 
-<img src="docs_conf/static/algorithmics_desc/multiple-loci-in-one-bin.png" width="50%" />
+<img src="./static/algorithmics_desc/multiple-loci-in-one-bin.png" width="50%" />
 
 *Interaction with multiple mapping positions turned into an rectangle.*
 
@@ -72,13 +72,13 @@ To count the number of intervals between a given start and end position, we look
 Then we substract the latter from the former to receive our count.
 Both lookups can be done in constant time using the two prefix sum matrices.
 
-<img src="docs_conf/static/algorithmics_desc/counting-intervals.png" width="50%" />
+<img src="./static/algorithmics_desc/counting-intervals.png" width="50%" />
 
 *Counting intervals instead of points using prefix sum matrices.*
 
 This strategy works fine as long as there is no interval that completely encloses our query region.
 
-<img src="docs_conf/static/algorithmics_desc/too-large-intervals.png" width="50%" />
+<img src="./static/algorithmics_desc/too-large-intervals.png" width="50%" />
 
 *Too large intervals break our strategy.*
 
@@ -86,7 +86,7 @@ However, we already developed a strategy for filtering out interactions based on
 We hence reuse this strategy, placing the rectangles at a position given bey their width and height in a 4th and 5th dimension.
 Again, we can then use the bottom and top positions of our 5d-orthotope queries (5-dimensional "cubes") to filter out all rectangles that are too wide or high.
 
-<img src="docs_conf/static/algorithmics_desc/rectangle-width.png" width="50%" />
+<img src="./static/algorithmics_desc/rectangle-width.png" width="50%" />
 
 *Adding two more dimensions to filter rectangle width and height.*
 
@@ -102,14 +102,14 @@ We hence use a customized version of a strategy called "sparse prefix sums" by S
 
 They remove empty rows and columns from point matrices using lookup tables:
 
-<img src="docs_conf/static/algorithmics_desc/sparse-matrices.png" />
+<img src="./static/algorithmics_desc/sparse-matrices.png" />
 
 *Removing slices. Image taken from [1]*
 
 However, this strategy breaks down for large datasets. 
 To split too large datasets down into smaller ones they use overlays.
 
-<img src="docs_conf/static/algorithmics_desc/sparse-matrices-in-large-datasets.png" />
+<img src="./static/algorithmics_desc/sparse-matrices-in-large-datasets.png" />
 
 *Left: eventhough the matrix is sparse, there are no empty columns and rows. Right: by splitting the matrix into four submatrices, empty columns and rows can be removed again.*
 
@@ -124,7 +124,7 @@ By then querying
 
 the prefix sum of arbitrary points can be queried again.
 
-<img src="docs_conf/static/algorithmics_desc/querying-overlays.png" />
+<img src="./static/algorithmics_desc/querying-overlays.png" />
 
 *Querying overlays.*
 
@@ -148,7 +148,7 @@ Here we use the lookup table in dimension 1 first.
 Dimension 2 then has an individual lookuptable for each column of dimension 1. Here, the lookup of dimension 1 determines the used lookup table used for dimension 2.
 This finally gives us a position in the materialized overlay grid.
 
-<img src="docs_conf/static/algorithmics_desc/distributing-overlays.png" />
+<img src="./static/algorithmics_desc/distributing-overlays.png" />
 
 *Overlay organization for nucleic acid interactome data.*
 
@@ -169,7 +169,7 @@ In brief, these files contain the following information:
 
 Apart from the meta file, all files exist once for the interaction and once for the normalization data.
 
-The exact content of these files is described [here](https://github.com/MarkusRainerSchmidt/libSps "Go to the libSps GitHub").
+The exact content of these files is described [here](https://github.com/Siegel-Lab/libSps "Go to the libSps GitHub").
 
 ### Implementation Details
 

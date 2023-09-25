@@ -6,8 +6,8 @@ BINARY_BUILD_DIR=docs_conf
 SPHINX_CACHE_DIR=_doctrees
 SPHINX_TEX_DIR=tex
 
-mkdir ${SPHINX_HTML_DIR}
-mkdir ${SPHINX_CACHE_DIR}
+mkdir -p ${SPHINX_HTML_DIR}
+mkdir -p ${SPHINX_CACHE_DIR}
 
 ${SPHINX_EXECUTABLE} \
     -E -a -q -b html \
@@ -16,8 +16,8 @@ ${SPHINX_EXECUTABLE} \
     ${SPHINX_HTML_DIR}
 
 # fix missing static files
-mkdir -p docs/docs_conf/static
-cp -r docs_conf/static/* docs/docs_conf/static
+mkdir -p docs/static/
+cp -r docs_conf/static/* docs/static/
 
 mkdir -p docs/biosmoother/static
 cp biosmoother/static/favicon.* docs/biosmoother/static
