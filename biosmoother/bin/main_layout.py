@@ -1103,9 +1103,9 @@ class MainLayout:
             )
             col.children = c
 
-        set_norm_visibility(self.bin_test_norm, "radicl-seq")
-        set_norm_visibility(self.ice_norm, "ice")
-        set_norm_visibility(self.slices_norm, "grid-seq")
+        # set_norm_visibility(self.bin_test_norm, "radicl-seq")
+        # set_norm_visibility(self.ice_norm, "ice")
+        # set_norm_visibility(self.slices_norm, "grid-seq")
         self.chrom_layout_ploidy.visible = not self.session.get_value(
             ["settings", "normalization", "ploidy_coords"]
         )
@@ -3277,9 +3277,9 @@ class MainLayout:
             [
                 normalization,
                 normalization_cov,
-                self.bin_test_norm,
-                self.ice_norm,
-                self.slices_norm,
+                Tabs(tabs=[Panel(child=self.bin_test_norm, title="Binom. test"),
+                           Panel(child=self.ice_norm, title="IC"),
+                           Panel(child=self.slices_norm, title="Assoc. Slices")])
             ],
         )
         self.make_panel(
@@ -3799,7 +3799,31 @@ class MainLayout:
                     self.tick_formatter_y_2.args = contig_ticks_y
 
                     self.ranked_columns_data.data = ranked_slice_y
+                    def set_range(plot_range, data):
+                        if len(data) > 0:
+                            start = min(data)
+                            end = max(data)
+                            size = end - start
+                            start -= size*RANGE_PADDING
+                            end += size*RANGE_PADDING
+                            plot_range.start = start
+                            plot_range.end = end 
+                    def set_log_range(plot_range, data):
+                        filtered_data = [x for x in data if x > 0]
+                        if len(filtered_data) > 0:
+                            start = min(filtered_data)
+                            end = max(filtered_data)
+                            start *= LOG_PADDING
+                            end /= LOG_PADDING
+                            plot_range.start = start
+                            plot_range.end = end 
+                    set_range(self.ranked_columns.x_range, ranked_slice_y["xs"])
+                    set_log_range(self.ranked_columns.y_range, ranked_slice_y["ys"])
+
                     self.ranked_rows_data.data = ranked_slice_x
+                    set_range(self.ranked_rows.x_range, ranked_slice_x["xs"])
+                    set_log_range(self.ranked_rows.y_range, ranked_slice_x["ys"])
+
                     self.dist_dep_dec_plot_data.data = dist_dep_dec_plot_data
 
                     self.custom_hover_x_data.data = bin_coords_x
