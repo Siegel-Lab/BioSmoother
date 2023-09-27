@@ -96,7 +96,7 @@ JS_UPDATE_LAYOUT = """
             window.dispatchEvent(new Event('resize'));
             layout_needed=false;
         }
-    }, 100);
+    }, 1);
 """
 
 JS_HOVER = """
@@ -3454,13 +3454,13 @@ class MainLayout:
         self.curdoc.add_root(self.anno_x_axis)
         self.curdoc.add_root(column([self.raw_x, self.raw_x_log], name="raw_x"))
         self.curdoc.add_root(
-            column([self.raw_x_axis, self.raw_x_axis_log], name="raw_x_axis")
+            row([self.raw_x_axis, self.raw_x_axis_log], name="raw_x_axis", sizing_mode="stretch_height")
         )
         self.curdoc.add_root(self.anno_y)
         self.curdoc.add_root(self.anno_y_axis)
         self.curdoc.add_root(row([self.raw_y, self.raw_y_log], name="raw_y"))
         self.curdoc.add_root(
-            row([self.raw_y_axis, self.raw_y_axis_log], name="raw_y_axis")
+            column([self.raw_y_axis, self.raw_y_axis_log], name="raw_y_axis", sizing_mode="stretch_width")
         )
         self.curdoc.add_root(communication)
         self.curdoc.add_root(status_bar_row)
