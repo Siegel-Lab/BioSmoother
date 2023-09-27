@@ -1,8 +1,6 @@
 # smoother todo (ranked)
 
 - opening biosmoother in safari, the layout fails
-- configure presettings
-- in export put top bar with coordinates
 - remove default.json from smoother_hg
 - binom. test norm: what is going wrong?
 - store in index what filters are active / inactive (data is now stored)

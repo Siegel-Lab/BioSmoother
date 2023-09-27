@@ -637,7 +637,7 @@ class MainLayout:
 
         def apply_event():
             if not bin.global_variables.quiet:
-                print("applying...")
+                self.print("applying...")
             with open(
                 biosmoother_home_folder + "/conf/" + str(file_nr) + ".json", "r"
             ) as f:
@@ -663,9 +663,11 @@ class MainLayout:
             self.curdoc.hold()
             self.do_config()
             self.curdoc.unhold()
+            #@todo-low-prio why do i need to do this? the comp graph should realize that it needs to update...
+            self.session.clear_cache()
             self.trigger_render()
             if not bin.global_variables.quiet:
-                print("applied")
+                self.print("applied")
 
         apply_button.on_click(lambda _: apply_event())
 
