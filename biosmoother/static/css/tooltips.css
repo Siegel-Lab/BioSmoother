@@ -343,10 +343,6 @@
     content: "A common prefix for exported files.";
 }
 
-.tooltip_export_selection:after {
-    content: "Pick which plots to export.";
-}
-
 .tooltip_full_matrix:after {
     content: "Export the full matrix instead of merely the visible area.";
 }

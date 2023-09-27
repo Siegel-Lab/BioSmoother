@@ -2955,7 +2955,6 @@ class MainLayout:
 
         self.heatmap_x_axis_2.xaxis.ticker = self.ticker_x_2
         self.heatmap_x_axis_2.xaxis.axis_line_color = None
-        self.heatmap_x_axis_2.xaxis.axis_label_text_font = "monospace"
         self.heatmap_x_axis_2.xaxis.major_tick_line_color = None
         self.heatmap_x_axis_2.xaxis.major_tick_out = 0
         self.heatmap_x_axis_2.y_range.start = 1
