@@ -3558,6 +3558,8 @@ class MainLayout:
                 raw_data_y = self.session.get_tracks(True, self.print)
                 min_max_tracks_x = self.session.get_min_max_tracks(False, self.print)
                 min_max_tracks_y = self.session.get_min_max_tracks(True, self.print)
+                min_max_tracks_non_zero_x = self.session.get_min_max_tracks_non_zero(False, self.print)
+                min_max_tracks_non_zero_y = self.session.get_min_max_tracks_non_zero(True, self.print)
 
                 d_anno_x = self.session.get_annotation(False, self.print)
                 d_anno_y = self.session.get_annotation(True, self.print)
@@ -3625,8 +3627,8 @@ class MainLayout:
                     RANGE_PADDING = 0.1
                     LOG_PADDING = 0.5
                     min_max_tracks_x_log = (
-                        min_max_tracks_x[0] * LOG_PADDING,
-                        min_max_tracks_x[1] / LOG_PADDING,
+                        min_max_tracks_non_zero_x[0] * LOG_PADDING,
+                        min_max_tracks_non_zero_x[1] / LOG_PADDING,
                     )
                     range_padding_x = RANGE_PADDING * (
                         min_max_tracks_x[1] - min_max_tracks_x[0]
@@ -3654,8 +3656,8 @@ class MainLayout:
                         self.raw_x_axis_log.xaxis.bounds = tuple(min_max_tracks_x_log)
 
                     min_max_tracks_y_log = (
-                        min_max_tracks_y[0] * LOG_PADDING,
-                        min_max_tracks_y[1] / LOG_PADDING,
+                        min_max_tracks_non_zero_y[0] * LOG_PADDING,
+                        min_max_tracks_non_zero_y[1] / LOG_PADDING,
                     )
                     range_padding_y = RANGE_PADDING * (
                         min_max_tracks_y[1] - min_max_tracks_y[0]
