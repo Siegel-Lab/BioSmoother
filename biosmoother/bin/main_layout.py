@@ -1520,6 +1520,7 @@ class MainLayout:
         self.chrom_layout_ploidy = None
         self.ploidy_file_in = None
         self.next_element_id = 0
+        self.download_session = None
 
         self.do_layout()
 
@@ -2881,6 +2882,14 @@ class MainLayout:
             if "biosmoother_index_path" in os.environ
             else "unknown"
         )
+        self.download_session = Button(label="Download current session",
+            width=SETTINGS_WIDTH,
+            sizing_mode="fixed",
+            css_classes=["other_button", "tooltip", "tooltip_download_session"], # @todo
+        )
+        def callback(e):
+            self.download("session.json", json.dumps(self.session.get_value([])), "test/json;charset=utf-8;")
+        self.download_session.on_click(callback)
 
         self.color_layout = row(
             [self.make_color_figure(["#000000"])],
@@ -3138,11 +3147,17 @@ class MainLayout:
 
         if bin.global_variables.no_save:
             export_panel = [
-                Div(
-                    text="This instance of biosmoother has been configured not to allow saving files on the server, so the Export tab has been disabled. Otherwise you could use this tab to export your raw data in tsv format, or create svg pictures from your data.",
-                    sizing_mode="stretch_width",
-                )
+                export_label,
+                self.export_file,
+                export_format,
+                export_full,
+                export_coords_size,
+                export_contigs_size,
+                export_axis_size,
+                export_stroke_width_secondary,
+                row([self.spinner, export_button]),
             ]
+            self.session.set_value(["settings", "export", "export_to_server"], False)
         else:
             export_panel = [
                 export_label,
@@ -3203,7 +3218,7 @@ class MainLayout:
         self.make_panel(
             "info",
             "",
-            [version_info, index_info, log_div, self.log_div],
+            [version_info, index_info, self.download_session, log_div, self.log_div],
         )
 
         self.bin_test_norm = column(
