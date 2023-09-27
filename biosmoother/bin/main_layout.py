@@ -46,6 +46,9 @@ from libbiosmoother import (
     export_tsv,
     export_png,
     export_svg,
+    get_tsv,
+    get_png,
+    get_svg,
     open_default_json,
 )  # pyright: ignore missing import
 import json
@@ -57,6 +60,7 @@ from bin.figure_maker import (  # pyright: ignore missing import
 from bin.extra_ticks_ticker import *  # pyright: ignore missing import
 import bin.global_variables  # pyright: ignore missing import
 import numpy as np  # pyright: ignore missing import
+import base64
 
 try:
     import importlib.resources as pkg_resources
@@ -97,6 +101,26 @@ JS_UPDATE_LAYOUT = """
 
 JS_HOVER = """
     return source.data.chr[value] + " " + source.data.index_left[value] + " .. " + source.data.index_right[value];
+"""
+
+JS_DOWNLOAD = """
+    if(decode_to_bytes){
+        filetext = new Uint8Array(atob(filetext).split('').map(char => char.charCodeAt(0)));
+    }
+
+    const blob = new Blob([filetext], { type: filetype })
+
+    //addresses IE
+    if (navigator.msSaveBlob) {
+        navigator.msSaveBlob(blob, filename)
+    } else {
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = filename
+        link.target = '_blank'
+        link.style.visibility = 'hidden'
+        link.dispatchEvent(new MouseEvent('click'))
+    }
 """
 
 
@@ -1251,21 +1275,49 @@ class MainLayout:
                 self.spinner.css_classes = ["fade-in"]
 
             self.curdoc.add_next_tick_callback(callback)
+            export_to_server = self.session.get_value(["settings", "export", "export_to_server"])
 
             if self.session.get_value(["settings", "export", "export_format"]) == "tsv":
-                export_tsv(self.session)
+                if export_to_server:
+                    export_tsv(self.session)
+                else:
+                    heatmap, track_x, track_y = get_tsv(self.session)
+                    output_format = "text/tsv;charset=utf-8;"
+                    output_data = [heatmap, track_x, track_y]
+                    output_filename_extensions = [".heatmap.tsv", ".track.x.tsv", ".track.y.tsv"]
+                    decode_to_bytes = False
             elif (
                 self.session.get_value(["settings", "export", "export_format"]) == "svg"
             ):
-                export_svg(self.session)
+                if export_to_server:
+                    export_svg(self.session)
+                else:
+                    output_data = [get_svg(self.session)]
+                    output_format = "image/svg+xml;charset=utf-8;"
+                    output_filename_extensions = [".svg"]
+                    decode_to_bytes = False
             elif (
                 self.session.get_value(["settings", "export", "export_format"]) == "png"
             ):
-                export_png(self.session)
+                if export_to_server:
+                    export_png(self.session)
+                else:
+                    output_data = [base64.encodebytes(get_png(self.session)).decode('utf-8')]
+                    output_format = "image/png"
+                    output_filename_extensions = [".png"]
+                    decode_to_bytes = True
             else:
                 self.print("invalid value for export_format")
 
             def callback():
+                if not export_to_server:
+                    for data, ext in zip(output_data, output_filename_extensions):
+                        self.download(
+                            self.session.get_value(["settings", "export", "prefix"]) + ext,
+                            data,
+                            file_type=output_format,
+                            decode_to_bytes=decode_to_bytes,
+                        )
                 self.spinner.css_classes = ["fade-out"]
                 self.print_status(
                     "done exporting. Current Bin Size: " + self.get_readable_bin_size()
@@ -1332,6 +1384,8 @@ class MainLayout:
             self.settings_default = json.load(f)
 
         self.re_layout = None
+        self.download_js_callback_div = None
+        self.download_js_callback = None
         self.heatmap = None
         d = {
             "screen_bottom": [],
@@ -2764,6 +2818,12 @@ class MainLayout:
             settings=["settings", "export", "do_export_full"],
         )
 
+        export_to_server = self.make_checkbox(
+            "Export files to server instead of downloading them",
+            "tooltip_export_to_serve",
+            settings=["settings", "export", "export_to_server"],
+        )
+
         export_label = Div(
             text="Output Prefix:", css_classes=["tooltip", "tooltip_export_prefix"]
         )
@@ -3089,6 +3149,7 @@ class MainLayout:
                 self.export_file,
                 export_format,
                 export_full,
+                export_to_server,
                 export_coords_size,
                 export_contigs_size,
                 export_axis_size,
@@ -3355,8 +3416,14 @@ class MainLayout:
         quit_ti.on_change("value", close_server)
         self.re_layout = Div(text="")
         self.re_layout.js_on_change("text", CustomJS(code=JS_UPDATE_LAYOUT))
+        self.download_js_callback = CustomJS(code=JS_DOWNLOAD, args={"filename": "unknown",
+                                                                      "filetext": "unknown",
+                                                                      "filetype": 'text/csv;charset=utf-8;',
+                                                                      "decode_to_bytes": False})
+        self.download_js_callback_div = Div(text="")
+        self.download_js_callback_div.js_on_change("text", self.download_js_callback)
 
-        communication = row([quit_ti, self.re_layout], name="communication")
+        communication = row([quit_ti, self.re_layout, self.download_js_callback_div], name="communication")
         communication.visible = False
 
         self.curdoc.add_root(self.heatmap)
@@ -3383,6 +3450,15 @@ class MainLayout:
         self.curdoc.add_root(tools_bar)
 
         self.update_visibility()
+
+    def download(self, filename, file_data, file_type='text/tsv;charset=utf-8;', decode_to_bytes=False):
+        # other file_types: image/svg+xml;
+        # other file_types: image/png;
+        self.download_js_callback.args["filename"] = filename
+        self.download_js_callback.args["filetext"] = file_data
+        self.download_js_callback.args["filetype"] = file_type
+        self.download_js_callback.args["decode_to_bytes"] = decode_to_bytes
+        self.download_js_callback_div.text = "blub" if self.download_js_callback_div.text == "" else ""
 
     # overlap of the given areas relative to the larger area
     @staticmethod
