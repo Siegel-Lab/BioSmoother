@@ -1297,6 +1297,12 @@ class MainLayout:
         self.biosmoother_version = "?"
         self.reset_options = {}
         self.session = Quarry(bin.global_variables.biosmoother_index)
+        self.log_div_text = ""
+        if not self.session.can_save():
+            self.print(
+                "WARNING: cannot write to the index folder. Do you have write permissions in that directory? Enabling --no_save mode."
+            )
+            bin.global_variables.no_save = True
         if not os.path.exists(biosmoother_home_folder + "/conf/"):
             os.makedirs(biosmoother_home_folder + "/conf/")
 
@@ -1446,7 +1452,6 @@ class MainLayout:
         self.dist_dep_dec_plot_data = ColumnDataSource(data=d)
         self.dist_dep_dec_plot = None
         self.log_div = None
-        self.log_div_text = ""
         self.v4c_col_expected = ""
         self.v4c_col = None
         self.v4c_row_expected = ""
@@ -3341,7 +3346,10 @@ class MainLayout:
                 if not bin.global_variables.quiet:
                     print("closing server since session exited")
                 if not bin.global_variables.no_save:
-                    self.session.save_session()
+                    try:
+                        self.session.save_session()
+                    except:
+                        self.print("WARNING: could not save session. Do you have write permissions for the index?")
                 sys.exit()
 
         quit_ti.on_change("value", close_server)
@@ -3768,7 +3776,10 @@ class MainLayout:
                 self.spinner.css_classes = ["fade-out"]
                 self.re_layout.text = "a" if self.re_layout.text == "b" else "b"
                 if not bin.global_variables.no_save:
-                    self.session.save_session()
+                    try:
+                        self.session.save_session()
+                    except:
+                        self.print("WARNING: could not save session. Do you have write permissions for the index?")
 
             self.curdoc.add_next_tick_callback(callback)
 
