@@ -6,10 +6,10 @@ build:
     python: "miniconda3-4.7"
   jobs:
     post_build:
-      - mkdir -p docs/static/
-      - cp -r docs_conf/static/* docs/static/
-      - mkdir -p docs/biosmoother/static
-      - cp biosmoother/static/favicon.* docs/biosmoother/static
+      - mkdir -p $READTHEDOCS_OUTPUT/html/static/
+      - cp -r docs_conf/static/* $READTHEDOCS_OUTPUT/html/static/
+      - mkdir -p $READTHEDOCS_OUTPUT/html/biosmoother/static
+      - cp biosmoother/static/favicon.* $READTHEDOCS_OUTPUT/html/biosmoother/static
 
 conda:
   environment: docs_conf/dev_env_linux.yml
