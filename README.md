@@ -2,6 +2,8 @@
     <img src="./biosmoother/static/favicon.png" width="180">
 </p>
 
+# Smoother
+
 Smoother is an interactive analysis and visualization software for contact mapping data. 
 
 ## Quick Start

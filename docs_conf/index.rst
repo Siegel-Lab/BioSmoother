@@ -7,10 +7,4 @@ Contents
 
    Readme
    Manual
-   Installation
-   ImportingData
-   ButtonList
-   Examples
-   Algorithmics
    Cli
-   Epilogue

@@ -1,5 +1,5 @@
-BioSmoother Command-line Interface
-----------------------------------
+Command-line Interface
+----------------------
 
 .. argparse::
    :module: biosmoother
