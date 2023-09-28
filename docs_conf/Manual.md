@@ -1,4 +1,4 @@
-# Smoother Manual
+# Smoother - Manual
 
 Bulk of the manual
 

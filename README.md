@@ -22,23 +22,23 @@ conda install -y nodejs # pip cannot install nodejs, so we use conda
 
 Download 2 example smoother indices.
 ```
-wget @todo
-#wget @todo
+wget https://syncandshare.lrz.de/getlink/fi4kLPLjRjMTbRnij7PtyB/t_brucei_hi_c.smoother_index.zip
+#wget https://syncandshare.lrz.de/getlink/fiMo5Zsj8baXjXpzD8Whic/m_musculus_radicl_seq.smoother_index.zip
 
 conda install unzip
-unzip radicl.smoother_index.zip
-#unzip micro-c.smoother_index.zip
+unzip t_brucei_hi_c.smoother_index.zip
+#unzip m_musculus_radicl_seq.smoother_index.zip
 ```
 
 View one of the indices
 ```
-biosmoother serve micro-c --show
-#biosmoother serve radicl --show
+biosmoother serve t_brucei_hi_c-c --show
+#biosmoother serve m_musculus_radicl_seq --show
 ```
 
-## Manual
+## Full Documentation
 
-A full manual can be found here @todo.
+For more information and in-depth instructions, check out the [manual](https://github.com/Siegel-Lab/BioSmoother/blob/master/docs_conf/Manual.md "Manual") or the [technical documentation](https://biosmoother.readthedocs.io/ "Technical Documentation").
 
 ## Overview
 
