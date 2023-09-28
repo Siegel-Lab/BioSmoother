@@ -4,8 +4,17 @@ build:
   os: "ubuntu-22.04"
   tools:
     python: "3.9"
+  jobs:
+    post_build:
+      - mkdir -p docs/static/
+      - cp -r docs_conf/static/* docs/static/
+      - mkdir -p docs/biosmoother/static
+      - cp biosmoother/static/favicon.* docs/biosmoother/static
+
+python:
   install:
     - method: pip
       path: .
+
 sphinx:
   configuration: docs_conf/conf.py
