@@ -2180,7 +2180,7 @@ class MainLayout:
             settings=["settings", "normalization", "ice_show_bias"],
         )
         ice_local = self.make_checkbox(
-            "Local Ice",
+            "Local Ic",
             "tooltip_local_ice",
             settings=["settings", "normalization", "ice_local"],
         )

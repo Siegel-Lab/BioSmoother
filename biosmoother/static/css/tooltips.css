@@ -64,15 +64,15 @@
 }
 
 .tooltip_ice_num_samples:after {
-    content: "The number of samples to compute during ICE normalization.";
+    content: "The number of samples to compute during IC normalization.";
 }
 
 .tooltip_ice_show_bias:after {
-    content: "Display the ICE bias as a track.";
+    content: "Display the IC bias as a track.";
 }
 
 .tooltip_local_ice:after {
-    content: "Only use the visible bins to compute the ICE bias.";
+    content: "Only use the visible bins to compute the IC bias.";
 }
 
 .tooltip_do_redraw:after {
