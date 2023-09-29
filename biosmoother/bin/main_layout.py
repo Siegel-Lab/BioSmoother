@@ -3041,6 +3041,7 @@ class MainLayout:
 
         self.heatmap_x_axis_3.xaxis.ticker = self.ticker_x
         self.heatmap_x_axis_3.xaxis.major_label_text_font_size = "0pt"
+        self.heatmap_x_axis_3.xaxis.formatter = FuncTickFormatter(code='return "";')
         self.heatmap_x_axis_3.xaxis.minor_tick_line_color = None
         self.heatmap_x_axis_3.y_range.start = 1
         self.heatmap_x_axis_3.y_range.end = 2
@@ -3060,6 +3061,7 @@ class MainLayout:
 
         self.heatmap_y_axis_3.yaxis.ticker = self.ticker_y
         self.heatmap_y_axis_3.yaxis.major_label_text_font_size = "0pt"
+        self.heatmap_y_axis_3.yaxis.formatter = FuncTickFormatter(code='return "";')
         self.heatmap_y_axis_3.yaxis.minor_tick_line_color = None
         self.heatmap_y_axis_3.x_range.start = 1
         self.heatmap_y_axis_3.x_range.end = 2
@@ -4001,9 +4003,13 @@ class MainLayout:
         self.force_render = True
         self.do_config()
         self.render_callback()
+
+        # very annoying, but we need to trigger a relayout at the beggining once everything is loaded
+        # however, i'm not sure how to know once everythin is loaded. I guess JS could send an event...
+        # for now we just send a few updates at different timepoints
         def layout_callback():
-            print("relayout!!!")
             self.re_layout.text = "a" if self.re_layout.text == "b" else "b"
         self.curdoc.add_timeout_callback(lambda: layout_callback(), 100)
         self.curdoc.add_timeout_callback(lambda: layout_callback(), 1000)
         self.curdoc.add_timeout_callback(lambda: layout_callback(), 10000)
+        self.curdoc.add_timeout_callback(lambda: layout_callback(), 50000)
