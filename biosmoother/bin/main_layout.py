@@ -4003,4 +4003,4 @@ class MainLayout:
         self.render_callback()
         def layout_callback():
             self.re_layout.text = "a" if self.re_layout.text == "b" else "b"
-        self.curdoc.add_timeout_callback(lambda: layout_callback(), 100)
+        self.curdoc.add_timeout_callback(lambda: layout_callback(), 1000)
