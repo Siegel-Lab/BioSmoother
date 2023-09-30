@@ -1,6 +1,8 @@
 
 ## Citing Smoother
 
+@todo
+
 ## References
 
 
@@ -18,9 +20,9 @@
 
 [7] stxxl
 
-## Thanks to...
-- Bokeh
-- Stxxl
-- Sparse Prefix Sums paper
-- Papers with the normalizations
-- Dataset origin
+## Thanks to
+
+Thanks to the following libraries that where used in this project:
+- [Bokeh](http://bokeh.org/)
+- [Stxxl](https://stxxl.org/)
+- [Pybind11](https://github.com/pybind/pybind11)

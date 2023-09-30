@@ -14,7 +14,7 @@ conda create -y -n smoother python=3.9
 conda activate smoother
 ```
 
-Install smoother (and all requirements) using pip.
+Install smoother (and all requirements) using pip. Smoother runs under Windows, Linux, and MacOS using the Google Chrome, Safari, or Firefox browsers.
 ```
 pip install biosmoother
 conda install -y nodejs # pip cannot install nodejs, so we use conda
@@ -38,7 +38,7 @@ biosmoother serve t_brucei_hi_c-c --show
 
 ## Full Documentation
 
-For more information and in-depth instructions, check out the [manual](https://github.com/Siegel-Lab/BioSmoother/blob/master/docs_conf/Manual.md "Manual") or the [technical documentation](https://biosmoother.readthedocs.io/ "Technical Documentation").
+For more information and in-depth instructions, check out the [manual](https://github.com/Siegel-Lab/BioSmoother/blob/master/Manual.md "Manual") or the [technical documentation](https://biosmoother.readthedocs.io/ "Technical Documentation").
 
 ## Overview
 

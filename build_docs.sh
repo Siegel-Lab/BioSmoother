@@ -16,8 +16,8 @@ ${SPHINX_EXECUTABLE} \
     ${SPHINX_HTML_DIR}
 
 # fix missing static files
-mkdir -p docs/static/
-cp -r docs_conf/static/* docs/static/
+mkdir -p docs/docs_conf/static/
+cp -r docs_conf/static/* docs/docs_conf/static/
 
 mkdir -p docs/biosmoother/static
 cp biosmoother/static/favicon.* docs/biosmoother/static

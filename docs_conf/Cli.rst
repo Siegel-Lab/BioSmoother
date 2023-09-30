@@ -1,5 +1,5 @@
-Command-line Interface
-----------------------
+Smoothers Command-line Interface - The technical Documentation
+--------------------------------------------------------------
 
 .. argparse::
    :module: biosmoother

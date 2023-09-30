@@ -8,3 +8,4 @@ Contents
    Readme
    Manual
    Cli
+   Epilogue
