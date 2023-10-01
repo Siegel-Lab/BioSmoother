@@ -5,6 +5,8 @@ build:
   tools:
     python: "miniconda3-4.7"
   jobs:
+    pre_build:
+      - export SMOOTHER_HIDE_SUBCOMMANDS_MANUAL=true
     post_build:
       - mkdir -p $READTHEDOCS_OUTPUT/html/docs_conf/static/
       - cp -r docs_conf/static/* $READTHEDOCS_OUTPUT/html/docs_conf/static/

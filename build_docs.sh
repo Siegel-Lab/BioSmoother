@@ -8,6 +8,7 @@ SPHINX_TEX_DIR=tex
 
 mkdir -p ${SPHINX_HTML_DIR}
 mkdir -p ${SPHINX_CACHE_DIR}
+export SMOOTHER_HIDE_SUBCOMMANDS_MANUAL=true
 
 ${SPHINX_EXECUTABLE} \
     -E -a -q -b html \
