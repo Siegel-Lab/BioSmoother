@@ -2076,7 +2076,7 @@ class MainLayout:
         )
 
         incomp_align_layout = self.make_checkbox(
-            "Show multi-mapping reads with incomplete mapping loci lists",
+            "Show multimapping reads with incomplete mapping loci lists",
             "tooltip_incomplete_alignments",
             settings=["settings", "filters", "incomplete_alignments"],
         )

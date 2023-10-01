@@ -28,28 +28,28 @@ def serve(args):
 
 
 def add_parsers(main_parser):
-    parser = main_parser.add_parser("serve", help="Serve a biosmoother index.")
+    parser = main_parser.add_parser("serve", help="Open Smoother's graphical user interface and launch an exisiting existing index. If an index has been already launched before, the session will be restored with the parameters of the last session.")
     parser.add_argument(
         "index_prefix",
-        help="Path where the index shall be loaded from.",
+        help="Path to the index directory generated with the init command.",
     )
     parser.add_argument(
         "-s",
         "--no_save",
         action="store_true",
-        help="Disable saving custom settings or sessions. This is intended for hosting public example datasets. (default: off)",
+        help="Disable saving changes to the current session. This is intended for hosting public datasets (default: off)",
     )
     parser.add_argument(
         "-k",
         "--keep_alive",
         action="store_true",
-        help="Keep the server alive even if the last browser window has been closed. (default: off)",
+        help="Keep Smoother alive when it's browser tab is closed. Smoother then can be reopened from the link without re-running the serve command. (default: off)",
     )
     parser.add_argument(
         "-q",
         "--quiet",
         action="store_true",
-        help="Print less on the command line. (default: off)",
+        help="Print less information about the ongoing processes on the command line. (default: off)",
     )
 
     def filter_args(args):
@@ -67,6 +67,8 @@ def add_parsers(main_parser):
                 and not "biosmoother_dont_hide_args" in os.environ
             ):
                 a["help"] = argparse.SUPPRESS
+            else:
+                a["help"] = {"--show": "Immediateley open a browser tab for the served index. Only works if run locally.", "--port": "Use a particular port.", "--address": "Use a particular address.", "--allow-websocket-origin": "Public hostnames which may connect to the Smoother server. Check https://docs.bokeh.org/en/latest/docs/user_guide/server/deploy.html#security for more details."}[name]
             yield name, a
 
     for arg in filter_args(bcss.Serve.args):
@@ -102,6 +104,7 @@ def make_versioned_parser():
         "--version",
         action="version",
         version=(pkg_resources.files("biosmoother") / "VERSION").read_text(),
+        help="Print Smoother's version and exit.",
     )
     parser.add_argument(
         "--version_lib",
