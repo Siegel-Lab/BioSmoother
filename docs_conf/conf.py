@@ -39,6 +39,10 @@ extensions = [
     "sphinxarg.ext",
 ]
 
+html_theme_options = {
+    'navigation_depth': 8,
+}
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

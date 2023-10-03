@@ -38,7 +38,7 @@ biosmoother serve t_brucei_hi_c-c --show
 
 ## Full Documentation
 
-For more information and in-depth instructions, check out the [manual](https://github.com/Siegel-Lab/BioSmoother/blob/master/Manual.md "Manual") or the [technical documentation](https://biosmoother.readthedocs.io/ "Technical Documentation").
+For more information and in-depth instructions, check out the [manual](https://github.com/Siegel-Lab/BioSmoother/blob/master/Manual.md "Manual") or the [full documentation](https://biosmoother.readthedocs.io/ "Full Documentation").
 
 ## Overview
 

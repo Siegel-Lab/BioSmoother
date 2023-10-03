@@ -1,7 +1,9 @@
 # smoother todo (ranked)
 
+- move all the tooltips and button names into config files.
+    - use these files for the interface AND the set/get commands.
+- upload session button
 - remove default.json from smoother_hg
-- binom. test norm: what is going wrong?
 - store in index what filters are active / inactive (data is now stored)
   - enable/disable appropriate filters (on a per dataset bases & disable button if no dataset contains the filter)
   - filters can be activated on a per replicate basis -> rather store proper default values for each deactivated filter
