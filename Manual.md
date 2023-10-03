@@ -425,7 +425,7 @@ Capitalization does not matter for all inputs to the :guilabel:`Navigation bar`.
 .. Hint::
     Inputting a `*` into the :guilabel:`Navigation bar` will make the full heatmap visible.
 
-### Status bar
+### The Status bar
 
 The status bar displays a bunch of information about the current state of Smoother.
 - *Bin size*: First, the size of the currently visible bins is shown. If bins are square, one number is given, while for rectanglar bins the size is given as `width` x `height`.
@@ -456,10 +456,10 @@ Exporting with settings thus allows to save interactome data with all active fil
 -	:guilabel:`Download current session` allows exporting the metadata by downloading all the parameters of the current session.
 
 ### The Normalize tab
-In the :kbd:`Normalize` tab of Smoother, there are three sub-tabs\: :kbd:`->Main`, :kbd:`->Dist. Dep. Dec.`, and :kbd:`->Ploidy`.
+In the :kbd:`Normalize` tab of Smoother, there are three sub-tabs\: :kbd:`->Primary`, :kbd:`->Dist. Dep. Dec.`, and :kbd:`->Ploidy`.
 
-#### The Main sub-tab
-Several normalisations are available in the :kbd:`Normalize->Main` sub-tab to normalise the heatmap or the coverage track. Using the :guilabel:`Normalize heatmap by` dropdown, the heatmap and coverage can be normalised by `Reads per million` or `Reads per thousand` on the visible region. It is worth noting that the visible colour changes automatically on screen (can be modified on the View tab) and thus the heatmap might not change visually between `No normalisation`, `Reads per million`, or `Reads per thousand`. However, the values of the bins do change, and they are what is relevant for exporting the TSV text file for downstream analyses. The coverage can also be normalised by `Reads per million base pairs` and `Reads per thousand base pairs`, so that normalisation can be done by the size of the bin, indicating the density of reads in one million or thousand base pair squared.
+#### The Primary sub-tab
+Several normalisations are available in the :kbd:`Normalize->Primary` sub-tab to normalise the heatmap or the coverage track. Using the :guilabel:`Normalize heatmap by` dropdown, the heatmap and coverage can be normalised by `Reads per million` or `Reads per thousand` on the visible region. It is worth noting that the visible colour changes automatically on screen (can be modified on the View tab) and thus the heatmap might not change visually between `No normalisation`, `Reads per million`, or `Reads per thousand`. However, the values of the bins do change, and they are what is relevant for exporting the TSV text file for downstream analyses. The coverage can also be normalised by `Reads per million base pairs` and `Reads per thousand base pairs`, so that normalisation can be done by the size of the bin, indicating the density of reads in one million or thousand base pair squared.
 
 The other normalisations available for heatmap on Smoother are performed with a sampling strategy that also considers some bins outside of the visible area for normalisation (@todo ref Smoother paper needed or not). The normalisations available for the heatmap (also in the :guilabel:`Normalize heatmap by` dropdown) based on the sampling strategy are `Binomial test` (@todo ref RADICLseq), `Iterative correction` (@todo ref) and `Associated slices` (@todo ref GRID-seq). The number of samples taken outside the visible region can be modified on the slider bar :guilabel:`Number of samples` to ensure the lowest deviation from normalising to the entire heatmap (@todo ref Smoother paper needed or not, but that is only for our genome...). 
 
