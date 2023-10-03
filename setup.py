@@ -3,7 +3,7 @@ import os
 from setuptools import find_packages
 import subprocess
 
-VERSION = "0.7.5"
+VERSION = "1.0.0"
 
 # conf version file
 def conf_version(in_file_name, cmake_version, out_file_name):
@@ -63,7 +63,9 @@ setup(
     url='https://github.com/Siegel-Lab/biosmoother',
     description="On-the-fly processing and visualization of interactome data",
     long_description="""
-Biosmother is a tool to process and visualize interactome data on-the-fly.
+BioSmoother performs on-the-fly analysis and visualization (filtering, normalization, downstream processing, and displaying) of interactome data (https://en.wikipedia.org/wiki/Chromosome_conformation_capture). See the GitHub repository for more information: https://github.com/Siegel-Lab/BioSmoother.
+
+BioSmoother's documentation is available at https://biosmoother.rtfd.io/.
     """,
     py_modules=["biosmoother.cli"],
     packages=find_packages(where='.'),
