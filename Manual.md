@@ -96,7 +96,10 @@ Smoother also supports input files formatted as count matrices, corresponding to
 
 See the table below for a summary of filtering functionalities of Smoother depending on the input pairs file format with which the index has been generated:
 
-<img src="./docs_conf/static/filtering_functions.png">
+<figure align=center>
+<img src="./docs_conf/static/filtering_functions.png" width=100%>
+<figcaption> <b>Figure:</b> Summary of filtering functionalities of Smoother depending on the input pairs file. </figcaption>
+</figure>
 
 A: column must exist \
 X: column cannot exist \
@@ -329,13 +332,37 @@ To reset to the default parameters for a given index, Smoother implements the `r
 
 The full documentation of the `reset` sub-command can be found [here](https://biosmoother.readthedocs.io/en/latest/Cli.html#reset).
 
+#### Overview
+
+Smoother's interface consists of several panels:
+- Navigation bar
+- Plot tools
+- Primary data
+- Secondary data
+- Annotations panel
+- Coordinate axis
+- Regions axis
+- Status bar
+- Settings tabs
+
+Components can be shown and hidden using the :kbd:`View->Panels` :guilabel:`Show / Hide` dropdown menu.
+The Annotation and the Secondary data panel hide theselves automatically if they do not contain data.
+
+<figure align=center>
+<img src="./docs_conf/static/GUI.png" width=100%>
+<figcaption> <b>Figure:</b> Smoothers' Panels labeled by name. </figcaption>
+</figure>
+
 #### Navigation on Smoother
 Navigation on Smoother is controlled by the panels on the top. On the top left, the two arrows allow undoing and redoing changes. (@todo ABS:do they? Haha, MS: don't they? If they don't its a bug. Ohoh.) On the top central panel, the coordinates for the visible region are displayed and can be modified to navigate to a region of interest, as described in the navigation bar chapter below. On the top right, several tools to interact with the plots can be activated (see the plot tools chapter below).
 
 ##### Plot tools
 The control panel on the top right corner has the following buttons from left to right: :guilabel:`Pan`, :guilabel:`Box zoom`, :guilabel:`Wheel zoom`, :guilabel:`Hover`, :guilabel:`Crosshair`, and :guilabel:`Reset`.
 
+<figure align=center>
 <img src="./docs_conf/static/navigation.png" width=50%>
+<figcaption> <b>Figure:</b> Smoother's Plot tools. </figcaption>
+</figure>
 
 - :guilabel:`Pan` enables navigation by clicking and moving the heatmap.
 - :guilabel:`Box zoom` allows to zoom into a region of interest by selecting the region with a box.
@@ -344,12 +371,19 @@ The control panel on the top right corner has the following buttons from left to
 - :guilabel:`Crosshair` highlights the row and column coordinates of the current location.
 - :guilabel:`Reset` resets the heatmap to default settings.
 
+<figure align=center>
 <img src="./docs_conf/static/hover.png" width=50%>
+<figcaption> <b>Figure:</b> Hovering over a bin in the heatmap with the Hover tool enabled. </figcaption>
+</figure>
+(@todo MS: please cut the image, so that the hover tooltip can be seen. Do we need to explain the tooltip?)
 
 ##### The Navigation bar
 The :guilabel:`Navigation bar` on the top centre of the graphical interface displays the currently visible region, every time Smoother renders a new heatmap. However, you can also input a location into the bar and Smoother will jump to that location in the heatmap.
 
-@todo put picture of the navigation bar.
+<figure align=center>
+<img src="./docs_conf/static/navigation.gif" width=100%>
+<figcaption> <b>Figure:</b> Navigating on smoother using the Navigation bar. </figcaption>
+</figure>
 
 For this, click into the :guilabel:`Navigation bar` and replace the text with the region you want to jump to. (A simple way to replace all text in the bar is clicking into it and hitting *control-a*, then typing the new location).
 
@@ -397,6 +431,16 @@ Capitalization does not matter for all inputs to the :guilabel:`Navigation bar`.
 .. Hint::
     Inputting a `*` into the :guilabel:`Navigation bar` will make the full heatmap visible.
 
+#### Status bar
+
+The status bar displays a bunch of information about the current state of Smoother.
+- *Bin size*: First, the size of the currently visible bins is shown. If bins are square, one number is given, while for rectanglar bins the size is given as `width` x `height`.
+- *Times*: Next, Smoother display the time it took to process and render the currently visible heatmap.
+- *Number of bins*: Then, the total number of bins is shown.
+- *Errors*: Finally, if there are any errors, they are displayed here.
+
+If you trigger Smoother to rerender the heatmap, the status bar will display that smoother is rendering and the reason why.
+
 #### Changing analysis parameters on-the-fly
 On the right-hand side of the interface, there are several tabs with buttons and sliders. These can be used to change several analysis parameters on-the-fly. These buttons and sliders are grouped into several tabs that will be explained in the next chapters.
 
@@ -439,14 +483,21 @@ The `Binomial test` and `Associated slices` normalisations are implemented for a
 
 It is possible to select the option to display coverage of the normalisation in the secondary data panel. It is also possible to change the axis in which the normalisation is performed, by default this normalisation is performed row-wise but if the box is ticked the normalisation is performed column-wise. A tick box allows to choose whether to use the minimum number of interactions (intersections) between datasets as background, otherwise the maximum (all chromatin-associated genes from the different datasets) is used. This is relevant because the normalisation is done separately on the datasets, but to make the normalisation match between the datasets, the chromatin-associated genes need to match. A tick box also allows to ignore or consider cis interactions (within same contig).
 
+
+<figure align=center>
 <img src="./docs_conf/static/assoc_binom.gif" width=50%>
+<figcaption> <b>Figure:</b> Normalizing RNA-DNA interactome data by Associated Slices and Binomial test. </figcaption>
+</figure>
 
 -	`Iterative correction` (IC)\: equalises the visibility of the heatmap by making its column and row sums equal to one. A bias value is computed for every slice (column and row) and IC normalisation of the bins is performed by multiplying the bias of each slice to each slice bin. It is possible to filter out slices with more than the given % of empty bins. A tick box allows to Show bias as tracks in the secondary data panels. It is possible to use only the visible region to compute the IC by ticking the Local IC box. The Mad Max filter slider allows to filter out bins for which the log marginal sum is lower than the given value (see [the Cooler github]( https://github.com/open2c/cooler/blob/0f4cf6e21cea50c92334b87c5c6d5759859f4de8/src/cooler/balance.py#L397)). One slider bar allows to set the threshold for :guilabel:`Minimal number of non-zero bins per slice` and another to define *n* for the Manhattan distance to :guilabel:`Ignore first n bins next to the diagonal`.
 
 ###### The Dist. Dep. Dec. sub-tab
 The :kbd:`Normalize->Dist. Dep. Dec.` sub-tab allows to perform a distance dependant decay normalisation by selecting the tick box :guilabel:`Normalise Primary`. The distance dependant decay is computed with the mean of the value for all the bins at the same Manhattan distance for the current contig and it can be displayed on a plot below by ticking the box :guilabel:`Display`. On the plot, each line represents a bin with the beginning being the top left corner and the end, the bottom right corner of the bin. The normalisation is calculated by dividing each bin to this mean. It is important to consider that the further away from the diagonal a bin is in a contig, has less bins at the same Manhattan distance (or none for the edge bin). A slider allows to modify the minimum and maximum number of samples to compute the distance dependant decay. The top and bottom percentiles of samples can be excluded from the normalisation with the :guilabel:`Percentile of samples to keep (%)` slider.
 
+<figure align=center>
 <img src="./docs_conf/static/norm_ice_ddd.gif" width=50%>
+<figcaption> <b>Figure:</b> Normalizing 3C data by ICing and distance dependent decay. </figcaption>
+</figure>
 
 
 ###### The Ploidy sub-tab
@@ -458,7 +509,10 @@ To perform the ploidy correction :guilabel:`do correct` must be ticked and ticki
 -	`Keep interactions from contig-pairs that never occur in the same group` (@todo ABS: again needs to be explained making clear what is a group)
 -	`Remove interactions that are not explicitly kept by the options above`
 
-<img src="./docs_conf/static/ploidy.gif" width=50%>
+<figure align=center>
+<img src="./docs_conf/static/ploidy.gif" width=50%> <img src="./docs_conf/static/legend.png" width=15%>
+<figcaption> <b>Figure:</b> Ploidy Correction. </figcaption>
+</figure>
 
 ##### The Filter tab
 In the :kbd:`Filter` tab of Smoother, there are four sub-tabs: :kbd:`->Datapools`, :kbd:`->Mapping`, :kbd:`->Coordinates`, and :kbd:`->Annotations`.
@@ -467,21 +521,24 @@ In the :kbd:`Filter` tab of Smoother, there are four sub-tabs: :kbd:`->Datapools
 :kbd:`Filter->Datapools` allows to define the group or condition for every sample and the type of comparison and representation that should be performed among the samples. The :guilabel:`Primary Datapools` table allows to distribute the samples with interactome data displayed on the heatmap in groups by ticking the different pool per sample. The :guilabel:`Secondary Datapools` table allows to select the axis in which the secondary data panel with unidimensional data should be displayed. A dropdown menu allows to :guilabel:`Merge datasets` belonging to the same datapool group by several operations\: `sum, minimum, difference` and `mean`. A second dropdown menu :guilabel:`Compare datapools` by enables the selection of options to display the combined datapools: `sum, show first group a, show first group b, substract, difference, divide, minimum and maximum`.
 
 <figure align=center>
-<img src="./docs_conf/static/compare_datapools_by.png" width=50%>
-<figcaption> <b>Figure\:</b> A visual representation of how datasets are first combined into two datapools, before these datapools are combined in turn. </figcaption>
+<img src="./docs_conf/static/compare_datapools_by.png" width=75%>
+<figcaption> <b>Figure:</b> A visual representation of how datasets are first combined into two datapools, before these datapools are combined in turn. </figcaption>
 </figure>
 
 <figure align=center>
 <img src="./docs_conf/static/compare_datasets.png" width=50%>
-<figcaption> <b>Figure\:</b> Using the <em>subtract</em> option of the *Compare datapools* dropdown menu, images like this can be generated. </figcaption>
+<figcaption> <b>Figure:</b> Using the <em>subtract</em> option of the *Compare datapools* dropdown menu, images like this can be generated. </figcaption>
 </figure>
 
 
 ###### The Mapping sub-tab
-:kbd:`Filter->Mapping` allows filtering interactions by mapping quality scores of their reads. The mapping quality score represents the confidence of the aligner for the correctness of each alignment. The highest possible score is 254 and the lowest is 0. The bounds and thresholds that can be used to filter the reads correspond to those listed as `-m` option when running the init command to generate the index, as default the lower bounds are 0, 3 and 30, and the upper bounds are 3, 30 and 255. The bounds for this filter can be selected on the dropdown menus :guilabel:`Mapping Quality: Lower Bound` and :guilabel:`Mapping Quality: Upper Bound`. 
+:kbd:`Filter->Mapping` allows filtering interactions by mapping quality scores of their reads. The mapping quality score represents the confidence of the aligner for the correctness of each alignment. The highest possible score is 254 and the lowest is 0. The bounds and thresholds that can be used to filter the reads correspond to those listed as `-m` option when running the init command to generate the index, as default the lower bounds are 0, 3 and 30, and the upper bounds are 3, 30 and 255. The bounds for this filter can be selected on the dropdown menus :guilabel:`Mapping Quality: Lower Bound` and :guilabel:`Mapping Quality: Upper Bound`.
 
-<img src="./docs_conf/static/by_mapping_quality.gif" width=50%>
 
+<figure align=center>
+<img src="./docs_conf/static/by_mapping_quality.gif" width=50%> <img src="./docs_conf/static/legend.png" width=15%>
+<figcaption> <b>Figure:</b> Filtering out reads with low mapping qualities. </figcaption>
+</figure>
 
 One key functionality of Smoother is the possibility to analyse regions of high homology and repeats as multimapping reads can be kept. To do so, the smallest possible rectangle enclosing all possible alignments for a multimapping read is computed. A dropdown menu allows to select the preferred option to deal with the multimapping reads (MMR) in the scenarios that these rectangles are confined within a bin or overlap more than a bin:
 - `Count MMR if all mapping loci are within the same bin`. This is the default option. (@todo ABS: in paper in fact you say this is only option if wanting to keep MMR. And from last times we talked I thought that either they are all in same bin and you keep them all or you ignore them, but here there are many more options which are not so clear to me; MS: I figred it wastoo much clutter for the paper to list them all.)
@@ -495,7 +552,11 @@ One key functionality of Smoother is the possibility to analyse regions of high 
 
 A tick box allows to show multimapping reads with incomplete mapping loci lists, which correspond to those that have too many mapping locations to be reported with the given maximum when running the mapping (@todo ABS: in fact in my case I choose with -n option how many to show, there is a default number but one can also choose to show more or less; MS: could you document this here then? maybe wth an example command?). It is important to notice that displaying these multi-mappers might introduce noise to the heatmap.
 
-<img src="./docs_conf/static/rescue_multimappers.gif" width=50%>
+
+<figure align=center>
+<img src="./docs_conf/static/rescue_multimappers.gif" width=50%> <img src="./docs_conf/static/legend.png" width=15%>
+<figcaption> <b>Figure:</b> Filtering out multimapping reads that overlap multiple bins. </figcaption>
+</figure>
 
 The :guilabel:`Directionality` dropdown menu allows choosing whether to display interaction for which interaction partners map to any or a particular strand. The options are the following:
 - `Count pairs where reads map to any strand`
@@ -517,7 +578,10 @@ The :guilabel:`Directionality` dropdown menu allows choosing whether to display 
 
 *Annotations* (@todo ABS: I still have to write this section)
 
-<img src="./docs_conf/static/by_annotation.gif" width=50%>
+<figure align=center>
+<img src="./docs_conf/static/by_annotation.gif" width=50%> <img src="./docs_conf/static/legend.png" width=15%>
+<figcaption> <b>Figure:</b> Filtering out reads that do not overlap a gene. </figcaption>
+</figure>
 
 
 ##### The view tab
@@ -548,7 +612,11 @@ Bins
 
 	Remainder bin
 
-4.3.4.remainder_bin.pdf/svg
+
+<figure align=center>
+<img src="./docs_conf/static/remainder_bin.svg" width=50%>
+<figcaption> <b>Figure:</b> A visual representation of how the last bin in a contig is placed given the remainder bin option. </figcaption>
+</figure>
 
 Extend remainder bin into the next contig. Only visible they are lost for next contig
 
@@ -568,7 +636,11 @@ Virtual 4C
 
 show all for V4C for example
 
-<img src="./docs_conf/static/v4c.gif" width=50%>
+
+<figure align=center>
+<img src="./docs_conf/static/v4c.gif" width=25%>
+<figcaption> <b>Figure:</b> Smoother performing a virtual 4C analysis. </figcaption>
+</figure>
 
 Rendering
 
