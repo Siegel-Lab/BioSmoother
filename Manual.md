@@ -468,12 +468,12 @@ In the :kbd:`Filter` tab of Smoother, there are four sub-tabs: :kbd:`->Datapools
 
 <figure align=center>
 <img src="./docs_conf/static/compare_datapools_by.png" width=50%>
-<figcaption> <b>Figure:</b> A visual representation of how datasets are first combined into two datapools, before these datapools are combined in turn. </figcaption>
+<figcaption> <b>Figure\:</b> A visual representation of how datasets are first combined into two datapools, before these datapools are combined in turn. </figcaption>
 </figure>
 
 <figure align=center>
 <img src="./docs_conf/static/compare_datasets.png" width=50%>
-<figcaption> <b>Figure:</b> Using the <em>subtract</em> option of the *Compare datapools* dropdown menu, images like this can be generated. </figcaption>
+<figcaption> <b>Figure\:</b> Using the <em>subtract</em> option of the *Compare datapools* dropdown menu, images like this can be generated. </figcaption>
 </figure>
 
 
