@@ -2043,7 +2043,7 @@ class MainLayout:
         norm_sele = [
             ("Reads per million", "rpm"),
             ("Reads per thousand", "rpk"),
-            ("Binominal test", "radicl-seq"),
+            ("Binomial test", "radicl-seq"),
             ("Iterative Correction", "ice"),
             ("Associated slices", "grid-seq"),
             ("No normalization", "dont"),
@@ -2446,7 +2446,7 @@ class MainLayout:
             width=SETTINGS_WIDTH,
             tooltip="tooltip_p_accept",
             settings=["settings", "normalization", "p_accept"],
-            title="pAccept for binominal test",
+            title="pAccept for binomial test",
             sizing_mode="stretch_width",
         )
         bsmcq_l = self.make_slider_spinner(
@@ -2548,12 +2548,12 @@ class MainLayout:
             settings=["settings", "normalization", "radicl_seq_display_coverage"],
         )
         grid_seq_column = self.make_checkbox(
-            "Compute Background for Columns",
+            "Compute background for columns",
             "tooltip_comp_backg_col",
             settings=["settings", "normalization", "grid_seq_axis_is_column"],
         )
         radicl_seq_column = self.make_checkbox(
-            "Apply binominal test on Columns",
+            "Apply binomial test on columns",
             "tooltip_comp_backg_col",
             settings=["settings", "normalization", "radicl_seq_axis_is_column"],
         )

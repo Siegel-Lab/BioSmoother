@@ -26,8 +26,7 @@ For installing Smoother via GitHub, run the following commands:
 
 While the pip installation will install the latest stable release, this type of installation will install the newest, possibly untested version. Note that this approach does still use pip to install the latest stable release of libBioSmoother and libSps, the two backend libraries behind Smoother. To also install these two libraries on your own, you will have to clone the respective repositories and install manually from them using the `pip install -e .` command. Then you can install Smoother using `pip install -e . –no-deps` to install Smoother without adjustments to the dependencies.
 
-## Usage
-### Command organization into main and subcommands
+## Command organization into main and subcommands
 Smoother has multiple sub-commands, all of which interact with an index directory. An index contains the genome, its annotations, as well as the datasets to be analysed and visualised. Each of the subcommands is designed to perform one specific task on the index. For example, there are the `init` and `serve` subcommands that can be called as follows:
 
 	biosmoother init ...
@@ -43,10 +42,10 @@ To see the help pages of the individual subcommands (e.g. for `init`), run:
 
 A complete list of subcommands can be found [here](https://biosmoother.readthedocs.io/en/latest/Cli.html). The following chapters explain how to use the subcommands for creating and interacting with indices.
 
-### Creating an index
+## Creating an index
 All data to be analysed and visualized on Smoother needs to be precomputed into an index. In the next chapters we will explain how to initialize an index and fill it with data.
 
-#### Initializing an index
+### Initializing an index
 Before an index can be filled with interactome data, we have to set it up for a given a reference genome. Generating an empty index is done using the `init` sub-command. The command outputs an index directory.
 
 Let us create a new index for a Trypanosome genome.
@@ -73,8 +72,8 @@ This gff file must match the [GFF specifications](http://gmod.org/wiki/GFF3), an
 
 The full documentation of the `init` sub-command can be found [here](https://biosmoother.readthedocs.io/en/latest/Cli.html#init).
 
-#### Adding replicates to an index
-Adding data for a sample or replicate to an index is done with the `repl` sub-command. This requires an input pairs file containing the two-dimensional interactome matrix for the aligned reads. Pre-processing of the data and input pairs file generation are explained in detail in the next section (3. Data pre-processing and input generation).
+### Adding replicates to an index
+Adding data for a sample or replicate to an index is done with the `repl` sub-command. This requires an input pairs file containing the two-dimensional interactome matrix for the aligned reads. Pre-processing of the data and input pairs file generation are explained in detail in the next section.
 
 The basic usage of the `repl` subcommand is as follows:
 
@@ -87,27 +86,27 @@ There is a way to load gzipped (or similar) datafiles into Smoother using pipes:
 
 The full documentation of the `repl` sub-command can be found [here](https://biosmoother.readthedocs.io/en/latest/Cli.html#repl).
 
-##### Input format for the repl command
-Smoother requires a whitespace (space or tab) delimited input pairs file containing the two-dimensional interactions. Each input pairs file contains the data for one sample or replicate to be analysed and visualised. Each row has the information for one interaction (i.e. two reads).
+#### Input format for the repl command
+Smoother requires a whitespace (space or tab) delimited input pairs file containing the two-dimensional interactions. Each input pairs file contains the data for one sample or replicate to be analysed and visualised. Each line in the file has the information for one interaction (i.e. two reads).
 
-The default format for the input pairs file is compatible with the output from pairtools and corresponds to the following `-C` option for the repl sub-command: `-C [readID] chr1 pos1 chr2 pos2 [strand1] [strand2] [.] [mapq1] [mapq2] [xa1] [xa2] [cnt]`.
+The default format for the input pairs file is compatible with the output from pairtools and corresponds to the following `-C` option for the repl sub-command: `-C [readID] chr1 pos1 chr2 pos2 [strand1] [strand2] [.] [mapq1] [mapq2] [xa1] [xa2] [cnt]`. Such a file would, for example, look something like this:
 
-Smoother also supports input files formatted as count matrices, corresponding to the `-C` option `chr1 pos1 chr2 pos2 cnt`. However, the limited information in such files won't allow Smoother to perform analyses at its full potential. It is important to notice that count matrices are already binned and thus the 'pos' columns correspond to the bin position. Thus, setting a smaller base resolution (with the `-d` option in the `init` sub-command) or using annotation filtering will not provide useful information and should be avoided. This is the case, since the individual positions of reads have been lost. So, filtering by annotation will only be able to consider the bin locations instead of the actual read locations. Similarly, the base resolution of the heatmap will be limited by the bin size of the input pairs file. For example, if the input pairs file has a bin size of 10 kbp, the heatmap will not be able to display a resolution higher than 10 kbp.
+    SRR7721318.88322997     chr1  284     chr1  4765    -       +       UU      0       0
+    SRR7721318.659929       chr1  294     chr1  366     +       -       UU      29      29      chr5,-1363,3S73M,2;chr11,+1132,73M3S,2;  chr6,-1131,2S74M,2;
+    ...
 
-See the table below for a summary of filtering functionalities of Smoother depending on the input pairs file format with which the index has been generated:
+Smoother also supports input files formatted as count matrices. For this, please use the `-C` option `chr1 pos1 chr2 pos2 cnt`. However, the limited information in such files won't allow Smoother to perform analyses at its full potential: Count matrices are already binned and thus the 'pos' columns correspond to the bin position. Hence, setting a smaller base resolution (with the `-d` option in the `init` sub-command) or using annotation filtering will not provide useful information and should be avoided. This is the case, since the individual positions of reads have been lost by using a count matrix file. So, filtering by annotation will only be able to consider the bin locations instead of the actual read locations. Similarly, the base resolution of the heatmap will be limited by the bin size of the count matrix. For example, if the input pairs file has a bin size of 10 kbp, the heatmap will not be able to display a resolution higher than 10 kbp. A count matrix would look something like this:
+
+    chr1    1    chr1      1    123
+    chr1    1    chr1  10000     57
+
+See the table below for a summary of filtering functionalities of Smoother depending on the input file format with which the index has been generated:
 
 <figure align=center>
 <img src="./docs_conf/static/filtering_functions.png" width=100%>
-<figcaption> <b>Figure:</b> Summary of filtering functionalities of Smoother depending on the input pairs file. </figcaption>
+<figcaption> <b>Figure:</b> Summary of filtering functionalities of Smoother depending on the input pairs file. <b>A</b>: column must exist; <b>X</b>: column cannot exist; <b>Y</b>: column exists; <b>N</b>: column does not exist; <b>On</b>: filter is active; <b>Off</b>: filter is inactive; <b>Off*</b>: filter can be active, but it is uninformative because position is binned</figcaption>
 </figure>
 
-A: column must exist \
-X: column cannot exist \
-Y: column exists \
-N: column does not exist \
-On: filter is active \
-Off: filter is inactive \
-Off*: filter can be active, but it is uninformative because position is binned
 
 The `-C` option accepts optional columns, e.g. with `-C [readID] chr1 pos1 chr2 pos2 [strand1] [strand2]`, readId, strand1 and strand2 are optional.
 In this case the input pairs file can contain rows with any of the following formats:
@@ -129,14 +128,14 @@ The following columns can be included in the input pairs file:
 - `cnt`: read count frequency of row interaction. 
 
 .. Important::
-    In the case of asymmetric data (like RNA-DNA interactome), 1 is the data displayed on the x axis (columns) and 2 is the data displayed on the y axis (rows). As default RNA is on the x axis and DNA on the y axis, and this can be modified interactively after launching Smoother.
+    In the case of asymmetric data (like RNA-DNA interactome), 1 is the data displayed on the x axis (columns) and 2 is the data displayed on the y axis (rows). As default RNA is on the x axis and DNA on the y axis; however, this can be modified interactively after launching Smoother.
 
 
 In the following sub-sections, we describe examples of the pre-processing workflow from raw demultiplexed fastq files to input pairs files for symmetric and asymmetric data sets.
 
-##### Preprocessing data for the repl command
+#### Preprocessing data for the repl command
 
-###### Symmetric data sets, such as Hi-C or Micro-C
+##### Symmetric data sets, such as Hi-C or Micro-C
 The following steps are one example that can be followed to produce the input pairs files necessary to generate the index for Smoother from raw Hi-C data.
 
 (@todo ABS: is there no need of step inputting the restriction enzyme(s) used to understand what are valid pairs, right? I see pairtools also have a restrict command...; MS: Maybe we should indicate, where such a step would go, ad say that it depends on the technique.)
@@ -176,7 +175,7 @@ Below an example of some lines of a Hi-C input pairs file that can be used to ge
 @todo Here paste first lines of one input Hi-C pairs file, formatted as text file.
 
 
-###### Asymmetric data sets, such as RD-SPRITE, or RADICL-seq
+##### Asymmetric data sets, such as RD-SPRITE, or RADICL-seq
 The following steps are one example that can be followed to produce the input pairs files necessary to generate the index for Smoother from single-read raw RADICL-seq (ref @todo) data.
 
 First round of extraction of the RNA and DNA tags from the chimeric reads containing the RADICL adapter sequence using tagdust. Here read1 will be RNA and read2 will be DNA.
@@ -232,7 +231,7 @@ Below an example of some lines of a RADICL-seq input pairs file that can be used
  
     @todo Here paste first lines of one input RADICL pairs file, formatted as text file.
 
-#### Adding tracks to an index
+### Adding tracks to an index
 Adding uni-dimensional data to an index is done with the `track` sub-command. Such uni-dimensional data is displayed as coverage tracks next to the main heatmap. Pre-processing of the data and input file generation are explained in detail in the next section (3. @todo).
 
 The basic usage of the `track` subcommand is as follows:
@@ -246,14 +245,14 @@ There is a way to load gzipped (or similar) datafiles into Smoother using pipes:
 
 The full documentation of the `track` sub-command can be found [here](https://biosmoother.readthedocs.io/en/latest/Cli.html#track).
 
-##### Input format for the track command
+#### Input format for the track command
 @todo
-##### Preprocessing data for the track command
+#### Preprocessing data for the track command
 @todo
-#### Correcting an index for aneuploidy
+### Correcting an index for aneuploidy
 Many genomes are aneuploid or comprise high levels of heterozygosity in their chromosomes to the extent that correction for practical ploidy is required in order to not over- or under-represent reads coming from these regions (@todo ABS: I think you should not say that chromosomes have different ploidies as that is not really correct, and interactions are not only distributed in polyploid because diploid does not count as polyploid that is only from 3 chromosome sets; MS: can you check the methods section of the paper, if you would agree with the wording there? then we can use basically the same here i think). Smoother can correct for these genomic imbalances by distributing interactions among varying-ploidy contig sets (@todo see section 4.3.2. Normalise) and this ploidy correction can also be run independently of launching Smoother with the ploidy sub-command.
 
-##### Input format for the ploidy command
+#### Input format for the ploidy command
 
 We have designed a custom format for correcting an index for aneuploidy. This format is a tab-separated text file with two columns: `source` and `destination`. All lines starting with a `#` are ignored.
 Entries in the `source` column contain the contig names of the genome assembly, exactly as they were specified in the `.sizes` file given to the `init` command. Entries in the `destination` column contain the contig names of the genome assembly, as they should be displayed in the user interface.
@@ -282,16 +281,16 @@ Here is an example ploidy file:
     Chr2_3A     Chr2_3A
 
 
-### Using the graphical user interface
+## Using the graphical user interface
 
-#### Launching the graphical user interface
-Launching the Smoother interface for an existing index is done with the `serve` sub-command. If an index has already been launched before, the session will be restored with the parameters of the last session, as they are saved in the session.json file in the index directory. The Smoother interface makes use of the [Bokeh library](http://bokeh.org). For example, this is how we would launch an index called `my_index`:
+### Launching the graphical user interface
+Launching the Smoother interface for an existing index is done with the `serve` sub-command. If an index has already been launched before, the session will be restored with the parameters of the last session, as they are saved in the session.json file in the index directory. The Smoothers interface makes use of the [Bokeh library](http://bokeh.org). For example, this is how we would launch an index called `my_index`:
 
 	biosmoother serve my_index –show
 
 The full documentation of the `serve` sub-command can be found [here](https://biosmoother.readthedocs.io/en/latest/Cli.html#serve).
 
-##### Port forwarding on a server that uses slurm
+#### Port forwarding on a server that uses slurm
 
 Smoother is set up to be run on a server with the [Slurm Workload Manager](https://slurm.schedmd.com/overview.html "Go to the Slurm Webpage").
 
@@ -320,19 +319,12 @@ To allow multiple users to use Smoother at the same time, you can use a differen
 .. Important::
     Remember to undo the port forwarding from the client to th master node after you are done using Smoother and before you log out. This can be done by killing the ssh command: `killall ssh`.
 
-##### Setting up a webserver with Smoother
+#### Setting up a webserver with Smoother
 
 Since Smoother is a web application, it can be set up as a webserver. This allows multiple users to access Smoother at the same time. To do this, you can use the `--keep_alive`, and `--no_save` options, so that Smoother does not shutdown once one user leaves and does not save the changes made by one user for the next user. To allow other machines connecting to the serer, you have to configure the `--allow-websocket-origin` option. For example, to allow connections from any machine, you can use the following command: `--allow-websocket-origin=*`.
 
 
-##### Resetting an index
-To reset to the default parameters for a given index, Smoother implements the `reset` sub-command. Using reset will erase the saved parameters from all previous session for that index. Example:
-
-	biosmoother reset my_index
-
-The full documentation of the `reset` sub-command can be found [here](https://biosmoother.readthedocs.io/en/latest/Cli.html#reset).
-
-#### Overview
+### Overview of Smoother's interface
 
 Smoother's interface consists of several panels:
 - Navigation bar
@@ -353,10 +345,12 @@ The Annotation and the Secondary data panel hide theselves automatically if they
 <figcaption> <b>Figure:</b> Smoothers' Panels labeled by name. </figcaption>
 </figure>
 
-#### Navigation on Smoother
+On the right-hand side of the interface, there are several tabs with buttons and sliders. These can be used to change several analysis parameters on-the-fly.
+
+### Navigation on Smoother
 Navigation on Smoother is controlled by the panels on the top. On the top left, the two arrows allow undoing and redoing changes. (@todo ABS:do they? Haha, MS: don't they? If they don't its a bug. Ohoh.) On the top central panel, the coordinates for the visible region are displayed and can be modified to navigate to a region of interest, as described in the navigation bar chapter below. On the top right, several tools to interact with the plots can be activated (see the plot tools chapter below).
 
-##### Plot tools
+#### Plot tools
 The control panel on the top right corner has the following buttons from left to right: :guilabel:`Pan`, :guilabel:`Box zoom`, :guilabel:`Wheel zoom`, :guilabel:`Hover`, :guilabel:`Crosshair`, and :guilabel:`Reset`.
 
 <figure align=center>
@@ -364,7 +358,7 @@ The control panel on the top right corner has the following buttons from left to
 <figcaption> <b>Figure:</b> Smoother's Plot tools. </figcaption>
 </figure>
 
-- :guilabel:`Pan` enables navigation by clicking and moving the heatmap.
+- :guilabel:`Pan` enables navigation by clicking and dragging in the plots.
 - :guilabel:`Box zoom` allows to zoom into a region of interest by selecting the region with a box.
 - :guilabel:`Wheel zoom` enables zooming in and out by scrolling. 
 - :guilabel:`Hover` displays information for the genomic coordinates, interaction score, and reads by group for the current bin of the heatmap. :guilabel:`Hover` also displays information of the name and colour of displayed coverage tracks and the scores for the current bins in the coverage track.
@@ -375,9 +369,9 @@ The control panel on the top right corner has the following buttons from left to
 <img src="./docs_conf/static/hover.png" width=50%>
 <figcaption> <b>Figure:</b> Hovering over a bin in the heatmap with the Hover tool enabled. </figcaption>
 </figure>
-(@todo MS: please cut the image, so that the hover tooltip can be seen. Do we need to explain the tooltip?)
+(@todo MS: please cut the image, so that the hover tooltip can be seen. Do we need to explain the tooltip? also, can we put a screenshot of hovering over a track?)
 
-##### The Navigation bar
+#### The Navigation bar
 The :guilabel:`Navigation bar` on the top centre of the graphical interface displays the currently visible region, every time Smoother renders a new heatmap. However, you can also input a location into the bar and Smoother will jump to that location in the heatmap.
 
 <figure align=center>
@@ -431,7 +425,7 @@ Capitalization does not matter for all inputs to the :guilabel:`Navigation bar`.
 .. Hint::
     Inputting a `*` into the :guilabel:`Navigation bar` will make the full heatmap visible.
 
-#### Status bar
+### Status bar
 
 The status bar displays a bunch of information about the current state of Smoother.
 - *Bin size*: First, the size of the currently visible bins is shown. If bins are square, one number is given, while for rectanglar bins the size is given as `width` x `height`.
@@ -441,17 +435,14 @@ The status bar displays a bunch of information about the current state of Smooth
 
 If you trigger Smoother to rerender the heatmap, the status bar will display that smoother is rendering and the reason why.
 
-#### Changing analysis parameters on-the-fly
-On the right-hand side of the interface, there are several tabs with buttons and sliders. These can be used to change several analysis parameters on-the-fly. These buttons and sliders are grouped into several tabs that will be explained in the next chapters.
-
-##### The File tab
+### The File tab
 In the :kbd:`File` tab of Smoother, there are three sub-tabs\: :kbd:`->Presetting`, :kbd:`->Export`, and :kbd:`->Info`.
 
-###### The Presetting sub-tab
-:kbd:`File->Presetting` allows performing analysis with predetermined settings. Three analyses are already preconfigured and available on Smoother for doing normalisations as in GRID-seq (@todo ref), RADICL-seq (@todo ref), and for mirroring data and performing iterative correction (@todo ref) for Hi-C data. It is also possible to save the current settings configured on Smoother as a new pre-set analysis, this will save all configuration but not the zoomed area of the session.
+#### The Presetting sub-tab
+:kbd:`File->Presetting` allows performing analysis with predetermined settings. Three analyses are already preconfigured and available on Smoother for doing normalisations as in GRID-seq (@todo ref), RADICL-seq (@todo ref), as well as one for Hi-C data. It is also possible to save the current settings configured on Smoother as a new presetting.
 
-###### The Export sub-tab
-:kbd:`File->Export` allows to save the interactome data with the settings of the current session either as a TSV text file with the interactions or as a picture in SVG or PNG format. It is possible to export the visible region or mark the option to export the full matrix instead.
+#### The Export sub-tab
+:kbd:`File->Export` allows to save the interactome data with the settings of the current session either as a TSV text file or as a picture in SVG or PNG format. It is possible to export only the visible region or the full heatmap using the :guilabel:`export full matrix instead of visible region` checkbox.
 -	The path for the exported files can be specified on the :guilabel:`Output Prefix` box.
 -	The format can be selected clicking on the :guilabel:`Format` dropdown.
 -	If files need to be exported to the server instead of downloading them it is possible to tick the box :guilabel:`Export files to server instead of downloading them`
@@ -460,28 +451,32 @@ In the :kbd:`File` tab of Smoother, there are three sub-tabs\: :kbd:`->Presettin
 
 Exporting with settings thus allows to save interactome data with all active filters, normalisation, comparison between groups, and even virtual 4C analyses. 
 
-###### The Info sub-tab
+#### The Info sub-tab
 :kbd:`File->Info` provides a log of Smoother processes, which are also displayed on the command line.
 -	:guilabel:`Download current session` allows exporting the metadata by downloading all the parameters of the current session.
 
-##### The Normalize tab
+### The Normalize tab
 In the :kbd:`Normalize` tab of Smoother, there are three sub-tabs\: :kbd:`->Main`, :kbd:`->Dist. Dep. Dec.`, and :kbd:`->Ploidy`.
 
-###### The Main sub-tab
-Several normalisations are available in the :kbd:`Normalize->Main` sub-tab to normalise the heatmap or the coverage track. Using the :guilabel:`Normalize by` dropdown, the heatmap and coverage can be normalised by `Reads per million` or `Reads per thousand` on the visible region. It is worth noting that the visible colour changes automatically on screen (can be modified on the View tab) and thus the heatmap might not change visually between `No normalisation`, `Reads per million`, or `Reads per thousand`. However, the values of the bins do change, and they are what is relevant for exporting the TSV text file for downstream analyses. The coverage can also be normalised by `Reads per million base pairs` and `Reads per thousand base pairs`, so that normalisation can be done by the size of the bin, indicating the density of reads in one million or thousand base pair squared.
+#### The Main sub-tab
+Several normalisations are available in the :kbd:`Normalize->Main` sub-tab to normalise the heatmap or the coverage track. Using the :guilabel:`Normalize heatmap by` dropdown, the heatmap and coverage can be normalised by `Reads per million` or `Reads per thousand` on the visible region. It is worth noting that the visible colour changes automatically on screen (can be modified on the View tab) and thus the heatmap might not change visually between `No normalisation`, `Reads per million`, or `Reads per thousand`. However, the values of the bins do change, and they are what is relevant for exporting the TSV text file for downstream analyses. The coverage can also be normalised by `Reads per million base pairs` and `Reads per thousand base pairs`, so that normalisation can be done by the size of the bin, indicating the density of reads in one million or thousand base pair squared.
 
-The other normalisations available for heatmap on Smoother are performed with a sampling strategy that also considers some bins outside of the visible area for normalisation (@todo ref Smoother paper needed or not). The normalisations available for the heatmap (also in the :guilabel:`Normalize by` dropdown) based on the sampling strategy are `Binomial test` (@todo ref RADICLseq), `Iterative correction` (@todo ref) and `Associated slices` (@todo ref GRID-seq). The number of samples taken outside the visible region can be modified on the slider bar :guilabel:`Number of samples` to ensure the lowest deviation from normalising to the entire heatmap (@todo ref Smoother paper needed or not, but that is only for our genome...). 
+The other normalisations available for heatmap on Smoother are performed with a sampling strategy that also considers some bins outside of the visible area for normalisation (@todo ref Smoother paper needed or not). The normalisations available for the heatmap (also in the :guilabel:`Normalize heatmap by` dropdown) based on the sampling strategy are `Binomial test` (@todo ref RADICLseq), `Iterative correction` (@todo ref) and `Associated slices` (@todo ref GRID-seq). The number of samples taken outside the visible region can be modified on the slider bar :guilabel:`Number of samples` to ensure the lowest deviation from normalising to the entire heatmap (@todo ref Smoother paper needed or not, but that is only for our genome...). 
 
 .. Hint::
     If it is essential that the normalisation runs on the entire heatmap it is possible to export the interactome and generate a new index on Smoother with the normalised data that allows zooming in to regions normalised to the entire heatmap. 
 
 The `Binomial test` and `Associated slices` normalisations are implemented for asymmetric RNA-DNA interactome data and `Iterative correction` is the default normalisation for Hi-C data.
 
--	`Binomial test`\: determines statistical significance of each bin over the genome-wide coverage of the interacting RNA. A slider bar allows to modify the :guilabel:`pAccept` which is the value at which the p-values is accepted as significant. It is possible to select the option to display coverage of the normalisation in the secondary data panel. It is also possible to change the axis in which the normalisation is performed, by default this normalisation is performed row-wise but if the box is ticked the normalisation is performed column-wise. 
+##### Binomial test normalization
 
--	`Associated slices`\: normalises each bin by the sum of trans chromatin-associated interactions of the interacting RNA. To compute this normalisation first the RNAs that are chromatin-associated need to be determined. The number of samples and the bin size of those samples to identify the chromatin-associated RNAs can be modified. As default, 1000 samples are taken, and their bin size is 1 kb. (For comprehensive computational explanation of this normalisation see ref Smoother paper). Computing this normalisation for annotated transcripts instead of bins requires the prior filtering by gene annotation on the RNA axis (see section: 4.3.3. Filter @todo put a link). Chromatin-associated RNAs can be determined by selecting the thresholds in the two lower charts. The top chart displays RNA reads per kbp of the samples (genes) ranked by RNA read densities per kbp. The bottom chart displays the maximal DNA reads per kbp of the genomic samples ranked by linked DNA read densities. The interacting RNA from the interactions fulfilling both thresholds will be the chromatin-associated RNAs.
+`Binomial test`\: determines statistical significance of each bin over the genome-wide coverage of the interacting RNA. A slider bar allows to modify the :guilabel:`pAccept for binomial test` which is the value at which the p-values is accepted as significant. It is possible to select the option to display coverage of the normalisation in the secondary data panel using the :guilabel:`Display coverage as secondary data` checkbox. It is also possible to change the axis in which the normalisation is performed (:guilabel:`Apply binomial test to columns`), by default this normalisation is performed row-wise but if the box is ticked the normalisation is performed column-wise. 
 
-It is possible to select the option to display coverage of the normalisation in the secondary data panel. It is also possible to change the axis in which the normalisation is performed, by default this normalisation is performed row-wise but if the box is ticked the normalisation is performed column-wise. A tick box allows to choose whether to use the minimum number of interactions (intersections) between datasets as background, otherwise the maximum (all chromatin-associated genes from the different datasets) is used. This is relevant because the normalisation is done separately on the datasets, but to make the normalisation match between the datasets, the chromatin-associated genes need to match. A tick box also allows to ignore or consider cis interactions (within same contig).
+##### Associated slices normalization
+
+`Associated slices`\: normalises each bin by the sum of *trans* chromatin-associated slices of the interacting RNA. First, chromatin-associated slices need to be determined. For this, we compute the *Average RNA reads per kb* and the *Maximal DNA reads in a bin* for a set of slices. You can adjust the :guilabel:`Number of samples` taken, using the so-named slider. Slices are chosen from a type of annotation. The specific :guilabel:`Annotation type` can be picked using a dropdown button. For the *Maximal DNA reads*, horizontal binsize of slices within the slices can be adjusted using the :guilabel:`Section size max coverage` slider. *Average RNA reads* are always normalized to 1 kb bins. Slices are considered as chromatin-associated if they fall into the ranges set by the :guilabel:`RNA reads per kbp bounds` and :guilabel:`Maximal DNA reads in bin bounds` sliders. To visualize the effects of these bounds, two plots show the distribution of the *Average RNA reads per kb* and the *Maximal DNA reads in a bin* for the selected slices. Grey dots indicate slices that are filtered out. Finally, bins are normalized by the *trans* coverage of the slices. You can display this coverage using the :guilabel:`Display background as secondary data` checkbox. (@todo MS: we need pictures here!) (For comprehensive computational explanation of this normalisation see ref Smoother paper, ref grid-seq paper). In (ref grid-seq), they use this normalization in combination with filtering out reads that do not overlap genes on their RNA read (see the @todo filtering->blabla tab).
+
+It is possible to change the axis in which the normalisation is performed using the :guilabel:`Compute background for columns` checkbox, by default this normalisation is performed column-wise but if the box is un-ticked the normalisation is performed row-wise. A tick box allows to choose whether to use the intersection of chromatin-associated slices between datasets as background, otherwise the union of slices is used. This is relevant because the normalisation is done separately on the datasets, but to make the normalisation match between the datasets, the chromatin-associated slices need to match. The :guilabel:`Ignore cis interactions` box also allows to ignore or consider *cis* interactions (within same contig).
 
 
 <figure align=center>
@@ -489,9 +484,11 @@ It is possible to select the option to display coverage of the normalisation in 
 <figcaption> <b>Figure:</b> Normalizing RNA-DNA interactome data by Associated Slices and Binomial test. </figcaption>
 </figure>
 
--	`Iterative correction` (IC)\: equalises the visibility of the heatmap by making its column and row sums equal to one. A bias value is computed for every slice (column and row) and IC normalisation of the bins is performed by multiplying the bias of each slice to each slice bin. It is possible to filter out slices with more than the given % of empty bins. A tick box allows to Show bias as tracks in the secondary data panels. It is possible to use only the visible region to compute the IC by ticking the Local IC box. The Mad Max filter slider allows to filter out bins for which the log marginal sum is lower than the given value (see [the Cooler github]( https://github.com/open2c/cooler/blob/0f4cf6e21cea50c92334b87c5c6d5759859f4de8/src/cooler/balance.py#L397)). One slider bar allows to set the threshold for :guilabel:`Minimal number of non-zero bins per slice` and another to define *n* for the Manhattan distance to :guilabel:`Ignore first n bins next to the diagonal`.
+##### Iterative correction normalization
 
-###### The Dist. Dep. Dec. sub-tab
+`Iterative correction` (IC)\: equalises the visibility of the heatmap by making its column and row sums equal to one. A bias value is computed for every slice (column and row) and IC normalisation of the bins is performed by multiplying the bias of each slice to each slice bin. It is possible to filter out slices with more than the given % of empty bins. A tick box allows to Show bias as tracks in the secondary data panels. It is possible to use only the visible region to compute the IC by ticking the Local IC box. The Mad Max filter slider allows to filter out bins for which the log marginal sum is lower than the given value (see [the Cooler github]( https://github.com/open2c/cooler/blob/0f4cf6e21cea50c92334b87c5c6d5759859f4de8/src/cooler/balance.py#L397)). One slider bar allows to set the threshold for :guilabel:`Minimal number of non-zero bins per slice` and another to define *n* for the Manhattan distance to :guilabel:`Ignore first n bins next to the diagonal`.
+
+#### The Dist. Dep. Dec. sub-tab
 The :kbd:`Normalize->Dist. Dep. Dec.` sub-tab allows to perform a distance dependant decay normalisation by selecting the tick box :guilabel:`Normalise Primary`. The distance dependant decay is computed with the mean of the value for all the bins at the same Manhattan distance for the current contig and it can be displayed on a plot below by ticking the box :guilabel:`Display`. On the plot, each line represents a bin with the beginning being the top left corner and the end, the bottom right corner of the bin. The normalisation is calculated by dividing each bin to this mean. It is important to consider that the further away from the diagonal a bin is in a contig, has less bins at the same Manhattan distance (or none for the edge bin). A slider allows to modify the minimum and maximum number of samples to compute the distance dependant decay. The top and bottom percentiles of samples can be excluded from the normalisation with the :guilabel:`Percentile of samples to keep (%)` slider.
 
 <figure align=center>
@@ -500,7 +497,7 @@ The :kbd:`Normalize->Dist. Dep. Dec.` sub-tab allows to perform a distance depen
 </figure>
 
 
-###### The Ploidy sub-tab
+#### The Ploidy sub-tab
 The :kbd:`Normalize->Ploidy` tab allows normalisation for practical ploidy. Many genomes are aneuploid or comprise high levels of heterozygosity in their chromosomes to the extent that correction for practical ploidy is required in order to not over- or under-represent reads coming from these regions. Smoother can correct for these genomic imbalances by distributing interactions among varying-ploidy contig sets. The ploidy menu comprises several tick boxes and requires uploading a ploidy file. The format of the ploidy file is described [here](https://biosmoother.readthedocs.io/en/latest/Manual.html#correcting-an-index-for-aneuploidy).
 
 To perform the ploidy correction :guilabel:`do correct` must be ticked and ticking :guilabel:`use ploidy corrected contigs` will trigger Smoother to use the order of contigs from the ploidy corrected file instead of the genome sizes. The correction considers *n*-ploid contigs as *n* instances and interactions are divided evenly among the instances of the contigs. The correction has several options that can be selected on the following tick boxes:
@@ -514,10 +511,10 @@ To perform the ploidy correction :guilabel:`do correct` must be ticked and ticki
 <figcaption> <b>Figure:</b> Ploidy Correction. </figcaption>
 </figure>
 
-##### The Filter tab
+### The Filter tab
 In the :kbd:`Filter` tab of Smoother, there are four sub-tabs: :kbd:`->Datapools`, :kbd:`->Mapping`, :kbd:`->Coordinates`, and :kbd:`->Annotations`.
 
-###### The Datapools sub-tab
+#### The Datapools sub-tab
 :kbd:`Filter->Datapools` allows to define the group or condition for every sample and the type of comparison and representation that should be performed among the samples. The :guilabel:`Primary Datapools` table allows to distribute the samples with interactome data displayed on the heatmap in groups by ticking the different pool per sample. The :guilabel:`Secondary Datapools` table allows to select the axis in which the secondary data panel with unidimensional data should be displayed. A dropdown menu allows to :guilabel:`Merge datasets` belonging to the same datapool group by several operations\: `sum, minimum, difference` and `mean`. A second dropdown menu :guilabel:`Compare datapools` by enables the selection of options to display the combined datapools: `sum, show first group a, show first group b, substract, difference, divide, minimum and maximum`.
 
 <figure align=center>
@@ -531,7 +528,7 @@ In the :kbd:`Filter` tab of Smoother, there are four sub-tabs: :kbd:`->Datapools
 </figure>
 
 
-###### The Mapping sub-tab
+#### The Mapping sub-tab
 :kbd:`Filter->Mapping` allows filtering interactions by mapping quality scores of their reads. The mapping quality score represents the confidence of the aligner for the correctness of each alignment. The highest possible score is 254 and the lowest is 0. The bounds and thresholds that can be used to filter the reads correspond to those listed as `-m` option when running the init command to generate the index, as default the lower bounds are 0, 3 and 30, and the upper bounds are 3, 30 and 255. The bounds for this filter can be selected on the dropdown menus :guilabel:`Mapping Quality: Lower Bound` and :guilabel:`Mapping Quality: Upper Bound`.
 
 
@@ -584,12 +581,12 @@ The :guilabel:`Directionality` dropdown menu allows choosing whether to display 
 </figure>
 
 
-##### The view tab
+### The View tab
 (@todo ABS: I still have to write this section)
 In the *View* tab of Smoother, there are five sub-tabs: *Color, Panels, Bins, Virtual4C* and *Rendering*.
 
 
-###### The color tab
+#### The Color sub-tab
 
 @todo ...
 
@@ -607,7 +604,7 @@ In detail, the function we use is:
 With varying values for *a*, this function always satisfies *f(0)=0* and *f(1)=1*.
 for *a=0* the function is undefined but approaches the 45-degree diagonal, so we hardcode *f(x)=x* for *a=0*.
 
-##### The panel tab
+### The Panel tab
 Bins
 
 	Remainder bin
@@ -645,12 +642,19 @@ show all for V4C for example
 Rendering
 
 
-### Using the command line interface
+## Using the command line interface
 All Smoother analyses can also be performed on the command line without the requirement to launch the graphical interface of Smoother. 
-#### The set command
+### The set command
 Running Smoother analyses without launching the GUI requires the set sub-command to define the values of different parameters.
-#### The get command
+### The get command
 The get sub-command allows retrieving the value of a parameter for the current/last session of a given index.
-#### The export command
+### The export command
 It is possible to save the current/last index session to a file with the export sub-command. This corresponds to the function Export of Smoother (see section 4.3.1. File). The interactome data with the settings of the current session can be saves as a TSV text file with the interactions or as a picture in SVG or PNG format.
 (MS: We should mention that we basically produce 'publication quality images' with the svg output)
+
+### Resetting an index
+To reset to the default parameters for a given index, Smoother implements the `reset` sub-command. Using reset will erase the saved parameters from all previous session for that index. Example:
+
+	biosmoother reset my_index
+
+The full documentation of the `reset` sub-command can be found [here](https://biosmoother.readthedocs.io/en/latest/Cli.html#reset).
