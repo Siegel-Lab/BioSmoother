@@ -8,3 +8,4 @@ Contents
    Manual
    Cli
    Epilogue
+   genindex

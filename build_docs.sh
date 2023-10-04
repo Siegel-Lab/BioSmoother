@@ -17,16 +17,22 @@ ${SPHINX_EXECUTABLE} \
     ${SPHINX_HTML_DIR}
 
 # fix missing static files
-mkdir -p docs/docs_conf/static/
-cp -r docs_conf/static/* docs/docs_conf/static/
+mkdir -p ${SPHINX_HTML_DIR}/docs_conf/static/
+cp -r docs_conf/static/* ${SPHINX_HTML_DIR}/docs_conf/static/
 
-mkdir -p docs/biosmoother/static
-cp biosmoother/static/favicon.* docs/biosmoother/static
+mkdir -p ${SPHINX_HTML_DIR}/biosmoother/static
+cp biosmoother/static/favicon.* ${SPHINX_HTML_DIR}/biosmoother/static
 
 # ${SPHINX_EXECUTABLE} \
 #     -E -a -q -b latex \
 #     -d ${SPHINX_CACHE_DIR} \
 #     ${BINARY_BUILD_DIR} \
 #     ${SPHINX_TEX_DIR}
+    
+# mkdir -p ${SPHINX_TEX_DIR}/docs_conf/static/
+# cp -r docs_conf/static/* ${SPHINX_TEX_DIR}/docs_conf/static/
+
+# mkdir -p ${SPHINX_TEX_DIR}/biosmoother/static
+# cp biosmoother/static/favicon.* ${SPHINX_TEX_DIR}/biosmoother/static
 
 # tectonic tex/*.tex

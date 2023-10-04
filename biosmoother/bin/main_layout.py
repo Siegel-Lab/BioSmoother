@@ -1274,7 +1274,7 @@ class MainLayout:
     def do_export(self):
         def unlocked_task():
             def callback():
-                self.spinner.css_classes = ["fade-in"]
+                self.spinner.text = '<img src="biosmoother/static/stirring.gif" width="30px" height="30px">'
 
             self.curdoc.add_next_tick_callback(callback)
             export_to_server = self.session.get_value(["settings", "export", "export_to_server"])
@@ -1320,7 +1320,7 @@ class MainLayout:
                             file_type=output_format,
                             decode_to_bytes=decode_to_bytes,
                         )
-                self.spinner.css_classes = ["fade-out"]
+                self.spinner.text = '<img src="biosmoother/static/favicon.png" width="30px" height="30px">'
                 self.print_status(
                     "done exporting. Current Bin Size: " + self.get_readable_bin_size()
                 )
@@ -2691,9 +2691,8 @@ class MainLayout:
         )
 
         self.spinner = Div(
-            text='<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>'
+            text='<img src="biosmoother/static/favicon.png" width="30px" height="30px">'
         )
-        self.spinner.css_classes = ["fade-out"]
 
         norm_layout = self.multi_choice_auto(
             "Dataset name",
@@ -3548,7 +3547,7 @@ class MainLayout:
         def unlocked_task():
             def cancelable_task():
                 def callback():
-                    self.spinner.css_classes = ["fade-in"]
+                    self.spinner.text = '<img src="biosmoother/static/stirring.gif" width="30px" height="30px">'
 
                 self.curdoc.add_next_tick_callback(callback)
 
@@ -3603,7 +3602,8 @@ class MainLayout:
                     }
 
                 error = self.session.get_error()
-                error_text = "None" if len(error) == 0 else error.replace("\n", "; ")
+                self.have_error = len(error) > 0
+                error_text = "None" if len(error) == 0 else "<font color=\"#FF0000\">" + error.replace("\n", "; ") + "</font>"
                 end_time = time.perf_counter()
                 start_render_time = time.perf_counter()
 
@@ -3894,7 +3894,10 @@ class MainLayout:
                 pass
 
             def callback():
-                self.spinner.css_classes = ["fade-out"]
+                if self.have_error:
+                    self.spinner.text = '<img src="biosmoother/static/error.png" width="30px" height="30px">'
+                else:
+                    self.spinner.text = '<img src="biosmoother/static/favicon.png" width="30px" height="30px">'
                 self.re_layout.text = "a" if self.re_layout.text == "b" else "b"
                 if not bin.global_variables.no_save:
                     try:
