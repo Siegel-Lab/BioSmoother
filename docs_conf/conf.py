@@ -31,7 +31,7 @@ author = 'Markus Schmidt'
 
 # The full version, including alpha/beta/rc tags
 b_version = (pkg_resources.files("biosmoother") / "VERSION").read_text()
-release = b_version.split()[1 if b_version.startswith("D-") else 0]
+release = b_version.split("-")[1 if b_version.startswith("D-") else 0]
 
 rst_epilog = """
 .. |BioSmootherVersion| replace:: {versionnum}
