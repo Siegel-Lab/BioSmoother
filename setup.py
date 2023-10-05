@@ -53,7 +53,6 @@ def package_files(directory):
             paths.append(os.path.join('..', path, filename))
     return paths
 extra_files = package_files('biosmoother')
-print(extra_files)
 
 setup(
     name="biosmoother",

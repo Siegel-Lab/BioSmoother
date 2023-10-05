@@ -7,6 +7,7 @@ build:
   jobs:
     pre_build:
       - export SMOOTHER_HIDE_SUBCOMMANDS_MANUAL=true
+      - git diff
     post_build:
       - mkdir -p $READTHEDOCS_OUTPUT/html/docs_conf/static/
       - cp -r docs_conf/static/* $READTHEDOCS_OUTPUT/html/docs_conf/static/
