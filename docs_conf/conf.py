@@ -15,6 +15,14 @@ import sys
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 
+try:
+    import importlib.resources as pkg_resources
+except ImportError:
+    # Try backported to PY<37 `importlib_resources`.
+    import importlib_resources as pkg_resources
+
+import libbiosmoother
+
 # -- Project information -----------------------------------------------------
 
 project = 'biosmoother'
@@ -22,8 +30,17 @@ copyright = '2022, Markus Schmidt'
 author = 'Markus Schmidt'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = (pkg_resources.files("biosmoother") / "VERSION").read_text()
 
+rst_epilog = """
+.. |BioSmootherVersion| replace:: {versionnum}
+""".format(
+versionnum = release,
+) + """
+.. |libBioSmootherVersion| replace:: {versionnum}
+""".format(
+versionnum = libbiosmoother.LIB_BIO_SMOOTHER_CPP_VERSION,
+)
 
 # -- General configuration ---------------------------------------------------
 
