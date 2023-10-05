@@ -30,12 +30,13 @@ copyright = '2022, Markus Schmidt'
 author = 'Markus Schmidt'
 
 # The full version, including alpha/beta/rc tags
-release = (pkg_resources.files("biosmoother") / "VERSION").read_text()
+b_version = (pkg_resources.files("biosmoother") / "VERSION").read_text()
+release = b_version.split()[1 if b_version.startswith("D-") else 0]
 
 rst_epilog = """
 .. |BioSmootherVersion| replace:: {versionnum}
 """.format(
-versionnum = release,
+versionnum = b_version,
 ) + """
 .. |libBioSmootherVersion| replace:: {versionnum}
 """.format(
