@@ -20,5 +20,3 @@ biosmoother.egg-info/
 build/
 dist/
 docs/*
-a/docs_conf/dev_env_linux.yml
-b/docs_conf/dev_env_linux.yml
