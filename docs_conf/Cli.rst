@@ -3,6 +3,7 @@
 Command Line Interface
 ----------------------
 
+Below is the technical documentation for Smoother's command line interface.
 
 .. argparse::
    :module: biosmoother

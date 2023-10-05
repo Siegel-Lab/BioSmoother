@@ -523,7 +523,7 @@ The `Binomial test` and `Associated slices` normalizations are implemented for a
 
 ##### Associated slices normalization
 
-`Associated slices`\: normalizes each bin by the sum of *trans* chromatin-associated slices of the interacting RNA. First, chromatin-associated slices need to be determined. For this, we compute the *Average RNA reads per kb* and the *Maximal DNA reads in a bin* for a set of slices. You can adjust the :guilabel:`Number of samples` taken, using the so-named slider. Slices are chosen from a type of annotation. The specific :guilabel:`Annotation type` can be picked using a dropdown button. For the *Maximal DNA reads*, horizontal bin size of slices within the slices can be adjusted using the :guilabel:`Section size max coverage` slider. *Average RNA reads* are always normalized to 1 kb bins. Slices are considered as chromatin-associated if they fall into the ranges set by the :guilabel:`RNA reads per kbp bounds` and :guilabel:`Maximal DNA reads in bin bounds` sliders. To visualize the effects of these bounds, two plots show the distribution of the *Average RNA reads per kb* and the *Maximal DNA reads in a bin* for the selected slices. Grey dots indicate slices that are filtered out. Finally, bins are normalized by the *trans* coverage of the slices. You can display this coverage using the :guilabel:`Display background as secondary data` checkbox. (@todo MS: we need pictures here!) (For comprehensive computational explanation of this normalization see [#smoother]_, [#grid_seq1]_ [#grid_seq2]_). In [#grid_seq1]_ [#grid_seq2]_, they use this normalization in combination with filtering out reads that do not overlap genes on their RNA read (see the :kbd:`Filter->Annotations` :ref:`tab <annotations_sub_tab>`).
+`Associated slices`\: normalizes each bin by the sum of *trans* chromatin-associated slices of the interacting RNA. First, chromatin-associated slices need to be determined. For this, we compute the *Average RNA reads per kb* and the *Maximal DNA reads in a bin* for a set of slices. You can adjust the :guilabel:`Number of samples` taken, using the so-named slider. Slices are chosen from a type of annotation. The specific :guilabel:`Annotation type` can be picked using a dropdown button. For the *Maximal DNA reads*, horizontal bin size of slices within the slices can be adjusted using the :guilabel:`Section size max coverage` slider. *Average RNA reads* are always normalized to 1 kb bins. Slices are considered as chromatin-associated if they fall into the ranges set by the :guilabel:`RNA reads per kbp bounds` and :guilabel:`Maximal DNA reads in bin bounds` sliders. To visualize the effects of these bounds, two plots show the distribution of the *Average RNA reads per kb* and the *Maximal DNA reads in a bin* for the selected slices. Grey dots indicate slices that are filtered out. Finally, bins are normalized by the *trans* coverage of the slices. You can display this coverage using the :guilabel:`Display background as secondary data` checkbox. (@todo MS: we need pictures here!) (For comprehensive computational explanation of this normalization see the Smoother manuscript [#smoother]_ and the GRID-seq publication [#grid_seq1]_ [#grid_seq2]_). GRID-seq [#grid_seq1]_ [#grid_seq2]_ uses this normalization in combination with filtering out reads that do not overlap genes on their RNA read (see the :kbd:`Filter->Annotations` :ref:`tab <annotations_sub_tab>`).
 
 It is possible to change the axis in which the normalisation is performed using the :guilabel:`Compute background for columns` checkbox, by default this normalization is performed column-wise but if the box is un-ticked the normalization is performed row-wise. A tick box allows to choose whether to use the intersection of chromatin-associated slices between datasets as background, otherwise the union of slices is used. This is relevant because the normalization is done separately on the datasets, but to make the normalization match between the datasets, the chromatin-associated slices need to match. The :guilabel:`Ignore cis interactions` box also allows to either ignore or consider *cis* interactions (within same contig).
 
@@ -670,21 +670,52 @@ The :guilabel:`Directionality` dropdown menu allows choosing whether to display 
 
 #### The Coordinates subtab
 
-:kbd:`Filter->Coordinates` allows filtering the regions displayed on the heatmap. The :guilabel:`Minimum Distance from Diagonal` slider allows setting a minimal Manhattan distance by filtering out bins that are closer to the diagonal than the set value in kbp. The dropdown :guilabel:`Annotation Coordinate System` menu allow to select the annotation to use as filter. Only annotations that have been listed on the `-f` option when running the `init` command to generate the index are available, as default the filterable annotation is gene. Two tick boxes allow changing the coordinate system from bins to the filterable annotation for rows and/or columns. The dropdown :guilabel:`Multiple Annotations in Bin` gives four options to deal with bins that comprise multiple annotations:
-- `Combine region from first to last annotation`
-- `Use first annotation in Bin`
-- `Use one prioritized annotation (stable while zoom- and pan-ing)` (@todo ABS:how do you prioritize it? Or does it do it automatically? MS: oh yes, this... I will write something!)
-- `Increase number of bins to match number of annotations (might be slow)`
-The dropdown :guilabel:`Multiple Bins for Annotation` gives three options to deal with annotations that fall into multiple bins:
-- `Stretch one bin over entire annotation`
-- `Show several bins for the annotation`
-- `Make all annotations size 1`
+:kbd:`Filter->Coordinates` allows filtering the regions displayed on the heatmap.
+
 In the :guilabel:`Active contigs` table, the contigs from the reference genome to be displayed on the two axis from the heatmap can be selected by tick boxes. The order in which the contigs are displayed can be modified by moving the contig names up or down using the arrows.
+
+
 The dropdown :guilabel:`Symmetry` gives four options to filter interactions by symmetry:
 - `Show all interactions` displays all interactions from the input pairs file which might not be redundant if interactions only appear once and thus might only display on one of the two triangles on the sides of the diagonal.
 - `Only show symmetric interactions` displays only symmetric interactions on asymmetric matrices (RNA-DNA) or on redundant DNA-DNA heatmaps. It is worth noting, that for non-redundant Hi-C heatmaps, this option would only show the diagonal.
 - `Only show asymmetric interactions` displays only asymmetric interactions and is useful for asymmetric matrices (RNA-DNA).
 - `Mirror interactions to be symmetric` allows showing interactions on the two sides of the diagonal for non-redundant Hi-C matrices.
+
+
+The :guilabel:`Minimum Distance from Diagonal` slider allows setting a minimal Manhattan distance by filtering out bins that are closer to the diagonal than the set value in kbp. 
+
+##### Annotation coordinate system
+The dropdown :guilabel:`Annotation Coordinate System` menu allows to select the annotation type to use as the annotation coordinates. Two tick boxes allow activating the coordinate system for rows and/or columns. If this coordinate system is activate, the whitespace between the annotations is removed. I.e. the bins are placed only on the annotations. This will shrink down the size of the heatmap. Only annotations that have been listed on the `-f` option when running the `init` command to generate the index are available, as default the filterable annotation is `gene`. 
+
+When zooming in at one annotation, there are multiple ways to place bins. The dropdown :guilabel:`Multiple Bins for Annotation` let's you choose to:
+- `Stretch one bin over entire annotation`: Places one bin per annotation. Since annotations might have different sizes, this will result in bins of different sizes (visually and on the genome).
+- `Show several bins for the annotation`: Place as many bins as you can fit into the annotation. This will result in bins of the same sizes (visually ad on the genome).
+- `Make all annotations size 1`: Compress all annotations to be of size 1, then place one bin per annotation. This will result in bins that are visually of the same size, however, on the genome bins will still cover the uncompressed annotations and therefore have different sizes.
+
+
+###### Prioritized annotation coordinate system
+
+When picking using the annotation coordinate system, it is crucial to filter out reads that do not overlap the chosen annotation type.
+Let's say we use 'gene' coordinates on the x-axis. Then, each column of the heatmap corresponds to one gene. 
+At least at at the most zoomed in level.
+However, when zooming out, Smoother has to keep the number of bins that are visible on screen roughly constent.
+Hence, at some points it will have t display two ore more neighboring genes in one column.
+This is all good and fine as long these neighboring genes are also neighbors in the genome.
+However, most likely, they are not. There will be some gap in between the genes. 
+When grouping the genes together into one column we hence have to remove the reads that fall into these gap.
+The best way to do this is using the :ref:`Annotation filter <annotations_sub_tab>`, to remove all genes that do not overlap a gene on the x-axis.
+In fact, this filter is automatically activated when using the annotation coordinate system.
+However, this filter cannot be used for all annotation types. 
+It is only computed for a hadfull annotation types that were specified when running the `init` command to generate the index.
+So, what do we do if we do not want to recompute the whole index just to try out annotation coordinates.
+
+We came up with a few options:
+The dropdown :guilabel:`Multiple Annotations in Bin` gives four options to deal with bins that comprise multiple annotations:
+- `Combine region from first to last annotation`: This is the option for the annotation filtering.
+- `Increase number of bins to match number of annotations (might be slow)`: This will obviously fix our problem, but when looking at large regions, this will be very slow since too many bins will have to be computed.
+- `Use first annotation in Bin`: Counting only the first annotation in the bin will make sure that we do not count any reads that fall into the gap between the genes. However, while moving around or zooming, the first annotation of a bin will change. Hence, the heatmap will appear to 'sparkle'. While moving around, every now and then an annotation with a strong interation will be the first in a bin, lighting up in the heatmap. 
+- `Use one prioritized annotation (stable while zoom- and pan-ing)`: This option fixes the 'sparkling' of the previous option, by keeping the annotation that is displayed in a bin constant while zooming and panning. For this, annotations are prioritized, and the annotation with the highest priority is displayed. We need a specific priority system, to ensure that no 'sparkling' is happening. We use the following system: The priority of an annotation is the *n*, where 2^*n* is the highest number that the index of the annotation can be evenly divided by. Hence, this would be the prioritis for the first 5 annotations (i.e. the annotations with index 1, 2, 3, 4, and 5): 0 (1 / 2^0), 1 (2 / 2^1), 0 (3 / 2^0), 2 (4 / 2^2), 0 (5 / 2^0). This is stable while panning around. Furter, new detail will be revealed when zooming in and zooming out will gradually remove visible slices.
+
 
 .. index:: Annotations, Filter out interactions that overlap annotation, Filter out interactions that don't overlap annotation, Visible annotations
 .. _annotations_sub_tab:

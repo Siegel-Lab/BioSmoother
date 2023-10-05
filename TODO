@@ -1,5 +1,7 @@
 # smoother todo (ranked)
 
+- anotation coord system should allow all annotations to be picked
+    - if an annotation that is not filterable is picked and 'multiple annos in bin' is set to 'combine', an error should be thrown.
 - move all the tooltips and button names into config files.
     - use these files for the interface AND the set/get commands.
 - upload session button
