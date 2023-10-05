@@ -7,7 +7,6 @@ build:
   jobs:
     pre_install:
       - git checkout -- docs_conf/dev_env_linux.yml # don't ask me why readthedocs changes this file...
-      - git diff
     pre_build:
       - export SMOOTHER_HIDE_SUBCOMMANDS_MANUAL=true
     post_build:
