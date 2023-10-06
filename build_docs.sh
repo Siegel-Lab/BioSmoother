@@ -23,6 +23,9 @@ cp -r docs_conf/static/* ${SPHINX_HTML_DIR}/docs_conf/static/
 mkdir -p ${SPHINX_HTML_DIR}/biosmoother/static
 cp biosmoother/static/favicon.* ${SPHINX_HTML_DIR}/biosmoother/static
 
+sed -i 's/Index/Contents/' ${SPHINX_HTML_DIR}/genindex.html
+sed -i 's/<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index<\/a><\/li>/<li class="toctree-l1"><a class="reference internal" href="genindex.html">Contents<\/a><\/li>/' ${SPHINX_HTML_DIR}/*.html
+
 # ${SPHINX_EXECUTABLE} \
 #     -E -a -q -b latex \
 #     -d ${SPHINX_CACHE_DIR} \

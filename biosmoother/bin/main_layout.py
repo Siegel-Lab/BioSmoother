@@ -663,7 +663,7 @@ class MainLayout:
             self.curdoc.hold()
             self.do_config()
             self.curdoc.unhold()
-            #@todo-low-prio why do i need to do this? the comp graph should realize that it needs to update...
+            # @todo-low-prio why do i need to do this? the comp graph should realize that it needs to update...
             self.session.clear_cache()
             self.trigger_render()
             if not bin.global_variables.quiet:
@@ -1277,7 +1277,9 @@ class MainLayout:
                 self.spinner.text = '<img src="biosmoother/static/stirring.gif" width="30px" height="30px">'
 
             self.curdoc.add_next_tick_callback(callback)
-            export_to_server = self.session.get_value(["settings", "export", "export_to_server"])
+            export_to_server = self.session.get_value(
+                ["settings", "export", "export_to_server"]
+            )
 
             if self.session.get_value(["settings", "export", "export_format"]) == "tsv":
                 if export_to_server:
@@ -1286,7 +1288,11 @@ class MainLayout:
                     heatmap, track_x, track_y = get_tsv(self.session)
                     output_format = "text/tsv;charset=utf-8;"
                     output_data = [heatmap, track_x, track_y]
-                    output_filename_extensions = [".heatmap.tsv", ".track.x.tsv", ".track.y.tsv"]
+                    output_filename_extensions = [
+                        ".heatmap.tsv",
+                        ".track.x.tsv",
+                        ".track.y.tsv",
+                    ]
                     decode_to_bytes = False
             elif (
                 self.session.get_value(["settings", "export", "export_format"]) == "svg"
@@ -1304,7 +1310,9 @@ class MainLayout:
                 if export_to_server:
                     export_png(self.session)
                 else:
-                    output_data = [base64.encodebytes(get_png(self.session)).decode('utf-8')]
+                    output_data = [
+                        base64.encodebytes(get_png(self.session)).decode("utf-8")
+                    ]
                     output_format = "image/png"
                     output_filename_extensions = [".png"]
                     decode_to_bytes = True
@@ -1315,7 +1323,8 @@ class MainLayout:
                 if not export_to_server:
                     for data, ext in zip(output_data, output_filename_extensions):
                         self.download(
-                            self.session.get_value(["settings", "export", "prefix"]) + ext,
+                            self.session.get_value(["settings", "export", "prefix"])
+                            + ext,
                             data,
                             file_type=output_format,
                             decode_to_bytes=decode_to_bytes,
@@ -2706,11 +2715,45 @@ class MainLayout:
             orderable=False,
         )
 
+        def anno_coords_event(e):
+            if self.session.get_value(["contigs", "annotation_coordinates"]) == e:
+                return
+
+            self.session.set_value(["contigs", "annotation_coordinates"], e)
+            can_combine = self.session.get_value(
+                ["contigs", "annotation_coordinates"]
+            ) in self.session.get_value(["annotation", "filterable"])
+
+            if (
+                can_combine
+                and self.session.get_value(
+                    ["settings", "filters", "multiple_annos_in_bin"]
+                )
+                != "combine"
+            ):
+                self.session.set_value(
+                    ["settings", "filters", "multiple_annos_in_bin"], "combine"
+                )
+                self.do_config()
+            if (
+                not can_combine
+                and self.session.get_value(
+                    ["settings", "filters", "multiple_annos_in_bin"]
+                )
+                == "combine"
+            ):
+                self.session.set_value(
+                    ["settings", "filters", "multiple_annos_in_bin"], "max_fac_pow_two"
+                )
+                self.do_config()
+            self.trigger_render()
+
         anno_coords = self.dropdown_select_session(
             "Annotation Coordinate System",
             "tooltip_coordinates",
-            ["annotation", "filterable"],
+            ["annotation", "list"],
             ["contigs", "annotation_coordinates"],
+            event=anno_coords_event,
         )
         coords_x = self.make_checkbox(
             "Use Annotation Coordinates for the columns",
@@ -2883,13 +2926,24 @@ class MainLayout:
             if "biosmoother_index_path" in os.environ
             else "unknown"
         )
-        self.download_session = Button(label="Download current session",
+        self.download_session = Button(
+            label="Download current session",
             width=SETTINGS_WIDTH,
             sizing_mode="fixed",
-            css_classes=["other_button", "tooltip", "tooltip_download_session"], # @todo
+            css_classes=[
+                "other_button",
+                "tooltip",
+                "tooltip_download_session",
+            ],  # @todo
         )
+
         def callback(e):
-            self.download("session.json", json.dumps(self.session.get_value([])), "test/json;charset=utf-8;")
+            self.download(
+                "session.json",
+                json.dumps(self.session.get_value([])),
+                "test/json;charset=utf-8;",
+            )
+
         self.download_session.on_click(callback)
 
         self.color_layout = row(
@@ -3280,9 +3334,13 @@ class MainLayout:
             [
                 normalization,
                 normalization_cov,
-                Tabs(tabs=[Panel(child=self.bin_test_norm, title="Binom. test"),
-                           Panel(child=self.ice_norm, title="IC"),
-                           Panel(child=self.slices_norm, title="Assoc. Slices")])
+                Tabs(
+                    tabs=[
+                        Panel(child=self.bin_test_norm, title="Binom. test"),
+                        Panel(child=self.ice_norm, title="IC"),
+                        Panel(child=self.slices_norm, title="Assoc. Slices"),
+                    ]
+                ),
             ],
         )
         self.make_panel(
@@ -3428,20 +3486,30 @@ class MainLayout:
                     try:
                         self.session.save_session()
                     except:
-                        self.print("WARNING: could not save session. Do you have write permissions for the index?")
+                        self.print(
+                            "WARNING: could not save session. Do you have write permissions for the index?"
+                        )
                 sys.exit()
 
         quit_ti.on_change("value", close_server)
         self.re_layout = Div(text="")
         self.re_layout.js_on_change("text", CustomJS(code=JS_UPDATE_LAYOUT))
-        self.download_js_callback = CustomJS(code=JS_DOWNLOAD, args={"filename": "unknown",
-                                                                      "filetext": "unknown",
-                                                                      "filetype": 'text/csv;charset=utf-8;',
-                                                                      "decode_to_bytes": False})
+        self.download_js_callback = CustomJS(
+            code=JS_DOWNLOAD,
+            args={
+                "filename": "unknown",
+                "filetext": "unknown",
+                "filetype": "text/csv;charset=utf-8;",
+                "decode_to_bytes": False,
+            },
+        )
         self.download_js_callback_div = Div(text="")
         self.download_js_callback_div.js_on_change("text", self.download_js_callback)
 
-        communication = row([quit_ti, self.re_layout, self.download_js_callback_div], name="communication")
+        communication = row(
+            [quit_ti, self.re_layout, self.download_js_callback_div],
+            name="communication",
+        )
         communication.visible = False
 
         self.curdoc.add_root(self.heatmap)
@@ -3455,13 +3523,21 @@ class MainLayout:
         self.curdoc.add_root(self.anno_x_axis)
         self.curdoc.add_root(column([self.raw_x, self.raw_x_log], name="raw_x"))
         self.curdoc.add_root(
-            row([self.raw_x_axis, self.raw_x_axis_log], name="raw_x_axis", sizing_mode="stretch_height")
+            row(
+                [self.raw_x_axis, self.raw_x_axis_log],
+                name="raw_x_axis",
+                sizing_mode="stretch_height",
+            )
         )
         self.curdoc.add_root(self.anno_y)
         self.curdoc.add_root(self.anno_y_axis)
         self.curdoc.add_root(row([self.raw_y, self.raw_y_log], name="raw_y"))
         self.curdoc.add_root(
-            column([self.raw_y_axis, self.raw_y_axis_log], name="raw_y_axis", sizing_mode="stretch_width")
+            column(
+                [self.raw_y_axis, self.raw_y_axis_log],
+                name="raw_y_axis",
+                sizing_mode="stretch_width",
+            )
         )
         self.curdoc.add_root(communication)
         self.curdoc.add_root(status_bar_row)
@@ -3469,14 +3545,22 @@ class MainLayout:
 
         self.update_visibility()
 
-    def download(self, filename, file_data, file_type='text/tsv;charset=utf-8;', decode_to_bytes=False):
+    def download(
+        self,
+        filename,
+        file_data,
+        file_type="text/tsv;charset=utf-8;",
+        decode_to_bytes=False,
+    ):
         # other file_types: image/svg+xml;
         # other file_types: image/png;
         self.download_js_callback.args["filename"] = filename
         self.download_js_callback.args["filetext"] = file_data
         self.download_js_callback.args["filetype"] = file_type
         self.download_js_callback.args["decode_to_bytes"] = decode_to_bytes
-        self.download_js_callback_div.text = "blub" if self.download_js_callback_div.text == "" else ""
+        self.download_js_callback_div.text = (
+            "blub" if self.download_js_callback_div.text == "" else ""
+        )
 
     # overlap of the given areas relative to the larger area
     @staticmethod
@@ -3561,8 +3645,12 @@ class MainLayout:
                 raw_data_y = self.session.get_tracks(True, self.print)
                 min_max_tracks_x = self.session.get_min_max_tracks(False, self.print)
                 min_max_tracks_y = self.session.get_min_max_tracks(True, self.print)
-                min_max_tracks_non_zero_x = self.session.get_min_max_tracks_non_zero(False, self.print)
-                min_max_tracks_non_zero_y = self.session.get_min_max_tracks_non_zero(True, self.print)
+                min_max_tracks_non_zero_x = self.session.get_min_max_tracks_non_zero(
+                    False, self.print
+                )
+                min_max_tracks_non_zero_y = self.session.get_min_max_tracks_non_zero(
+                    True, self.print
+                )
 
                 d_anno_x = self.session.get_annotation(False, self.print)
                 d_anno_y = self.session.get_annotation(True, self.print)
@@ -3603,7 +3691,13 @@ class MainLayout:
 
                 error = self.session.get_error()
                 self.have_error = len(error) > 0
-                error_text = "None" if len(error) == 0 else "<font color=\"#FF0000\">" + error.replace("\n", "; ") + "</font>"
+                error_text = (
+                    "None"
+                    if len(error) == 0
+                    else '<font color="#FF0000">'
+                    + error.replace("\n", "; ")
+                    + "</font>"
+                )
                 end_time = time.perf_counter()
                 start_render_time = time.perf_counter()
 
@@ -3805,15 +3899,17 @@ class MainLayout:
                     self.tick_formatter_y_2.args = contig_ticks_y
 
                     self.ranked_columns_data.data = ranked_slice_y
+
                     def set_range(plot_range, data):
                         if len(data) > 0:
                             start = min(data)
                             end = max(data)
                             size = end - start
-                            start -= size*RANGE_PADDING
-                            end += size*RANGE_PADDING
+                            start -= size * RANGE_PADDING
+                            end += size * RANGE_PADDING
                             plot_range.start = start
-                            plot_range.end = end 
+                            plot_range.end = end
+
                     def set_log_range(plot_range, data):
                         filtered_data = [x for x in data if x > 0]
                         if len(filtered_data) > 0:
@@ -3822,7 +3918,8 @@ class MainLayout:
                             start *= LOG_PADDING
                             end /= LOG_PADDING
                             plot_range.start = start
-                            plot_range.end = end 
+                            plot_range.end = end
+
                     set_range(self.ranked_columns.x_range, ranked_slice_y["xs"])
                     set_log_range(self.ranked_columns.y_range, ranked_slice_y["ys"])
 
@@ -3903,7 +4000,9 @@ class MainLayout:
                     try:
                         self.session.save_session()
                     except:
-                        self.print("WARNING: could not save session. Do you have write permissions for the index?")
+                        self.print(
+                            "WARNING: could not save session. Do you have write permissions for the index?"
+                        )
 
             self.curdoc.add_next_tick_callback(callback)
 
@@ -4012,6 +4111,7 @@ class MainLayout:
         # for now we just send a few updates at different timepoints
         def layout_callback():
             self.re_layout.text = "a" if self.re_layout.text == "b" else "b"
+
         self.curdoc.add_timeout_callback(lambda: layout_callback(), 100)
         self.curdoc.add_timeout_callback(lambda: layout_callback(), 1000)
         self.curdoc.add_timeout_callback(lambda: layout_callback(), 10000)

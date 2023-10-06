@@ -28,7 +28,10 @@ def serve(args):
 
 
 def add_parsers(main_parser):
-    parser = main_parser.add_parser("serve", help="Open Smoother's graphical user interface and launch an exisiting existing index. If an index has been already launched before, the session will be restored with the parameters of the last session.")
+    parser = main_parser.add_parser(
+        "serve",
+        help="Open Smoother's graphical user interface and launch an exisiting existing index. If an index has been already launched before, the session will be restored with the parameters of the last session.",
+    )
     parser.add_argument(
         "index_prefix",
         help="Path to the index directory generated with the init command.",
@@ -68,7 +71,12 @@ def add_parsers(main_parser):
             ):
                 a["help"] = argparse.SUPPRESS
             else:
-                a["help"] = {"--show": "Immediateley open a browser tab for the served index. Only works if run locally.", "--port": "Use a particular port.", "--address": "Use a particular address.", "--allow-websocket-origin": "Public hostnames which may connect to the Smoother server. Check https://docs.bokeh.org/en/latest/docs/user_guide/server/deploy.html#security for more details."}[name]
+                a["help"] = {
+                    "--show": "Immediateley open a browser tab for the served index. Only works if run locally.",
+                    "--port": "Use a particular port.",
+                    "--address": "Use a particular address.",
+                    "--allow-websocket-origin": "Public hostnames which may connect to the Smoother server. Check https://docs.bokeh.org/en/latest/docs/user_guide/server/deploy.html#security for more details.",
+                }[name]
             yield name, a
 
     for arg in filter_args(bcss.Serve.args):
