@@ -14,8 +14,8 @@ build:
       - cp -r docs_conf/static/* $READTHEDOCS_OUTPUT/html/docs_conf/static/
       - mkdir -p $READTHEDOCS_OUTPUT/html/biosmoother/static
       - cp biosmoother/static/favicon.* $READTHEDOCS_OUTPUT/html/biosmoother/static
-      - sed -i 's/Index/Contents/' $READTHEDOCS_OUTPUT/html/genindex.html
-      - sed -i 's/href=\"genindex.html\">Index/href=\"genindex.html\">Contents/' $READTHEDOCS_OUTPUT/html/*.html
+      - sed -i "s/Index/Contents/" $READTHEDOCS_OUTPUT/html/genindex.html
+      - sed -i "s/href=\"genindex.html\">Index/href=\"genindex.html\">Contents/" $READTHEDOCS_OUTPUT/html/*.html
 
 conda:
   environment: docs_conf/dev_env_linux.yml
