@@ -1,7 +1,7 @@
 # Manual
-Smoother is an interactive analysis and visualization software for nucleic acid interactome data that allows the change of parameters such as normalization, bin size or MAPQ on-the-fly. Smoother can load multiple samples which can be grouped and compared. Smoother also allows filtering by annotations and the display of coverage for additional sequencing data. 
+Smoother is an interactive analysis and visualization software for nucleic acid interactome data that allows the change of parameters such as normalization, bin size or MAPQ on-the-fly. Smoother can load multiple samples which can be grouped and compared. Smoother also allows filtering by annotations and the display of coverage for additional sequencing data.
 
-Smoother is centered around an index including the genome, annotations and datasets to be analyzed and visualized. Using this index, Smoother is the first tool that allows changing analysis parameters on-the-fly.
+Smoother is centered around an index including the genome, annotations, and datasets to be analyzed and visualized. Using this index, Smoother is the first tool that allows changing analysis parameters on-the-fly.
 
 ## Installation
 
@@ -17,7 +17,7 @@ This will install `biosmoother`, the graphical user interface, and `libbiosmooth
 
 .. index:: compiling
 
-### Compiling yourself
+### Compiling Smoother yourself
 
 For installing Smoother via GitHub, run the following commands:
 
@@ -45,14 +45,14 @@ To see the main help page, run:
 
     biosmoother -h
 
-To see the help pages of the individual subcommands (e.g. for `init`), run:
+To see the help pages of the individual subcommands (e.g., for `init`), run:
 
     biosmoother init -h
 
 A complete list of subcommands can be found :ref:`here <cli_target>`. The following chapters explain how to use the subcommands for creating and interacting with indices.
 
 ## Creating an index
-All data to be analyzed and visualized on Smoother needs to be precomputed into an index. In the next chapters we will explain how to initialize an index and fill it with data.
+All data to be analyzed and visualized on Smoother needs to be precomputed into an index. In the next chapters, we will explain how to initialize an index and fill it with data.
 
 .. index:: init, gff, annotation, .sizes
 
@@ -60,11 +60,11 @@ All data to be analyzed and visualized on Smoother needs to be precomputed into 
 
 Before an index can be filled with interactome data, we must set it up for a given reference genome. Generating an empty index is done using the `init` subcommand. The command outputs an index directory.
 
-Let us create a new index for a trypanosome genome.
+Let us create a new index for the Trypanosoma brucei genome.
 
     biosmoother init my_index tryp.sizes
 
-This command will create a folder called `my_index.smoother_index`. In all other subcommands, we can now use `my_index` to refer to this index. `tryp.sizes` is a file that contains the contig sizes of our genome. It looks something like this:
+This command will create a folder called `my_index.smoother_index`. In all other subcommands, we can now use `my_index` to refer to this index. `tryp.sizes` is a file that contains the contig sizes of the trypanosome genome. It looks something like this:
 
     #contig_name contig_size
     chr1 844108
@@ -80,11 +80,11 @@ This gff file must match the [GFF specifications](http://gmod.org/wiki/GFF3), an
     Chr2   EuPathDB   rRNA   1582219 1583848 .   -   .   ID=Tb427_000074200:rRNA;description=unspecified product
 
 .. Important::
-    Currently we recommend Smoother only for genomes < 150Mbp in size, as Indices might become very large (multiple hundreds of gigabytes) otherwise. The easiest way to reduce index size is to increase the base resolution of the index. For this, you can use the `-d` parameter of the `init` subcommand. The base resolution is the highest resolution that can be displayed, so do not set it lower than the resolutions you are interested in.
+    Currently, we recommend Smoother only for genomes < 150Mbp in size, as indices might become very large (many hundreds of gigabytes) otherwise. The easiest way to reduce index size is to increase the base resolution of the index. For this, you can use the `-d` parameter of the `init` subcommand. The base resolution is the highest resolution that can be displayed, so do not set it lower than the resolutions you are interested in.
 
 The full documentation of the `init` subcommand can be found :ref:`here <init_command>`.
 
-.. index:: repl, .pairs
+.. index:: repl, pairs
 
 ### Adding replicates to an index
 
@@ -92,17 +92,17 @@ Adding data for a sample or replicate to an index is done with the `repl` subcom
 
 The basic usage of the `repl` subcommand is as follows:
 
-    biosmoother repl my_index replicate_data.tsv replicate_name
+    biosmoother repl my_index replicate_data replicate_name
 
-Here, `my_index` is the index the data shall be added to, `replicate_data.tsv` is a file containing the actual data, and `replicate_name` is the displayname of that dataset in the user interface.
+Here, `my_index` is the index the data shall be added to, `replicate_data` is a file containing the actual data, and `replicate_name` is the displayname of that dataset in the user interface.
 There is a way to load gzipped (or similar) datafiles into Smoother using pipes:
 
-    zcat replicate_data.tsv.gz | biosmoother repl my_index – replicate_name 
+    zcat replicate_data.gz | biosmoother repl my_index – replicate_name
 
 The full documentation of the `repl` subcommand can be found :ref:`here <repl_command>`.
 
 #### Input format for the repl command
-Smoother requires a whitespace (space or tab) delimited input pairs file containing the two-dimensional interactions. Each input pairs file contains the data for one sample or replicate to be analyzed and visualized. Each line in the file has the information for one interaction (i.e., two reads).
+Smoother requires a whitespace (space or tab) delimited input pairs file containing the two-dimensional interactions. Each input pairs file contains the data for one sample or replicate to be analyzed and visualized. Each line in the file has the information for one interaction.
 
 The default format for the input pairs file is compatible with the output from pairtools and corresponds to the following `-C` option for the `repl` subcommand: `-C [readID] chr1 pos1 chr2 pos2 [strand1] [strand2] [.] [mapq1] [mapq2] [xa1] [xa2] [cnt]`. Such a file would, for example, look something like this:
 
@@ -110,20 +110,22 @@ The default format for the input pairs file is compatible with the output from p
     SRR7721318.659929       chr1  294     chr1  366     +       -       UU      29      29      chr5,-1363,3S73M,2;chr11,+1132,73M3S,2;  chr6,-1131,2S74M,2;
     # ...
 
-Smoother also supports input files formatted as count matrices. For this, please use the `-C` option `chr1 pos1 chr2 pos2 cnt`. However, the limited information in such files won't allow Smoother to perform analyses at its full potential: Count matrices are already binned and thus the 'pos' columns correspond to the bin position. Hence, setting a smaller base resolution (with the `-d` option in the `init` subcommand) or using annotation filtering will not provide useful information and should be avoided. This is the case, since the individual positions of reads have been lost by using a count matrix file. So, filtering by annotation will only be able to consider the bin locations instead of the actual read locations. Similarly, the base resolution of the heatmap will be limited by the bin size of the count matrix. For example, if the input pairs file has a bin size of 10 kbp, the heatmap will not be able to display a resolution higher than 10 kbp. A count matrix would look something like this:
+Smoother also supports input files formatted as count matrices. A count matrix would look something like this:
 
     chr1    1    chr1      1    123
     chr1    1    chr1  10000     57
 
-See the table below for a summary of filtering functionalities of Smoother depending on the input file format with which the index has been generated:
+For this, please use the `-C` option `chr1 pos1 chr2 pos2 cnt`. However, it is important to note that the limited information in such files won't allow Smoother to perform analyses at its full potential. Indeed, count matrices are already binned and thus the 'pos' columns correspond to the bin position. Hence, setting a smaller base resolution (with the `-d` option in the `init` subcommand) or using annotation filtering will not provide useful information and should be avoided, since the individual positions of reads have been lost by using a count matrix file. The functionalities of Smoother will be limited: 1) filtering by annotation will only be able to consider the bin locations instead of the actual read locations; 2) similarly, the base resolution of the heatmap will be limited by the bin size of the count matrix. For example, if the input pairs file has a bin size of 10 kbp, the heatmap will not be able to display a resolution higher than 10 kbp.
+
+See the table below for a summary of filtering functionalities of Smoother depending on the input file format used to generate the index:
 
 <figure align=center>
 <img src="./docs_conf/static/filtering_functions.png" width=100%>
 <figcaption> <b>Figure:</b> Summary of filtering functionalities of Smoother depending on the input pairs file. <b>A</b>: column must exist; <b>X</b>: column cannot exist; <b>Y</b>: column exists; <b>N</b>: column does not exist; <b>On</b>: filter is active; <b>Off</b>: filter is inactive; <b>Off*</b>: filter can be active, but it is uninformative because position is binned</figcaption>
 </figure>
 
-The `-C` option accepts optional columns, e.g. with `-C [readID] chr1 pos1 chr2 pos2 [strand1] [strand2]`, readId, strand1 and strand2 are optional.
-In this case the input pairs file can contain rows with any of the following formats:
+The `-C` option accepts optional columns, indicated in squared brackets (e.g., with `-C [readID] chr1 pos1 chr2 pos2 [strand1] [strand2]`, readId, strand1 and strand2 are optional).
+In this case, the input pairs file can contain rows with any of the following formats:
 
     readID chr1 pos1 chr2 pos2 strand1 strand2
     readID chr1 pos1 chr2 pos2 strand1
@@ -138,10 +140,10 @@ The following columns can be included in the input pairs file:
 - `.`: column to ignore
 - `mapq`: mapping quality
 - `xa`: XA tag from BWA with secondary alignments with format (chr,pos,CIGAR,NM;)
-- `cnt`: read count frequency of row interaction. 
+- `cnt`: read count frequency of row interaction.
 
 .. Important::
-    In the case of asymmetric data (like RNA-DNA interactome), 1 is the data displayed on the x axis (columns) and 2 is the data displayed on the y axis (rows). As default RNA is on the x axis and DNA on the y axis; however, this can be modified interactively after launching Smoother.
+    In the case of asymmetric data (like RNA-DNA interactome), 1 is the data displayed on the x-axis (columns) and 2 is the data displayed on the y-axis (rows). As default RNA is on the x-axis and DNA on the y-axis; however, this can be modified interactively after launching Smoother.
 
 In the following subsections, we describe examples of the preprocessing workflow from raw demultiplexed fastq files to input pairs files for symmetric and asymmetric data sets.
 
@@ -191,8 +193,8 @@ Below an example of some lines of a Hi-C input pairs file that can be used to ge
     #chromsize: BES12_Tb427v10 48283
     # ...
     #columns: readID chrom1 pos1 chrom2 pos2 strand1 strand2 pair_type mapq1 mapq2 XA1 XA2
-    SRR7721318.37763890     BES10_Tb427v10  103     BES10_Tb427v10  4813    -       +       UU      0       0               
-    SRR7721318.42386417     BES10_Tb427v10  184     BES10_Tb427v10  2446    +       -       UU      0       0               
+    SRR7721318.37763890     BES10_Tb427v10  103     BES10_Tb427v10  4813    -       +       UU      0       0              
+    SRR7721318.42386417     BES10_Tb427v10  184     BES10_Tb427v10  2446    +       -       UU      0       0              
     SRR7721318.659929       BES10_Tb427v10  294     BES10_Tb427v10  366     +       -       UU      29      29      unitig_172_Tb427v10,-1363,3S73M,2;BES12_Tb427v10,+1132,73M3S,2;BES12_Tb427v10,+1432,73M3S,2;unitig_172_Tb427v10,-1063,3S73M,2;  BES12_Tb427v10,-1131,2S74M,2;unitig_172_Tb427v10,+1063,74M2S,2;unitig_172_Tb427v10,+1363,74M2S,2;BES12_Tb427v10,-1431,2S74M,2;
     # ...
 
@@ -226,15 +228,15 @@ The RNA and DNA read files are mapped to the reference genome using bwa aln with
     bwa aln -N ${GENOME_NAME}.fna {DNA}.fq > {DNA}.sai
 
 Convert the output from the alignment to SAM format with a value for the -n parameter high enough to keep all interesting multimapping reads.
- 
+
     bwa samse -n 60 ${GENOME_NAME}.fna {RNA}.sai {RNA}.fq > {RNA}.sam
     bwa samse -n 60 ${GENOME_NAME}.fna {DNA}.sai {DNA}.fq > {DNA}.sam
- 
+
 Generate tab-separated text files for RNA and for DNA with the information from the SAM files and adding dummy values (notag) if there is no XA tag.
 
     cat {RNA}.sam | awk -F '\t' 'BEGIN {OFS="\t";ORS=""} {if ($1 ~ !/^@/ && $3 ~ !/*/) {print $3,$4,$1,$5; for(i=12;i<=NF;i+=1) if ($i ~ /^XA:Z:/) print "",$i; print "\n"}}' | awk -F '\t' 'BEGIN {OFS="\t";ORS=""} {print $1,$2,$3,$4; if(NF<5) print "\tnotag"; else print "",$5; print "\n"}' >> {RNA}
     cat {DNA}.sam | awk -F '\t' 'BEGIN {OFS="\t";ORS=""} {if ($1 ~ !/^@/ && $3 ~ !/*/) {print $3,$4,$1,$5; for(i=12;i<=NF;i+=1) if ($i ~ /^XA:Z:/) print "",$i; print "\n"}}' | awk -F '\t' 'BEGIN {OFS="\t";ORS=""} {print $1,$2,$3,$4; if(NF<5) print "\tnotag"; else print "",$5; print "\n"}' >> {DNA}
- 
+
 Sort the RNA and DNA tab-separated text files.
 
     sort -k1,1 -k2,2n {RNA} > {RNA_k1k2}
@@ -266,23 +268,23 @@ Adding uni-dimensional data to an index is done with the `track` subcommand. Suc
 
 The basic usage of the `track` subcommand is as follows:
 
-    biosmoother track my_index track_data.tsv track_name
+    biosmoother track my_index track_data track_name
 
-Here, `my_index` is the index the data shall be added to, `track_data.tsv` is a file containing the actual data, and `track_name` is the displayname of that dataset in the user interface.
+Here, `my_index` is the index the data shall be added to, `track_data` is a file containing the actual data, and `track_name` is the displayname of that dataset in the user interface.
 There is a way to load gzipped (or similar) datafiles into Smoother using pipes:
 
-    zcat track_data.tsv.gz | biosmoother repl my_index – track_name 
+    zcat track_data.gz | biosmoother repl my_index – track_name
 
 The full documentation of the `track` subcommand can be found :ref:`here <track_command>`.
 
 #### Input format for the track command
-Smoother requires a whitespace (space or tab) delimited input coverage file for the secondary data to be loaded with the `track` subcommand. 
+Smoother requires a whitespace (space or tab) delimited input coverage file for the secondary data to be loaded with the `track` subcommand.
 
 The default format for the input coverage file corresponds to the following `-C` option for the `track` subcommand: `-C [readID] chr pos [strand] [mapq] [xa] [cnt]`.
 
 The input coverage file can be generated from a .bed or .sam file from the secondary data set. As an example, the input coverage file can be directly generated from the bwa mem .sam output using the following command:
 
-    cat alignments.sam | awk '!/^#|^@/ {print $1, $3, $4, $2 % 16 == 0 ? "+" :"-", $5, $12}' OFS="\t" > coverage.tsv
+    cat alignments.sam | awk '!/^#|^@/ {print $1, $3, $4, $2 % 16 == 0 ? "+" :"-", $5, $12}' OFS="\t" > coverage
 
 ## Using the graphical user interface
 
@@ -325,13 +327,14 @@ Follow this url with any web browser to open Smoother on the server.
 To allow multiple users to use Smoother at the same time, you can use a different port for each user.
 
 .. Important::
-    Remember to undo the port forwarding from the client to th master node after you are done using Smoother and before you log out. This can be done by killing the ssh command: `killall ssh`.
+    Remember to undo the port forwarding from the client to the master node after you are done using Smoother and before you log out. This can be done by killing the ssh command: `killall ssh`.
 
 .. index:: webserver, no_save, keep_alive, allow-websocket-origin
 
 #### Setting up a webserver with Smoother
 
 Since Smoother is a web application, it can be set up as a webserver. This allows multiple users to access Smoother at the same time. To do this, you can use the `--keep_alive`, and `--no_save` options, so that Smoother does not shutdown once one user leaves and does not save the changes made by one user for the next user. To allow other machines connecting to the server, you have to configure the `--allow-websocket-origin` option. For example, to allow connections from any machine, you can use the following command: `--allow-websocket-origin=*`.
+
 
 
 .. index:: Show / Hide, Working spinner, Coordinate axis, Regions axis
@@ -344,7 +347,7 @@ Since Smoother is a web application, it can be set up as a webserver. This allow
 </figure>
 
 Smoother's interface consists of several panels:
-- *Working spinner*: Visible, while Smoother in computing a new heatmap.
+- *Working spinner*: Visible, while Smoother is computing a new heatmap.
 - *Un-/re-do arrows*: Click to undo or redo changes.
 - *Navigation bar*: Displays the currently visible region and allows to jump to a region of interest.
 - *Plot tools*: Allows toggling ways to interact with the plots.
@@ -377,7 +380,7 @@ The control panel on the top right corner has the following buttons from left to
 
 - :guilabel:`Pan` enables navigation by clicking and dragging in the plots.
 - :guilabel:`Box zoom` allows to zoom into a region of interest by selecting the region with a box.
-- :guilabel:`Wheel zoom` enables zooming in and out by scrolling. 
+- :guilabel:`Wheel zoom` enables zooming in and out by scrolling.
 - :guilabel:`Hover` displays information for the genomic coordinates, interaction score, and reads by group for the current bin of the heatmap. :guilabel:`Hover` also displays information of the name and colour of displayed coverage tracks and the scores for the current bins in the coverage track.
 - :guilabel:`Crosshair` highlights the row and column coordinates of the current location.
 - :guilabel:`Reset` resets the heatmap to default settings.
@@ -389,7 +392,9 @@ The control panel on the top right corner has the following buttons from left to
 </figure>
 
 
+
 .. index:: Navigation bar
+.. _navigation_bar:
 
 #### The Navigation bar
 
@@ -412,7 +417,7 @@ If you want to merely change the range of the x-axis, you can omit the `Y=[...]`
 
     X=[chrX1: 10 kbp .. chrX2: 100 kbp]
 
-If you want to change both axis to the same region, simply drop the `X=` and `Y=`
+If you want to change both axes to the same region, simply drop the `X=` and `Y=`
 
     chr1: 10 kbp .. chr2: 100 kbp
 
@@ -420,7 +425,7 @@ If the entire contig shall be visible, coordinates can be omitted:
 
     chr1 .. chr2
 
-Here the heatmap would include `chr1` and `chr2` fully: I.e., start at the beginning of `chr1` and end at the ending of `chr2`. If `chr1` equals `chr2`, this can be expressed even simpler:
+Here the heatmap would include `chr1` and `chr2` fully: I.e., start at the beginning of `chr1` and end at the end off `chr2`. If you want to visualize only one contig you can use this:
 
     chr1
 
@@ -440,7 +445,7 @@ Negative coordinates are allowed, the following command will show a 200 kbp regi
 
     chr1: -100 kbp .. 100 kbp
 
-Capitalization does not matter for all inputs to the :guilabel:`Navigation bar`. 
+Capitalization does not matter for all inputs to the :guilabel:`Navigation bar`.
 
 .. Hint::
     Inputting a `*` into the :guilabel:`Navigation bar` will make the full heatmap visible.
@@ -450,12 +455,12 @@ Capitalization does not matter for all inputs to the :guilabel:`Navigation bar`.
 ### The Status bar
 
 The status bar displays a bunch of information about the current state of Smoother.
-- *Bin size*: First, the size of the currently visible bins is shown. If bins are square, one number is given, while for rectangular bins the size is given as `width` x `height`.
-- *Times*: Next, Smoother display the time it took to process and render the currently visible heatmap.
+- *Bin size*: First, the size of the currently visible bins is shown. If bins are squared, one number is given, while for rectangular bins the size is given as `width` x `height`.
+- *Times*: Next, Smoother displays the time it took to process and render the currently visible heatmap.
 - *Number of bins*: Then, the total number of bins is shown.
 - *Errors*: Finally, if there are any errors, they are displayed here.
 
-If you trigger Smoother to rerender the heatmap, the status bar will display that smoother is rendering and the reason why.
+If you trigger Smoother to rerender the heatmap, the status bar will display that Smoother is rendering and the reason why.
 
 .. index:: File
 
@@ -470,17 +475,18 @@ In the :kbd:`File` tab of Smoother, there are three subtabs\: :kbd:`->Presetting
 :kbd:`File->Presetting` allows performing analysis with predetermined settings. Three analyses are already preconfigured and available on Smoother for doing normalizations as in GRID-seq [#grid_seq1]_ [#grid_seq2]_ , RADICL-seq [#radicl_seq]_, as well as one for Hi-C data. It is also possible to save the current settings configured on Smoother as a new presetting.
 
 .. index:: Export, export full matrix instead of visible region, Export files to server instead of downloading them
+.. _export_tab:
 
 #### The Export subtab
 
 :kbd:`File->Export` allows to save the interactome data with the settings of the current session either as a TSV text file or as a picture in SVG or PNG format. It is possible to export only the visible region or the full heatmap using the :guilabel:`export full matrix instead of visible region` checkbox.
 -   The path for the exported files can be specified on the :guilabel:`Output Prefix` box.
 -   The format can be selected clicking on the :guilabel:`Format` dropdown.
--   If files need to be exported to the server instead of being downloaded, it is possible to tick the box :guilabel:`Export files to server instead of downloading them`
+-   If files need to be exported to the server instead of being downloaded, it is possible to check the box :guilabel:`Export files to server instead of downloading them` .
 -   The pixel size for coordinates, contigs, secondary axis and stroke width can be selected prior to export.
 -   When saving as TSV, 3 files are saved, one for the interactome, and one for each axis.
 
-Exporting with settings thus allows to save interactome data with all active filters, normalization, comparison between groups, and even virtual 4C analyses. 
+Exporting with settings thus allows to save interactome data with all active filters, normalization, comparison between groups, and even virtual 4C analyses.
 
 .. index:: Info, Download current session
 
@@ -501,10 +507,10 @@ In the :kbd:`Normalize` tab of Smoother, there are three subtabs\: :kbd:`->Prima
 
 Several normalizations are available in the :kbd:`Normalize->Primary` subtab to normalize the heatmap or the coverage track. Using the :guilabel:`Normalize heatmap by` dropdown, the heatmap and coverage can be normalized by `Reads per million` or `Reads per thousand` on the visible region. It is worth noting that the visible color changes automatically on screen (can be modified on the View tab) and thus the heatmap might not change visually between `No normalization`, `Reads per million`, or `Reads per thousand`. However, the values of the bins do change, and they are what is relevant for exporting the TSV text file for downstream analyses. The coverage can also be normalized by `Reads per million base pairs` and `Reads per thousand base pairs`, so that normalization can be done by the size of the bin, indicating the density of reads in one million or thousand base pairs squared.
 
-The other normalizations available for heatmap on Smoother are performed with a sampling strategy that also considers some bins outside of the visible area for normalization [#smoother]_ . The normalizations available for the heatmap (also in the :guilabel:`Normalize heatmap by` dropdown) based on the sampling strategy are `Binomial test` [#radicl_seq]_ , `Iterative correction` [#IC]_ and `Associated slices` [#grid_seq1]_ [#grid_seq2]_ . The number of samples taken outside the visible region can be modified on the slider bar :guilabel:`Number of samples` to ensure the lowest deviation from normalizing to the entire heatmap [#smoother]_ . 
+The other normalizations available for heatmap on Smoother are performed with a sampling strategy that also considers some bins outside of the visible area for normalization [#smoother]_ . The normalizations available for the heatmap (also in the :guilabel:`Normalize heatmap by` dropdown) based on the sampling strategy are `Binomial test` [#radicl_seq]_ , `Iterative correction` [#IC]_ and `Associated slices` [#grid_seq1]_ [#grid_seq2]_ . The number of samples taken outside the visible region can be modified on the slider bar :guilabel:`Number of samples` to ensure the lowest deviation from normalizing to the entire heatmap [#smoother]_ .
 
 .. Hint::
-    If it is essential that the normalization runs on the entire heatmap it is possible to 1) export the normalized interactome (whole heatmap), and 2) generate a new index on Smoother. This will allow zooming in to regions normalized to the entire heatmap. 
+    If it is essential that the normalization runs on the entire heatmap it is possible to 1) export the normalized interactome (whole heatmap), and 2) generate a new index on Smoother. This will allow zooming in to regions normalized to the entire heatmap.
 
 The `Binomial test` and `Associated slices` normalizations are implemented for asymmetric RNA-DNA interactome data and `Iterative correction` is the default normalization for Hi-C data.
 
@@ -512,7 +518,7 @@ The `Binomial test` and `Associated slices` normalizations are implemented for a
 
 ##### Binomial test normalization
 
-`Binomial test`\: determines statistical significance of each bin over the genome-wide coverage of the interacting RNA. A slider bar allows to modify the :guilabel:`pAccept for binomial test` which is the value at which the p-value is accepted as significant. It is possible to select the option to display coverage of the normalization in the secondary data panel using the :guilabel:`Display coverage as secondary data` checkbox. It is also possible to change the axis in which the normalization is performed (:guilabel:`Apply binomial test to columns`), by default this normalization is performed row-wise but if the box is ticked the normalization is performed column-wise. 
+`Binomial test`\: determines statistical significance of each bin over the genome-wide coverage of the interacting RNA. A slider bar allows to modify the :guilabel:`pAccept for binomial test` which is the value at which the p-value is accepted as significant. It is possible to select the option to display coverage of the normalization in the secondary data panel using the :guilabel:`Display coverage as secondary data` checkbox. It is also possible to change the axis in which the normalization is performed (:guilabel:`Apply binomial test to columns`), by default this normalization is performed row-wise but if the box is checked the normalization is performed column-wise.
 
 <figure align=center>
 <img src="./docs_conf/static/binom.gif" width=50%>
@@ -523,9 +529,9 @@ The `Binomial test` and `Associated slices` normalizations are implemented for a
 
 ##### Associated slices normalization
 
-`Associated slices`\: normalizes each bin by the sum of *trans* chromatin-associated slices of the interacting RNA. First, chromatin-associated slices need to be determined. For this, we compute the *Average RNA reads per kb* and the *Maximal DNA reads in a bin* for a set of slices. You can adjust the :guilabel:`Number of samples` taken, using the so-named slider. Slices are chosen from a type of annotation. The specific :guilabel:`Annotation type` can be picked using a dropdown button. For the *Maximal DNA reads*, horizontal bin size of slices within the slices can be adjusted using the :guilabel:`Section size max coverage` slider. *Average RNA reads* are always normalized to 1 kb bins. Slices are considered as chromatin-associated if they fall into the ranges set by the :guilabel:`RNA reads per kbp bounds` and :guilabel:`Maximal DNA reads in bin bounds` sliders. To visualize the effects of these bounds, two plots show the distribution of the *Average RNA reads per kb* and the *Maximal DNA reads in a bin* for the selected slices. Grey dots indicate slices that are filtered out. Finally, bins are normalized by the *trans* coverage of the slices. You can display this coverage using the :guilabel:`Display background as secondary data` checkbox. (@todo MS: we need pictures here!) (For comprehensive computational explanation of this normalization see the Smoother manuscript [#smoother]_ and the GRID-seq publication [#grid_seq1]_ [#grid_seq2]_). GRID-seq [#grid_seq1]_ [#grid_seq2]_ uses this normalization in combination with filtering out reads that do not overlap genes on their RNA read (see the :kbd:`Filter->Annotations` :ref:`tab <annotations_sub_tab>`).
+`Associated slices`\: normalizes each bin by the sum of *trans* chromatin-associated slices of the interacting RNA. First, chromatin-associated slices need to be determined. For this, we compute the *Average RNA reads per kb* and the *Maximal DNA reads in a bin* for a set of slices. You can adjust the :guilabel:`Number of samples` taken, using the so-named slider. Slices are chosen from a type of annotation, where the vertical size of bins is determined by the individual annotations. The specific :guilabel:`Annotation type` can be picked using a dropdown button. For the *Maximal DNA reads*, horizontal bin size can be adjusted using the :guilabel:`Section size max coverage` slider. *Average RNA reads* are always normalized to 1 kb bins. Slices are considered as chromatin-associated if they fall into the ranges set by the :guilabel:`RNA reads per kbp bounds` and :guilabel:`Maximal DNA reads in bin bounds` sliders. To visualize the effects of these bounds, two plots show the distribution of the *Average RNA reads per kb* and the *Maximal DNA reads in a bin* for the selected slices. Grey dots indicate slices that are filtered out. Finally, bins are normalized by the *trans* coverage of the slices. You can display this coverage using the :guilabel:`Display background as secondary data` checkbox. (For comprehensive computational explanation of this normalization see the Smoother manuscript [#smoother]_ and the GRID-seq publication [#grid_seq1]_ [#grid_seq2]_). GRID-seq [#grid_seq1]_ [#grid_seq2]_ uses this normalization in combination with filtering out reads that do not overlap genes on their RNA read (see the :kbd:`Filter->Annotations` :ref:`tab <annotations_sub_tab>`).
 
-It is possible to change the axis in which the normalisation is performed using the :guilabel:`Compute background for columns` checkbox, by default this normalization is performed column-wise but if the box is un-ticked the normalization is performed row-wise. A tick box allows to choose whether to use the intersection of chromatin-associated slices between datasets as background, otherwise the union of slices is used. This is relevant because the normalization is done separately on the datasets, but to make the normalization match between the datasets, the chromatin-associated slices need to match. The :guilabel:`Ignore cis interactions` box also allows to either ignore or consider *cis* interactions (within same contig).
+It is possible to change the axis in which the normalization is performed using the :guilabel:`Compute background for columns` checkbox, by default this normalization is performed column-wise but if the box is unchecked the normalization is performed row-wise. A checkbox allows to choose whether to use the intersection of chromatin-associated slices between datasets as background, otherwise the union of slices is used. This is relevant because the normalization is done separately on the datasets, but to make the normalization match between the datasets, the chromatin-associated slices need to match. The :guilabel:`Ignore cis interactions` box also allows to either ignore or consider *cis* interactions (within same contig).
 
 <figure align=center>
 <img src="./docs_conf/static/assoc.gif" width=50%>
@@ -536,7 +542,7 @@ It is possible to change the axis in which the normalisation is performed using 
 
 ##### Iterative correction normalization
 
-`Iterative correction` (IC)\: equalizes the visibility of the heatmap by making its column and row sums equal to a constant value. A bias value is computed for every slice (column and row) and IC normalization of the bins is performed by multiplying each bin by the biases of its column and row. It is possible to filter out slices with more than the given percentage of empty bins using the :guilabel:`filter out slices with too many empty bins [%]` slider. A tick box allows to :guilabel:`Show bias` as tracks in the secondary data panels. It is possible to use only the visible region to compute the IC by ticking the :guilabel:`Local IC` box. The :guilabel:`Mad Max filter` slider allows to filter out bins for which the log marginal sum is lower than the given value (see [the Cooler github]( https://github.com/open2c/cooler/blob/0f4cf6e21cea50c92334b87c5c6d5759859f4de8/src/cooler/balance.py#L397)). One slider bar allows to set the threshold for :guilabel:`Minimal number of non-zero bins per slice`, removing slices with less bins. Another slider can be used to ignore the *n* closest bins to the diagonal for bias computation (:guilabel:`Ignore first n bins next to the diagonal`).
+`Iterative correction` (IC)\: equalizes the visibility of the heatmap by making its column and row sums equal to a constant value. A bias value is computed for every slice (column and row) and IC normalization of the bins is performed by multiplying each bin by the biases of its column and row. It is possible to filter out slices with more than the given percentage of empty bins using the :guilabel:`filter out slices with too many empty bins [%]` slider. A checkbox allows to :guilabel:`Show bias` as tracks in the secondary data panels. It is possible to use only the visible region to compute the IC by checking the :guilabel:`Local IC` box. The :guilabel:`Mad Max filter` slider allows to filter out bins for which the log marginal sum is lower than the given value (see [the Cooler github]( https://github.com/open2c/cooler/blob/0f4cf6e21cea50c92334b87c5c6d5759859f4de8/src/cooler/balance.py#L397)). One slider bar allows to set the threshold for :guilabel:`Minimal number of non-zero bins per slice`, removing slices with less bins. Another slider can be used to ignore the *n* closest bins to the diagonal for bias computation (:guilabel:`Ignore first n bins next to the diagonal`).
 
 <figure align=center>
 <img src="./docs_conf/static/ice.gif" width=50%>
@@ -547,7 +553,7 @@ It is possible to change the axis in which the normalisation is performed using 
 
 #### The Dist. Dep. Dec. subtab
 
-The :kbd:`Normalize->Dist. Dep. Dec.` subtab allows to perform a distance dependent decay normalization by selecting the tick box :guilabel:`Normalize Primary`. The distance dependent decay is computed with the mean of the value for all the bins at the same distance from the diagonal for the current contig and it can be displayed on a plot below by ticking the box :guilabel:`Display`. On the plot, each line represents a bin with the beginning being the top left corner and the end, the bottom right corner of the bin. The normalization is calculated by dividing each bin to this mean. It is important to consider that the further away from the diagonal a bin is in a contig, the less bins it has at the same distance (or none for the corner bin). A slider allows to modify the minimum and maximum number of samples to compute for each diagonal. The top and bottom percentiles of samples can be excluded from the normalization with the :guilabel:`Percentile of samples to keep (%)` slider.
+The :kbd:`Normalize->Dist. Dep. Dec.` subtab allows to perform a distance dependent decay normalization by selecting the checkbox:guilabel:`Normalize Primary data`. The distance dependent decay is computed with the mean of the value for all the bins at the same distance from the diagonal for the current contig. The normalization divides each bin by this mean. The mean can be displayed on a plot below by checking the box :guilabel:`Display`. On the plot, each line represents a bin with the beginning being the top left corner and the end being the bottom right corner of the bin. It is important to consider that the further away from the diagonal a bin is in a contig, the less bins it has at the same distance (or none for the corner bin). A slider allows to modify the minimum and maximum number of samples to compute for each diagonal. The top and bottom percentiles of samples can be excluded from the normalization with the :guilabel:`Percentile of samples to keep (%)` slider.
 
 <figure align=center>
 <img src="./docs_conf/static/ddd.gif" width=50%>
@@ -555,21 +561,21 @@ The :kbd:`Normalize->Dist. Dep. Dec.` subtab allows to perform a distance depend
 </figure>
 
 .. Hint::
-    Distance Dependent decay normalization can be applied on top of other normalizations.
+    Distance Dependent decay normalization can be applied on top of a primary normalization and/or the ploidy correction.
 
 .. index:: Ploidy, do correct, use ploidy corrected contigs, homozygous, heterozygous, zygosity, aneuploidy
 
 #### The Ploidy subtab
 
-Many organisms are aneuploid or comprise chromosomes where some regions are homozygous and some are heterozygous. While with a "normal" diploid organism, each contig of the organism's assembly corresponds to two physical chromosomes of a set, aneuploid organisms are more difficult. There, some contigs might correspond to one physical chromosome, while others correspond to two or more. The same situation occurs with varying zygosity. For example, there might be a chromosome set that has a homozygous core but heterozygous telomeres. While the core would be collapsed into one contig, the telomeres would be assembled separately. Again, the core contig would correspond to two physical regions, while the telomere contigs would correspond to one physical region each. We call such contigs *misrepresented*.
+Many organisms are aneuploid or comprise chromosomes where some regions are homozygous and some are highly heterozygous. While with a "normal" diploid organism each contig of the organism's assembly corresponds to two physical chromosomes of a set, aneuploid organisms harbor an abnormal number of chromosomes. For aneuploid organisms, some contigs might correspond to one (set of) physical chromosome(s), while others correspond to two or more. The same situation occurs with varying zygosity. For example, in some organisms, the chromosome sets have homozygous central regions (cores) flanked by heterozygous peripheral regions. While the cores would be collapsed into one contig in their genome assembly, the peripheral regions would be assembled separately. Therefore, the core contigs would correspond to two physical regions, while each of the peripheral contigs would correspond to one physical region. We call such contigs *misrepresented*.
 
-The :kbd:`Normalize->Ploidy` tab allows correcting for such *misrepresentation*. First, a `.ploidy` file must be uploaded using the :guilabel:`replace ploidy file` button. The format of `.ploidy` files is described in the `Ploidy input format`_ chapter below. To perform the ploidy correction :guilabel:`do correct` must be ticked and ticking :guilabel:`use ploidy corrected contigs` will trigger Smoother to use the order of contigs from the ploidy corrected file instead of the genome sizes. The correction considers *n*-ploid contigs as *n* instances and interactions are divided evenly among the instances of the contigs. The correction has several options that can be selected on the following tick boxes:
+The :kbd:`Normalize->Ploidy` tab allows correcting for such *misrepresentation*. First, a `.ploidy` file must be uploaded using the :guilabel:`replace ploidy file` button. The format of `.ploidy` files is described in the `Ploidy input format`_ chapter below. To perform the ploidy correction :guilabel:`do correct` must be checked and checking :guilabel:`use ploidy corrected contigs` will trigger Smoother to use the order of contigs from the ploidy corrected file instead of the genome sizes file. The correction considers *n*-ploid contigs as *n* instances and interactions are divided evenly among the instances of the contigs. The correction has several options that can be selected on the following checkboxes:
 -   `Remove inter-contig, intra-instance interactions` will remove interactions between two different instances of the same contig.
 -   `Keep interactions from contig-pairs that are in the same group` will keep interactions if they belong to the same contig-groups which are defined in the ploidy file (see example on top).
 -   `Keep interactions from contig-pairs that never occur in the same group` will keep interactions only if they don't belong to the same contig-groups which are defined in the ploidy file
 -   `Remove interactions that are not explicitly kept by the options above`
 
-An example that requires ploidy correction is *T. brucei*: Its genome is organized in diploid chromosomes, with homozygous core regions and heterozygous subtelomeric regions. In the genome assembly, such a chromosome (e.g. chromosome 1) is composed of five contigs: two contigs for the 3' subtelomere ( 3'A\ <sub>chr1</sub> and 3'B<sub>chr1</sub> ), one contig for the core (core<sub>chr1</sub>), and two contigs for the 5' subtelomere (5'A<sub>chr1</sub> and 5'B<sub>chr1</sub>). In this case, ploidy correction works by defining the following two groups: 3'A<sub>chr1</sub>-coreA<sub>chr1</sub>-5'A<sub>chr1</sub>, 3'B<sub>chr1</sub>-coreB<sub>chr1</sub>-5'B<sub>chr1</sub>, where coreA<sub>chr1</sub> and coreB<sub>chr1</sub> are two instances of the core<sub>chr1</sub> contig. As with intra-contig interactions, we assume intra-group interactions to take prevalence. In detail, for every contig pair where at least one contig has multiple instances, interactions are split among the pair's instances that are within a group, if at least one pair-instance is within a group. Otherwise, interactions are split among all instances. Hence, interactions occurring between 5'A<sub>chr1</sub> and core<sub>chr1</sub> would be assigned to the 5'A<sub>chr1</sub>-coreA<sub>chr1</sub> instance and not to 5'A<sub>chr1</sub>-coreB<sub>chr1</sub>. Furthermore, interactions between core<sub>chr1</sub> and a heterozygous contig 5'A<sub>chr2</sub> would be evenly distributed between coreA<sub>chr1</sub>-5'A<sub>chr2</sub> and coreB<sub>chr1</sub>-5'A<sub>chr2</sub>.
+An example that requires ploidy correction is *T. brucei*: Its genome is organized in diploid chromosomes, with homozygous core regions and heterozygous subtelomeric regions. In the genome assembly, such a chromosome (e.g., chromosome 1) is composed of five contigs: two contigs for the 3' subtelomere ( 3'A\ <sub>chr1</sub> and 3'B<sub>chr1</sub> ), one contig for the core (core<sub>chr1</sub>), and two contigs for the 5' subtelomere (5'A<sub>chr1</sub> and 5'B<sub>chr1</sub>). In this case, ploidy correction works by defining the following two groups: 3'A<sub>chr1</sub>-coreA<sub>chr1</sub>-5'A<sub>chr1</sub>, 3'B<sub>chr1</sub>-coreB<sub>chr1</sub>-5'B<sub>chr1</sub>, where coreA<sub>chr1</sub> and coreB<sub>chr1</sub> are two instances of the core<sub>chr1</sub> contig. As with intra-contig interactions, we assume intra-group interactions to take prevalence. In detail, for every contig pair where at least one contig has multiple instances, interactions are split among the pair's instances that are within a group, if at least one pair-instance is within a group. Otherwise, interactions are split among all instances. Hence, interactions occurring between 5'A<sub>chr1</sub> and core<sub>chr1</sub> would be assigned to the 5'A<sub>chr1</sub>-coreA<sub>chr1</sub> instance and not to 5'A<sub>chr1</sub>-coreB<sub>chr1</sub>. Furthermore, interactions between core<sub>chr1</sub> and a heterozygous contig 5'A<sub>chr2</sub> would be evenly distributed between coreA<sub>chr1</sub>-5'A<sub>chr2</sub> and coreB<sub>chr1</sub>-5'A<sub>chr2</sub>.
 
 <figure align=center>
 <img src="./docs_conf/static/ploidy.gif" width=50%> <img src="./docs_conf/static/legend.png" width=15%>
@@ -585,9 +591,9 @@ An example that requires ploidy correction is *T. brucei*: Its genome is organiz
 We have designed a custom format for correcting an index for ploidy. This format is a tab-separated text file with two columns: *source* and *destination*. All lines starting with a `#` are ignored.
 Entries in the *source* column contain the contig names of the genome assembly, exactly as they were specified in the `.sizes` file given to the `init` command. Entries in the *destination* column contain the contig names of the genome assembly, as they should be displayed in the user interface.
 
-Correcting for ploidy is done by listing the same *source* for multiple *destination* columns. In the example below, we have the contigs `Chr1_core`, `Chr1_5A`, `Chr1_3A`, `Chr1_5B`, and `Chr1_3B` which express a chromosome set with a homozygous core but heterozygous telomeres. We correct for `Chr1_core` having 2 physical copies but all other contigs having only one, by listing `Chr1_core` as the *source* for `Chr1_coreA` and `Chr1_coreB`.
+Correcting for ploidy is done by listing the same *source* for multiple *destination* columns. In the example below, we have the contigs `Chr1_core`, `Chr1_5A`, `Chr1_3A`, `Chr1_5B`, and `Chr1_3B` which express a chromosome set with a homozygous core but heterozygous subtelomeric regions. We correct for `Chr1_core` having 2 physical copies by listing `Chr1_core` as the *source* for `Chr1_coreA` and `Chr1_coreB`. All other contigs having only one physical copy and do not need to be corrected.
 
-Finally, there are `---` lines in the ploidy file. These lines are used to delimitate groups. The purpose of groups is to limit the correction to within the groups. For example: We want interactions between `Chr1_core` and `Chr1_5A` to occur in `Chr1_coreA`-`Chr1_5A`, not in `Chr1_coreB`-`Chr1_5A`. We achieve this by placing `Chr1_coreA` and `Chr1_5A` in the same group. 
+Finally, there are `---` lines in the ploidy file. These lines are used to delimitate groups. The purpose of groups is to limit the correction to within the groups. For example: We want interactions between `Chr1_core` and `Chr1_5A` to occur in `Chr1_coreA`-`Chr1_5A`, not in `Chr1_coreB`-`Chr1_5A`. We achieve this by placing `Chr1_coreA` and `Chr1_5A` in the same group.
 
 Interactions between `Chr2_5A` and `Chr1_core`, will be split evenly between `Chr2_5A`-`Chr1_coreA` and `Chr2_5A`-`Chr1_coreB`, since `Chr2_5A` and `Chr1_core` are never in the same group.
 
@@ -619,7 +625,7 @@ In the :kbd:`Filter` tab of Smoother, there are four subtabs: :kbd:`->Datapools`
 
 #### The Datapools subtab
 
-:kbd:`Filter->Datapools` allows to define the group or condition for every sample and the type of comparison and representation that should be performed among the samples. The :guilabel:`Primary Datapools` table allows to distribute the samples with interactome data displayed on the heatmap in groups by ticking the different pool per sample. The :guilabel:`Secondary Datapools` table allows to select the axis in which the secondary data panel with unidimensional data should be displayed. A dropdown menu allows to :guilabel:`Merge datasets` belonging to the same datapool group by several operations\: `sum, minimum, difference` and `mean`. A second dropdown menu :guilabel:`Compare datapools` by enables the selection of options to display the combined datapools: `sum, show first group a, show first group b, substract, difference, divide, minimum and maximum`.
+:kbd:`Filter->Datapools` allows to define the group or condition for every sample and the type of comparison and representation that should be performed among the samples. The :guilabel:`Primary Datapools` table allows to distribute the samples with interactome data displayed on the heatmap in groups by assigning samples to different pools. The :guilabel:`Secondary Datapools` table allows to select the axis in which the secondary data panel with unidimensional data should be displayed. A dropdown menu allows to :guilabel:`Merge datasets` belonging to the same datapool group by several operations\: `sum, minimum, difference` and `mean`. A second dropdown menu :guilabel:`Compare datapools` by enables the selection of options to display the combined datapools: `sum, show first group a, show first group b, substract, difference, divide, minimum and maximum`.
 
 <figure align=center>
 <img src="./docs_conf/static/compare_datapools_by.png" width=75%>
@@ -630,6 +636,7 @@ In the :kbd:`Filter` tab of Smoother, there are four subtabs: :kbd:`->Datapools`
 <img src="./docs_conf/static/compare_datasets.png" width=50%>
 <figcaption> <b>Figure:</b> Using the <em>subtract</em> option of the <em>Compare datapools by</em> dropdown menu, images like this can be generated. </figcaption>
 </figure>
+
 
 
 .. index:: Mapping, Mapping Quality: Lower Bound, Mapping Quality: Upper Bound, Directionality
@@ -652,14 +659,14 @@ One key functionality of Smoother is the possibility to analyze regions of high 
 - `Count MMR if all mapping loci are within the same bin and ignore non-MMRs`. This option allows analysis only of multimapping reads that are enclosed in a bin. This option can be useful for exploratory purposes.
 - `Count MMR if mapping loci minimum bounding-box overlaps bin and ignore non-MMRs`. This option allows analysis of multimapping reads that are not enclosed in a bin. This option can be useful for exploratory purposes.
 
-A tick box allows to show multimapping reads with incomplete mapping loci lists, which correspond to those that have too many mapping locations to be reported with the given maximum when running the mapping. When running the alignment with bwa, the maximum number of alignments to output in the XA tag can be predetermined with the -n option for the bwa samse command, and if there are more hits than the -n value, the XA tag is not written. It is important to notice that displaying these multi-mappers might introduce noise to the heatmap.
+A checkbox allows to show multimapping reads with incomplete mapping loci lists, which correspond to those that have too many mapping locations to be reported with the given maximum when running the mapping. When running the alignment with bwa, the maximum number of alignments to output in the XA tag can be predetermined with the -n option for the bwa samse command, and if there are more hits than the -n value, the XA tag is not written. It is important to notice that displaying these multi-mappers might introduce noise to the heatmap.
 
 <figure align=center>
 <img src="./docs_conf/static/rescue_multimappers.gif" width=50%> <img src="./docs_conf/static/legend.png" width=15%>
 <figcaption> <b>Figure:</b> Filtering out multimapping reads that overlap multiple bins. </figcaption>
 </figure>
 
-The :guilabel:`Directionality` dropdown menu allows choosing whether to display interaction for which interaction partners map to any or a particular strand. The options are the following:
+The :guilabel:`Directionality` dropdown menu allows choosing whether to display interactions for which interaction partners map to any or a particular strand. The options are the following:
 - `Count pairs where reads map to any strand`
 - `Count pairs where reads map to the same strand`
 - `Count pairs where reads map to opposite strands`
@@ -672,7 +679,7 @@ The :guilabel:`Directionality` dropdown menu allows choosing whether to display 
 
 :kbd:`Filter->Coordinates` allows filtering the regions displayed on the heatmap.
 
-In the :guilabel:`Active contigs` table, the contigs from the reference genome to be displayed on the two axis from the heatmap can be selected by tick boxes. The order in which the contigs are displayed can be modified by moving the contig names up or down using the arrows.
+In the :guilabel:`Active contigs` table, the contigs from the reference genome to be displayed on the two axes from the heatmap can be selected by tick boxes. The order in which the contigs are displayed can be modified by moving the contig names up or down using the arrows.
 
 
 The dropdown :guilabel:`Symmetry` gives four options to filter interactions by symmetry:
@@ -702,7 +709,7 @@ However, when zooming out, Smoother has to keep the number of bins that are visi
 Hence, at some points it will have t display two ore more neighboring genes in one column.
 This is all good and fine as long these neighboring genes are also neighbors in the genome.
 However, most likely, they are not. There will be some gap in between the genes. 
-When grouping the genes together into one column we hence have to remove the reads that fall into these gap.
+When grouping the genes together into one column we hence have to remove the reads that fall into these gaps.
 The best way to do this is using the :ref:`Annotation filter <annotations_sub_tab>`, to remove all genes that do not overlap a gene on the x-axis.
 In fact, this filter is automatically activated when using the annotation coordinate system.
 However, this filter cannot be used for all annotation types. 
@@ -711,96 +718,162 @@ So, what do we do if we do not want to recompute the whole index just to try out
 
 We came up with a few options:
 The dropdown :guilabel:`Multiple Annotations in Bin` gives four options to deal with bins that comprise multiple annotations:
-- `Combine region from first to last annotation`: This is the option for the annotation filtering.
-- `Increase number of bins to match number of annotations (might be slow)`: This will obviously fix our problem, but when looking at large regions, this will be very slow since too many bins will have to be computed.
-- `Use first annotation in Bin`: Counting only the first annotation in the bin will make sure that we do not count any reads that fall into the gap between the genes. However, while moving around or zooming, the first annotation of a bin will change. Hence, the heatmap will appear to 'sparkle'. While moving around, every now and then an annotation with a strong interation will be the first in a bin, lighting up in the heatmap. 
-- `Use one prioritized annotation (stable while zoom- and pan-ing)`: This option fixes the 'sparkling' of the previous option, by keeping the annotation that is displayed in a bin constant while zooming and panning. For this, annotations are prioritized, and the annotation with the highest priority is displayed. We need a specific priority system, to ensure that no 'sparkling' is happening. We use the following system: The priority of an annotation is the *n*, where 2^*n* is the highest number that the index of the annotation can be evenly divided by. Hence, this would be the prioritis for the first 5 annotations (i.e. the annotations with index 1, 2, 3, 4, and 5): 0 (1 / 2^0), 1 (2 / 2^1), 0 (3 / 2^0), 2 (4 / 2^2), 0 (5 / 2^0). This is stable while panning around. Furter, new detail will be revealed when zooming in and zooming out will gradually remove visible slices.
-
+- `Combine region from first to last annotation`\: This is the option for the annotation filtering.
+- `Increase number of bins to match number of annotations (might be slow)`\: This will obviously fix our problem, but when looking at large regions, this will be very slow since too many bins will have to be computed.
+- `Use first annotation in Bin`\: Counting only the first annotation in the bin will make sure that we do not count any reads that fall into the gap between the genes. However, while moving around or zooming, the first annotation of a bin will change. Hence, the heatmap will appear to 'sparkle'. While moving around, every now and then an annotation with a strong interation will be the first in a bin, lighting up in the heatmap. 
+- `Use one prioritized annotation (stable while zoom- and pan-ing)`\: This option fixes the 'sparkling' of the previous option, by keeping the annotation that is displayed in a bin constant while zooming and panning. For this, annotations are prioritized, and the annotation with the highest priority is displayed. We need a specific priority system, to ensure that no 'sparkling' is happening. We use the following system: The priority of an annotation is the <em>n</em>, where 2<sup><em>n</em></sup> is the highest number that the index of the annotation can be evenly divided by. Hence, this would be the prioritis for the first 5 annotations (i.e. the annotations with index 1, 2, 3, 4, and 5): 0 (1 / 2<sup>0</sup>), 1 (2 / 2<sup>1</sup>), 0 (3 / 2<sup>0</sup>), 2 (4 / 2<sup>2</sup>), 0 (5 / 2<sup>0</sup>). This is stable while panning around. Furter, new detail will be revealed when zooming in and zooming out will gradually remove visible slices.
 
 .. index:: Annotations, Filter out interactions that overlap annotation, Filter out interactions that don't overlap annotation, Visible annotations
 .. _annotations_sub_tab:
 
 #### The Annotations subtab
 
-:kbd:`Filter->Annotations` allows selecting and organizing the filterable annotations. In the top panel there is a :guilabel:`Visible annotations` table, the annotations from the GFF file to be displayed on the two axis can be selected by tick boxes. The order in which the annotations are displayed in the axis can be modified by moving the contig names up or down using the arrows.
-In the middla panel :`Filter out interactions that overlap annotation` the annotation filter can be selected to remove interactions overlapping an annotation from the heatmap for the two axis. In the bottom panel :`Filter out interactions that don't overlap annotation` the annotation filter can be selected to only display interactions that overlap the annotations for the two axis. In both filters it is possible to filter by annotation in columns, in rows or in both. It is worth noticing that only annotations that have been listed on the -f option when running the init command to generate the index are available for filtering, as default the filterable annotation is gene.  
+:kbd:`Filter->Annotations` allows selecting and organizing the filterable annotations. In the top panel there is a :guilabel:`Visible annotations` table, where the annotations from the GFF file to be displayed on the two axes can be selected by checkboxes. The order in which the annotations are displayed in the axes can be modified by moving the feature names up or down using the arrows.
+In the middle panel\:  `Filter out interactions that overlap annotation`, the annotation filter can be selected to remove interactions overlapping an annotation from the heatmap for the two axes. In the bottom panel\: `Filter out interactions that don't overlap annotation`, the annotation filter can be selected to only display interactions that overlap the annotations for the two axes. In both cases, it is possible to filter by annotation in columns, in rows or in both. It is worth noticing that only annotations that have been listed on the -f option when running the `init` command to generate the index are available for filtering, as default the filterable annotation is gene.
 
 <figure align=center>
 <img src="./docs_conf/static/by_annotation.gif" width=50%> <img src="./docs_conf/static/legend.png" width=15%>
 <figcaption> <b>Figure:</b> Filtering out reads that do not overlap a gene. </figcaption>
 </figure>
 
+
+.. index:: View
+
 ### The View tab
-(@todo ABS: I still have to write this section)
-In the *View* tab of Smoother, there are five subtabs: *Color, Panels, Bins, Virtual4C* and *Rendering*.
+In the :kbd:`View` tab of Smoother, there are five subtabs: :kbd:`->Color`, :kbd:`->Panels`, :kbd:`->Bins`, :kbd:`->Virtual4C`, and :kbd:`->Rendering`.
+
+.. index:: Color, Color Scale Range, Color Scale Log Base, Color Range, Color Palette
 
 #### The Color subtab
-
-@todo ...
-
-*Log base slider:* After normalization, the values in each bin are between zero and one. 
-Before displaying these values in the heatmap, we apply a logarithmic transformation.
-Like with logarithmic scales, this keeps all values in the same order but makes a difference between two small numbers appear bigger than the same difference between two bigger numbers.
-You can fiddle with the strength of this effect using the `Color Scale Log Base` slider.
-In brief, higher values for the log base increase the difference between small numbers but make larger number look more similar. Lower values do the opposite. Setting log base to zero displays the numbers without any transformation.
-
-In detail, the function we use is:
+:kbd:`View->Color` allows changing the color palette and range displayed on the heatmap. The top scatter plot displays the value (i.e, color) of each bin in the heatmap. Each dot represents one bin and is placed according to its value from lowest, on the left, to highest, on the right. Before displaying, the values are scaled to be between zero and one. The :guilabel:`Color Scale Range` slider allows setting up the upper and lower values for the color scale; the effect of this slider can be observed in the scatter plot. Before displaying the bin values in the heatmap, we apply a logarithmic transformation to them. The logarithmic scale keeps all values in the same order but makes a difference between two small numbers appear bigger than the same difference between two bigger numbers. You can fiddle with the strength of this effect using the :guilabel:`Color Scale Log Base` slider. In brief, higher values for the log base increase the difference between small numbers but make larger numbers look more similar. Lower values for the log base do the opposite, increasing the difference between larger numbers but making smaller numbers more look more similar. Setting log base to zero displays the numbers without any transformation. In detail, the function we use is:
 
 <img src="./docs_conf/static/log_scale.png" width=50%/>
 
-, where *x* and *y* are the un-normalized and normalized interaction frequencies while *a* is the log base parameter.
+, where *x* and *y* are the unnormalized and normalized interaction frequencies while *a* is the log base parameter.
 With varying values for *a*, this function always satisfies *f(0)=0* and *f(1)=1*.
-for *a=0* the function is undefined but approaches the 45-degree diagonal, so we hardcode *f(x)=x* for *a=0*.
+For *a=0* the function is undefined but approaches the 45-degree diagonal, so we hardcode *f(x)=x* for *a=0*.
 
-### The Panel tab
-Bins
+The :guilabel:`Color Range` dropdown menu allows scaling the final values of the heatmap. The options are:
+- `absolute max`\: Divides every value by the maximum absolute value. This makes sure that all values are between minus one and one.
+- `max`\: Divides every value by the maximum value. This makes sure that all values are smaller equal one. Values might be negative and smaller than minus one though.
+- `min-max`\: Normalizes the smallest value to zero and the largest value to one. Scales intermediate values linearly inbetween.
+- `do not scale`\: Keeps all values the same.
 
-    Remainder bin
+The :guilabel:`Color Palette` dropdown menu allows changing the palette of the heatmap. The options are:
+- `Viridis`
+- `Plasma`
+- `Turbo`
+- `Fall`
+- `Low to High` for this option the lowest and highest colors can be selected on the boxes below and a palette will be generated from one to the other.
+
+.. index:: Panels, Show/Hide, Axes Labels, Character of Labels, Center Tracks on Bins, Zero Track at Ends, Connect Tracks over Contig Borders, Display Tracks on a Log Scale
+
+#### The Panels subtab
+:kbd:`View->Panels` allows changing the format of the heatmap and secondary panels. The :guilabel:`Show/Hide` dropdown menu allows toggling the visibility of the GUI elements below, by checking and unchecking checkboxes:
+- `Secondary Axes` are the axes of the secondary data panels and of the annotation panel. (Defaut: on)
+- `Coordinates` displays the contig/chromosomal coordinates on the two axes, outside the secondary data and annotation panels. (Defaut: off)
+- `Regions` displays the names of contigs/chromosomes on the two axes, as the outermost label. (Defaut: on)
+- `Secondary data panel` is the panel(s) with coverage tracks for additional unidimensional data. (Defaut: on)
+- `Annotation panel` is the panel where the annotations from the genome GFF file are displayed. (Defaut: on)
+- `Grid lines` displays lines evenly spaced along the heatmap. (Defaut: off)
+- `Identity Line` displays a line in the diagonal of the heatmap. (Defaut: off)
+- `Contig border` displays lines at the edges of every contig/chromosome. (Defaut: off)
+
+The slider bars :guilabel:`Annotation panel Size` and :guilabel:`Secondary data panel Size` allow modifying  the pixel size of these panels.
+
+The labels for the two axes can be selected in the :guilabel:`Axes Labels` dropdown among:
+- `DNA / RNA` displays DNA on the y-axis and RNA on the x-axis.
+- `RNA / DNA` displays RNA on the y-axis and DNA on the x-axis.
+- `DNA / DNA` displays DNA on both axes.
+- `RNA / RNA` displays RNA on both axes.
+
+The length that labels are truncated to can be adjusted on the :guilabel:`Character of Labels` slider. After the given number of characters the labels will be truncated (default: 10). Four checkboxes allow further formatting of the secondary data panels. 1) :guilabel:`Center Tracks on Bins` allows placing the points of the track lines at the center of the bins (default: on). If this option is disabled, two line-points are displayed for every bin; one at the beginning, and the other at the end of the bin. 2) :guilabel:`Zero Track at Ends` allows adding additional line-points at (0,0) and (0,end) of the track lines. 3) :guilabel:`Connect Tracks over Contig Borders` connects the track lines over contig borders removing the gaps that appear as default. 4) :guilabel:`Display Tracks on a Log Scale` displays the values for the tracks on logarithmic scale.
+
+.. index:: Bins, Max number of Bins, Minimum Bin Size, Make Bins Squares, Snap Bin Size, Remainder Bin, Fill contigs that are smaller than one bin
+
+#### The Bins subtab
+:kbd:`View->Bins` defines the binning formatting for the heatmap. The :guilabel:`Max number of Bins [in thousands]` slider is used to determine the value for the maximum number of bins that are displayed on the heatmap. 
+
+.. Important::
+    It is important to notice that this number of bins is the main factor contributing to the runtime of Smoother and inputting a high number will reduce the running speed of Smoother. 
+
+The :guilabel:`Minimum Bin Size` slider allows to select the minimum bin size to be visualized on the heatmap, which cannot be lower than the value of the `-d` parameter of the `init` subcommand. The actual bin size and number of bins displayed can always be found on the *Status bar*. The :guilabel:`Make Bins Squares` checkbox enforces the bins to have a square shape; Unchecking it makes Smoother place rectangular bins that follow the aspect ratio of the visible area. The :guilabel:`Snap Bin Size` checkbox restricts the possible bin sizes to only round numbers.
+
+The :guilabel:`Remainder Bin` dropdown menu gives different options for dealing with the last bin of each contig that might be smaller than the displayed bin size:
+- `Merge remainder into last full-sized bin` is the default option and places all the interactions of the remainder bin into the previous bin.
+- `Hide remainder` does not display the remainder bin.
+- `Display remainder` displays the remainder bin with the size of the remaining region of the contig and is thus smaller than the current bin size.
+- `Make contig smaller` squeezes the contig so it is covered by an exact number of bins.
+- `Make contig larger` expands the contig so it is covered by an exact number of bins.
+- `Extend remainder bin into next contig (only visual)` displays the remainder bin as a full sized bin, even though this will make it extend into the next contig. Shifts bins in the next contig over to make space for the remainder bin. Note that, for the remainder bin, interactions from the next contig will not be counted; I.e. it is extended only visually.
 
 <figure align=center>
 <img src="./docs_conf/static/remainder_bin.svg" width=50%>
 <figcaption> <b>Figure:</b> A visual representation of how the last bin in a contig is placed given the remainder bin option. </figcaption>
 </figure>
 
-Extend remainder bin into the next contig. Only visible they are lost for next contig
+It is possible to add a bin in contigs that are smaller than the displayed bin size by checking the :guilabel:`Fill contigs that are smaller than one bin` checkbox, but it is important to notice that this will significantly slow down the running speed of Smoother if there are many small contigs. If this option is unchecked, contigs that are smaller than the bin size will not be displayed.
 
-but that is for the filtering but also for the display when on a zoomed region and changing the bin size no?
+.. index:: Virtual4C, Compute for columns, Compute for rows, Normalize by viewpoint size, Column Viewpoint, Row Viewpoint
 
-I have two figure
+#### The Virtual4C subtab
+:kbd:`View->Virtual4C` allows extracting a slice of the heatmap and displaying it as a track in the secondary data panel. This virtual 4C can be performed for columns and for rows and requires as input the coordinates of the viewpoint from the other axis.
+Checking the :guilabel:`Compute for columns` checkbox will compute a virtual 4C for columns. Below, there is the navigation bar :guilabel:`Column Viewpoint` to input the coordinates for the starting and ending of the viewpoint. A virtual 4C can also be performed on rows by checking the :guilabel:`Compute for rows` checkbox and inputing the viewpoint coordinates in the navigation bar :guilabel:`Row Viewpoint`. By default, the virtual 4C track is normalized by the viewpoint size (i.e., all values are divided by the viewpoint size), but this can be undone by unchecking the :guilabel:`Normalize by viewpoint size` checkbox. The format for the coordinates is the same as for the :guilabel:`Navigation bar` and is described :ref:`here <navigation_bar>`. For example, this would be a valid viewpoint:
 
-For symmetric data, upper triangle can be mirrored to otherwise empty lower triangle interactively on Smoother (in fact this option takes all interactions and displays them in both)
+    Chr1: 0 bp .. Chr1: 100 kbp
 
-    
-
-Virtual 4C
-
-show all for V4C for example
-
+There is an example of virtual 4C analyses for the rows with two different viewpoints on the y-axis, below.
 <figure align=center>
 <img src="./docs_conf/static/v4c.gif" width=25%>
 <figcaption> <b>Figure:</b> Smoother performing a virtual 4C analysis. </figcaption>
 </figure>
 
-Rendering
+.. index:: Rendering, Update Frequency, Redraw if zoomed in by, Additional Draw Area, Auto Render, Render Now
+
+#### The Rendering subtab
+:kbd:`View->Rendering` allows formatting the rendering settings of Smoother. The :guilabel:`Update Frequency [seconds]` slider adjusts the delay between checking if the heatmap needs to be re-rendered due to panning or zooming. The :guilabel:`Redraw if zoomed in by [%]` slider sets a threshold to redraw the heatmap if less than the given percentage of the previously rendered heatmap area is visible. The :guilabel:`Additional Draw Area [%]` slider adjusts the threshold (in percentage over visible area) to which the rendered area is increased over the visible area when re-rendering; this is needed so that panning does not trigger re-rendering immediately. Unchecking the :guilabel:`Auto Render` checkbox stops Smoother from redrawing the heatmap when panning or zooming; This can be usefull if you have a specific heatmap that you want to zoom into without rerendering it on a smaller binsize. It is possible to force Smoother to re-render the heatmap by pressing the :guilabel:`Render Now` button.
+
+.. index:: Command line interface
 
 ## The command line interface
-All Smoother analyses can also be performed on the command line without the requirement to launch the graphical interface of Smoother. 
+All Smoother analyses can also be performed on the command line without the requirement to launch the graphical interface of Smoother.
 
 .. index:: ploidy
 
 ### The ploidy command
 
 Smoother can correct for these genomic imbalances by distributing interactions among *misrepresented* contigs. This ploidy correction can be run independently of launching Smoother with the `ploidy` :ref:`subcommand <ploidy_command>`.
-It can also be run in the `The Ploidy subtab`_. 
+It can also be run in the `The Ploidy subtab`_.
 The format for the `.ploidy` file is described `Ploidy input format`_ chapter.
 
+.. index:: set
+
 ### The set command
-Running Smoother analyses without launching the GUI requires the set subcommand to define the values of different parameters.
+Running Smoother analyses without launching the GUI requires the set subcommand to define the values of different parameters. Here are some examples for parameters you can adjust using this command:
+
+
+    libbiosmoother set $INDEX area.x_end 3000                         # setting the x-axis end to 3000 * the base resolution of the index
+    libbiosmoother set $INDEX area "Chr7"                             # area accepts the same syntax as the navigation bar
+    libbiosmoother set $INDEX settings.filters.mapping_q.val_min 2    # settin the minimal mapping quality
+    libbiosmoother set $INDEX annotation.filter_absent_x gene         # filtering out interactions that do not overlap a gene on the x-axis
+    libbiosmoother set $INDEX settings.normalization.log_base.val 10  # adjusting the log-base of the color scale
+    libbiosmoother set $INDEX settings.interface.v4c.do_col true      # enabling virtual 4C for columns
+
+.. index:: get
+
 ### The get command
 The get subcommand allows retrieving the value of a parameter for the current/last session of a given index.
+
+The full documentation of the `get` subcommand can be found :ref:`here <get_command>`.
+
+.. index:: export
+
 ### The export command
-It is possible to save the current/last index session to a file with the export subcommand. This corresponds to the function Export of Smoother (see section 4.3.1. File). The interactome data with the settings of the current session can be saves as a TSV text file with the interactions or as a picture in SVG or PNG format.
-(MS: We should mention that we basically produce 'publication quality images' with the svg output)
+It is possible to save the current/last index session to a file with the export subcommand. This corresponds to the function Export of Smoother (see the section :ref:`here <export_tab>`). The interactome data with the settings of the current session can be saves as a TSV text file with the interactions or as a publication-quality image in SVG or PNG format.
+
+The full documentation of the `export` subcommand can be found :ref:`here <export_command>`.
+
+.. index:: reset
 
 ### Resetting an index
 To reset to the default parameters for a given index, Smoother implements the `reset` subcommand. Using reset will erase the saved parameters from all previous session for that index. Example:
@@ -818,13 +891,14 @@ Thanks to the following libraries that are used in Smoother:
 
 ## Bibliography
 
-.. [#radicl_seq] Bonetti, A., Agostini, F., Suzuki, A.M. et al. RADICL-seq identifies general and cell type–specific principles of genome-wide RNA-chromatin interactions. Nat Commun 11, 1018 
+.. [#radicl_seq] Bonetti, A., Agostini, F., Suzuki, A.M. et al. RADICL-seq identifies general and cell type–specific principles of genome-wide RNA-chromatin interactions. Nat Commun 11, 1018
 .. [#grid_seq1] Li, X., Zhou, B., Chen, L. et al. GRID-seq reveals the global RNA–chromatin interactome.Nat Biotechnol 35, 940–950 (2017). https://doi.org/10.1038/nbt.3968.
 .. [#grid_seq2] Zhou, B., Li, X., Luo, D. et al. GRID-seq for comprehensive analysis of global RNA–chromatin interactions. Nat Protoc 14, 2036–2068 (2019).
 .. [#IC] Imakaev, M., Fudenberg, G., McCord, R. et al. Iterative correction of Hi-C data reveals hallmarks of chromosome organization. Nat Methods 9, 999–1003 (2012)
-.. [#smoother] Schmidt, M., Barcons-Simon, A., Rabuffo, C., Siegel, N. Unpublished.
+.. [#smoother] Schmidt, M., Barcons-Simon, A., Rabuffo, C., Siegel, N. Smoother: On-the-fly processing of interactome data using prefix sums. Unpublished.
+
+.. index:: version
 
 ## Version
 
 This Documentation was generated for BioSmoother |BioSmootherVersion| and libBioSmoother |LibBioSmootherVersion|.
-

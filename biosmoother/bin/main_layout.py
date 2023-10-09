@@ -2072,7 +2072,7 @@ class MainLayout:
         )
 
         color_scale = self.dropdown_select(
-            "Scale Color Range",
+            "Color Range",
             "tooltip_scale_color_range",
             ("absolute max [x' = x / max(|v| in V)]", "abs"),
             ("max [x' = x / max(v in V)]", "max"),
@@ -2281,11 +2281,12 @@ class MainLayout:
         self.heatmap_x_axis_2.xaxis.axis_label = default_label.split("_")[1]
 
         axis_lables = self.dropdown_select(
-            "Axis Labels",
+            "Axes Labels",
             "tooltip_y_axis_label",
             ("DNA / RNA", "DNA_RNA"),
             ("RNA / DNA", "RNA_DNA"),
             ("DNA / DNA", "DNA_DNA"),
+            ("RNA / RNA", "RNA_RNA"),
             active_item=["settings", "interface", "axis_lables"],
             event=axis_labels_event,
         )
@@ -3394,15 +3395,15 @@ class MainLayout:
             "coordinates",
             "",
             [
+                self.chrom_layout,
+                self.chrom_layout_ploidy,
+                symmetrie,
                 dds_l,
                 anno_coords,
                 coords_x,
                 coords_y,
-                multiple_anno_per_bin,
                 multiple_bin_per_anno,
-                self.chrom_layout,
-                self.chrom_layout_ploidy,
-                symmetrie,
+                multiple_anno_per_bin,
             ],
         )
         self.make_panel(

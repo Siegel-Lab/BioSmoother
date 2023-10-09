@@ -240,7 +240,7 @@
 }
 
 .tooltip_scale_color_range:after {
-    content: "scale the final values of the main heatmap; where V is the set of all values, x' any sacled and x the respective unscaled value.";
+    content: "scale the final values of the main heatmap; where V is the set of all values, x' a scaled and x the respective unscaled value.";
 }
 
 .tooltip_coverage_normalization:after {

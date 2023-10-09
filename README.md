@@ -14,13 +14,13 @@ conda create -y -n smoother python=3.9
 conda activate smoother
 ```
 
-Install smoother (and all requirements) using pip. Smoother runs under Windows, Linux, and MacOS using the Google Chrome, Safari, or Firefox browsers.
+Install Smoother (and all requirements) using pip. Smoother runs under Windows, Linux, and MacOS using the Google Chrome, Safari, or Firefox browsers.
 ```
 pip install biosmoother
 conda install -y nodejs # pip cannot install nodejs, so we use conda
 ```
 
-Download 2 example smoother indices.
+Download 2 example Smoother indices.
 ```
 wget https://syncandshare.lrz.de/getlink/fi4kLPLjRjMTbRnij7PtyB/t_brucei_hi_c.smoother_index.zip
 #wget https://syncandshare.lrz.de/getlink/fiMo5Zsj8baXjXpzD8Whic/m_musculus_radicl_seq.smoother_index.zip
@@ -48,9 +48,13 @@ Parameters that can be changed include:
 
 <img src="./docs_conf/static/all_features.gif">
 
+Here is a screenshot of Smoother in action:
+
+<img src="./docs_conf/static/interface.png">
+
 ## Loading your own data
 
-All data needs to be converted into a smoother index first.
+All data needs to be converted into a Smoother index first.
 For this, first create an empty index:
 ```
 biosmoother init my_index my_genome.sizes my_annotation.gff
