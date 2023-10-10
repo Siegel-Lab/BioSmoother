@@ -6,7 +6,10 @@
 
 Smoother is an interactive analysis and visualization software for contact mapping data. 
 
+
 ## Quick Start
+
+First, install [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html "conda install page") on your machine if you don't have it already.
 
 create & activate a new environment (optional)
 ```
@@ -17,13 +20,14 @@ conda activate smoother
 Install Smoother (and all requirements) using pip. Smoother runs under Windows, Linux, and MacOS using the Google Chrome, Safari, or Firefox browsers.
 ```
 pip install biosmoother
-conda install -y nodejs # pip cannot install nodejs, so we use conda
+conda install -y nodejs cairo # pip cannot install nodejs and cairo, so we use conda
 ```
 
 Download 2 example Smoother indices.
 ```
-wget https://syncandshare.lrz.de/getlink/fi4kLPLjRjMTbRnij7PtyB/t_brucei_hi_c.smoother_index.zip
-#wget https://syncandshare.lrz.de/getlink/fiMo5Zsj8baXjXpzD8Whic/m_musculus_radicl_seq.smoother_index.zip
+conda install wget
+wget https://syncandshare.lrz.de/dl/fi7p5SyG4uq9hzTiuEh8TK/t_brucei_hi_c.smoother_index.zip
+#wget https://syncandshare.lrz.de/dl/fiMo5Zsj8baXjXpzD8Whic/m_musculus_radicl_seq.smoother_index.zip
 
 conda install unzip
 unzip t_brucei_hi_c.smoother_index.zip
@@ -32,7 +36,7 @@ unzip t_brucei_hi_c.smoother_index.zip
 
 View one of the indices
 ```
-biosmoother serve t_brucei_hi_c-c --show
+biosmoother serve t_brucei_hi_c --show
 #biosmoother serve m_musculus_radicl_seq --show
 ```
 
