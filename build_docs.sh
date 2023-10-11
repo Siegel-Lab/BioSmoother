@@ -5,6 +5,10 @@ SPHINX_HTML_DIR=docs
 BINARY_BUILD_DIR=docs_conf
 SPHINX_CACHE_DIR=_doctrees
 SPHINX_TEX_DIR=tex
+GENERATED_DIR=generated_docs
+
+mkdir -p ${GENERATED_DIR}
+python3 docs_conf/split_md.py README.md ${GENERATED_DIR}
 
 mkdir -p ${SPHINX_HTML_DIR}
 mkdir -p ${SPHINX_CACHE_DIR}

@@ -26,8 +26,8 @@ import libbiosmoother
 # -- Project information -----------------------------------------------------
 
 project = 'biosmoother'
-copyright = '2022, Markus Schmidt'
-author = 'Markus Schmidt'
+copyright = '2023, Markus R. Schmidt, Anna Barcons-Simon, Claudia Rabuffo, and T. Nicolai Siegel'
+author = 'Markus R. Schmidt, Anna Barcons-Simon, Claudia Rabuffo, and T. Nicolai Siegel'
 
 # The full version, including alpha/beta/rc tags
 b_version = (pkg_resources.files("biosmoother") / "VERSION").read_text()
@@ -59,6 +59,7 @@ extensions = [
 
 html_theme_options = {
     'navigation_depth': 8,
+    'collapse_navigation': False,
 }
 
 # Add any paths that contain templates here, relative to this directory.

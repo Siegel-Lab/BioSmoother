@@ -13,32 +13,39 @@ First, install [conda](https://conda.io/projects/conda/en/latest/user-guide/inst
 
 create & activate a new environment (optional)
 ```
-conda create -y -n smoother python=3.9
-conda activate smoother
+ conda create -y -n smoother python=3.9
+ conda activate smoother
 ```
 
 Install Smoother (and all requirements) using pip. Smoother runs under Windows, Linux, and MacOS using the Google Chrome, Safari, or Firefox browsers.
 ```
-pip install biosmoother
-conda install -y nodejs cairo # pip cannot install nodejs and cairo, so we use conda
+ pip install biosmoother
+ conda install -y nodejs cairo # pip cannot install nodejs and cairo, so we use conda
 ```
 
 Download 2 example Smoother indices.
 ```
-conda install wget
-wget https://syncandshare.lrz.de/dl/fi7p5SyG4uq9hzTiuEh8TK/t_brucei_hi_c.smoother_index.zip
-#wget https://syncandshare.lrz.de/dl/fiMo5Zsj8baXjXpzD8Whic/m_musculus_radicl_seq.smoother_index.zip
-
-conda install unzip
-unzip t_brucei_hi_c.smoother_index.zip
-#unzip m_musculus_radicl_seq.smoother_index.zip
+ conda install wget
+ wget https://syncandshare.lrz.de/dl/fi7p5SyG4uq9hzTiuEh8TK/t_brucei_hi_c.smoother_index.zip
+ #wget https://syncandshare.lrz.de/dl/fiMo5Zsj8baXjXpzD8Whic/m_musculus_radicl_seq.smoother_index.zip
+ 
+ conda install unzip
+ unzip t_brucei_hi_c.smoother_index.zip
+ #unzip m_musculus_radicl_seq.smoother_index.zip
 ```
 
 View one of the indices
 ```
-biosmoother serve t_brucei_hi_c --show
-#biosmoother serve m_musculus_radicl_seq --show
+ biosmoother serve t_brucei_hi_c.smoother_index --show
+ #biosmoother serve m_musculus_radicl_seq.smoother_index --show
 ```
+
+From now on, to run smoother you will merely have to activate the environment and run the serve command.
+```
+ conda activate smoother
+ biosmoother serve t_brucei_hi_c.smoother_index --show
+```
+
 
 ## Full Documentation
 

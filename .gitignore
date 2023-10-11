@@ -20,3 +20,4 @@ biosmoother.egg-info/
 build/
 dist/
 docs/*
+generated_docs/*
