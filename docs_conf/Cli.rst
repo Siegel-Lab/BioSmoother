@@ -1,6 +1,6 @@
 .. _cli_target:
 
-Command Line API Reference
+Command line API reference
 --------------------------
 
 Below is the technical documentation for Smoother's command line interface.

@@ -1,3 +1,5 @@
+.. _installation_target:
+
 # Installation
 
 .. index:: pip, installation
@@ -29,6 +31,7 @@ For installing Smoother via GitHub, run the following commands:
 While the pip installation will install the latest stable release, this type of installation will install the newest, possibly untested version. Note that this approach does still use pip to install the latest stable release of libBioSmoother and libSps, the two backend libraries behind Smoother. To also install these two libraries on your own, you will have to clone the respective repositories and install manually from them using the `pip install -e .` command. Then you can install Smoother using `pip install -e . –no-deps` to install Smoother without adjustments to the dependencies.
 
 .. index:: help, subcommands
+.. _command_organization_target:
 
 # Command organization
 
@@ -46,6 +49,8 @@ To see the help pages of the individual subcommands (e.g., for `init`), run:
     biosmoother init -h
 
 A complete list of subcommands can be found :ref:`here <cli_target>`. The following chapters explain how to use the subcommands for creating and interacting with indices.
+
+.. _creating_an_index_target:
 
 # Creating an index
 All data to be analyzed and visualized on Smoother needs to be precomputed into an index. In the next chapters, we will explain how to initialize an index and fill it with data.
@@ -282,11 +287,13 @@ The input coverage file can be generated from a .bed or .sam file from the secon
 
     cat alignments.sam | awk '!/^#|^@/ {print $1, $3, $4, $2 % 16 == 0 ? "+" :"-", $5, $12}' OFS="\t" > coverage
 
-# Using the graphical user interface
+.. _using_graphical_target:
+
+# Using the graphical interface
 
 .. index:: serve
 
-## Launching the graphical user interface
+## Launching the graphical interface
 
 Launching the Smoother interface for an existing index is done with the `serve` subcommand. If an index has already been launched before, the session will be restored with the parameters of the last session, as they are saved in the session.json file in the index directory. The Smoothers interface makes use of the [Bokeh library](http://bokeh.org). For example, this is how we would launch an index called `my_index`:
 
@@ -824,6 +831,7 @@ Below, an example of virtual 4C analyses for the rows with two different viewpoi
 The :guilabel:`Update Frequency [seconds]` slider sets how often the program checks if the heatmap needs to be re-rendered due to moving around in the heatmap or zooming in or out. The :guilabel:`Redraw if zoomed in by [%]` slider sets a threshold to redraw the heatmap if, after zooming in, less than the given percentage of the previously rendered heatmap area is visible. The :guilabel:`Additional Draw Area [%]` slider sets how much bigger a newly rendered area should be compared to the visible area. Smoother will re-render the heatmap only when moving location outside the borders of the increased area defined by this value. The purpose of these parameters is that zooming or moving location does not trigger re-rendering immediately. Unchecking the :guilabel:`Auto Render` checkbox stops Smoother from redrawing the heatmap when moving location or zooming; This can be useful if you have a specific heatmap that you want to zoom into without re-rendering it on a smaller binsize. It is possible to force Smoother to re-render the heatmap by pressing the :guilabel:`Render Now` button.
 
 .. index:: Command line interface
+.. _using_cli_target:
 
 # Using the command line interface
 All Smoother analyses can also be performed on the command line without the requirement to launch the graphical interface of Smoother.
@@ -871,7 +879,9 @@ To reset to the default parameters for a given index, Smoother implements the `r
 
 The full documentation of the `reset` subcommand can be found :ref:`here <reset_command>`.
 
-# References and Acknowledgments
+.. _ref_and_ack_target:
+
+# References and acknowledgments
 
 ## Thanks
 
