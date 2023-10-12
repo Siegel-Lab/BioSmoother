@@ -10,13 +10,18 @@ except ImportError:
     # Try backported to PY<37 `importlib_resources`.
     import importlib_resources as pkg_resources
 
+def get_path(prefix):
+    for possible in [prefix, prefix + ".smoother_index"]:
+        if os.path.exists(possible) and os.path.isdir(possible):
+            return possible
+    raise RuntimeError("the given index", prefix, "does not exist.")
 
 def serve(args):
     import biosmoother
 
     args.files = [Path(biosmoother.__file__).parent]
 
-    os.environ["biosmoother_index_path"] = args.index_prefix
+    os.environ["biosmoother_index_path"] = get_path(args.index_prefix)
     os.environ["biosmoother_port"] = str(args.port)
     os.environ["biosmoother_no_save"] = str(args.no_save)
     os.environ["biosmoother_keep_alive"] = str(args.keep_alive)

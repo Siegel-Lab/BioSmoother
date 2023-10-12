@@ -3279,43 +3279,6 @@ class MainLayout:
             [version_info, index_info, self.download_session, log_div, self.log_div],
         )
 
-        self.bin_test_norm = column(
-            [
-                rsa_l,
-                radicl_seq_display_coverage,
-                radicl_seq_column,
-                radicl_seq_samples_l,
-            ]
-        )
-
-        self.ice_norm = column(
-            [
-                ice_sparse_filter,
-                ice_num_samples,
-                ice_show_bias,
-                ice_local,
-                ice_mad_max,
-                ice_min_nz,
-                ice_ignore_n_diags,
-            ]
-        )
-
-        self.slices_norm = column(
-            [
-                grid_seq_samples_l,
-                bsmcq_l,
-                grid_seq_column,
-                grid_seq_anno,
-                grid_seq_display_background,
-                grid_seq_intersection,
-                grid_seq_ignore_cis,
-                grid_seq_rna_filter_l,
-                self.ranked_columns,
-                grid_seq_dna_filter_l,
-                self.ranked_rows,
-            ]
-        )
-
         def norm_event(e):
             self.session.set_value(["settings", "normalization", "normalize_by"], e)
             self.update_visibility()
@@ -3335,13 +3298,46 @@ class MainLayout:
             [
                 normalization,
                 normalization_cov,
-                Tabs(
-                    tabs=[
-                        Panel(child=self.bin_test_norm, title="Binom. test"),
-                        Panel(child=self.ice_norm, title="IC"),
-                        Panel(child=self.slices_norm, title="Assoc. Slices"),
-                    ]
-                ),
+            ],
+        )
+        self.make_panel(
+            "binom",
+            "",
+            [
+                rsa_l,
+                radicl_seq_display_coverage,
+                radicl_seq_column,
+                radicl_seq_samples_l,
+            ],
+        )
+        self.make_panel(
+            "ic",
+            "",
+            [
+                ice_sparse_filter,
+                ice_num_samples,
+                ice_show_bias,
+                ice_local,
+                ice_mad_max,
+                ice_min_nz,
+                ice_ignore_n_diags,
+            ],
+        )
+        self.make_panel(
+            "assoc",
+            "",
+            [
+                grid_seq_samples_l,
+                bsmcq_l,
+                grid_seq_column,
+                grid_seq_anno,
+                grid_seq_display_background,
+                grid_seq_intersection,
+                grid_seq_ignore_cis,
+                grid_seq_rna_filter_l,
+                self.ranked_columns,
+                grid_seq_dna_filter_l,
+                self.ranked_rows,
             ],
         )
         self.make_panel(

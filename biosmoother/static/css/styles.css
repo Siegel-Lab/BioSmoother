@@ -201,16 +201,25 @@ button {
     background-color: white;
     font-family: Consolas, 'Courier New', monospace !important;
     font-size: 11px !important;
+    cursor: pointer;
 }
 
 .tab-button-active {
     border: solid;
-    border-width: 3px 1px 0px 1px;
-    border-color: #e6e6e6;
+    border-width: 1px 1px 3px 1px;
+    border-color: #0072b1;
 }
 
-.tab-button:hover{
+.tab-button:hover:not(.tab-button-active){
     background-color: #f2f2f2;
+}
+
+label, input[type="radio"], input[type="checkbox"] {
+    accent-color: #0072b1;
+ }
+
+.bk-toolbar-button.bk-active {
+    border-bottom-color: #0072b1 !important;
 }
 
 

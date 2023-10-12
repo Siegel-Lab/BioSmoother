@@ -33,6 +33,7 @@
                 x[i].style.display = "none";
             }
             document.getElementById(tabName + "Tab").style.display = "block";
+
             
             var x = document.getElementsByClassName(className + "Button");
             for (i = 0; i < x.length; i++)
@@ -153,6 +154,30 @@
 
             <div id="mainNormTab" class="normTab scroll_y" style="display:block">
                 {{ embed(doc.roots.mainNorm) }}
+
+                <div class="tab-header">
+                    <button class="tab-button mainNormButton tab-button-active" id="BinomButton" 
+                            onclick="openTab('Binom', 'mainNorm')">
+                        Binom. test
+                    </button>
+                    <button class="tab-button mainNormButton" id="IcButton" onclick="openTab('Ic', 'mainNorm', 'ic')">
+                        IC
+                    </button>
+                    <button class="tab-button mainNormButton" id="AssocButton" onclick="openTab('Assoc', 'mainNorm')">
+                        Assoc. Slices
+                    </button>
+                </div>
+
+                <div id="BinomTab" class="mainNormTab scroll_y" style="display:block">
+                    {{ embed(doc.roots.binom) }}
+                </div>
+                <div id="IcTab" class="mainNormTab scroll_y" style="display:none">
+                    {{ embed(doc.roots.ic) }}
+                </div>
+                <div id="AssocTab" class="mainNormTab scroll_y" style="display:none">
+                    {{ embed(doc.roots.assoc) }}
+                </div>
+
             </div>
             <div id="dddTab" class="normTab scroll_y" style="display:none">
                 {{ embed(doc.roots.ddd) }}
