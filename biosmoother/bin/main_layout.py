@@ -283,7 +283,7 @@ class MainLayout:
             editable=True,
             autosize_mode="fit_columns",
             index_position=None,
-            width=SETTINGS_WIDTH,
+            width=SETTINGS_WIDTH - 10,
             tags=["blub"],
             height=150,
             sortable=False,
@@ -461,13 +461,14 @@ class MainLayout:
         layout = column(
             [
                 row(
-                    [Div(text=title, width=SETTINGS_WIDTH - 200), filter_t_in],
+                    [Div(text=title, width=SETTINGS_WIDTH - 210), filter_t_in],
                     sizing_mode="stretch_width",
                 ),
                 data_table,
             ],
             sizing_mode="stretch_width",
             css_classes=["outlnie_border", "tooltip", tooltip],
+            margin=DIV_MARGIN,
         )
 
         def update():

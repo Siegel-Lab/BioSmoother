@@ -180,17 +180,20 @@ button {
 .tab-header{
     width: 100%;
     overflow: hidden;
-    border-bottom: 1px solid #e6e6e6;
-    margin-top: 5px;
+    display: flex;
+    height: 33px;
+    margin-bottom: 3px;
 }
 
 .mainTab {
-    top: 34px !important; 
+    top: 33px !important; 
     bottom: 26px !important;
     position: absolute !important;
+    width: 100%;
 }
 
 .tab-button {
+    margin-top: 3px;
     white-space: normal;
     padding: 8px 8px;
     float: left;
@@ -198,20 +201,67 @@ button {
     border: none;
     display: block;
     outline: 0;
-    background-color: white;
     font-family: Consolas, 'Courier New', monospace !important;
     font-size: 11px !important;
     cursor: pointer;
-}
-
-.tab-button-active {
     border: solid;
-    border-width: 1px 1px 3px 1px;
-    border-color: #0072b1;
+    border-width: 1px;
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+    background-color: transparent;
+    border-color: transparent;
+    white-space: nowrap;
 }
 
-.tab-button:hover:not(.tab-button-active){
+.tab-button-fill{
+    width: 100%;
+}
+.tab-button-spacer{
+    width: 2px;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+.tab-level-1 {
+    border-bottom-color: #002f4d;
+}
+.tab-level-2 {
+    border-bottom-color: #0072b1;
+}
+.tab-level-3 {
+    border-bottom-color: #0072b1;
+}
+
+.tab-header-1 {
+    background-color: #e5e5e5;
+}
+.tab-header-2 {
     background-color: #f2f2f2;
+}
+.tab-header-3 {
+    background-color: #f2f2f2;
+}
+
+.tab-button-active.tab-level-1 {
+    border-color: #002f4d;
+    border-bottom-color: #f2f2f2;
+    background-color: #f2f2f2;
+}
+.tab-button-active.tab-level-2 {
+    border-color: #0072b1;
+    border-bottom-color: white;
+    background-color: white;
+}
+.tab-button-active.tab-level-3 {
+    border-color: #0072b1;
+    border-bottom-color: white;
+    background-color: white;
+}
+
+
+.tab-button:hover:not(.tab-button-active):not(.tab-button-fill):not(.tab-button-spacer){
+    background-color: white;
+    font-weight: 900;
 }
 
 label, input[type="radio"], input[type="checkbox"] {

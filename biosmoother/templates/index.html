@@ -100,34 +100,52 @@
         justify-content: center; display: flex;">
             <img src="biosmoother/static/favicon.png" style="object-fit: contain; width: 80%; filter: grayscale(100%); opacity: 0.025">
         </div>
-        <div class="tab-header">
-            <button class="tab-button mainButton tab-button-active" id="FileButton" onclick="openTab('File', 'main')">
+        <div class="tab-header tab-header-1">
+            <div class="tab-button tab-button-spacer tab-level-1">
+            </div>
+            <button class="tab-button mainButton tab-button-active tab-level-1" id="FileButton" onclick="openTab('File', 'main')">
                 File
             </button>
-            <button class="tab-button mainButton" id="NormalizeButton" onclick="openTab('Normalize', 'main')">
+            <div class="tab-button tab-button-spacer tab-level-1">
+            </div>
+            <button class="tab-button mainButton tab-level-1" id="NormalizeButton" onclick="openTab('Normalize', 'main')">
                 Normalize
             </button>
-            <button class="tab-button mainButton" id="FilterButton" onclick="openTab('Filter', 'main')">
+            <div class="tab-button tab-button-spacer tab-level-1">
+            </div>
+            <button class="tab-button mainButton tab-level-1" id="FilterButton" onclick="openTab('Filter', 'main')">
                 Filter
             </button>
-            <button class="tab-button mainButton" id="ViewButton" onclick="openTab('View', 'main')">
+            <div class="tab-button tab-button-spacer tab-level-1">
+            </div>
+            <button class="tab-button mainButton tab-level-1" id="ViewButton" onclick="openTab('View', 'main')">
                 View
             </button>
+            <div class="tab-button tab-button-fill tab-level-1">
+            </div>
         </div>
 
         <div id="FileTab" class="mainTab" style="display:block">
-            <div class="tab-header">
-                <button class="tab-button fileButton tab-button-active" id="PresettingButton" onclick="openTab('Presetting', 'file')">
+            <div class="tab-header tab-header-2">
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button fileButton tab-button-active tab-level-2" id="PresettingButton" onclick="openTab('Presetting', 'file')">
                     Presetting
                 </button>
-                <button class="tab-button fileButton" id="ExportButton" onclick="openTab('Export', 'file')">
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button fileButton tab-level-2" id="ExportButton" onclick="openTab('Export', 'file')">
                     Export
                 </button>
-                <button class="tab-button fileButton" id="InfoButton" onclick="openTab('Info', 'file')">
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button fileButton tab-level-2" id="InfoButton" onclick="openTab('Info', 'file')">
                     Info
                 </button>
+                <div class="tab-button tab-button-fill tab-level-2">
+                </div>
             </div>
-
+            
             <div id="PresettingTab" class="fileTab scroll_y" style="display:block">
                 {{ embed(doc.roots.presetting) }}
             </div>
@@ -140,41 +158,57 @@
         </div>
 
         <div id="NormalizeTab" class="mainTab" style="display:none">
-            <div class="tab-header">
-                <button class="tab-button normButton tab-button-active" id="mainNormButton" onclick="openTab('mainNorm', 'norm')">
+            <div class="tab-header tab-header-2">
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button normButton tab-button-active tab-level-2" id="mainNormButton" onclick="openTab('mainNorm', 'norm')">
                     Primary
                 </button>
-                <button class="tab-button normButton" id="dddButton" onclick="openTab('ddd', 'norm')">
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button normButton tab-level-2" id="dddButton" onclick="openTab('ddd', 'norm')">
                     Dist. Dep. Dec.
                 </button>
-                <button class="tab-button normButton" id="ploidyButton" onclick="openTab('ploidy', 'norm')">
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button normButton tab-level-2" id="ploidyButton" onclick="openTab('ploidy', 'norm')">
                     Ploidy
                 </button>
+                <div class="tab-button tab-button-fill tab-level-2">
+                </div>
             </div>
 
             <div id="mainNormTab" class="normTab scroll_y" style="display:block">
                 {{ embed(doc.roots.mainNorm) }}
 
-                <div class="tab-header">
-                    <button class="tab-button mainNormButton tab-button-active" id="BinomButton" 
+                <div class="tab-header tab-header-3">
+                    <div class="tab-button tab-button-spacer tab-level-3">
+                    </div>
+                    <button class="tab-button mainNormButton tab-button-active tab-level-3" id="BinomButton" 
                             onclick="openTab('Binom', 'mainNorm')">
                         Binom. test
                     </button>
-                    <button class="tab-button mainNormButton" id="IcButton" onclick="openTab('Ic', 'mainNorm', 'ic')">
+                    <div class="tab-button tab-button-spacer tab-level-3">
+                    </div>
+                    <button class="tab-button mainNormButton tab-level-3" id="IcButton" onclick="openTab('Ic', 'mainNorm', 'ic')">
                         IC
                     </button>
-                    <button class="tab-button mainNormButton" id="AssocButton" onclick="openTab('Assoc', 'mainNorm')">
+                    <div class="tab-button tab-button-spacer tab-level-3">
+                    </div>
+                    <button class="tab-button mainNormButton tab-level-3" id="AssocButton" onclick="openTab('Assoc', 'mainNorm')">
                         Assoc. Slices
                     </button>
+                    <div class="tab-button tab-button-fill tab-level-3">
+                    </div>
                 </div>
 
-                <div id="BinomTab" class="mainNormTab scroll_y" style="display:block">
+                <div id="BinomTab" class="mainNormTab" style="display:block">
                     {{ embed(doc.roots.binom) }}
                 </div>
-                <div id="IcTab" class="mainNormTab scroll_y" style="display:none">
+                <div id="IcTab" class="mainNormTab" style="display:none">
                     {{ embed(doc.roots.ic) }}
                 </div>
-                <div id="AssocTab" class="mainNormTab scroll_y" style="display:none">
+                <div id="AssocTab" class="mainNormTab" style="display:none">
                     {{ embed(doc.roots.assoc) }}
                 </div>
 
@@ -188,19 +222,29 @@
         </div>
 
         <div id="FilterTab" class="mainTab" style="display:none">
-            <div class="tab-header">
-                <button class="tab-button filterButton tab-button-active" id="DatapoolsButton" onclick="openTab('Datapools', 'filter')">
+            <div class="tab-header tab-header-2">
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button filterButton tab-button-active tab-level-2" id="DatapoolsButton" onclick="openTab('Datapools', 'filter')">
                     Datapools
                 </button>
-                <button class="tab-button filterButton" id="MappingButton" onclick="openTab('Mapping', 'filter')">
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button filterButton tab-level-2" id="MappingButton" onclick="openTab('Mapping', 'filter')">
                     Mapping
                 </button>
-                <button class="tab-button filterButton" id="CoordinatesButton" onclick="openTab('Coordinates', 'filter')">
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button filterButton tab-level-2" id="CoordinatesButton" onclick="openTab('Coordinates', 'filter')">
                     Coordinates
                 </button>
-                <button class="tab-button filterButton" id="AnnotationsButton" onclick="openTab('Annotations', 'filter')">
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button filterButton tab-level-2" id="AnnotationsButton" onclick="openTab('Annotations', 'filter')">
                     Annotations
                 </button>
+                <div class="tab-button tab-button-fill tab-level-2">
+                </div>
             </div>
 
             <div id="DatapoolsTab" class="filterTab scroll_y" style="display:block">
@@ -218,22 +262,24 @@
         </div>
 
         <div id="ViewTab" class="mainTab" style="display:none">
-            <div class="tab-header">
-                <button class="tab-button viewButton tab-button-active" id="ColorButton" onclick="openTab('Color', 'view')">
+            <div class="tab-header tab-header-2">
+                <button class="tab-button viewButton tab-button-active tab-level-2" id="ColorButton" onclick="openTab('Color', 'view')">
                     Color
                 </button>
-                <button class="tab-button viewButton" id="PanelsButton" onclick="openTab('Panels', 'view')">
+                <button class="tab-button viewButton tab-level-2" id="PanelsButton" onclick="openTab('Panels', 'view')">
                     Panels
                 </button>
-                <button class="tab-button viewButton" id="BinsButton" onclick="openTab('Bins', 'view')">
+                <button class="tab-button viewButton tab-level-2" id="BinsButton" onclick="openTab('Bins', 'view')">
                     Bins
                 </button>
-                <button class="tab-button viewButton" id="Virtual4CButton" onclick="openTab('Virtual4C', 'view')">
+                <button class="tab-button viewButton tab-level-2" id="Virtual4CButton" onclick="openTab('Virtual4C', 'view')">
                     Virtual4C
                 </button>
-                <button class="tab-button viewButton" id="RenderingButton" onclick="openTab('Rendering', 'view')">
+                <button class="tab-button viewButton tab-level-2" id="RenderingButton" onclick="openTab('Rendering', 'view')">
                     Rendering
                 </button>
+                <div class="tab-button tab-button-fill tab-level-2">
+                </div>
             </div>
 
             <div id="ColorTab" class="viewTab scroll_y" style="display:block">
