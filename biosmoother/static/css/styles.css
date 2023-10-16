@@ -203,7 +203,6 @@ button {
     outline: 0;
     font-family: Consolas, 'Courier New', monospace !important;
     font-size: 11px !important;
-    cursor: pointer;
     border: solid;
     border-width: 1px;
     border-top-right-radius: 5px;
@@ -233,19 +232,19 @@ button {
 }
 
 .tab-header-1 {
-    background-color: #e5e5e5;
+    background-color: #cccccc;
 }
 .tab-header-2 {
-    background-color: #f2f2f2;
+    background-color: #e5e5e5;
 }
 .tab-header-3 {
-    background-color: #f2f2f2;
+    background-color: #e5e5e5;
 }
 
 .tab-button-active.tab-level-1 {
     border-color: #002f4d;
-    border-bottom-color: #f2f2f2;
-    background-color: #f2f2f2;
+    border-bottom-color: #e5e5e5;
+    background-color: #e5e5e5;
 }
 .tab-button-active.tab-level-2 {
     border-color: #0072b1;
@@ -262,6 +261,7 @@ button {
 .tab-button:hover:not(.tab-button-active):not(.tab-button-fill):not(.tab-button-spacer){
     background-color: white;
     font-weight: 900;
+    cursor: pointer;
 }
 
 label, input[type="radio"], input[type="checkbox"] {

@@ -160,7 +160,7 @@ The raw read files are mapped to the reference genome using bwa mem.
 Find ligation junctions and make pairs file using `pairtools parse` with the following options:
 - `--drop-sam`: drop the sam information
 - `--min-mapq 0`: do not filter by mapping quality
-- `--add-columns mapq`,XA: add columns for mapping quality and alternative alignments
+- `--add-columns mapq,XA`: add columns for mapping quality and alternative alignments
 - `--walks-policy mask`: mask the walks (WW, XX, N*) in the pair_type column
 
 ```
@@ -339,7 +339,7 @@ To allow multiple users to use Smoother at the same time, you can use a differen
 Since Smoother is a web application, it can be set up as a webserver. This allows multiple users to access Smoother at the same time. To do this, you can use the `--keep_alive`, and `--no_save` options, so that Smoother does not shutdown once one user leaves and does not save the changes made by one user for the next user. To allow other machines connecting to the server, you have to configure the `--allow-websocket-origin` option. For example, to allow connections from any machine, you can use the following command: `--allow-websocket-origin=*`.
 
 
-.. index:: Show / Hide, Working spinner, Coordinate axis, Regions axis
+.. index:: Show / Hide, Working icon, Coordinate axis, Regions axis
 
 ## Overview of Smoother's interface
 
@@ -349,20 +349,25 @@ Since Smoother is a web application, it can be set up as a webserver. This allow
 </figure>
 
 Smoother's interface consists of several panels:
-- *Working spinner*: Visible, while Smoother is computing a new heatmap.
-- *Un-/re-do arrows*: Click to undo or redo changes.
-- *Navigation bar*: Displays the currently visible region and allows to jump to a region of interest.
-- *Plot tools*: Allows toggling ways to interact with the plots.
-- *Primary data*: Displays the heatmap.
-- *Secondary data*: Displays the coverage tracks.
-- *Annotations panel*: Displays the annotations.
-- *Coordinate axis*: Displays the coordinates within the contigs.
-- *Regions axis*: Displays the contigs.
-- *Status bar*: Displays the current status of Smoother.
-- *Settings tabs*: Allows changing the on-the-fly analysis parameters of Smoother.
+
+<ul>
+<li> <em>Working icon</em>: Displays the current status. </li>
+<li> <em>Un-/re-do arrows</em>: Click to undo or redo changes. </li>
+<li> <em>Navigation bar</em>: Displays the currently visible region and allows to jump to a region of interest. </li>
+<li> <em>Plot tools</em>: Allows toggling ways to interact with the plots. </li>
+<li> <em>Primary data</em>: Displays the heatmap. </li>
+<li> <em>Secondary data</em>: Displays the coverage tracks. </li>
+<li> <em>Annotations panel</em>: Displays the annotations. </li>
+<li> <em>Coordinate axis</em>: Displays the coordinates within the contigs. </li>
+<li> <em>Regions axis</em>: Displays the contigs. </li>
+<li> <em>Status bar</em>: Displays the current status of Smoother. </li>
+<li> <em>Settings tabs</em>: Allows changing the on-the-fly analysis parameters of Smoother. </li>
+</ul>
 
 Panels can be shown and hidden using the :kbd:`View->Panels` :guilabel:`Show / Hide` dropdown menu.
 The Annotation and the Secondary data panel hide themselves automatically if they do not contain data.
+
+ <p> Smoothers status can be one of three things. Working: <img src="./biosmoother/static/stirring.gif" width=20px>, error: <img src="./biosmoother/static/error.png" width=20px>, waiting: <img src="./biosmoother/static/favicon.png" width=20px>.</p>
 
 On the right-hand side of the interface, there are several tabs with buttons and sliders. These can be used to change several analysis parameters on-the-fly.
 

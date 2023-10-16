@@ -1531,6 +1531,7 @@ class MainLayout:
         self.chrom_layout = None
         self.chrom_layout_ploidy = None
         self.ploidy_file_in = None
+        self.ploidy_last_uploaded_filename = None
         self.next_element_id = 0
         self.download_session = None
 
@@ -2357,12 +2358,22 @@ class MainLayout:
             disabled=bin.global_variables.no_save
         )
 
+        self.ploidy_last_uploaded_filename = Div(text="No ploidy file has been uploaded yet.")
+        if len(self.session.get_value(["settings", "normalization", "ploidy_last_uploaded_filename"])) > 0:
+            self.ploidy_last_uploaded_filename.text = "Last uploaded ploidy file: " + self.session.get_value(["settings", "normalization", "ploidy_last_uploaded_filename"])
+
+        def ploidy_file_name_change(a, o, n):
+            self.ploidy_last_uploaded_filename.text = "Last uploaded ploidy file: " + n
+            self.session.set_value(["settings", "normalization", "ploidy_last_uploaded_filename"], n)
+
         def ploidy_file_upload(a, o, n):
             self.session.set_ploidy_itr(b64decode(n).decode("utf-8").split("\n"))
             self.update_visibility()
             self.trigger_render()
 
+        self.ploidy_file_in.on_change("filename", ploidy_file_name_change)
         self.ploidy_file_in.on_change("value", ploidy_file_upload)
+        
 
         is_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
@@ -3353,6 +3364,7 @@ class MainLayout:
                 ploidy_remove_others,
                 Div(text="replace ploidy file:"),
                 self.ploidy_file_in,
+                self.ploidy_last_uploaded_filename,
             ],
         )
         self.make_panel(
