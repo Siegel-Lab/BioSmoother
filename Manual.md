@@ -1,3 +1,489 @@
+.. index: Tour
+
+# Taking a tour
+
+In this example, we install Smoother, download one of the sample datasets and run basic analyses. To do that we should have a terminal open:
+
+
+We start by installing Smoother. Firstly, we create a new environment.
+
+<div class="highlight-default notranslate">
+<div class="highlight">
+<pre style="padding-bottom: 0px">
+conda create -y -n smoother python=3.9
+<details>
+<summary style="color:grey">See the output of this command by clicking here.</summary>
+<div>
+    Collecting package metadata (current_repodata.json): done
+    Solving environment: done
+
+
+    ==> WARNING: A newer version of conda exists. <==
+    current version: 4.10.3
+    latest version: 23.9.0
+
+    Please update conda by running
+
+        $ conda update -n base conda
+
+
+    ## Package Plan ##
+
+    environment location: /home/abarcons/miniconda3/envs/smoother
+
+    added / updated specs:
+        - python=3.9
+
+
+    The following packages will be downloaded:
+
+        package                    |            build
+        ---------------------------|-----------------
+        libnsl-2.0.0               |       hd590300_1          32 KB  conda-forge
+        libsqlite-3.43.2           |       h2797004_0         820 KB  conda-forge
+        tk-8.6.13                  |       h2797004_0         3.1 MB  conda-forge
+        ------------------------------------------------------------
+                                            Total:         4.0 MB
+
+    The following NEW packages will be INSTALLED:
+
+    _libgcc_mutex      conda-forge/linux-64::_libgcc_mutex-0.1-conda_forge
+    _openmp_mutex      conda-forge/linux-64::_openmp_mutex-4.5-2_gnu
+    bzip2              conda-forge/linux-64::bzip2-1.0.8-h7f98852_4
+    ca-certificates    conda-forge/linux-64::ca-certificates-2023.7.22-hbcca054_0
+    ld_impl_linux-64   conda-forge/linux-64::ld_impl_linux-64-2.40-h41732ed_0
+    libffi             conda-forge/linux-64::libffi-3.4.2-h7f98852_5
+    libgcc-ng          conda-forge/linux-64::libgcc-ng-13.2.0-h807b86a_2
+    libgomp            conda-forge/linux-64::libgomp-13.2.0-h807b86a_2
+    libnsl             conda-forge/linux-64::libnsl-2.0.0-hd590300_1
+    libsqlite          conda-forge/linux-64::libsqlite-3.43.2-h2797004_0
+    libuuid            conda-forge/linux-64::libuuid-2.38.1-h0b41bf4_0
+    libzlib            conda-forge/linux-64::libzlib-1.2.13-hd590300_5
+    ncurses            conda-forge/linux-64::ncurses-6.4-hcb278e6_0
+    openssl            conda-forge/linux-64::openssl-3.1.3-hd590300_0
+    pip                conda-forge/noarch::pip-23.2.1-pyhd8ed1ab_0
+    python             conda-forge/linux-64::python-3.9.18-h0755675_0_cpython
+    readline           conda-forge/linux-64::readline-8.2-h8228510_1
+    setuptools         conda-forge/noarch::setuptools-68.2.2-pyhd8ed1ab_0
+    tk                 conda-forge/linux-64::tk-8.6.13-h2797004_0
+    tzdata             conda-forge/noarch::tzdata-2023c-h71feb2d_0
+    wheel              conda-forge/noarch::wheel-0.41.2-pyhd8ed1ab_0
+    xz                 conda-forge/linux-64::xz-5.2.6-h166bdaf_0
+
+
+
+    Downloading and Extracting Packages
+    libsqlite-3.43.2     | 820 KB    | ######################################################## | 100% 
+    libnsl-2.0.0         | 32 KB     | ######################################################## | 100% 
+    tk-8.6.13            | 3.1 MB    | ######################################################## | 100% 
+    Preparing transaction: done
+    Verifying transaction: done
+    Executing transaction: done
+    #
+    # To activate this environment, use
+    #
+    #     $ conda activate smoother
+    #
+    # To deactivate an active environment, use
+    #
+    #     $ conda deactivate
+</div>
+</details>
+</pre>
+</div>
+</div>
+
+
+Secondly, we activate the environment.
+
+
+    (base) [ID@master name]$ conda activate smoother
+
+
+Then, we install Smoother.
+
+
+
+<div class="highlight-default notranslate">
+<div class="highlight">
+<pre style="padding-bottom: 0px">
+pip install biosmoother
+<details>
+<summary style="color:grey">See the output of this command by clicking here.</summary>
+<div>
+    (smoother) [ID@master name]$ pip install biosmoother
+    Collecting biosmoother
+    Obtaining dependency information for biosmoother from https://files.pythonhosted.org/packages/bd/a4/641ba3c9ab5704b8c7f52484d57cd7a83a363202aa7f0e383f7e06d31a73/biosmoother-1.0.1-py3-none-any.whl.metadata
+    Downloading biosmoother-1.0.1-py3-none-any.whl.metadata (1.2 kB)
+    Collecting libbiosmoother (from biosmoother)
+    Obtaining dependency information for libbiosmoother from https://files.pythonhosted.org/packages/12/2e/2f40405174cb7a567a95f07e0dbcf7dfcc0d30aa614f60e0e33302cd8f1f/libbiosmoother-1.0.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+    Downloading libbiosmoother-1.0.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.2 kB)
+    Collecting bokeh==2.3.2 (from biosmoother)
+    Using cached bokeh-2.3.2-py3-none-any.whl
+    Collecting psutil (from biosmoother)
+    Using cached psutil-5.9.5-cp36-abi3-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (282 kB)
+    Collecting pybase64 (from biosmoother)
+    Obtaining dependency information for pybase64 from https://files.pythonhosted.org/packages/c0/9c/47876c6af2bbcc5d7d376f6fb04e46536d8fabe22d5633888d303d50ce20/pybase64-1.3.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+    Downloading pybase64-1.3.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.9 kB)
+    Collecting PyYAML>=3.10 (from bokeh==2.3.2->biosmoother)
+    Obtaining dependency information for PyYAML>=3.10 from https://files.pythonhosted.org/packages/7d/39/472f2554a0f1e825bd7c5afc11c817cd7a2f3657460f7159f691fbb37c51/PyYAML-6.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+    Using cached PyYAML-6.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (2.1 kB)
+    Collecting python-dateutil>=2.1 (from bokeh==2.3.2->biosmoother)
+    Using cached python_dateutil-2.8.2-py2.py3-none-any.whl (247 kB)
+    Collecting Jinja2>=2.9 (from bokeh==2.3.2->biosmoother)
+    Using cached Jinja2-3.1.2-py3-none-any.whl (133 kB)
+    Collecting numpy>=1.11.3 (from bokeh==2.3.2->biosmoother)
+    Obtaining dependency information for numpy>=1.11.3 from https://files.pythonhosted.org/packages/75/cd/7ae0f2cd3fc68aea6cfb2b7e523842e1fa953adb38efabc110d27ba6e423/numpy-1.26.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+    Using cached numpy-1.26.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (58 kB)
+    Collecting pillow>=7.1.0 (from bokeh==2.3.2->biosmoother)
+    Obtaining dependency information for pillow>=7.1.0 from https://files.pythonhosted.org/packages/5d/cc/3345b8cf6f2b8c5ee33d59e3e2ddb693c45c4f3c88e10859f8b8abf9dc82/Pillow-10.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+    Using cached Pillow-10.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (9.5 kB)
+    Collecting packaging>=16.8 (from bokeh==2.3.2->biosmoother)
+    Obtaining dependency information for packaging>=16.8 from https://files.pythonhosted.org/packages/ec/1a/610693ac4ee14fcdf2d9bf3c493370e4f2ef7ae2e19217d7a237ff42367d/packaging-23.2-py3-none-any.whl.metadata
+    Downloading packaging-23.2-py3-none-any.whl.metadata (3.2 kB)
+    Collecting tornado>=5.1 (from bokeh==2.3.2->biosmoother)
+    Obtaining dependency information for tornado>=5.1 from https://files.pythonhosted.org/packages/66/a5/e6da56c03ff61200d5a43cfb75ab09316fc0836aa7ee26b4e9dcbfc3ae85/tornado-6.3.3-cp38-abi3-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+    Using cached tornado-6.3.3-cp38-abi3-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (2.5 kB)
+    Collecting typing-extensions>=3.7.4 (from bokeh==2.3.2->biosmoother)
+    Obtaining dependency information for typing-extensions>=3.7.4 from https://files.pythonhosted.org/packages/24/21/7d397a4b7934ff4028987914ac1044d3b7d52712f30e2ac7a2ae5bc86dd0/typing_extensions-4.8.0-py3-none-any.whl.metadata
+    Using cached typing_extensions-4.8.0-py3-none-any.whl.metadata (3.0 kB)
+    Collecting scipy (from libbiosmoother->biosmoother)
+    Obtaining dependency information for scipy from https://files.pythonhosted.org/packages/88/8c/9d1f74196c296046af1f20e6d3fc7fbb27387282315e1643f450bba14329/scipy-1.11.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+    Downloading scipy-1.11.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (60 kB)
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 60.4/60.4 kB 1.3 MB/s eta 0:00:00
+    Collecting statsmodels (from libbiosmoother->biosmoother)
+    Using cached statsmodels-0.14.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (10.1 MB)
+    Collecting scikit-learn (from libbiosmoother->biosmoother)
+    Obtaining dependency information for scikit-learn from https://files.pythonhosted.org/packages/af/ad/329a88013936e4372181c0e275c19aa6130b0835876726944b811af5a856/scikit_learn-1.3.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+    Using cached scikit_learn-1.3.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (11 kB)
+    Collecting drawSvg==1.9.0 (from libbiosmoother->biosmoother)
+    Using cached drawSvg-1.9.0-py3-none-any.whl (26 kB)
+    Collecting cairoSVG (from drawSvg==1.9.0->libbiosmoother->biosmoother)
+    Obtaining dependency information for cairoSVG from https://files.pythonhosted.org/packages/01/a5/1866b42151f50453f1a0d28fc4c39f5be5f412a2e914f33449c42daafdf1/CairoSVG-2.7.1-py3-none-any.whl.metadata
+    Using cached CairoSVG-2.7.1-py3-none-any.whl.metadata (2.7 kB)
+    Collecting imageio (from drawSvg==1.9.0->libbiosmoother->biosmoother)
+    Obtaining dependency information for imageio from https://files.pythonhosted.org/packages/f6/37/e21e6f38b93878ba80302e95b8ccd4718d80f0c53055ccae343e606b1e2d/imageio-2.31.5-py3-none-any.whl.metadata
+    Downloading imageio-2.31.5-py3-none-any.whl.metadata (4.6 kB)
+    Collecting MarkupSafe>=2.0 (from Jinja2>=2.9->bokeh==2.3.2->biosmoother)
+    Obtaining dependency information for MarkupSafe>=2.0 from https://files.pythonhosted.org/packages/de/63/cb7e71984e9159ec5f45b5e81e896c8bdd0e45fe3fc6ce02ab497f0d790e/MarkupSafe-2.1.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+    Using cached MarkupSafe-2.1.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (3.0 kB)
+    Collecting six>=1.5 (from python-dateutil>=2.1->bokeh==2.3.2->biosmoother)
+    Using cached six-1.16.0-py2.py3-none-any.whl (11 kB)
+    Collecting joblib>=1.1.1 (from scikit-learn->libbiosmoother->biosmoother)
+    Obtaining dependency information for joblib>=1.1.1 from https://files.pythonhosted.org/packages/10/40/d551139c85db202f1f384ba8bcf96aca2f329440a844f924c8a0040b6d02/joblib-1.3.2-py3-none-any.whl.metadata
+    Using cached joblib-1.3.2-py3-none-any.whl.metadata (5.4 kB)
+    Collecting threadpoolctl>=2.0.0 (from scikit-learn->libbiosmoother->biosmoother)
+    Obtaining dependency information for threadpoolctl>=2.0.0 from https://files.pythonhosted.org/packages/81/12/fd4dea011af9d69e1cad05c75f3f7202cdcbeac9b712eea58ca779a72865/threadpoolctl-3.2.0-py3-none-any.whl.metadata
+    Using cached threadpoolctl-3.2.0-py3-none-any.whl.metadata (10.0 kB)
+    Collecting pandas>=1.0 (from statsmodels->libbiosmoother->biosmoother)
+    Obtaining dependency information for pandas>=1.0 from https://files.pythonhosted.org/packages/bc/7e/a9e11bd272e3135108892b6230a115568f477864276181eada3a35d03237/pandas-2.1.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+    Using cached pandas-2.1.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (18 kB)
+    Collecting patsy>=0.5.2 (from statsmodels->libbiosmoother->biosmoother)
+    Using cached patsy-0.5.3-py2.py3-none-any.whl (233 kB)
+    Collecting pytz>=2020.1 (from pandas>=1.0->statsmodels->libbiosmoother->biosmoother)
+    Obtaining dependency information for pytz>=2020.1 from https://files.pythonhosted.org/packages/32/4d/aaf7eff5deb402fd9a24a1449a8119f00d74ae9c2efa79f8ef9994261fc2/pytz-2023.3.post1-py2.py3-none-any.whl.metadata
+    Using cached pytz-2023.3.post1-py2.py3-none-any.whl.metadata (22 kB)
+    Collecting tzdata>=2022.1 (from pandas>=1.0->statsmodels->libbiosmoother->biosmoother)
+    Using cached tzdata-2023.3-py2.py3-none-any.whl (341 kB)
+    Collecting cairocffi (from cairoSVG->drawSvg==1.9.0->libbiosmoother->biosmoother)
+    Obtaining dependency information for cairocffi from https://files.pythonhosted.org/packages/17/be/a5d2c16317c6a890502725970589ae7f06cfc66b2e6916ba0a86973403c8/cairocffi-1.6.1-py3-none-any.whl.metadata
+    Using cached cairocffi-1.6.1-py3-none-any.whl.metadata (3.3 kB)
+    Collecting cssselect2 (from cairoSVG->drawSvg==1.9.0->libbiosmoother->biosmoother)
+    Using cached cssselect2-0.7.0-py3-none-any.whl (15 kB)
+    Collecting defusedxml (from cairoSVG->drawSvg==1.9.0->libbiosmoother->biosmoother)
+    Using cached defusedxml-0.7.1-py2.py3-none-any.whl (25 kB)
+    Collecting tinycss2 (from cairoSVG->drawSvg==1.9.0->libbiosmoother->biosmoother)
+    Using cached tinycss2-1.2.1-py3-none-any.whl (21 kB)
+    Collecting cffi>=1.1.0 (from cairocffi->cairoSVG->drawSvg==1.9.0->libbiosmoother->biosmoother)
+    Obtaining dependency information for cffi>=1.1.0 from https://files.pythonhosted.org/packages/ea/ac/e9e77bc385729035143e54cc8c4785bd480eaca9df17565963556b0b7a93/cffi-1.16.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+    Downloading cffi-1.16.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.5 kB)
+    Collecting webencodings (from cssselect2->cairoSVG->drawSvg==1.9.0->libbiosmoother->biosmoother)
+    Using cached webencodings-0.5.1-py2.py3-none-any.whl (11 kB)
+    Collecting pycparser (from cffi>=1.1.0->cairocffi->cairoSVG->drawSvg==1.9.0->libbiosmoother->biosmoother)
+    Using cached pycparser-2.21-py2.py3-none-any.whl (118 kB)
+    Downloading biosmoother-1.0.1-py3-none-any.whl (339 kB)
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 339.4/339.4 kB 6.9 MB/s eta 0:00:00
+    Downloading libbiosmoother-1.0.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.6 MB)
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 4.4 MB/s eta 0:00:00
+    Downloading pybase64-1.3.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (64 kB)
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 64.9/64.9 kB 11.4 MB/s eta 0:00:00
+    Using cached numpy-1.26.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (18.2 MB)
+    Downloading packaging-23.2-py3-none-any.whl (53 kB)
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 53.0/53.0 kB 10.4 MB/s eta 0:00:00
+    Using cached Pillow-10.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.5 MB)
+    Using cached PyYAML-6.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (738 kB)
+    Using cached tornado-6.3.3-cp38-abi3-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (427 kB)
+    Using cached typing_extensions-4.8.0-py3-none-any.whl (31 kB)
+    Using cached scikit_learn-1.3.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (10.9 MB)
+    Downloading scipy-1.11.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (36.6 MB)
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.6/36.6 MB 10.8 MB/s eta 0:00:00
+    Using cached joblib-1.3.2-py3-none-any.whl (302 kB)
+    Using cached MarkupSafe-2.1.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (25 kB)
+    Using cached pandas-2.1.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (12.3 MB)
+    Using cached threadpoolctl-3.2.0-py3-none-any.whl (15 kB)
+    Using cached CairoSVG-2.7.1-py3-none-any.whl (43 kB)
+    Downloading imageio-2.31.5-py3-none-any.whl (313 kB)
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 313.2/313.2 kB 10.8 MB/s eta 0:00:00
+    Using cached pytz-2023.3.post1-py2.py3-none-any.whl (502 kB)
+    Using cached cairocffi-1.6.1-py3-none-any.whl (75 kB)
+    Downloading cffi-1.16.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (443 kB)
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 443.4/443.4 kB 39.7 MB/s eta 0:00:00
+    Installing collected packages: webencodings, pytz, tzdata, typing-extensions, tornado, tinycss2, threadpoolctl, six, PyYAML, pycparser, pybase64, psutil, pillow, packaging, numpy, MarkupSafe, joblib, defusedxml, scipy, python-dateutil, patsy, Jinja2, imageio, cssselect2, cffi, scikit-learn, pandas, cairocffi, bokeh, statsmodels, cairoSVG, drawSvg, libbiosmoother, biosmoother
+    Successfully installed Jinja2-3.1.2 MarkupSafe-2.1.3 PyYAML-6.0.1 biosmoother-1.0.1 bokeh-2.3.2 cairoSVG-2.7.1 cairocffi-1.6.1 cffi-1.16.0 cssselect2-0.7.0 defusedxml-0.7.1 drawSvg-1.9.0 imageio-2.31.5 joblib-1.3.2 libbiosmoother-1.0.2 numpy-1.26.0 packaging-23.2 pandas-2.1.1 patsy-0.5.3 pillow-10.0.1 psutil-5.9.5 pybase64-1.3.1 pycparser-2.21 python-dateutil-2.8.2 pytz-2023.3.post1 scikit-learn-1.3.1 scipy-1.11.3 six-1.16.0 statsmodels-0.14.0 threadpoolctl-3.2.0 tinycss2-1.2.1 tornado-6.3.3 typing-extensions-4.8.0 tzdata-2023.3 webencodings-0.5.1
+</div>
+</details>
+</pre>
+</div>
+</div>
+
+Finally, we install further requirements for Smoother.
+
+<div class="highlight-default notranslate">
+<div class="highlight">
+<pre style="padding-bottom: 0px">
+conda install -y nodejs cairo
+<details>
+<summary style="color:grey">See the output of this command by clicking here.</summary>
+<div>
+
+    Collecting package metadata (current_repodata.json): done
+    Solving environment: done
+
+
+    ==> WARNING: A newer version of conda exists. <==
+    current version: 4.10.3
+    latest version: 23.9.0
+
+    Please update conda by running
+
+        $ conda update -n base conda
+
+
+
+    ## Package Plan ##
+
+    environment location: /home/abarcons/miniconda3/envs/smoother
+
+    added / updated specs:
+        - cairo
+        - nodejs
+
+
+    The following packages will be downloaded:
+
+        package                    |            build
+        ---------------------------|-----------------
+        cairo-1.16.0               |    h0c91306_1017         1.1 MB  conda-forge
+        libxcb-1.15                |       h0b41bf4_0         375 KB  conda-forge
+        nodejs-20.8.0              |       hb753e55_0        16.3 MB  conda-forge
+        pixman-0.42.2              |       h59595ed_0         376 KB  conda-forge
+        xorg-libx11-1.8.6          |       h8ee46fc_0         809 KB  conda-forge
+        xorg-libxrender-0.9.11     |       hd590300_0          37 KB  conda-forge
+        ------------------------------------------------------------
+                                            Total:        18.9 MB
+
+    The following NEW packages will be INSTALLED:
+
+    cairo              conda-forge/linux-64::cairo-1.16.0-h0c91306_1017
+    expat              conda-forge/linux-64::expat-2.5.0-hcb278e6_1
+    font-ttf-dejavu-s~ conda-forge/noarch::font-ttf-dejavu-sans-mono-2.37-hab24e00_0
+    font-ttf-inconsol~ conda-forge/noarch::font-ttf-inconsolata-3.000-h77eed37_0
+    font-ttf-source-c~ conda-forge/noarch::font-ttf-source-code-pro-2.038-h77eed37_0
+    font-ttf-ubuntu    conda-forge/noarch::font-ttf-ubuntu-0.83-hab24e00_0
+    fontconfig         conda-forge/linux-64::fontconfig-2.14.2-h14ed4e7_0
+    fonts-conda-ecosy~ conda-forge/noarch::fonts-conda-ecosystem-1-0
+    fonts-conda-forge  conda-forge/noarch::fonts-conda-forge-1-0
+    freetype           conda-forge/linux-64::freetype-2.12.1-h267a509_2
+    gettext            conda-forge/linux-64::gettext-0.21.1-h27087fc_0
+    icu                conda-forge/linux-64::icu-73.2-h59595ed_0
+    libexpat           conda-forge/linux-64::libexpat-2.5.0-hcb278e6_1
+    libglib            conda-forge/linux-64::libglib-2.78.0-hebfc3b9_0
+    libiconv           conda-forge/linux-64::libiconv-1.17-h166bdaf_0
+    libpng             conda-forge/linux-64::libpng-1.6.39-h753d276_0
+    libstdcxx-ng       conda-forge/linux-64::libstdcxx-ng-13.2.0-h7e041cc_2
+    libuv              conda-forge/linux-64::libuv-1.46.0-hd590300_0
+    libxcb             conda-forge/linux-64::libxcb-1.15-h0b41bf4_0
+    nodejs             conda-forge/linux-64::nodejs-20.8.0-hb753e55_0
+    pcre2              conda-forge/linux-64::pcre2-10.40-hc3806b6_0
+    pixman             conda-forge/linux-64::pixman-0.42.2-h59595ed_0
+    pthread-stubs      conda-forge/linux-64::pthread-stubs-0.4-h36c2ea0_1001
+    xorg-kbproto       conda-forge/linux-64::xorg-kbproto-1.0.7-h7f98852_1002
+    xorg-libice        conda-forge/linux-64::xorg-libice-1.1.1-hd590300_0
+    xorg-libsm         conda-forge/linux-64::xorg-libsm-1.2.4-h7391055_0
+    xorg-libx11        conda-forge/linux-64::xorg-libx11-1.8.6-h8ee46fc_0
+    xorg-libxau        conda-forge/linux-64::xorg-libxau-1.0.11-hd590300_0
+    xorg-libxdmcp      conda-forge/linux-64::xorg-libxdmcp-1.1.3-h7f98852_0
+    xorg-libxext       conda-forge/linux-64::xorg-libxext-1.3.4-h0b41bf4_2
+    xorg-libxrender    conda-forge/linux-64::xorg-libxrender-0.9.11-hd590300_0
+    xorg-renderproto   conda-forge/linux-64::xorg-renderproto-0.11.1-h7f98852_1002
+    xorg-xextproto     conda-forge/linux-64::xorg-xextproto-7.3.0-h0b41bf4_1003
+    xorg-xproto        conda-forge/linux-64::xorg-xproto-7.0.31-h7f98852_1007
+    zlib               conda-forge/linux-64::zlib-1.2.13-hd590300_5
+
+
+
+    Downloading and Extracting Packages
+    libxcb-1.15          | 375 KB    | ############################################ | 100% 
+    cairo-1.16.0         | 1.1 MB    | ############################################ | 100% 
+    nodejs-20.8.0        | 16.3 MB   | ############################################ | 100% 
+    pixman-0.42.2        | 376 KB    | ############################################ | 100% 
+    xorg-libx11-1.8.6    | 809 KB    | ############################################ | 100% 
+    xorg-libxrender-0.9. | 37 KB     | ############################################ | 100% 
+    Preparing transaction: done
+    Verifying transaction: done
+    Executing transaction: done
+</div>
+</details>
+</pre>
+</div>
+</div>
+
+We download one example Smoother index.
+
+
+<div class="highlight-default notranslate">
+<div class="highlight">
+<pre style="padding-bottom: 0px">
+wget https://syncandshare.lrz.de/dl/fi7p5SyG4uq9hzTiuEh8TK/t_brucei_hi_c.smoother_index.zip
+<details>
+<summary style="color:grey">See the output of this command by clicking here.</summary>
+<div>
+    --2023-10-11 14:20:52--  https://syncandshare.lrz.de/dl/fi7p5SyG4uq9hzTiuEh8TK/t_brucei_hi_c.smoother_index.zip
+    Resolving syncandshare.lrz.de (syncandshare.lrz.de)... 129.187.255.213
+    Connecting to syncandshare.lrz.de (syncandshare.lrz.de)|129.187.255.213|:443... connected.
+    HTTP request sent, awaiting response... 200 OK
+    Length: 1297169622 (1.2G) [application/x-zip-compressed]
+    Saving to: 't_brucei_hi_c.smoother_index.zip'
+
+    100%[===============================================================================================>] 1,297,169,622 58.2MB/s   in 20s    
+
+    2023-10-11 14:21:13 (60.6 MB/s) - 't_brucei_hi_c.smoother_index.zip' saved [1297169622/1297169622]
+</div>
+</details>
+</pre>
+</div>
+</div>
+
+
+We unzip the example Smoother index.
+
+<div class="highlight-default notranslate">
+<div class="highlight">
+<pre style="padding-bottom: 0px">
+unzip t_brucei_hi_c.smoother_index.zip
+<details>
+<summary style="color:grey">See the output of this command by clicking here.</summary>
+<div>
+    Archive:  t_brucei_hi_c.smoother_index.zip
+    creating: t_brucei_hi_c.smoother_index/
+    extracting: t_brucei_hi_c.smoother_index/sps.corners  
+    inflating: t_brucei_hi_c.smoother_index/anno.desc  
+    inflating: t_brucei_hi_c.smoother_index/anno.intervals  
+    inflating: t_brucei_hi_c.smoother_index/session.json  
+    inflating: t_brucei_hi_c.smoother_index/default_session.json  
+    inflating: t_brucei_hi_c.smoother_index/sps.overlays  
+    inflating: t_brucei_hi_c.smoother_index/sps.coords  
+    inflating: t_brucei_hi_c.smoother_index/anno.datasets  
+    inflating: t_brucei_hi_c.smoother_index/sps.prefix_sums  
+    inflating: t_brucei_hi_c.smoother_index/sps.datasets  
+</div>
+</details>
+</pre>
+</div>
+</div>
+
+
+We load the index on Smoother.
+
+<div class="highlight-default notranslate">
+<div class="highlight">
+<pre style="padding-bottom: 0px">
+biosmoother serve t_brucei_hi_c.smoother_index --show
+<details>
+<summary style="color:grey">See the output of this command by clicking here.</summary>
+<div>
+    loading index...
+    done loading.
+    starting biosmoother server at: http://localhost:5006/biosmoother
+    WARNING: the version of libSps that was used to create this index is different from the current version. This may lead to undefined behavior.
+    Version in index: 0.4.1-ca0d905-2023-09-05-14:22:50 
+    Current version: 1.0.0-5c093ba-2023-10-10-12:35:53
+    WARNING: the version of libBioSmoother that was used to create this index is different from the current version. This may lead to undefined behavior.
+    Version in index: 0.5.0-ce0be2e-2023-09-11-12:53:38 
+    Current version: 1.0.3-8512484-2023-10-11-17:36:56
+</div>
+</details>
+</pre>
+</div>
+</div>
+
+
+Since we used the `--show` option, a browser tab should open. In it we should see our heatmap after a few seconds:
+
+<img src="./docs_conf/static/Example_1.png" width=100%>
+
+## Changing mapping quality filter
+
+We will now perform some example analysis and navigation on Smoother.
+
+We start by changing the mapping quality filter. First, we select the :kbd:`Filter` tab.
+
+<img src="./docs_conf/static/Example_2.1.png" width=100%>
+
+We then select the :kbd:`Filter->Mapping` subtab.
+
+<img src="./docs_conf/static/Example_2.2.png" width=100%>
+
+In the dropdown menu :guilabel:`Mapping Quality: Lower Bound` we can select the threshold for mapping quality.
+
+<img src="./docs_conf/static/Example_2.3.png" width=100%>
+
+Here, we select >=30 that will filter out the reads with mapping quality score below 30.
+
+<img src="./docs_conf/static/Example_2.4.png" width=100%>
+
+After selecting the filter, the heatmap re-renders with the updated mapping quality filter.
+
+<img src="./docs_conf/static/Example_2.5.png" width=100%>
+
+## Zooming into a region of interest
+
+We now can zoom to a particular genomic location of interest, for example using the :guilabel:`Box zoom`.
+
+<img src="./docs_conf/static/Example_3.1.png" width=100%>
+
+We draw a box around the region of interest.
+
+<img src="./docs_conf/static/Example_3.2.png" width=100%>
+<img src="./docs_conf/static/Example_3.3.png" width=100%>
+
+Smoother renders the zoomed region. While Smoother is rendering there is a yellow background on the top left icon.
+
+<img src="./docs_conf/static/Example_3.4.png" width=100%>
+
+The new region is rendered.
+
+<img src="./docs_conf/static/Example_3.5.png" width=100%>
+
+## Exporting a picture
+We can now export a picture of the zoomed in region of interest. To do so we have to select the :kbd:`File->Export` subtab.
+
+<img src="./docs_conf/static/Example_4.1.png" width=100%>
+
+We then select the format we want in the dropdown menu :guilabel:`Format`.
+
+<img src="./docs_conf/static/Example_4.2.png" width=100%>
+
+We can then press the :guilabel:`Export` button to save the file.
+
+<img src="./docs_conf/static/Example_4.3.png" width=100%>
+<img src="./docs_conf/static/Example_4.4.png" width=100%>
+
+The picture file is saved.
+
+<img src="./docs_conf/static/Example_4.5.png" width=100%>
+
+
 .. _installation_target:
 
 # Installation
