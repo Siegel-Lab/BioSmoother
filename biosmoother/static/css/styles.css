@@ -212,6 +212,10 @@ button {
     white-space: nowrap;
 }
 
+.z_index_100 {
+    z-index: 100;
+}
+
 .tab-button-fill{
     width: 100%;
 }

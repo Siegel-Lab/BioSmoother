@@ -179,7 +179,9 @@
             </div>
 
             <div id="mainNormTab" class="normTab scroll_y" style="display:block">
-                {{ embed(doc.roots.mainNorm) }}
+                <div style="z-index:100;position:relative">
+                    {{ embed(doc.roots.mainNorm) }}
+                </div>
 
                 <div class="tab-header tab-header-3">
                     <div class="tab-button tab-button-spacer tab-level-3">
