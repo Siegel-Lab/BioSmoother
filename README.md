@@ -28,8 +28,8 @@ Install Smoother (and all requirements) using pip. Smoother runs under Windows, 
 Download 2 example Smoother indices.
 ```
  conda install wget
- wget https://syncandshare.lrz.de/dl/fi7p5SyG4uq9hzTiuEh8TK/t_brucei_hi_c.smoother_index.zip
- #wget https://syncandshare.lrz.de/dl/fiMo5Zsj8baXjXpzD8Whic/m_musculus_radicl_seq.smoother_index.zip
+ wget https://syncandshare.lrz.de/dl/fiTWvK4pxwB2TQkMSrzzDJ/t_brucei_hi_c.smoother_index.zip
+ #wget https://syncandshare.lrz.de/dl/fi8NBv2b3VDt4Htkm8Auuv/m_musculus_radicl_seq.smoother_index.zip
  
  conda install unzip
  unzip t_brucei_hi_c.smoother_index.zip

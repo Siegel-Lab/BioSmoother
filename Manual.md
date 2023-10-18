@@ -345,11 +345,11 @@ We download one example Smoother index.
 <div class="highlight-default notranslate">
 <div class="highlight">
 <pre style="padding-bottom: 0px">
-wget https://syncandshare.lrz.de/dl/fi7p5SyG4uq9hzTiuEh8TK/t_brucei_hi_c.smoother_index.zip
+wget https://syncandshare.lrz.de/dl/fiTWvK4pxwB2TQkMSrzzDJ/t_brucei_hi_c.smoother_index.zip
 <details>
 <summary style="color:grey">See the output of this command by clicking here.</summary>
 <div>
-    --2023-10-11 14:20:52--  https://syncandshare.lrz.de/dl/fi7p5SyG4uq9hzTiuEh8TK/t_brucei_hi_c.smoother_index.zip
+    --2023-10-11 14:20:52--  https://syncandshare.lrz.de/dl/fiTWvK4pxwB2TQkMSrzzDJ/t_brucei_hi_c.smoother_index.zip
     Resolving syncandshare.lrz.de (syncandshare.lrz.de)... 129.187.255.213
     Connecting to syncandshare.lrz.de (syncandshare.lrz.de)|129.187.255.213|:443... connected.
     HTTP request sent, awaiting response... 200 OK
