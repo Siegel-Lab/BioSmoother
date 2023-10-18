@@ -28,6 +28,7 @@ dependencies:
   - readthedocs-sphinx-ext
   - sphinx-mdinclude
   - sphinx-argparse
+  - sphinxemoji
   - psutil
   - drawSvg>=1.9.0
   - statsmodels

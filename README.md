@@ -9,9 +9,11 @@ Smoother is an interactive analysis and visualization software for contact mappi
 
 ## Quick Start
 
-First, install [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html "conda install page") on your machine if you don't have it already.
+:exclamation: If you want an in-detail explanation of installing Smoother and doing a handfull of first steps, [how about taking a tour](https://biosmoother.readthedocs.io/en/latest/Manual.html#taking-a-tour "take a tour") :bus:? 
 
-create & activate a new environment (optional)
+Otherwise, here is a brief set of instructions to get Smoother running: First, install [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html "conda install page") on your machine if you don't have it already.
+
+Then, create & activate a new environment (optional)
 ```
  conda create -y -n smoother python=3.9
  conda activate smoother

@@ -16,6 +16,7 @@ Table of Contents
 
 * :ref:`QuickStart <quickstart_target>`
 * :ref:`Overview <overview_target>`
+* :ref:`Taking a Tour <tour_target>`
 * :ref:`Installation <installation_target>`
 * :ref:`Command organization <command_organization_target>`
 * :ref:`Creating an index <creating_an_index_target>`
@@ -27,8 +28,6 @@ Table of Contents
 .. toctree::
    :hidden:
 
-   QuickStart
-   Overview
    Manual
    Cli
    genindex

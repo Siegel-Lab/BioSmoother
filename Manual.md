@@ -1,4 +1,5 @@
 .. index: Tour
+.. _tour_target:
 
 # Taking a tour
 
@@ -97,7 +98,7 @@ conda create -y -n smoother python=3.9
 Secondly, we activate the environment.
 
 
-    (base) [ID@master name]$ conda activate smoother
+    conda activate smoother
 
 
 Then, we install Smoother.

@@ -14,6 +14,8 @@ def split_md(md_file_in, prefix_out):
             with open(prefix_out + "/" + file_name + ".md", "w") as out_file:
                 out_file.write("# " + file_name.replace("_", " ") + "\n\n")
                 for line in file_lines:
+                    line = line.replace(":bus:", "|:bus:|")
+                    line = line.replace(":exclamation:", "|:exclamation:|")
                     out_file.write(line)
 
 if __name__ == "__main__":

@@ -55,6 +55,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx_mdinclude",
     "sphinxarg.ext",
+    'sphinxemoji.sphinxemoji',
 ]
 
 html_theme_options = {
