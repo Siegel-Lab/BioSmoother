@@ -70,9 +70,9 @@ Here is a screenshot of Smoother in action:
 All data needs to be converted into a Smoother index first.
 For this, first create an empty index:
 ```
-biosmoother init my_index my_genome.sizes my_annotation.gff
+biosmoother init my_index -a my_annotation.gff
 ```
-Here, `my_genome.sizes` is a file that contains the length of each chromosome in your genome and `my_annotation.gff` contains the genomes annotations.
+Here, `my_annotation.gff` is a GFF file that contains the genomes annotations.
 
 Then, add your data to the index:
 ```

@@ -14,5 +14,8 @@
     "normalization": {
         "normalize_by": "ice"
     },
+    "filters":{
+        "symmetry": "mirror"
+    },
     "smoother_config_file_version": 0.4
 }

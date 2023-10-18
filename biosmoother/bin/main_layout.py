@@ -935,8 +935,11 @@ class MainLayout:
 
     def parse_v4c(self):
         change = False
+        def interpret_error(s):
+            self.error_interpret_pos += s + "\n"
         if self.v4c_col.value != self.v4c_col_expected:
-            col_start, col_end = self.session.interpret_range(self.v4c_col.value, True)
+            self.error_interpret_pos = ""
+            col_start, col_end = self.session.interpret_range(self.v4c_col.value, True, report_error=interpret_error)
             change = True
             if not col_start is None:
                 self.session.set_value(
@@ -946,9 +949,11 @@ class MainLayout:
                 self.session.set_value(
                     ["settings", "interface", "v4c", "col_to"], col_end
                 )
+            self.trigger_render()
 
         if self.v4c_row.value != self.v4c_row_expected:
-            row_start, row_end = self.session.interpret_range(self.v4c_row.value, False)
+            self.error_interpret_pos = ""
+            row_start, row_end = self.session.interpret_range(self.v4c_row.value, False, report_error=interpret_error)
             change = True
             if not row_start is None:
                 self.session.set_value(
@@ -958,6 +963,7 @@ class MainLayout:
                 self.session.set_value(
                     ["settings", "interface", "v4c", "row_to"], row_end
                 )
+            self.trigger_render()
 
         if change:
             self.set_v4c_range()
@@ -1247,12 +1253,16 @@ class MainLayout:
 
     def parse_area_range(self):
         if self.area_range_expected != self.area_range.value:
+            self.error_interpret_pos = ""
+            def interpret_error(s):
+                self.error_interpret_pos += s + "\n"
             i = self.session.interpret_area(
                 self.area_range.value,
                 self.heatmap.x_range.start,
                 self.heatmap.y_range.start,
                 self.heatmap.x_range.end,
                 self.heatmap.y_range.end,
+                report_error=interpret_error,
             )
             if not i[0] is None:
                 self.heatmap.x_range.start = i[0]
@@ -1262,6 +1272,7 @@ class MainLayout:
                 self.heatmap.y_range.start = i[2]
             if not i[3] is None:
                 self.heatmap.y_range.end = i[3]
+            self.trigger_render()
 
     def save_tools(self, tools):
         if not self.session is None:
@@ -1534,6 +1545,7 @@ class MainLayout:
         self.ploidy_last_uploaded_filename = None
         self.next_element_id = 0
         self.download_session = None
+        self.error_interpret_pos = ""
 
         self.do_layout()
 
@@ -3700,6 +3712,10 @@ class MainLayout:
                     }
 
                 error = self.session.get_error()
+                if len(error) > 0 and len(self.error_interpret_pos) > 0:
+                    error += "\n"
+                error += self.error_interpret_pos
+                self.error_interpret_pos = ""
                 self.have_error = len(error) > 0
                 error_text = (
                     "None"

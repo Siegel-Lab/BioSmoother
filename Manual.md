@@ -550,22 +550,27 @@ Before an index can be filled with interactome data, we must set it up for a giv
 
 Let us create a new index for the Trypanosoma brucei genome.
 
-    biosmoother init my_index tryp.sizes
+If we have a .gff file, containing annotations for our genome, we must include this file right when creating the index:
 
-This command will create a folder called `my_index.smoother_index`. In all other subcommands, we can now use `my_index` to refer to this index. `tryp.sizes` is a file that contains the contig sizes of the trypanosome genome. It looks something like this:
+    biosmoother init my_index -a tryp_anno.gff
+    
+This command will create a folder called `my_index.smoother_index`. In all other subcommands, we can now use `my_index` to refer to this index. The `tryp_anno.gff` file must match the [GFF specifications](http://gmod.org/wiki/GFF3), and looks something like this:
+
+    ##sequence-region Chr1 253215
+    ##sequence-region Chr2 546247
+    Chr1   EuPathDB   gene   33710   34309   .   -   .   ID=Tb427_010006200.1;description=hypothetical protein / conserved
+    Chr2   EuPathDB   rRNA   1582219 1583848 .   -   .   ID=Tb427_000074200:rRNA;description=unspecified product
+
+If, for some reason, we do not have a .gff file, we can also create an index without annotations However, then we need to supply a file containing the contig sizes of the genome:
+
+    biosmoother init my_index -c tryp.sizes
+
+`tryp.sizes` is the file that contains the contig sizes of the genome. It looks something like this:
 
     #contig_name contig_size
     chr1 844108
     chr2 882890
 
-If we have a .gff file, containing annotations for our genome, we must include this file right when creating the index:
-
-    biosmoother init my_index tryp.sizes tryp_anno.gff
-
-This gff file must match the [GFF specifications](http://gmod.org/wiki/GFF3), and looks something like this:
-
-    Chr1   EuPathDB   gene   33710   34309   .   -   .   ID=Tb427_010006200.1;description=hypothetical protein / conserved
-    Chr2   EuPathDB   rRNA   1582219 1583848 .   -   .   ID=Tb427_000074200:rRNA;description=unspecified product
 
 .. Important::
     Currently, we recommend Smoother only for genomes < 150Mbp in size, as indices might become very large (many hundreds of gigabytes) otherwise. The easiest way to reduce index size is to increase the base resolution of the index. For this, you can use the `-d` parameter of the `init` subcommand. The base resolution is the highest resolution that can be displayed, so do not set it lower than the resolutions you are interested in.
