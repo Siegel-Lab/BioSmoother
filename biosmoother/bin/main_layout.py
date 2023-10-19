@@ -1892,7 +1892,7 @@ class MainLayout:
             tools="pan,wheel_zoom,box_zoom,crosshair",
             y_axis_type="log",
             height=200,
-            width=SETTINGS_WIDTH - 10,
+            width=SETTINGS_WIDTH,
         )
         tollbars.append(self.ranked_columns.toolbar)
         self.ranked_columns.dot(
@@ -1906,7 +1906,7 @@ class MainLayout:
             tools="pan,wheel_zoom,box_zoom,crosshair",
             y_axis_type="log",
             height=200,
-            width=SETTINGS_WIDTH - 10,
+            width=SETTINGS_WIDTH,
         )
         self.ranked_rows.toolbar_location = None
         self.ranked_rows.dot(
@@ -1921,7 +1921,7 @@ class MainLayout:
             tools="pan,wheel_zoom,box_zoom,crosshair",
             y_axis_type="log",
             height=200,
-            width=SETTINGS_WIDTH - 10,
+            width=SETTINGS_WIDTH,
         )
         self.dist_dep_dec_plot.xaxis.axis_label = "manhatten distance from diagonal"
         self.dist_dep_dec_plot.yaxis.axis_label = "reads per kbp^2"
@@ -1930,7 +1930,7 @@ class MainLayout:
         )
 
         for p in [self.ranked_columns, self.ranked_rows, self.dist_dep_dec_plot]:
-            p.sizing_mode = "stretch_width"
+            #p.sizing_mode = "stretch_width"
             p.toolbar_location = None
             tollbars.append(p.toolbar)
             p.xaxis.axis_label_text_font_size = "11px"
@@ -4139,6 +4139,7 @@ class MainLayout:
             self.re_layout.text = "a" if self.re_layout.text == "b" else "b"
 
         self.curdoc.add_timeout_callback(lambda: layout_callback(), 100)
-        self.curdoc.add_timeout_callback(lambda: layout_callback(), 1000)
-        self.curdoc.add_timeout_callback(lambda: layout_callback(), 10000)
-        self.curdoc.add_timeout_callback(lambda: layout_callback(), 50000)
+        for time in range(1, 10):
+            self.curdoc.add_timeout_callback(lambda: layout_callback(), time * 1000)
+        for time in range(1, 10):
+            self.curdoc.add_timeout_callback(lambda: layout_callback(), time * 10000)

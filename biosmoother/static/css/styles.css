@@ -187,7 +187,7 @@ button {
 
 .mainTab {
     top: 33px !important; 
-    bottom: 26px !important;
+    bottom: 36px !important;
     position: absolute !important;
     width: 100%;
 }
@@ -274,6 +274,10 @@ label, input[type="radio"], input[type="checkbox"] {
 
 .bk-toolbar-button.bk-active {
     border-bottom-color: #0072b1 !important;
+}
+
+.bk-root .bk-btn-light[disabled] {
+    border-color: transparent !important;
 }
 
 

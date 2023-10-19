@@ -42,6 +42,14 @@
             }
             document.getElementById(tabName + "Button").classList.add("tab-button-active");
         }
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function(){
+                if(layout_needed){
+                    window.dispatchEvent(new Event('resize'));
+                    layout_needed=false;
+                }
+            }, 1);
+        }, false);
     </script>
     {%- endblock js_resources %}
     {% endblock resources %}
