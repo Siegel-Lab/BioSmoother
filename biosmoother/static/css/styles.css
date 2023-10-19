@@ -172,11 +172,11 @@ button {
     text-align: inherit;
 }
 
-.bk .bk-input {
+.bk-input {
     text-align: inherit;
 }
 
-.bk-root .bk-btn {
+.bk-btn {
     text-align: inherit;
     padding: 6px 0px;
     font-weight: inherit;
@@ -189,17 +189,17 @@ button {
     border: none !important;
 }
 
-.bk-root .bk-tabs-header .bk-tab.bk-active {
+.bk-tab.bk-active {
     border-top-color: #26aae1 !important;
 }
 
-.bk-root .bk-btn-light.bk-active {
+.bk-btn-light.bk-active {
     background-color: transparent !important;
     border-color: transparent;
     font-weight: inherit;
 }
 
-.bk-root .bk-btn-light {
+.bk-btn-light {
     background-color: transparent !important;
     border-color: transparent;
     font-weight: inherit;
@@ -208,8 +208,7 @@ button {
     display: none;
 }
 
-.bk-root .bk-btn:active,
-.bk-root .bk-btn.bk-active {
+.bk-btn:active, .bk-btn.bk-active {
     box-shadow: inherit;
     font-weight: inherit;
 }

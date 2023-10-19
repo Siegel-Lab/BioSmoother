@@ -14,7 +14,7 @@ def get_path(prefix):
     for possible in [prefix, prefix + ".smoother_index"]:
         if os.path.exists(possible) and os.path.isdir(possible):
             return possible
-    raise RuntimeError("the given index", prefix, "does not exist.")
+    raise RuntimeError("the given index " + prefix + " does not exist.")
 
 def serve(args):
     import biosmoother
