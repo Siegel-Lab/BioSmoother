@@ -1342,9 +1342,9 @@ class MainLayout:
                             decode_to_bytes=decode_to_bytes,
                         )
                 self.spinner.text = '<img src="biosmoother/static/favicon.png" width="30px" height="30px">'
-                self.print_status(
-                    "done exporting. Current Bin Size: " + self.get_readable_bin_size()
-                )
+                s = "done exporting. Current Bin Size: " + self.get_readable_bin_size()
+                self.print(s)
+                self.print_status(s)
 
             self.curdoc.add_next_tick_callback(callback)
 
@@ -3608,11 +3608,12 @@ class MainLayout:
 
         return b_xs < a_xs or b_ys < a_ys or b_xe > a_xe or b_ye > a_ye
 
-    def print(self, s):
+    def print(self, s, font_color=None):
         s = datetime.now().strftime("[%H:%M:%S] ") + s
         if not bin.global_variables.quiet:
             print(s)
-        self.log_div_text += s.replace("\n", "<br>") + "<br>"
+        self.log_div_text += ("" if font_color is None else "<font color=" + font_color + ">") + \
+                             s.replace("\n", "<br>") + ("" if font_color is None else "</font>") + "<br>"
         # self.log_div_text = self.log_div_text[-5000:]
 
     def update_log_div(self):
@@ -3622,8 +3623,6 @@ class MainLayout:
         self.curdoc.add_next_tick_callback(callback)
 
     def print_status(self, s):
-        self.print(s)
-
         def callback():
             self.info_status_bar.text = s.replace("\n", " | ")
 
@@ -3718,11 +3717,14 @@ class MainLayout:
                 self.error_interpret_pos = ""
                 self.have_error = len(error) > 0
                 error_text = (
+                    "No errors"
+                    if len(error) == 0
+                    else "ERRORS:\n" + error
+                )
+                error_text_status = (
                     "None"
                     if len(error) == 0
-                    else '<font color="#FF0000">'
-                    + error.replace("\n", "; ")
-                    + "</font>"
+                    else error.split("\n")[0]
                 )
                 end_time = time.perf_counter()
                 start_render_time = time.perf_counter()
@@ -3731,7 +3733,7 @@ class MainLayout:
                 def callback():
                     self.curdoc.hold()
                     if not bin.global_variables.quiet:
-                        self.print("ERROR: " + error_text)
+                        self.print(error_text, font_color="#FF0000" if self.have_error else None)
                     self.color_layout.children = [self.make_color_figure(palette)]
 
                     def mmax(*args):
@@ -3999,7 +4001,7 @@ class MainLayout:
                         + "{:,}".format(len(d_heatmap["color"]))
                         + " bins"  #
                         + "\nErrors: "
-                        + error_text  #
+                        + error_text_status  #
                     )
                     self.print_status(end_text)
                     self.curdoc.add_timeout_callback(
