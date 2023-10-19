@@ -277,9 +277,16 @@ class MainLayout:
             return columns
 
         select_ret = TextInput(value="")
+        css_classes_add_on = []
+        columns = make_columns()
+        if orderable:
+            css_classes_add_on.append("table_col_1_clickable")
+            css_classes_add_on.append("table_col_2_clickable")
+        for idx in range(len(columns)):
+            css_classes_add_on.append("table_col_" + str(idx + 2 + (2 if orderable else 0)) + "_clickable")
         data_table = DataTable(
             source=ColumnDataSource(make_source()),
-            columns=make_columns(),
+            columns=columns,
             editable=True,
             autosize_mode="fit_columns",
             index_position=None,
@@ -290,7 +297,7 @@ class MainLayout:
             css_classes=[
                 "multichoice_element_id_" + str(self.next_element_id),
                 "white_background",
-            ],
+            ] + css_classes_add_on,
         )
 
         source_code = """

@@ -134,6 +134,26 @@ textarea {
     background-image: url(floppy-disk-hover.svg) !important;
 }
 
+.table_col_1_clickable .slick-cell.l1.r1:hover {
+    color: #0072b1;
+}
+.table_col_2_clickable .slick-cell.l2.r2:hover {
+    color: #0072b1;
+}
+.table_col_3_clickable .slick-cell.l3.r3:hover {
+    color: #0072b1;
+}
+.table_col_4_clickable .slick-cell.l4.r4:hover {
+    color: #0072b1;
+}
+.table_col_5_clickable .slick-cell.l5.r5:hover {
+    color: #0072b1;
+}
+.table_col_6_clickable .slick-cell.l6.r6:hover {
+    color: #0072b1;
+}
+
+
 .white_background {
     background-color: white !important;
 }
