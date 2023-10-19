@@ -549,15 +549,18 @@ class MainLayout:
             disabled=lock_name or bin.global_variables.no_save,
             height=DEFAULT_TEXT_INPUT_HEIGHT,
         )
+        apply_disabled = file_nr == self.session.get_value(["settings", "interface", "last_appplied_presetting"])
         apply_button = Button(
             label="",
-            css_classes=SYM_CSS + ["fa_apply"],
+            css_classes=SYM_CSS + ["fa_apply_disabled"] if apply_disabled else [ "fa_apply" ],
             width=SYM_WIDTH,
             height=SYM_WIDTH,
             sizing_mode="fixed",
             button_type="light",
             align="center",
+            disabled=apply_disabled
         )
+        self.apply_button_by_file_nr[str(file_nr)] = apply_button
         save_button = Button(
             label="",
             css_classes=SYM_CSS + ["fa_save"],
@@ -638,7 +641,7 @@ class MainLayout:
 
         def apply_event():
             if not bin.global_variables.quiet:
-                self.print("applying...")
+                self.print("applying presetting " + str(file_nr))
             with open(
                 biosmoother_home_folder + "/conf/" + str(file_nr) + ".json", "r"
             ) as f:
@@ -666,6 +669,7 @@ class MainLayout:
             self.curdoc.unhold()
             # @todo-low-prio why do i need to do this? the comp graph should realize that it needs to update...
             self.session.clear_cache()
+            self.session.set_value(["settings", "interface", "last_appplied_presetting"], str(file_nr))
             self.trigger_render()
             if not bin.global_variables.quiet:
                 self.print("applied")
@@ -1546,6 +1550,7 @@ class MainLayout:
         self.next_element_id = 0
         self.download_session = None
         self.error_interpret_pos = ""
+        self.apply_button_by_file_nr = {}
 
         self.do_layout()
 
@@ -3724,7 +3729,7 @@ class MainLayout:
                 error_text_status = (
                     "None"
                     if len(error) == 0
-                    else error.split("\n")[0]
+                    else '<font color="#FF0000">' + error.split("\n")[0] + "</font>"
                 )
                 end_time = time.perf_counter()
                 start_render_time = time.perf_counter()
@@ -3735,6 +3740,11 @@ class MainLayout:
                     if not bin.global_variables.quiet:
                         self.print(error_text, font_color="#FF0000" if self.have_error else None)
                     self.color_layout.children = [self.make_color_figure(palette)]
+
+                    file_nr = self.session.get_value(["settings", "interface", "last_appplied_presetting"])
+                    for file_nr_curr, apply_button_curr in self.apply_button_by_file_nr.items():
+                        apply_button_curr.css_classes = ["other_button"] + (["fa_apply_disabled"] if file_nr_curr == file_nr else [ "fa_apply" ])
+                        apply_button_curr.disabled = file_nr_curr == file_nr
 
                     def mmax(*args):
                         m = 0
@@ -4086,18 +4096,22 @@ class MainLayout:
                     and self.session.get_value(["settings", "interface", "do_redraw"])
                 ) or self.force_render:
                     if curr_area_size / self.curr_area_size < min_change:
-                        self.print_status("Rendering was triggered by zoom-in.")
+                        s = "Rendering was triggered by zoom-in."
+                        self.print(s)
+                        self.print_status(s)
                         zoom_in_render = True
                     elif self.force_render:
-                        self.print_status(
-                            "Rendering was triggered by parameter change."
-                        )
+                        s = "Rendering was triggered by parameter change."
+                        self.print(s)
+                        self.print_status(s)
                     elif MainLayout.area_outside(self.last_drawing_area, curr_area):
-                        self.print_status(
-                            "Rendering was triggered by panning or zoom-out."
-                        )
+                        s = "Rendering was triggered by panning or zoom-out."
+                        self.print(s)
+                        self.print_status(s)
                     else:
-                        self.print_status("Rendering.")
+                        s = "Rendering."
+                        self.print(s)
+                        self.print_status(s)
                     self.force_render = False
                     self.curr_area_size = curr_area_size
 

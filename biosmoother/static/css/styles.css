@@ -72,15 +72,24 @@ textarea {
     background-size: cover;
 }
 
+.fa_page_next_solid:hover {
+    background-image: url(page-next-hover.svg) !important;
+}
+
 .fa_page_previous_solid {
     background-image: url(page-previous-solid.svg) !important;
     background-size: cover;
+}
+
+.fa_page_previous_solid:hover {
+    background-image: url(page-previous-hover.svg) !important;
 }
 
 .fa_page_next {
     background-image: url(page-next.svg) !important;
     background-size: cover;
 }
+
 
 .fa_page_previous {
     background-image: url(page-previous.svg) !important;
@@ -92,10 +101,23 @@ textarea {
     background-size: cover;
 }
 
+.fa_apply:hover {
+    background-image: url(play-button-hover.svg) !important;
+}
+
+.fa_apply_disabled {
+    background-image: url(play-button-disabled.svg) !important;
+    background-size: cover;
+}
+
 .fa_reset {
     background-image: url(repeat-solid.svg) !important;
     background-size: contain;
     background-repeat: no-repeat;
+}
+
+.fa_reset:hover {
+    background-image: url(repeat-solid-hover.svg) !important;
 }
 
 .fa_reset_disabled {
@@ -106,6 +128,10 @@ textarea {
 .fa_save {
     background-image: url(floppy-disk-solid.svg) !important;
     background-size: cover;
+}
+
+.fa_save:hover {
+    background-image: url(floppy-disk-hover.svg) !important;
 }
 
 .white_background {
