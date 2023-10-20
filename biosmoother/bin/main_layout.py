@@ -3793,26 +3793,30 @@ class MainLayout:
                     min_max_tracks_y[0] -= range_padding_y
                     min_max_tracks_y[1] += range_padding_y
 
-                    if self.set_range_raw_x_axis != min_max_tracks_x:
-                        self.raw_x_axis.x_range.start = min_max_tracks_x[0]
-                        self.raw_x_axis.x_range.end = min_max_tracks_x[1]
-                        self.set_range_raw_x_axis = min_max_tracks_x
+                    if math.isfinite(min_max_tracks_x[0]) and math.isfinite(min_max_tracks_x[1]):
+                        if self.set_range_raw_x_axis != min_max_tracks_x:
+                            self.raw_x_axis.x_range.start = min_max_tracks_x[0]
+                            self.raw_x_axis.x_range.end = min_max_tracks_x[1]
+                            self.set_range_raw_x_axis = min_max_tracks_x
 
-                    if self.set_range_raw_y_axis != tuple(min_max_tracks_y):
-                        self.raw_y_axis.y_range.start = min_max_tracks_y[0]
-                        self.raw_y_axis.y_range.end = min_max_tracks_y[1]
-                        self.set_range_raw_y_axis = tuple(min_max_tracks_y)
+                    if math.isfinite(min_max_tracks_y[0]) and math.isfinite(min_max_tracks_y[1]):
+                        if self.set_range_raw_y_axis != tuple(min_max_tracks_y):
+                            self.raw_y_axis.y_range.start = min_max_tracks_y[0]
+                            self.raw_y_axis.y_range.end = min_max_tracks_y[1]
+                            self.set_range_raw_y_axis = tuple(min_max_tracks_y)
 
 
-                    if self.set_range_raw_x_axis_log != tuple(min_max_tracks_x_log):
-                        self.raw_x_axis_log.x_range.start = min_max_tracks_x_log[0]
-                        self.raw_x_axis_log.x_range.end = min_max_tracks_x_log[1]
-                        self.set_range_raw_x_axis_log = tuple(min_max_tracks_x_log)
+                    if math.isfinite(min_max_tracks_x_log[0]) and math.isfinite(min_max_tracks_x_log[1]):
+                        if self.set_range_raw_x_axis_log != tuple(min_max_tracks_x_log):
+                            self.raw_x_axis_log.x_range.start = min_max_tracks_x_log[0]
+                            self.raw_x_axis_log.x_range.end = min_max_tracks_x_log[1]
+                            self.set_range_raw_x_axis_log = tuple(min_max_tracks_x_log)
 
-                    if self.set_range_raw_y_axis_log != tuple(min_max_tracks_y_log):
-                        self.raw_y_axis_log.y_range.start = min_max_tracks_y_log[0]
-                        self.raw_y_axis_log.y_range.end = min_max_tracks_y_log[1]
-                        self.set_range_raw_y_axis_log = tuple(min_max_tracks_y_l)
+                    if math.isfinite(min_max_tracks_y_log[0]) and math.isfinite(min_max_tracks_y_log[1]):
+                        if self.set_range_raw_y_axis_log != tuple(min_max_tracks_y_log):
+                            self.raw_y_axis_log.y_range.start = min_max_tracks_y_log[0]
+                            self.raw_y_axis_log.y_range.end = min_max_tracks_y_log[1]
+                            self.set_range_raw_y_axis_log = tuple(min_max_tracks_y_log)
 
                     def set_bounds_x(
                         plot, color=None
@@ -3988,7 +3992,6 @@ class MainLayout:
                         )
                         * 1000,
                     )
-                    print(self.raw_x_axis.x_range.start, self.raw_x_axis.x_range.end)
 
                 self.curdoc.add_next_tick_callback(callback)
                 return True
