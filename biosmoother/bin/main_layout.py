@@ -1558,6 +1558,10 @@ class MainLayout:
         self.download_session = None
         self.error_interpret_pos = ""
         self.apply_button_by_file_nr = {}
+        self.set_range_raw_x_axis = None
+        self.set_range_raw_y_axis = None
+        self.set_range_raw_x_axis_log = None
+        self.set_range_raw_y_axis_log = None
 
         self.do_layout()
 
@@ -3778,26 +3782,7 @@ class MainLayout:
                     )
                     min_max_tracks_x[0] -= range_padding_x
                     min_max_tracks_x[1] += range_padding_x
-                    if math.isfinite(min_max_tracks_x[0]) and math.isfinite(
-                        min_max_tracks_x[1]
-                    ):
-                        if not self.raw_x_axis.xaxis.bounds == tuple(min_max_tracks_x):
-                            self.raw_x_axis.x_range.start = min_max_tracks_x[0]
-                            self.raw_x_axis.x_range.end = min_max_tracks_x[1]
-                        self.raw_x_axis.xaxis.bounds = tuple(min_max_tracks_x)
-                    if math.isfinite(min_max_tracks_x_log[0]) and math.isfinite(
-                        min_max_tracks_x_log[1]
-                    ):
-                        if not self.raw_x_axis_log.xaxis.bounds == tuple(
-                            min_max_tracks_x_log
-                        ):
-                            if min_max_tracks_x_log[0] > 0:
-                                self.raw_x_axis_log.x_range.start = (
-                                    min_max_tracks_x_log[0]
-                                )
-                            self.raw_x_axis_log.x_range.end = min_max_tracks_x_log[1]
-                        self.raw_x_axis_log.xaxis.bounds = tuple(min_max_tracks_x_log)
-
+                    
                     min_max_tracks_y_log = (
                         min_max_tracks_non_zero_y[0] * LOG_PADDING,
                         min_max_tracks_non_zero_y[1] / LOG_PADDING,
@@ -3807,79 +3792,54 @@ class MainLayout:
                     )
                     min_max_tracks_y[0] -= range_padding_y
                     min_max_tracks_y[1] += range_padding_y
-                    if math.isfinite(min_max_tracks_y[0]) and math.isfinite(
-                        min_max_tracks_y[1]
-                    ):
-                        if not self.raw_y_axis.yaxis.bounds == tuple(min_max_tracks_y):
-                            self.raw_y_axis.y_range.start = min_max_tracks_y[0]
-                            self.raw_y_axis.y_range.end = min_max_tracks_y[1]
-                        self.raw_y_axis.yaxis.bounds = tuple(min_max_tracks_y)
-                    if math.isfinite(min_max_tracks_y_log[0]) and math.isfinite(
-                        min_max_tracks_y_log[1]
-                    ):
-                        if not self.raw_y_axis_log.yaxis.bounds == tuple(
-                            min_max_tracks_y_log
-                        ):
-                            if min_max_tracks_y_log[0] > 0:
-                                self.raw_y_axis_log.y_range.start = (
-                                    min_max_tracks_y_log[0]
-                                )
-                            self.raw_y_axis_log.y_range.end = min_max_tracks_y_log[1]
-                        self.raw_y_axis_log.yaxis.bounds = tuple(min_max_tracks_y_log)
 
-                    def set_bounds(
-                        plot, left=None, right=None, top=None, bottom=None, color=None
+                    if self.set_range_raw_x_axis != min_max_tracks_x:
+                        self.raw_x_axis.x_range.start = min_max_tracks_x[0]
+                        self.raw_x_axis.x_range.end = min_max_tracks_x[1]
+                        self.set_range_raw_x_axis = min_max_tracks_x
+
+                    if self.set_range_raw_y_axis != tuple(min_max_tracks_y):
+                        self.raw_y_axis.y_range.start = min_max_tracks_y[0]
+                        self.raw_y_axis.y_range.end = min_max_tracks_y[1]
+                        self.set_range_raw_y_axis = tuple(min_max_tracks_y)
+
+
+                    if self.set_range_raw_x_axis_log != tuple(min_max_tracks_x_log):
+                        self.raw_x_axis_log.x_range.start = min_max_tracks_x_log[0]
+                        self.raw_x_axis_log.x_range.end = min_max_tracks_x_log[1]
+                        self.set_range_raw_x_axis_log = tuple(min_max_tracks_x_log)
+
+                    if self.set_range_raw_y_axis_log != tuple(min_max_tracks_y_log):
+                        self.raw_y_axis_log.y_range.start = min_max_tracks_y_log[0]
+                        self.raw_y_axis_log.y_range.end = min_max_tracks_y_log[1]
+                        self.set_range_raw_y_axis_log = tuple(min_max_tracks_y_l)
+
+                    def set_bounds_x(
+                        plot, color=None
                     ):
                         ra = self.plot_render_area(plot)
-                        ra.left = render_area[0] if left is None else left
-                        ra.bottom = render_area[1] if bottom is None else bottom
-                        ra.right = render_area[2] if right is None else right
-                        ra.top = render_area[3] if top is None else top
+                        ra.bottom = render_area[1]
+                        ra.top = render_area[3]
+                        if not color is None:
+                            ra.fill_color = color
+                    def set_bounds_y(
+                        plot, color=None
+                    ):
+                        ra = self.plot_render_area(plot)
+                        ra.left = render_area[0]
+                        ra.right = render_area[2]
                         if not color is None:
                             ra.fill_color = color
 
-                    if math.isfinite(min_max_tracks_x[0]) and math.isfinite(
-                        min_max_tracks_x[1]
-                    ):
-                        set_bounds(
-                            self.raw_x,
-                            left=min_max_tracks_x[0],
-                            right=min_max_tracks_x[1],
-                        )
-                    if math.isfinite(min_max_tracks_x_log[0]) and math.isfinite(
-                        min_max_tracks_x_log[1]
-                    ):
-                        if min_max_tracks_x_log[0] > 0:
-                            set_bounds(
-                                self.raw_x_log,
-                                left=min_max_tracks_x_log[0],
-                                right=min_max_tracks_x_log[1],
-                            )
-                        else:
-                            set_bounds(self.raw_x_log, right=min_max_tracks_x_log[1])
-                    if math.isfinite(min_max_tracks_y[0]) and math.isfinite(
-                        min_max_tracks_y[1]
-                    ):
-                        set_bounds(
-                            self.raw_y,
-                            bottom=min_max_tracks_y[0],
-                            top=min_max_tracks_y[1],
-                        )
-                    if math.isfinite(min_max_tracks_y_log[0]) and math.isfinite(
-                        min_max_tracks_y_log[1]
-                    ):
-                        if min_max_tracks_y_log[0] > 0:
-                            set_bounds(
-                                self.raw_y_log,
-                                bottom=min_max_tracks_y_log[0],
-                                top=min_max_tracks_y_log[1],
-                            )
-                        else:
-                            set_bounds(self.raw_y_log, top=min_max_tracks_y_log[1])
-                    set_bounds(self.anno_x, left=0, right=len(displayed_annos_x))
-                    set_bounds(self.anno_y, bottom=0, top=len(displayed_annos_y))
+                    set_bounds_x(self.raw_x)
+                    set_bounds_x(self.raw_x_log)
+                    set_bounds_y(self.raw_y)
+                    set_bounds_y(self.raw_y_log)
+                    set_bounds_x(self.anno_x)
+                    set_bounds_y(self.anno_y)
 
-                    set_bounds(self.heatmap, color=b_col)
+                    set_bounds_x(self.heatmap, color=b_col)
+                    set_bounds_y(self.heatmap, color=b_col)
 
                     self.heatmap_data.data = d_heatmap
                     self.raw_data_x.data = raw_data_x
@@ -4028,6 +3988,7 @@ class MainLayout:
                         )
                         * 1000,
                     )
+                    print(self.raw_x_axis.x_range.start, self.raw_x_axis.x_range.end)
 
                 self.curdoc.add_next_tick_callback(callback)
                 return True

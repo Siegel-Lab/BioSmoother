@@ -89,6 +89,7 @@ class FigureMaker:
         return self
 
     def link_y(self, other):
+        self.args["x_range"] = (0, 1)
         self.args["y_range"] = other.y_range
         # self.args["sizing_mode"] = "stretch_height"
         self.args["height_policy"] = "max"
@@ -98,6 +99,7 @@ class FigureMaker:
 
     def link_x(self, other):
         self.args["x_range"] = other.x_range
+        self.args["y_range"] = (0, 1)
         # self.args["sizing_mode"] = "stretch_width"
         self.args["width_policy"] = "max"
         self.args["width"] = 10
