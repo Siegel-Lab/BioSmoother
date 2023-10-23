@@ -115,7 +115,7 @@ class FigureMaker:
         return self
 
     def scale(self):
-        self.args["sizing_mode"] = "scale_both"
+        self.args["sizing_mode"] = "scale_height"
         self.args["height"] = 10
         self.args["width"] = 10
         self.no_border_h = True

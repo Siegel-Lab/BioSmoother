@@ -1573,7 +1573,7 @@ class MainLayout:
             FigureMaker()
             .name("heatmap")
             .range1d()
-            .scale()
+            .stretch()
             .combine_tools(tollbars)
             .get(self)
         )
@@ -4113,6 +4113,9 @@ class MainLayout:
         else:
             self.curdoc.add_timeout_callback(lambda: self.render_callback(), 1000)
 
+    def ping_callback(self):
+        self.curdoc.add_timeout_callback(lambda: self.ping_callback(), 1000)
+
     def set_root(self):
         self.curdoc.title = "Smoother"
         self.force_render = True
@@ -4130,3 +4133,4 @@ class MainLayout:
             self.curdoc.add_timeout_callback(lambda: layout_callback(), time * 1000)
         for time in range(1, 10):
             self.curdoc.add_timeout_callback(lambda: layout_callback(), time * 10000)
+        self.curdoc.add_timeout_callback(lambda: self.ping_callback(), 1000)
