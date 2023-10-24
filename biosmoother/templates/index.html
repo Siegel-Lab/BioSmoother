@@ -50,6 +50,22 @@
                 }
             }, 1);
         }, false);
+
+        function lostServerConnection(){
+            console.log("Server connection lost.");
+            document.getElementById("spinner").src = "biosmoother/static/error.png";
+            document.getElementById("status_bar").innerHTML = "<font color='red' class='top_border bk' style='width: 100%; padding: 5px'>Server connection lost. Please restart the server and open a new tab.</font>";
+        }
+        (function(){
+            var oldLog = Bokeh.logger.info;
+            Bokeh.logger.info = function (message) {
+                if(message.startsWith("Websocket connection") && 
+                   message.endsWith("disconnected, will not attempt to reconnect")){
+                    lostServerConnection();
+                }
+                oldLog.apply(console, arguments);
+            };
+        })();
     </script>
     {%- endblock js_resources %}
     {% endblock resources %}
@@ -322,7 +338,7 @@
         </div>
 
     </div>
-    <div style="position:absolute; height: 26px; left: 0; bottom: 0; right: 0; justify-content: center; display: flex; background-color: white">
+    <div style="position:absolute; height: 26px; left: 0; bottom: 0; right: 0; justify-content: center; display: flex; background-color: white" id="status_bar">
         {{ embed(doc.roots.status_bar) }}
     </div>
 

@@ -1297,7 +1297,7 @@ class MainLayout:
     def do_export(self):
         def unlocked_task():
             def callback():
-                self.spinner.text = '<img src="biosmoother/static/stirring.gif" width="30px" height="30px">'
+                self.spinner.text = '<img id="spinner" src="biosmoother/static/stirring.gif" width="30px" height="30px">'
 
             self.curdoc.add_next_tick_callback(callback)
             export_to_server = self.session.get_value(
@@ -1352,7 +1352,7 @@ class MainLayout:
                             file_type=output_format,
                             decode_to_bytes=decode_to_bytes,
                         )
-                self.spinner.text = '<img src="biosmoother/static/favicon.png" width="30px" height="30px">'
+                self.spinner.text = '<img id="spinner" src="biosmoother/static/favicon.png" width="30px" height="30px">'
                 s = "done exporting. Current Bin Size: " + self.get_readable_bin_size()
                 self.print(s)
                 self.print_status(s)
@@ -1418,6 +1418,7 @@ class MainLayout:
             self.settings_default = json.load(f)
 
         self.re_layout = None
+        self.ping_div = None
         self.download_js_callback_div = None
         self.download_js_callback = None
         self.heatmap = None
@@ -2726,7 +2727,7 @@ class MainLayout:
         )
 
         self.info_status_bar = Div(
-            text="Waiting for Fileinput.", sizing_mode="stretch_width"
+            text="Loading index.", sizing_mode="stretch_width"
         )
         self.info_status_bar.height = 26
         self.info_status_bar.min_height = 26
@@ -3668,7 +3669,7 @@ class MainLayout:
         def unlocked_task():
             def cancelable_task():
                 def callback():
-                    self.spinner.text = '<img src="biosmoother/static/stirring.gif" width="30px" height="30px">'
+                    self.spinner.text = '<img id="spinner" src="biosmoother/static/stirring.gif" width="30px" height="30px">'
 
                 self.curdoc.add_next_tick_callback(callback)
 
@@ -4001,9 +4002,9 @@ class MainLayout:
 
             def callback():
                 if self.have_error:
-                    self.spinner.text = '<img src="biosmoother/static/error.png" width="30px" height="30px">'
+                    self.spinner.text = '<img id="spinner" src="biosmoother/static/error.png" width="30px" height="30px">'
                 else:
-                    self.spinner.text = '<img src="biosmoother/static/favicon.png" width="30px" height="30px">'
+                    self.spinner.text = '<img id="spinner" src="biosmoother/static/favicon.png" width="30px" height="30px">'
                 self.re_layout.text = "a" if self.re_layout.text == "b" else "b"
                 if not bin.global_variables.no_save:
                     try:
@@ -4113,9 +4114,6 @@ class MainLayout:
         else:
             self.curdoc.add_timeout_callback(lambda: self.render_callback(), 1000)
 
-    def ping_callback(self):
-        self.curdoc.add_timeout_callback(lambda: self.ping_callback(), 1000)
-
     def set_root(self):
         self.curdoc.title = "Smoother"
         self.force_render = True
@@ -4133,4 +4131,3 @@ class MainLayout:
             self.curdoc.add_timeout_callback(lambda: layout_callback(), time * 1000)
         for time in range(1, 10):
             self.curdoc.add_timeout_callback(lambda: layout_callback(), time * 10000)
-        self.curdoc.add_timeout_callback(lambda: self.ping_callback(), 1000)

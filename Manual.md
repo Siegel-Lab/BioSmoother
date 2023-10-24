@@ -1,7 +1,7 @@
 .. index: Tour
 .. _tour_target:
 
-# Taking a tour
+# Taking a tour |:bus:|
 
 In this example, we install Smoother, download one of the sample datasets and run basic analyses. To do that we should have a terminal open:
 
