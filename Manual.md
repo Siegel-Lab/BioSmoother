@@ -495,8 +495,10 @@ The picture file is saved.
 
 The easiest way to install Smoother is via pip and conda
 
-    pip install biosmoother
-    conda install -y nodejs cairo
+    conda create -y -n smoother python=3.9 # create an environment for smoother
+    conda activate smoother # activate the environment
+    pip install biosmoother # install smoother and dependencies
+    conda install -y nodejs cairo # install non-pip dependencies
 
 This will install `biosmoother`, the graphical user interface, and `libbiosmoother`, the backend behind the GUI and the command-line interface.
 
@@ -506,13 +508,18 @@ This will install `biosmoother`, the graphical user interface, and `libbiosmooth
 
 For installing Smoother via GitHub, run the following commands:
 
+    # create & activate an environment for smoother
+    conda create -y -n smoother python=3.9
+    conda activate smoother
+
     # clone repository
     git clone https://github.com/Siegel-Lab/BioSmoother.git
+    cd BioSmoother
 
     # create the required conda environment
-    ./conda_env/create_smoother_env.sh
+    conda env create -f doncs_conf/dev_env_linux.yml
 
-    # install using pip
+    # install from local folder using pip
     pip install -e .
 
 While the pip installation will install the latest stable release, this type of installation will install the newest, possibly untested version. Note that this approach does still use pip to install the latest stable release of libBioSmoother and libSps, the two backend libraries behind Smoother. To also install these two libraries on your own, you will have to clone the respective repositories and install manually from them using the `pip install -e .` command. Then you can install Smoother using `pip install -e . –no-deps` to install Smoother without adjustments to the dependencies.
