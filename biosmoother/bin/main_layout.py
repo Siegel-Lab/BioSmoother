@@ -341,7 +341,7 @@ class MainLayout:
                 for _, n in checkboxes:
                     bools = [name in active_dict[n] for name in labels]
                     source[n].append(
-                        "☑"
+                        "🞕"
                         if all(bools)
                         else ("☐" if all(not b for b in bools) else "·")
                     )
@@ -356,7 +356,7 @@ class MainLayout:
                         source["down"].append("▼" if idx < len(labels) - 1 else "")
                     source["names"].append(name)
                     for _, n in checkboxes:
-                        source[n].append("☑" if name in active_dict[n] else "☐")
+                        source[n].append("🞕" if name in active_dict[n] else "☐")
 
             data_table.source.data = source
             data_table.frozen_rows = 1 if len(labels) > 1 else 0
