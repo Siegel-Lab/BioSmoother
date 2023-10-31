@@ -531,14 +531,11 @@ While the pip installation will install the latest stable release, this type of 
 
 Smoother supports Linux, Windows, and MacOS. 
 Specifically, we support:
-- macOS 10.9+ Intel
-- macOS 10.9+ Apple Silicon
+- macOS 10.9+ Intel 64Bit
+- macOS 10.9+ Apple Silicon 64Bit
 - Windows 64bit
-- Windows 32bit
 - manylinux2014 x86_64 (CentOS 7 & 8, Fedora 32+, Mageia 8+, openSUSE 15.3+, Photon OS 4.0+, Ubuntu 20.04+)
-- manylinux2014 i686 (CentOS 7 & 8, Fedora 32+, Mageia 8+, openSUSE 15.3+, Photon OS 4.0+, Ubuntu 20.04+)
 - musllinux x86_64
-- musllinux i686
 
 Smoother has been tested on the latest versions of Firefox, Chrome, and Safari.
 

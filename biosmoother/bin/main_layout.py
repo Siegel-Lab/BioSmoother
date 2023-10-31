@@ -1066,7 +1066,12 @@ class MainLayout:
                 plot.visible = visible
 
         log_axis = self.session.get_value(["settings", "interface", "tracks_log_scale"])
-        x_visible = len(self.raw_data_x.data["values"]) > 0
+        heat_visible = self.show_hide["heatmap"]
+        self.heatmap.visible = heat_visible
+        self.heatmap_y_axis.visible = heat_visible
+        self.heatmap_y_axis_2.visible = heat_visible
+        self.heatmap_y_axis_3.visible = heat_visible
+        x_visible = len(self.raw_data_x.data["values"]) > 0 and heat_visible
         self.raw_x.visible = self.show_hide["raw"] and x_visible and not log_axis
         self.raw_x_axis.visible = (
             self.show_hide["raw"]
@@ -1091,7 +1096,7 @@ class MainLayout:
             self.show_hide["raw"] and y_visible and self.show_hide["axis"] and log_axis
         )
         self.anno_x.visible = (
-            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"]
+            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"] and heat_visible
         )
         self.anno_x_axis.visible = self.anno_x.visible and self.show_hide["axis"]
         self.anno_y.visible = (
@@ -1998,6 +2003,7 @@ class MainLayout:
         tool_bar = FigureMaker.get_tools(tollbars)
         show_hide = self.make_show_hide_dropdown(
             ["settings", "interface", "show_hide"],
+            ("Heatmap", "heatmap"),
             ("Secondary Axes", "axis"),
             ("Coordinates", "coords"),
             ("Regions", "regs"),
@@ -3852,7 +3858,8 @@ class MainLayout:
                     log_axis = self.session.get_value(
                         ["settings", "interface", "tracks_log_scale"]
                     )
-                    x_visible = len(raw_data_x["values"]) > 0
+                    heat_visible = self.show_hide["heatmap"]
+                    x_visible = len(raw_data_x["values"]) > 0 and heat_visible
                     self.raw_x.visible = (
                         self.show_hide["raw"] and x_visible and not log_axis
                     )
@@ -3886,7 +3893,7 @@ class MainLayout:
                     self.anno_x_data.data = d_anno_x
                     self.anno_y_data.data = d_anno_y
                     self.anno_x.visible = (
-                        len(d_anno_x["anno_name"]) > 0 and self.show_hide["annotation"]
+                        len(d_anno_x["anno_name"]) > 0 and self.show_hide["annotation"] and heat_visible
                     )
                     self.anno_x_axis.visible = self.anno_x.visible
                     self.anno_y.visible = (
