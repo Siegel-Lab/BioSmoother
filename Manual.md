@@ -527,6 +527,21 @@ While the pip installation will install the latest stable release, this type of 
 .. index:: help, subcommands
 .. _command_organization_target:
 
+## Supported operating systems and browsers
+
+Smoother supports Linux, Windows, and MacOS. 
+Specifically, we support:
+- macOS 10.9+ Intel
+- macOS 10.9+ Apple Silicon
+- Windows 64bit
+- Windows 32bit
+- manylinux2014 x86_64 (CentOS 7 & 8, Fedora 32+, Mageia 8+, openSUSE 15.3+, Photon OS 4.0+, Ubuntu 20.04+)
+- manylinux2014 i686 (CentOS 7 & 8, Fedora 32+, Mageia 8+, openSUSE 15.3+, Photon OS 4.0+, Ubuntu 20.04+)
+- musllinux x86_64
+- musllinux i686
+
+Smoother has been tested on the latest versions of Firefox, Chrome, and Safari.
+
 # Command organization
 
 Smoother has multiple subcommands, all of which interact with an index directory. An index contains the genome, its annotations, as well as the datasets to be analyzed and visualized. Each of the subcommands is designed to perform one specific task on the index. For example, there are the `init` and `serve` subcommands that can be called as follows:
@@ -1389,7 +1404,7 @@ The full documentation of the `reset` subcommand can be found :ref:`here <reset_
 
 .. _ref_and_ack_target:
 
-# References and acknowledgments
+# Appendix
 
 ## Thanks
 
@@ -1402,7 +1417,7 @@ Thanks to the following libraries that are used in Smoother:
 
 Smoother is currently unpublished. This page will be updated with a bioRxiv link soon.
 
-## Bibliography
+## References
 
 .. [#radicl_seq] Bonetti, A., Agostini, F., Suzuki, A.M. et al. RADICL-seq identifies general and cell type–specific principles of genome-wide RNA-chromatin interactions. Nat Commun 11, 1018
 .. [#grid_seq1] Li, X., Zhou, B., Chen, L. et al. GRID-seq reveals the global RNA–chromatin interactome.Nat Biotechnol 35, 940–950 (2017). https://doi.org/10.1038/nbt.3968.
