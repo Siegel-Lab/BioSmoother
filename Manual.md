@@ -601,6 +601,8 @@ There is a way to load gzipped (or similar) datafiles into Smoother using pipes:
 
 The full documentation of the `repl` subcommand can be found :ref:`here <repl_command>`.
 
+.. _input_table:
+
 ### Input format for the repl command
 Smoother requires a whitespace (space or tab) delimited input pairs file containing the two-dimensional interactions. Each input pairs file contains the data for one sample or replicate to be analyzed and visualized. Each line in the file has the information for one interaction.
 
@@ -620,8 +622,8 @@ For this, please use the `-C` option `chr1 pos1 chr2 pos2 cnt`. However, it is i
 See the table below for a summary of filtering functionalities of Smoother depending on the input file format used to generate the index:
 
 <figure align=center>
-<img src="./docs_conf/static/filtering_functions.png" width=100%>
-<figcaption> <b>Figure:</b> Summary of filtering functionalities of Smoother depending on the input pairs file. <b>A</b>: column must exist; <b>X</b>: column cannot exist; <b>Y</b>: column exists; <b>N</b>: column does not exist; <b>On</b>: filter is active; <b>Off</b>: filter is inactive; <b>Off*</b>: filter can be active, but it is uninformative because position is binned</figcaption>
+<img src="./docs_conf/static/input_table.png" width=100%>
+<figcaption> <b>Figure:</b> Summary of filtering functionalities of Smoother depending on the input file. <b>E</b>: column exists; <b>X</b>: column does not exist or contains a dummy value; <b>On</b>: filter is active; <b>Off</b>: filter is inactive; <b>Off*</b>: filter can be active, but it is uninformative because position is binned</figcaption>
 </figure>
 
 The `-C` option accepts optional columns, indicated in squared brackets (e.g., with `-C [readID] chr1 pos1 chr2 pos2 [strand1] [strand2]`, readId, strand1 and strand2 are optional).
@@ -776,6 +778,8 @@ There is a way to load gzipped (or similar) datafiles into Smoother using pipes:
     zcat track_data.gz | biosmoother repl my_index – track_name
 
 The full documentation of the `track` subcommand can be found :ref:`here <track_command>`.
+
+.. _track_input_format:
 
 ### Input format for the track command
 Smoother requires a whitespace (space or tab) delimited input coverage file for the secondary data to be loaded with the `track` subcommand.

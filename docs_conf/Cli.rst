@@ -27,9 +27,15 @@ Below is the technical documentation for Smoother's command line interface.
     .. index:: repl
     .. _repl_command:
 
+   repl : @after
+    The detailed explanation for the input format can be found :ref:`here <input_table>`.
+
    track : @before
     .. index:: track
     .. _track_command:
+
+   track : @after
+    The detailed explanation for the input format can be found :ref:`here <track_input_format>`.
 
    export : @before
     .. index:: export
