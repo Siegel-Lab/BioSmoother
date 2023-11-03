@@ -1068,9 +1068,9 @@ class MainLayout:
         log_axis = self.session.get_value(["settings", "interface", "tracks_log_scale"])
         heat_visible = self.show_hide["heatmap"]
         self.heatmap.visible = heat_visible
-        self.heatmap_y_axis.visible = heat_visible
-        self.heatmap_y_axis_2.visible = heat_visible
-        self.heatmap_y_axis_3.visible = heat_visible
+        self.heatmap_y_axis.visible = heat_visible  and self.show_hide["coords"]
+        self.heatmap_y_axis_2.visible = heat_visible and self.show_hide["regs"]
+        self.heatmap_y_axis_3.visible = heat_visible and self.show_hide["regs"]
         x_visible = len(self.raw_data_x.data["values"]) > 0 and heat_visible
         self.raw_x.visible = self.show_hide["raw"] and x_visible and not log_axis
         self.raw_x_axis.visible = (
