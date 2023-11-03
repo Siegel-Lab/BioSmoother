@@ -12,6 +12,10 @@
     pointer-events: none;
 }
 
+.tooltip_fix_overlap:after{
+    top: 100%;
+}
+
 .tooltip:hover:before {
     opacity: 1;
     transition-delay: 1s;

@@ -474,7 +474,7 @@ class MainLayout:
                 data_table,
             ],
             sizing_mode="stretch_width",
-            css_classes=["outlnie_border", "tooltip", tooltip],
+            css_classes=["outlnie_border", "tooltip", tooltip, "tooltip_fix_overlap"],
             margin=DIV_MARGIN,
         )
 
@@ -738,7 +738,7 @@ class MainLayout:
             [slider, spinner],
             width=width,
             margin=DIV_MARGIN,
-            css_classes=["tooltip", tooltip],
+            css_classes=["tooltip", tooltip, "tooltip_fix_overlap"],
         )
 
     def make_range_slider_spinner(
@@ -805,7 +805,7 @@ class MainLayout:
             [slider, spinner_start, spinner_end],
             width=width,
             margin=DIV_MARGIN,
-            css_classes=["tooltip", tooltip],
+            css_classes=["tooltip", tooltip, "tooltip_fix_overlap"],
         )
 
     def make_checkbox(
@@ -825,7 +825,7 @@ class MainLayout:
         self.checkbox_config.append((cg, settings))
 
         return row(
-            [div, cg], width=width, margin=DIV_MARGIN, css_classes=["tooltip", tooltip]
+            [div, cg], width=width, margin=DIV_MARGIN, css_classes=["tooltip", tooltip, "tooltip_fix_overlap"]
         )
 
     def config_slider_spinner(self):
@@ -1066,12 +1066,7 @@ class MainLayout:
                 plot.visible = visible
 
         log_axis = self.session.get_value(["settings", "interface", "tracks_log_scale"])
-        heat_visible = self.show_hide["heatmap"]
-        self.heatmap.visible = heat_visible
-        self.heatmap_y_axis.visible = heat_visible  and self.show_hide["coords"]
-        self.heatmap_y_axis_2.visible = heat_visible and self.show_hide["regs"]
-        self.heatmap_y_axis_3.visible = heat_visible and self.show_hide["regs"]
-        x_visible = len(self.raw_data_x.data["values"]) > 0 and heat_visible
+        x_visible = len(self.raw_data_x.data["values"]) > 0
         self.raw_x.visible = self.show_hide["raw"] and x_visible and not log_axis
         self.raw_x_axis.visible = (
             self.show_hide["raw"]
@@ -1096,7 +1091,7 @@ class MainLayout:
             self.show_hide["raw"] and y_visible and self.show_hide["axis"] and log_axis
         )
         self.anno_x.visible = (
-            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"] and heat_visible
+            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"]
         )
         self.anno_x_axis.visible = self.anno_x.visible and self.show_hide["axis"]
         self.anno_y.visible = (
@@ -2003,7 +1998,6 @@ class MainLayout:
         tool_bar = FigureMaker.get_tools(tollbars)
         show_hide = self.make_show_hide_dropdown(
             ["settings", "interface", "show_hide"],
-            ("Heatmap", "heatmap"),
             ("Secondary Axes", "axis"),
             ("Coordinates", "coords"),
             ("Regions", "regs"),
@@ -3858,8 +3852,7 @@ class MainLayout:
                     log_axis = self.session.get_value(
                         ["settings", "interface", "tracks_log_scale"]
                     )
-                    heat_visible = self.show_hide["heatmap"]
-                    x_visible = len(raw_data_x["values"]) > 0 and heat_visible
+                    x_visible = len(raw_data_x["values"]) > 0
                     self.raw_x.visible = (
                         self.show_hide["raw"] and x_visible and not log_axis
                     )
@@ -3893,7 +3886,7 @@ class MainLayout:
                     self.anno_x_data.data = d_anno_x
                     self.anno_y_data.data = d_anno_y
                     self.anno_x.visible = (
-                        len(d_anno_x["anno_name"]) > 0 and self.show_hide["annotation"] and heat_visible
+                        len(d_anno_x["anno_name"]) > 0 and self.show_hide["annotation"]
                     )
                     self.anno_x_axis.visible = self.anno_x.visible
                     self.anno_y.visible = (

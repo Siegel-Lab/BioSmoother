@@ -80,7 +80,7 @@
     {% block contents %}
     {% for doc in docs %}
     {{ embed(doc) if doc.elementid }}
-    <div style="position:absolute; height: 40px; left: 0; top: 0; right: 0; justify-content: center; display: flex">
+    <div style="position:absolute; height: 40px; left: 0; top: 0; right: 0; justify-content: center; display: flex; z-index: 100">
         {{ embed(doc.roots.tools_bar) }}
     </div>
     <div
