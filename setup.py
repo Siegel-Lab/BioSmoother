@@ -3,7 +3,7 @@ import os
 from setuptools import find_packages
 import subprocess
 
-VERSION = "1.1.1"
+VERSION = "1.2.0"
 
 # conf version file
 def conf_version(in_file_name, cmake_version, out_file_name):
@@ -84,7 +84,7 @@ BioSmoother's documentation is available at https://biosmoother.rtfd.io/.
         'Programming Language :: Python :: 3.9',
     ],
     install_requires=[
-        'libbiosmoother>=1.1.1',
+        'libbiosmoother>=1.2.0',
         'bokeh==2.3.2', # specific version is necessary for now -> with newer versions the layout starts glitching
         'psutil',
         'pybase64',
