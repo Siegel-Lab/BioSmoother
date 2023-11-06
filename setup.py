@@ -2,6 +2,8 @@ from distutils.core import setup
 import os
 from setuptools import find_packages
 import subprocess
+from libbiosmoother import open_descriptions_json
+import json
 
 VERSION = "1.2.0"
 
@@ -45,6 +47,20 @@ def conf_version(in_file_name, cmake_version, out_file_name):
 
 # update version file...
 conf_version("VERSION.in", VERSION, "biosmoother/VERSION")
+
+# configure tooltips_generated.css
+def conf_tooltips(out_file_name):
+    with open(out_file_name, "w") as out_file:
+        def recursion(prefix, d):
+            for k, v in d.items():
+                if isinstance(v, dict):
+                    recursion(prefix + "__" + k, v)
+                else:
+                    out_file.write(f".tooltip{prefix}__{k}::after {{ content: \"{v}\"; }}\n")
+
+        recursion("", json.load(open_descriptions_json()))
+
+conf_tooltips("biosmoother/static/css/tooltips_generated.css")
 
 def package_files(directory):
     paths = []

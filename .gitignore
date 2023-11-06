@@ -21,3 +21,4 @@ build/
 dist/
 docs/*
 generated_docs/*
+tooltips_generated.css

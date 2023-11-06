@@ -50,6 +50,8 @@ from libbiosmoother import (
     get_png,
     get_svg,
     open_default_json,
+    open_descriptions_json,
+    open_button_names_json
 )  # pyright: ignore missing import
 import json
 from bin.figure_maker import (  # pyright: ignore missing import
@@ -169,13 +171,15 @@ class MainLayout:
 
     def dropdown_select(
         self,
-        title,
-        tooltip,
         *options,
         active_item=None,
         event=None,
         trigger_render=True
     ):
+        self.in_descriptions_json(active_item)
+        tooltip = "tooltip__" + "__".join(active_item)
+        title = self.get_button_name(active_item)
+
         if event is None:
 
             def default_event(e):
@@ -194,8 +198,12 @@ class MainLayout:
         return ret
 
     def dropdown_select_session(
-        self, title, tooltip, session_key, active_item, add_keys=[], event=None
+        self, session_key, active_item, add_keys=[], event=None
     ):
+        self.in_descriptions_json(active_item)
+        tooltip = "tooltip__" + "__".join(active_item)
+        title = self.get_button_name(active_item)
+
         if event is None:
 
             def default_event(e):
@@ -220,14 +228,16 @@ class MainLayout:
     def multi_choice(
         self,
         label,
-        tooltip,
         checkboxes,
         session_key=None,
         callback=None,
         orderable=True,
         renamable=False,
-        title="",
     ):
+        self.in_descriptions_json(checkboxes[0][0])
+        tooltip = "tooltip__" + "__".join(checkboxes[0][0])
+        title = self.get_button_name(checkboxes[0][0])
+
         if callback is None:
 
             def default_callback(n, cb):
@@ -488,22 +498,18 @@ class MainLayout:
     def multi_choice_auto(
         self,
         label,
-        tooltip,
         checkboxes,
         session_key,
         callback=None,
         orderable=True,
-        title="",
         renamable=False,
     ):
         set_options, layout = self.multi_choice(
             label,
-            tooltip,
             checkboxes,
             session_key,
             callback,
             orderable,
-            title=title,
             renamable=renamable,
         )
         self.multi_choice_config.append((set_options, session_key, checkboxes))
@@ -693,8 +699,6 @@ class MainLayout:
 
     def make_slider_spinner(
         self,
-        title,
-        tooltip,
         settings,
         width=200,
         on_change=None,
@@ -703,6 +707,10 @@ class MainLayout:
         js_on_change=None,
         trigger_render=True,
     ):
+        self.in_descriptions_json(settings)
+        tooltip = "tooltip__" + "__".join(settings)
+        title = self.get_button_name(settings)
+
         if on_change is None:
 
             def default_on_change(val):
@@ -743,14 +751,16 @@ class MainLayout:
 
     def make_range_slider_spinner(
         self,
-        title,
-        tooltip,
         settings,
         width=200,
         on_change=None,
         spinner_width=80,
         sizing_mode="stretch_width",
     ):
+        self.in_descriptions_json(settings)
+        tooltip = "tooltip__" + "__".join(settings)
+        title = self.get_button_name(settings)
+
         if on_change is None:
 
             def default_on_change(val):
@@ -808,9 +818,30 @@ class MainLayout:
             css_classes=["tooltip", tooltip, "tooltip_fix_overlap"],
         )
 
+    def in_descriptions_json(self, key):
+        d = self.description_json
+        for k in key:
+            if not k in d:
+                print("WARNING:", key, "has no tooltip")
+                return
+            d = d[k]
+
+    def get_button_name(self, key):
+        d = self.button_names_json
+        for k in key:
+            if not k in d:
+                print("WARNING:", key, "has no button name")
+                return "???"
+            d = d[k]
+        return d
+
     def make_checkbox(
-        self, title, tooltip="", settings=[], on_change=None, width=SETTINGS_WIDTH
+        self, title, settings=[], on_change=None, width=SETTINGS_WIDTH
     ):
+        self.in_descriptions_json(settings)
+        tooltip = "tooltip__" + "__".join(settings)
+        title = self.get_button_name(settings)
+
         div = Div(text=title, sizing_mode="stretch_width", width=width - 20)
         cg = CheckboxGroup(labels=[""], width=20)
         if on_change is None:
@@ -1563,6 +1594,8 @@ class MainLayout:
         self.set_range_raw_y_axis = None
         self.set_range_raw_x_axis_log = None
         self.set_range_raw_y_axis_log = None
+        self.description_json = json.load(open_descriptions_json())
+        self.button_names_json = json.load(open_button_names_json())
 
         self.do_layout()
 
@@ -2006,8 +2039,6 @@ class MainLayout:
         )
 
         in_group = self.dropdown_select(
-            "Merge datasets by",
-            "tooltip_in_group",
             ("Sum [a+b+c+...]", "sum"),
             ("Minimium [min(a,b,c,...)]", "min"),
             ("Maximum [max(a,b,c,...)]", "max"),
@@ -2039,8 +2070,6 @@ class MainLayout:
             self.trigger_render()
 
         betw_group = self.dropdown_select(
-            "Compare datapools by",
-            "tooltip_between_groups",
             ("Sum [a+b]", "sum"),
             ("Show First Group [a]", "1st"),
             ("Show Second Group [b]", "2nd"),
@@ -2055,8 +2084,6 @@ class MainLayout:
         )
 
         symmetrie = self.dropdown_select(
-            "Symmetry",
-            "tooltip_symmetry",
             ("Show All Interactions", "all"),
             ("Only Show Symmetric Interactions", "sym"),
             ("Only Show Asymmetric Interactions", "asym"),
@@ -2065,8 +2092,6 @@ class MainLayout:
         )
 
         last_bin_in_contig = self.dropdown_select(
-            "Remainder Bin",
-            "tooltip_remainder_bin",
             ("Merge remainder into last fullsized bin", "larger"),
             ("Hide remainder", "skip"),
             ("Display remainder", "smaller"),
@@ -2077,7 +2102,6 @@ class MainLayout:
         )
         contig_smaller_than_bin = self.make_checkbox(
             "Fill contigs that are smaller than one bin",
-            "tooltip_contig_smaller_than_bin",
             settings=["settings", "filters", "show_contig_smaller_than_bin"],
         )
 
@@ -2093,8 +2117,6 @@ class MainLayout:
             norm_sele.append((("Cooler Iterative Correction", "cool-ice")))
 
         normalization_cov = self.dropdown_select(
-            "Normalize coverage by",
-            "tooltip_normalize_by_coverage",
             ("Reads per million", "rpm"),
             ("Reads per thousand", "rpk"),
             ("Reads per million base pairs", "rpmb"),
@@ -2104,8 +2126,6 @@ class MainLayout:
         )
 
         color_scale = self.dropdown_select(
-            "Color Range",
-            "tooltip_scale_color_range",
             ("absolute max [x' = x / max(|v| in V)]", "abs"),
             ("max [x' = x / max(v in V)]", "max"),
             (
@@ -2118,38 +2138,31 @@ class MainLayout:
 
         incomp_align_layout = self.make_checkbox(
             "Show multimapping reads with incomplete mapping loci lists",
-            "tooltip_incomplete_alignments",
             settings=["settings", "filters", "incomplete_alignments"],
         )
 
         ddd = self.make_checkbox(
             "Normalize Primary data",
-            "tooltip_ddd",
             settings=["settings", "normalization", "ddd"],
         )
         ploidy_correct = self.make_checkbox(
             "do correct",
-            "tooltip_ploidy_correct",
             settings=["settings", "normalization", "ploidy_correct"],
         )
         ploidy_keep_distinct_group = self.make_checkbox(
             "Keep interactions from contig-pairs that never occur in the same group",
-            "tooltip_ploidy_keep_distinct_group",
             settings=["settings", "normalization", "ploidy_keep_distinct_group"],
         )
         ploidy_keep_inter_group = self.make_checkbox(
             "Keep interactions from contig-pairs that are in the same group",
-            "tooltip_ploidy_keep_inter_group",
             settings=["settings", "normalization", "ploidy_keep_inter_group"],
         )
         ploidy_remove_others = self.make_checkbox(
             "Remove interactions that are not explicitly kept by the options above",
-            "tooltip_ploidy_remove_others",
             settings=["settings", "normalization", "ploidy_remove_others"],
         )
         ploidy_remove_intra_instance_contig = self.make_checkbox(
             "Remove inter-contig, intra-instance interactions",
-            "tooltip_ploidy_remove_intra_instance_contig",
             settings=[
                 "settings",
                 "normalization",
@@ -2164,83 +2177,63 @@ class MainLayout:
 
         ploidy_coords = self.make_checkbox(
             "use ploidy corrected contigs",
-            "tooltip_ploidy_coords",
             settings=["settings", "normalization", "ploidy_coords"],
             on_change=ploidy_coords_event,
         )
         ddd_show = self.make_checkbox(
             "Display",
-            "tooltip_ddd_show",
             settings=["settings", "normalization", "ddd_show"],
         )
         ddd_ex_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_ddd_quantiles",
-            title="Percentile of samples to keep [%]",
             settings=["settings", "normalization", "ddd_quantile"],
             sizing_mode="stretch_width",
         )
         ice_sparse_filter = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_ice_sparse_filter",
-            title="filter out slices with too many empty bins [%]",
             settings=["settings", "normalization", "ice_sparse_slice_filter"],
             sizing_mode="stretch_width",
         )
         ice_num_samples = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_ice_num_samples",
-            title="Number of samples",
             settings=["settings", "normalization", "num_ice_bins"],
             sizing_mode="stretch_width",
         )
         ice_mad_max = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_ice_mad_max",
-            title="Mad Max filter",
             settings=["settings", "normalization", "ice_mad_max"],
             sizing_mode="stretch_width",
         )
         ice_min_nz = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_ice_min_nz",
-            title="Minimal number of non-zero bins per slice",
             settings=["settings", "normalization", "ice_min_nz"],
             sizing_mode="stretch_width",
         )
         ice_ignore_n_diags = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_ice_ignore_n_diags",
-            title="Ignore first n bins next to the diagonal",
             settings=["settings", "normalization", "ice_ignore_n_diags"],
             sizing_mode="stretch_width",
         )
         ice_show_bias = self.make_checkbox(
             "Show Bias",
-            "tooltip_ice_show_bias",
             settings=["settings", "normalization", "ice_show_bias"],
         )
         ice_local = self.make_checkbox(
             "Local Ic",
-            "tooltip_local_ice",
             settings=["settings", "normalization", "ice_local"],
         )
         ddd_sam_l = self.make_range_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_ddd_samples",
-            title="Number of samples",
             settings=["settings", "normalization", "ddd_samples"],
             sizing_mode="stretch_width",
         )
 
         square_bins = self.make_checkbox(
             "Make Bins Squares",
-            "tooltip_bin_aspect_ratio",
             settings=["settings", "interface", "squared_bins"],
         )
         do_redraw = self.make_checkbox(
             "Auto Render",
-            "tooltip_do_redraw",
             settings=["settings", "interface", "do_redraw"],
         )
         render_now = Button(
@@ -2259,13 +2252,10 @@ class MainLayout:
 
         power_ten_bin = self.make_checkbox(
             "Snap Bin Size",
-            "tooltip_snap_bin_size",
             settings=["settings", "interface", "snap_bin_size"],
         )
 
         color_picker = self.dropdown_select(
-            "Color Palette",
-            "tooltip_color",
             ("Viridis", "Viridis256"),
             ("Plasma", "Plasma256"),
             ("Turbo", "Turbo256"),
@@ -2275,8 +2265,6 @@ class MainLayout:
         )
 
         multi_mapping = self.dropdown_select(
-            "Multi-Mapping reads (MMR)",
-            "tooltip_multi_mapping",
             ("Count MMR if all mapping loci are within the same bin", "enclosed"),
             ("Count MMR if mapping loci minimum bounding-box overlaps bin", "overlaps"),
             ("Count MMR if bottom left mapping loci is within a bin", "first"),
@@ -2293,8 +2281,6 @@ class MainLayout:
             active_item=["settings", "filters", "ambiguous_mapping"],
         )
         directionality = self.dropdown_select(
-            "Directionality",
-            "tooltip_directionality",
             ("Count pairs where reads map to any strand", "all"),
             ("Count pairs where reads map to the same strand", "same"),
             ("Count pairs where reads map to opposite strands", "oppo"),
@@ -2313,8 +2299,6 @@ class MainLayout:
         self.heatmap_x_axis_2.xaxis.axis_label = default_label.split("_")[1]
 
         axis_lables = self.dropdown_select(
-            "Axes Labels",
-            "tooltip_y_axis_label",
             ("DNA / RNA", "DNA_RNA"),
             ("RNA / DNA", "RNA_DNA"),
             ("DNA / DNA", "DNA_DNA"),
@@ -2330,8 +2314,6 @@ class MainLayout:
             self.trigger_render()
 
         ms_l = self.dropdown_select(
-            "Mapping Quality: Lower Bound",
-            "tooltip_map_q_bounds",
             (">= 0", "0"),
             *[
                 (">= " + str(i), str(idx + 1))
@@ -2348,8 +2330,6 @@ class MainLayout:
             self.trigger_render()
 
         ms_l_2 = self.dropdown_select(
-            "Mapping Quality: Upper Bound",
-            "tooltip_map_q_bounds",
             *[
                 ("< " + str(i), str(idx + 1))
                 for idx, i in enumerate(self.session.get_value(["map_q_thresholds"]))
@@ -2361,24 +2341,18 @@ class MainLayout:
 
         # ms_l = self.make_range_slider_spinner(
         #    width=SETTINGS_WIDTH,
-        #    tooltip="tooltip_map_q_bounds",
         #    settings=["settings", "filters", "mapping_q"],
-        #    title="Mapping Quality Bounds",
         #    sizing_mode="stretch_width",
         # )
 
         ibs_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_minimum_interactions",
-            title="read-count adjustment",
             settings=["settings", "normalization", "min_interactions"],
             sizing_mode="stretch_width",
         )
 
         crs_l = self.make_range_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_color_scale_range",
-            title="Color Scale Range",
             settings=["settings", "normalization", "color_range"],
             sizing_mode="stretch_width",
         )
@@ -2407,8 +2381,6 @@ class MainLayout:
 
         is_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_color_scale_log_base",
-            title="Color Scale Log Base",
             settings=["settings", "normalization", "log_base"],
             sizing_mode="stretch_width",
         )
@@ -2418,34 +2390,26 @@ class MainLayout:
 
         ufs_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_update_frequency",
             settings=["settings", "interface", "update_freq"],
-            title="Update Frequency [seconds]",  # , format="0[.]000"
             on_change=update_freq_event,
             sizing_mode="stretch_width",
         )
 
         rs_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_redraw_zoom",
             settings=["settings", "interface", "zoom_redraw"],
-            title="Redraw if zoomed in by [%]",
             sizing_mode="stretch_width",
         )
 
         aas_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_add_draw_area",
             settings=["settings", "interface", "add_draw_area"],
-            title="Additional Draw Area [%]",
             sizing_mode="stretch_width",
         )
 
         dds_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_min_diag_dist",
             settings=["settings", "filters", "min_diag_dist"],
-            title="Minimum Distance from Diagonal [kbp]",
             sizing_mode="stretch_width",
         )
 
@@ -2458,9 +2422,7 @@ class MainLayout:
 
         ass_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_anno_size",
             settings=["settings", "interface", "anno_size"],
-            title=ANNOTATION_PLOT_NAME + " Size [pixel]",
             sizing_mode="stretch_width",
             on_change=anno_size_slider_event,
         )
@@ -2479,77 +2441,58 @@ class MainLayout:
 
         rss2_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_raw_size",
             settings=["settings", "interface", "raw_size"],
-            title=RAW_PLOT_NAME + " Size [pixel]",
             sizing_mode="stretch_width",
             on_change=raw_size_slider_event,
         )
 
         nb_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_max_number_of_bins",
             settings=["settings", "interface", "max_num_bins"],
-            title="Max number of Bins [in thousands]",
             sizing_mode="stretch_width",
         )
 
         rsa_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_p_accept",
             settings=["settings", "normalization", "p_accept"],
-            title="pAccept for binomial test",
             sizing_mode="stretch_width",
         )
         bsmcq_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_section_size_max_cov",
             settings=["settings", "normalization", "grid_seq_max_bin_size"],
-            title="Section size max coverage [bp]",
             sizing_mode="stretch_width",
         )
         grid_seq_samples_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_section_size_max_coverage",
             settings=["settings", "normalization", "grid_seq_samples"],
-            title="Number of samples",
             sizing_mode="stretch_width",
         )
         radicl_seq_samples_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_radicl_num_samples",
             settings=["settings", "normalization", "radicl_seq_samples"],
-            title="Number of samples",
             sizing_mode="stretch_width",
         )
         export_coords_size = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_export_coordinate_size",
             settings=["settings", "export", "coords"],
-            title="Coordinate size",
             sizing_mode="stretch_width",
             trigger_render=False,
         )
         axis_label_max_char = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_max_char_of_labels",
             settings=["settings", "interface", "axis_label_max_char"],
-            title="Maximal Character of Labels",
             sizing_mode="stretch_width",
         )
         center_tracks_on_bins = self.make_checkbox(
             "Center Tracks on Bins",
-            "tooltip_center_tracks_on_bins",
             settings=["settings", "interface", "center_tracks_on_bins"],
         )
         zero_track_at_ends = self.make_checkbox(
             "Zero Track at Ends",
-            "tooltip_zero_track_at_ends",
             settings=["settings", "interface", "zero_track_at_ends"],
         )
         connect_tracks_over_contig_borders = self.make_checkbox(
             "Connect Tracks over Contig Borders",
-            "tooltip_connect_tracks_over_contig_borders",
             settings=["settings", "interface", "connect_tracks_over_contig_borders"],
         )
 
@@ -2561,106 +2504,83 @@ class MainLayout:
 
         tracks_log_scale = self.make_checkbox(
             "Display Tracks on a Log Scale",
-            "tooltip_tracks_log_scale",
             settings=["settings", "interface", "tracks_log_scale"],
             on_change=tracks_log_scale_change,
         )
         export_contigs_size = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_export_contigs_size",
             settings=["settings", "export", "contigs"],
-            title="Contig size",
             sizing_mode="stretch_width",
             trigger_render=False,
         )
         export_axis_size = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_export_axis_size",
             settings=["settings", "export", "axis"],
-            title="Secondary Axis size",
             sizing_mode="stretch_width",
             trigger_render=False,
         )
         export_stroke_width_secondary = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_export_stroke_width",
             settings=["settings", "export", "secondary_stroke_width"],
-            title="Secondary Stroke Width",
             sizing_mode="stretch_width",
             trigger_render=False,
         )
         grid_seq_display_background = self.make_checkbox(
             "Display Background as Secondary Data",
-            "tooltip_backg_as_sec_data",
             settings=["settings", "normalization", "grid_seq_display_background"],
         )
         radicl_seq_display_coverage = self.make_checkbox(
             "Display Coverage as Secondary Data",
-            "tooltip_cov_as_sec_data",
             settings=["settings", "normalization", "radicl_seq_display_coverage"],
         )
         grid_seq_column = self.make_checkbox(
             "Compute background for columns",
-            "tooltip_comp_backg_col",
             settings=["settings", "normalization", "grid_seq_axis_is_column"],
         )
         radicl_seq_column = self.make_checkbox(
             "Apply binomial test on columns",
-            "tooltip_comp_backg_col",
             settings=["settings", "normalization", "radicl_seq_axis_is_column"],
         )
         grid_seq_intersection = self.make_checkbox(
             "Use intersection between datasets",
-            "tooltip_intersect_repl",
             settings=["settings", "normalization", "grid_seq_filter_intersection"],
         )
         grid_seq_ignore_cis = self.make_checkbox(
             "Ignore cis interactions",
-            "tooltip_ignore_cis",
             settings=["settings", "normalization", "grid_seq_ignore_cis"],
         )
         grid_seq_anno = self.dropdown_select_session(
-            "Annotation type",
-            "tooltip_anno_type",
             ["annotation", "filterable"],
             ["settings", "normalization", "grid_seq_annotation"],
         )
         grid_seq_rna_filter_l = self.make_range_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_rna_filter",
             settings=["settings", "normalization", "grid_seq_rna_filter"],
-            title="RNA reads per kbp bounds",
             sizing_mode="stretch_width",
         )
         grid_seq_dna_filter_l = self.make_range_slider_spinner(
             width=SETTINGS_WIDTH,
-            tooltip="tooltip_dna_filter",
             settings=["settings", "normalization", "grid_seq_dna_filter"],
-            title="Maximal DNA reads in bin bounds",
             sizing_mode="stretch_width",
         )
 
         group_layout = self.multi_choice_auto(
             "Dataset Name",
-            "tooltip_replicates",
             [
                 [["replicates", "in_group_a"], "Pool A"],
                 [["replicates", "in_group_b"], "Pool B"],
             ],
             ["replicates", "list"],
-            title="Primary Datapools",
             orderable=False,
         )
 
         annos_layout = self.multi_choice_auto(
             "Annotation Name",
-            "tooltip_annotations",
             [
                 [["annotation", "visible_x"], "Column"],
                 [["annotation", "visible_y"], "Row"],
             ],
             ["annotation", "list"],
-            title="Visible Annotations",
         )
 
         power_tick = FuncTickFormatter(
@@ -2681,7 +2601,7 @@ class MainLayout:
             title="Minimum Bin Size",
             format=power_tick,
             sizing_mode="fixed",
-            css_classes=["tooltip", "tooltip_min_bin_size"],
+            css_classes=["tooltip", "tooltip__settings__interface__min_bin_size"],
             height=40,
             width=SETTINGS_WIDTH - 20,
         )
@@ -2748,13 +2668,11 @@ class MainLayout:
 
         norm_layout = self.multi_choice_auto(
             "Dataset name",
-            "tooltip_coverage_normalization",
             [
                 [["coverage", "in_column"], "Column"],
                 [["coverage", "in_row"], "Row"],
             ],
             ["coverage", "list"],
-            title="Secondary Datapools",
             orderable=False,
         )
 
@@ -2792,70 +2710,56 @@ class MainLayout:
             self.trigger_render()
 
         anno_coords = self.dropdown_select_session(
-            "Annotation Coordinate System",
-            "tooltip_coordinates",
             ["annotation", "list"],
             ["contigs", "annotation_coordinates"],
             event=anno_coords_event,
         )
         coords_x = self.make_checkbox(
             "Use Annotation Coordinates for the columns",
-            "tooltip_anno_coordinates_col",
             settings=["settings", "filters", "anno_coords_col"],
         )
         coords_y = self.make_checkbox(
             "Use Annotation Coordinates for the rows",
-            "tooltip_anno_coordinates_row",
             settings=["settings", "filters", "anno_coords_row"],
         )
 
         anno_read_filter_present = self.multi_choice_auto(
             "Annotation Name",
-            "tooltip_annotation_filter_col",
             [
                 [["annotation", "filter_present_x"], "Column"],
                 [["annotation", "filter_present_y"], "Row"],
             ],
             ["annotation", "filterable"],
-            title="Filter out interactions that overlap annotation:",
             orderable=False,
         )
         anno_read_filter_absent = self.multi_choice_auto(
             "Annotation Name",
-            "tooltip_annotation_filter_col",
             [
                 [["annotation", "filter_absent_x"], "Column"],
                 [["annotation", "filter_absent_y"], "Row"],
             ],
             ["annotation", "filterable"],
-            title="Filter out interactions that don't overlap annotation:",
             orderable=False,
         )
 
         self.chrom_layout = self.multi_choice_auto(
             "Contig Name",
-            "tooltip_chromosomes",
             [
                 [["contigs", "displayed_on_x"], "Column"],
                 [["contigs", "displayed_on_y"], "Row"],
             ],
             ["contigs", "list"],
-            title="Active Contigs",
         )
         self.chrom_layout_ploidy = self.multi_choice_auto(
             "Contig Name",
-            "tooltip_chromosomes",
             [
                 [["contigs", "displayed_on_x_ploidy"], "Column"],
                 [["contigs", "displayed_on_y_ploidy"], "Row"],
             ],
             ["contigs", "ploidy_list"],
-            title="Active Contigs",
         )
 
         multiple_anno_per_bin = self.dropdown_select(
-            "Multiple Annotations in Bin",
-            "tooltip_multiple_annotations_in_bin",
             ("Combine region from first to last annotation", "combine"),
             ("Use first annotation in Bin", "first"),
             (
@@ -2869,8 +2773,6 @@ class MainLayout:
             active_item=["settings", "filters", "multiple_annos_in_bin"],
         )
         multiple_bin_per_anno = self.dropdown_select(
-            "Multiple Bins for Annotation",
-            "tooltip_multiple_bin_for_anno",
             ("Stretch one bin over entire annotation", "stretch"),
             ("Show several bins for the annotation", "separate"),
             ("Make all annotations size 1", "squeeze"),
@@ -2891,8 +2793,6 @@ class MainLayout:
         export_button.on_click(exp_event)
 
         export_format = self.dropdown_select(
-            "Format",
-            "tooltip_export_format",
             ("TSV-file", "tsv"),
             ("SVG-picture", "svg"),
             ("PNG-picture", "png"),
@@ -2902,22 +2802,20 @@ class MainLayout:
 
         export_full = self.make_checkbox(
             "Export full matrix instead of visible region",
-            "tooltip_full_matrix",
             settings=["settings", "export", "do_export_full"],
         )
 
         export_to_server = self.make_checkbox(
             "Export files to server instead of downloading them",
-            "tooltip_export_to_serve",
             settings=["settings", "export", "export_to_server"],
         )
 
         export_label = Div(
-            text="Output Prefix:", css_classes=["tooltip", "tooltip_export_prefix"]
+            text="Output Prefix:", css_classes=["tooltip", "tooltip__settings__export__prefix"]
         )
         export_label.margin = DIV_MARGIN
         self.export_file = TextInput(
-            css_classes=["tooltip", "tooltip_export_prefix"],
+            css_classes=["tooltip", "tooltip__settings__export__prefix"],
             height=DEFAULT_TEXT_INPUT_HEIGHT,
             width=SETTINGS_WIDTH,
         )
@@ -2931,12 +2829,12 @@ class MainLayout:
 
         self.low_color = ColorPicker(
             title="Color Low",
-            css_classes=["tooltip", "tooltip_color_low"],
+            css_classes=["tooltip", "tooltip__settings__interface__color_low"],
             height=DEFAULT_TEXT_INPUT_HEIGHT * 2,
         )
         self.high_color = ColorPicker(
             title="Color High",
-            css_classes=["tooltip", "tooltip_color_high"],
+            css_classes=["tooltip", "tooltip__settings__interface__color_high"],
             height=DEFAULT_TEXT_INPUT_HEIGHT * 2,
         )
 
@@ -2977,7 +2875,7 @@ class MainLayout:
                 "other_button",
                 "tooltip",
                 "tooltip_download_session",
-            ],  # @todo
+            ],
         )
 
         def callback(e):
@@ -3274,22 +3172,20 @@ class MainLayout:
 
         v4c_norm_viewpoint_size = self.make_checkbox(
             "Normalize by viewpoint size",
-            "tooltip_v4c_norm_viewpoint_size",
             settings=["settings", "interface", "v4c", "norm_by_viewpoint_size"],
         )
 
         do_v4c_col = self.make_checkbox(
             "Compute for columns",
-            "tooltip_v4c_do_column",
             settings=["settings", "interface", "v4c", "do_col"],
         )
 
         v4c_col_label = Div(
-            text="Column Viewpoint", css_classes=["tooltip", "tooltip_v4c_column"]
+            text="Column Viewpoint", css_classes=["tooltip", "tooltip__settings__interface__v4c__col"]
         )
         v4c_col_label.margin = DIV_MARGIN
         self.v4c_col = TextInput(
-            css_classes=["tooltip", "tooltip_v4c_column"],
+            css_classes=["tooltip", "tooltip__settings__interface__v4c__col"],
             height=DEFAULT_TEXT_INPUT_HEIGHT,
             width=SETTINGS_WIDTH,
         )
@@ -3297,15 +3193,14 @@ class MainLayout:
 
         do_v4c_row = self.make_checkbox(
             "Compute for rows",
-            "tooltip_v4c_do_row",
             settings=["settings", "interface", "v4c", "do_row"],
         )
         v4c_row_label = Div(
-            text="Row Viewpoint", css_classes=["tooltip", "tooltip_v4c_row"]
+            text="Row Viewpoint", css_classes=["tooltip", "tooltip__settings__interface__v4c__row"]
         )
         v4c_row_label.margin = DIV_MARGIN
         self.v4c_row = TextInput(
-            css_classes=["tooltip", "tooltip_v4c_row"],
+            css_classes=["tooltip", "tooltip__settings__interface__v4c__row"],
             height=DEFAULT_TEXT_INPUT_HEIGHT,
             width=SETTINGS_WIDTH,
         )
@@ -3327,8 +3222,6 @@ class MainLayout:
             self.trigger_render()
 
         normalization = self.dropdown_select(
-            "Normalize heatmap by",
-            "tooltip_normalize_by",
             *norm_sele,
             active_item=["settings", "normalization", "normalize_by"],
             event=norm_event,
