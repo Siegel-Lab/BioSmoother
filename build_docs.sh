@@ -9,6 +9,7 @@ GENERATED_DIR=generated_docs
 
 mkdir -p ${GENERATED_DIR}
 python3 docs_conf/split_md.py README.md ${GENERATED_DIR}
+python3 docs_conf/generate_index_parameters.md.py ${GENERATED_DIR}
 
 mkdir -p ${SPHINX_HTML_DIR}
 mkdir -p ${SPHINX_CACHE_DIR}

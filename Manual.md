@@ -990,13 +990,14 @@ If you trigger Smoother to re-render the heatmap, the status bar will display th
 In the :kbd:`File` tab of Smoother, there are three subtabs\: :kbd:`->Presetting`, :kbd:`->Export`, and :kbd:`->Info`.
 
 .. index:: Presetting
+:: _presetting_sub_tab
 
 ### The Presetting subtab
 
 :kbd:`File->Presetting` allows performing analysis with predetermined settings. Three analyses are already preconfigured and available on Smoother for doing normalizations as in GRID-seq [#grid_seq1]_ [#grid_seq2]_ , RADICL-seq [#radicl_seq]_, as well as one for Hi-C data. It is also possible to save the current settings configured on Smoother as a new presetting.
 
 .. index:: Export, export full matrix instead of visible region, Export files to server instead of downloading them
-.. _export_tab:
+.. _export_sub_tab:
 
 ### The Export subtab
 
@@ -1010,6 +1011,7 @@ In the :kbd:`File` tab of Smoother, there are three subtabs\: :kbd:`->Presetting
 Exporting with settings thus allows to save interactome data with all active filters, normalization, comparison between groups, and even virtual 4C analyses.
 
 .. index:: Info, Download current session
+.. _info_sub_tab:
 
 ### The Info subtab
 
@@ -1017,12 +1019,14 @@ Exporting with settings thus allows to save interactome data with all active fil
 -   :guilabel:`Download current session` allows exporting the metadata by downloading all the parameters of the current session.
 
 .. index:: Normalize
+.. _normalize_sub_tab:
 
 ## The Normalize tab
 
 In the :kbd:`Normalize` tab of Smoother, there are three subtabs\: :kbd:`->Primary`, :kbd:`->Dist. Dep. Dec.`, and :kbd:`->Ploidy`. It is possible to perform one :kbd:`Normalize->Primary` normalization and also perform the :kbd:`->Dist. Dep. Dec.` and :kbd:`->Ploidy` correction.
 
 .. index:: Primary, Normalize heatmap by
+.. _primary_sub_tab:
 
 ### The Primary subtab
 
@@ -1036,6 +1040,7 @@ The other normalizations available for heatmap on Smoother are performed with a 
 The `Binomial test` and `Associated slices` normalizations are implemented for asymmetric RNA-DNA interactome data and `Iterative correction` is the default normalization for Hi-C data.
 
 .. index:: Binomial test, pAccept for binomial test, Display coverage as secondary data, Apply binomial test to columns
+.. _binom_test_sub_tab:
 
 #### Binomial test normalization
 
@@ -1047,6 +1052,7 @@ The `Binomial test` and `Associated slices` normalizations are implemented for a
 </figure>
 
 .. index:: Associated slices, Number of samples, Annotation type, Section size max coverage, RNA reads per kbp bounds, Maximal DNA reads in bin bounds, Display background as secondary data, Compute background for columns, Ignore cis interactions
+.. _assoc_slices_sub_tab:
 
 #### Associated slices normalization
 
@@ -1060,6 +1066,7 @@ It is possible to change the axis in which the normalization is performed using 
 </figure>
 
 .. index:: Iterative correction, Local IC, Mad Max filter, Minimal number of non-zero bins per slice, Ignore first n bins next to the diagonal, Show bias, filter out slices with too many empty bins
+.. _ic_sub_tab:
 
 #### Iterative correction normalization
 
@@ -1071,6 +1078,7 @@ It is possible to change the axis in which the normalization is performed using 
 </figure>
 
 .. index:: Dist. Dep. Dec., Percentile of samples to keep (%), Display
+.. _ddd_sub_tab:
 
 ### The Dist. Dep. Dec. subtab
 
@@ -1085,6 +1093,7 @@ The :kbd:`Normalize->Dist. Dep. Dec.` subtab allows to perform a distance depend
     Distance Dependent decay normalization can be applied on top of a primary normalization and/or the ploidy correction.
 
 .. index:: Ploidy, do correct, use ploidy corrected contigs, homozygous, heterozygous, zygosity, aneuploidy
+.. _ploidy_sub_tab:
 
 ### The Ploidy subtab
 
@@ -1137,12 +1146,14 @@ Here is an example ploidy file:
     Chr2_3A     Chr2_3A
 
 .. index:: Filter
+.. _filter_sub_tab:
 
 ## The Filter tab
 
 In the :kbd:`Filter` tab of Smoother, there are four subtabs: :kbd:`->Datapools`, :kbd:`->Mapping`, :kbd:`->Coordinates`, and :kbd:`->Annotations`.
 
 .. index:: Datapools, Primary Datapools, Secondary Datapools, Merge datasets, Compare datapools
+.. _datapools_sub_tab:
 
 ### The Datapools subtab
 
@@ -1160,6 +1171,7 @@ In the :kbd:`Filter` tab of Smoother, there are four subtabs: :kbd:`->Datapools`
 
 
 .. index:: Mapping, Mapping Quality: Lower Bound, Mapping Quality: Upper Bound, Directionality
+.. _mapping_sub_tab:
 
 ### The Mapping subtab
 
@@ -1194,6 +1206,7 @@ The :guilabel:`Directionality` dropdown menu allows choosing whether to display 
 - `Count pairs where reads map to the reverse strand`
 
 .. index:: Coordinates, Minimum Distance from Diagonal, Annotation Coordinate System, Multiple Annotations in Bin, Multiple Bins for Annotation, Symmetry
+.. _coordinates_sub_tab:
 
 ### The Coordinates subtab
 
@@ -1254,11 +1267,13 @@ In the middle panel\:  `Filter out interactions that overlap annotation`, the an
 </figure>
 
 .. index:: View
+.. _view_sub_tab:
 
 ## The View tab
 In the :kbd:`View` tab of Smoother, there are five subtabs: :kbd:`->Color`, :kbd:`->Panels`, :kbd:`->Bins`, :kbd:`->Virtual4C`, and :kbd:`->Rendering`.
 
 .. index:: Color, Color Scale Range, Color Scale Log Base, Color Range, Color Palette
+.. _color_sub_tab:
 
 ### The Color subtab
 :kbd:`View->Color` allows changing the color palette and range displayed on the heatmap. The top scatter plot displays the value (i.e, color) of each bin in the heatmap. Each dot represents one bin and is placed according to its value from lowest, on the left, to highest, on the right. Before displaying, the values are scaled to be between 0 and 1. The :guilabel:`Color Scale Range` slider allows setting up the upper and lower values for the color scale; the effect of this slider can be observed in the scatter plot. Before displaying the bin values in the heatmap, we apply a logarithmic transformation to them. The logarithmic scale keeps all values in the same order but makes a difference between two small numbers appear bigger than the same difference between two bigger numbers. You can fiddle with the strength of this effect using the :guilabel:`Color Scale Log Base` slider. In brief, higher values for the log base increase the difference between small numbers but make larger numbers look more similar. Lower values for the log base do the opposite, increasing the difference between larger numbers but making smaller numbers more look more similar. Setting log base to zero displays the numbers without any transformation. In detail, the function we use is:
@@ -1283,6 +1298,7 @@ The :guilabel:`Color Palette` dropdown menu allows changing the palette of the h
 - `Low to High` for this option the lowest and highest colors can be selected on the boxes below and a palette will be generated from one to the other.
 
 .. index:: Panels, Show/Hide, Axes Labels, Character of Labels, Center Tracks on Bins, Zero Track at Ends, Connect Tracks over Contig Borders, Display Tracks on a Log Scale
+.. _panels_sub_tab:
 
 ### The Panels subtab
 :kbd:`View->Panels` allows changing the format of the heatmap and secondary panels. The :guilabel:`Show/Hide` dropdown menu allows toggling the visibility of the GUI elements below, by checking and unchecking checkboxes:
@@ -1306,6 +1322,7 @@ The labels for the two axes can be selected in the :guilabel:`Axes Labels` dropd
 The length that labels are truncated to can be adjusted on the :guilabel:`Character of Labels` slider. After the given number of characters the labels will be truncated (default: 10). Four checkboxes allow further formatting of the secondary data panels. 1) :guilabel:`Center Tracks on Bins` allows placing the points of the track lines at the center of the bins (default: on). If this option is disabled, two line-points are displayed for every bin; one at the beginning, and the other at the end of the bin. 2) :guilabel:`Zero Track at Ends` allows adding additional line-points at (0,0) and (0,end) of the track lines. 3) :guilabel:`Connect Tracks over Contig Borders` connects the track lines over contig borders removing the gaps that appear as default. 4) :guilabel:`Display Tracks on a Log Scale` displays the values for the tracks on logarithmic scale.
 
 .. index:: Bins, Max number of Bins, Minimum Bin Size, Make Bins Squares, Snap Bin Size, Remainder Bin, Fill contigs that are smaller than one bin
+.. _bins_sub_tab:
 
 ### The Bins subtab
 :kbd:`View->Bins` defines the binning formatting for the heatmap. The :guilabel:`Max number of Bins [in thousands]` slider is used to determine the value for the maximum number of bins that are displayed on the heatmap. 
@@ -1331,6 +1348,7 @@ The :guilabel:`Remainder Bin` dropdown menu gives different options for dealing 
 It is possible to add a bin in contigs that are smaller than the displayed bin size by checking the :guilabel:`Fill contigs that are smaller than one bin` checkbox, but it is important to notice that this will significantly slow down the running speed of Smoother if there are many small contigs. If this option is unchecked, contigs that are smaller than the bin size will not be displayed.
 
 .. index:: Virtual4C, Compute for columns, Compute for rows, Normalize by viewpoint size, Column Viewpoint, Row Viewpoint
+.. _virtual4c_sub_tab:
 
 ### The Virtual 4C subtab
 :kbd:`View->Virtual4C` allows extracting the genome-wide interactions of a given viewpoint (a slice of the heatmap) and displaying them as a track in the secondary data panel. This virtual 4C can be performed for columns and for rows and requires as input the coordinates of the viewpoint from the other axis.
@@ -1345,6 +1363,7 @@ Below, an example of virtual 4C analyses for the rows with two different viewpoi
 </figure>
 
 .. index:: Rendering, Update Frequency, Redraw if zoomed in by, Additional Draw Area, Auto Render, Render Now
+.. _rendering_sub_tab:
 
 ### The Rendering subtab
 :kbd:`View->Rendering` allows formatting the rendering settings of Smoother when moving location or zooming in or out (i.e., changing the visible area).
@@ -1386,7 +1405,7 @@ The full documentation of the `get` subcommand can be found :ref:`here <get_comm
 .. index:: export
 
 ## Exporting pictures and data
-It is possible to save the current/last index session to a file with the export subcommand. This corresponds to the function Export of Smoother (see the section :ref:`here <export_tab>`). The interactome data with the settings of the current session can be saves as a TSV text file with the interactions or as a publication-quality image in SVG or PNG format.
+It is possible to save the current/last index session to a file with the export subcommand. This corresponds to the function Export of Smoother (see the section :ref:`here <export_sub_tab>`). The interactome data with the settings of the current session can be saves as a TSV text file with the interactions or as a publication-quality image in SVG or PNG format.
 
 The full documentation of the `export` subcommand can be found :ref:`here <export_command>`.
 
@@ -1409,6 +1428,7 @@ Thanks to the following libraries that are used in Smoother:
 - [Bokeh](http://bokeh.org/)
 - [Stxxl](https://stxxl.org/)
 - [Pybind11](https://github.com/pybind/pybind11)
+- [Cibuildwheel](https://cibuildwheel.readthedocs.io)
 
 ## Citing Smoother
 

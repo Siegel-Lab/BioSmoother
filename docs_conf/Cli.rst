@@ -52,3 +52,5 @@ Below is the technical documentation for Smoother's command line interface.
    ploidy : @before
     .. index:: ploidy
     .. _ploidy_command:
+
+.. mdinclude:: ../generated_docs/IndexParameters.md
