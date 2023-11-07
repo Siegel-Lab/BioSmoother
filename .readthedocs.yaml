@@ -10,6 +10,7 @@ build:
     pre_build:
       - mkdir -p generated_docs
       - python3 docs_conf/split_md.py README.md generated_docs
+      - python3 docs_conf/generate_index_parameters.md.py generated_docs
       - export SMOOTHER_HIDE_SUBCOMMANDS_MANUAL=true
     post_build:
       - mkdir -p $READTHEDOCS_OUTPUT/html/docs_conf/static/

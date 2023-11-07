@@ -45,9 +45,15 @@ Below is the technical documentation for Smoother's command line interface.
     .. index:: set
     .. _set_command:
 
+   set : @after
+    A list of parameters can be found :ref:`here <index_parameters_section>`.
+
    get : @before
     .. index:: get
     .. _get_command:
+
+   get : @after
+    A list of parameters can be found :ref:`here <index_parameters_section>`.
 
    ploidy : @before
     .. index:: ploidy

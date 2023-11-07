@@ -990,7 +990,7 @@ If you trigger Smoother to re-render the heatmap, the status bar will display th
 In the :kbd:`File` tab of Smoother, there are three subtabs\: :kbd:`->Presetting`, :kbd:`->Export`, and :kbd:`->Info`.
 
 .. index:: Presetting
-:: _presetting_sub_tab
+.. _presetting_sub_tab:
 
 ### The Presetting subtab
 
@@ -1395,12 +1395,16 @@ Running Smoother analyses without launching the GUI requires the set subcommand 
     libbiosmoother set $INDEX settings.normalization.log_base.val 10  # adjusting the log-base of the color scale
     libbiosmoother set $INDEX settings.interface.v4c.do_col true      # enabling virtual 4C for columns
 
+A list of all parameters that exist can be found :ref:`here <index_parameters_section>`.
+
 .. index:: get
 
 ## Retrieving the values of parameters
 The get subcommand allows retrieving the value of a parameter for the current/last session of a given index.
 
 The full documentation of the `get` subcommand can be found :ref:`here <get_command>`.
+
+A list of all parameters that exist can be found :ref:`here <index_parameters_section>`.
 
 .. index:: export
 
