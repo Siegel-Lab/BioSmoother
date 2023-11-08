@@ -87,3 +87,11 @@
 .tooltip_download_session::after {
     content: "download the current session as a .json file";
 }
+
+.tooltip_undo::after {
+    content: "undo";
+}
+
+.tooltip_redo::after {
+    content: "redo";
+}

@@ -2922,6 +2922,7 @@ class MainLayout:
                     default_session = json.load(f)
                     default_session["settings"] = self.settings_default
             self.session.set_session(default_session)
+            self.session.establish_backwards_compatibility()
             self.do_config()
             self.trigger_render()
 
@@ -2992,7 +2993,7 @@ class MainLayout:
 
         self.undo_button = Button(
             label="",
-            css_classes=SYM_CSS + ["fa_page_previous_solid"],
+            css_classes=SYM_CSS + ["fa_page_previous_solid", "tooltip", "tooltip_undo", "tooltip_fix_overlap"],
             width=SYM_WIDTH,
             height=SYM_WIDTH,
             sizing_mode="fixed",
@@ -3008,7 +3009,7 @@ class MainLayout:
         self.undo_button.on_click(undo_event)
         self.redo_button = Button(
             label="",
-            css_classes=SYM_CSS + ["fa_page_next_solid"],
+            css_classes=SYM_CSS + ["fa_page_next_solid", "tooltip", "tooltip_redo", "tooltip_fix_overlap"],
             width=SYM_WIDTH,
             height=SYM_WIDTH,
             sizing_mode="fixed",
@@ -3916,11 +3917,13 @@ class MainLayout:
             "fa_page_previous"
             if self.undo_button.disabled
             else "fa_page_previous_solid",
+            "tooltip", "tooltip_undo", "tooltip_fix_overlap"
         ]
         self.redo_button.disabled = not self.session.has_redo()
         self.redo_button.css_classes = [
             "other_button",
             "fa_page_next" if self.redo_button.disabled else "fa_page_next_solid",
+            "tooltip", "tooltip_redo", "tooltip_fix_overlap"
         ]
         yield executor.submit(unlocked_task)
 
