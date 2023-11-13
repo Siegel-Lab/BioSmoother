@@ -2876,16 +2876,33 @@ class MainLayout:
                 "tooltip",
                 "tooltip_download_session",
             ],
+            height=DROPDOWN_HEIGHT,
         )
 
         def callback(e):
             self.download(
                 "session.json",
-                json.dumps(self.session.get_value([])),
+                json.dumps(self.session.get_session()),
                 "test/json;charset=utf-8;",
             )
 
         self.download_session.on_click(callback)
+
+        upload_session = FileInput(
+            disabled=bin.global_variables.no_save
+        )
+        
+        def session_upload(a, o, n):
+            self.session.set_session(json.loads(b64decode(n).decode("utf-8")))
+            self.session.establish_backwards_compatibility()
+            self.heatmap.x_range.start = self.session.get_value(["area", "x_start"])
+            self.heatmap.x_range.end = self.session.get_value(["area", "x_end"])
+            self.heatmap.y_range.start = self.session.get_value(["area", "y_start"])
+            self.heatmap.y_range.end = self.session.get_value(["area", "y_end"])
+            self.update_visibility()
+            self.trigger_render()
+
+        upload_session.on_change("value", session_upload)
 
         self.color_layout = row(
             [self.make_color_figure(["#000000"])],
@@ -3214,7 +3231,8 @@ class MainLayout:
         self.make_panel(
             "info",
             "",
-            [version_info, index_info, self.download_session, log_div, self.log_div],
+            [version_info, index_info, self.download_session, 
+                Div(text="upload session:"), upload_session, log_div, self.log_div],
         )
 
         def norm_event(e):

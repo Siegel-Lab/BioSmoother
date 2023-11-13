@@ -88,6 +88,10 @@
     content: "download the current session as a .json file";
 }
 
+.tooltip_upload_session::after {
+    content: "upload a previously downloaded session .json file.";
+}
+
 .tooltip_undo::after {
     content: "undo";
 }
