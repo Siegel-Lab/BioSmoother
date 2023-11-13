@@ -994,7 +994,20 @@ In the :kbd:`File` tab of Smoother, there are three subtabs\: :kbd:`->Presetting
 
 ### The Presetting subtab
 
-:kbd:`File->Presetting` allows performing analysis with predetermined settings. Three analyses are already preconfigured and available on Smoother for doing normalizations as in GRID-seq [#grid_seq1]_ [#grid_seq2]_ , RADICL-seq [#radicl_seq]_, as well as one for Hi-C data. It is also possible to save the current settings configured on Smoother as a new presetting.
+:kbd:`File->Presetting` allows performing analysis with predetermined settings. 
+
+<p>A presetting can be applied using the 'play' button (<img src="./biosmoother/static/css/play-button.svg" width=15px>).</p> 
+
+Three analyses are already preconfigured and available on Smoother for doing normalizations as in GRID-seq [#grid_seq1]_ [#grid_seq2]_ , RADICL-seq [#radicl_seq]_, as well as one for Hi-C data. 
+
+<p>It is also possible to save the current settings configured on Smoother as a new presetting, using the 'floppy disk' button (<img src="./biosmoother/static/css/floppy-disk-solid.svg" width=15px>).
+Every presetting can be reset to factory default, using the 'arrow' button (<img src="./biosmoother/static/css/repeat-solid.svg" width=15px>).</p>
+
+The `Default` presetting contains the parameters that are applied to an index when first loading it.
+Presettings only contain parameters that are independent of the data of the index. 
+For example, :ref:`assigning primnary datasets into pool A or B <datapools_sub_tab>`, depends on the datasets that are loaded in the index and thus cannot be saved as a presetting.
+The type of normalization that is applied on the other hand is saved as a presetting, since it is independent of the data.
+Specifically, all parameters that are in the :ref:`'Settings' group <settings_group>` are saved in a presetting.
 
 .. index:: Export, export full matrix instead of visible region, Export files to server instead of downloading them
 .. _export_sub_tab:
@@ -1010,13 +1023,14 @@ In the :kbd:`File` tab of Smoother, there are three subtabs\: :kbd:`->Presetting
 
 Exporting with settings thus allows to save interactome data with all active filters, normalization, comparison between groups, and even virtual 4C analyses.
 
-.. index:: Info, Download current session
+.. index:: Info, Download current session, upload session
 .. _info_sub_tab:
 
 ### The Info subtab
 
 :kbd:`File->Info` provides a log of Smoother processes, which are also displayed on the command line.
 -   :guilabel:`Download current session` allows exporting the metadata by downloading all the parameters of the current session.
+-   :guilabel:`upload session` allows setting all the parameters of the current session by uploading a file.
 
 .. index:: Normalize
 .. _normalize_sub_tab:
@@ -1082,7 +1096,7 @@ It is possible to change the axis in which the normalization is performed using 
 
 ### The Dist. Dep. Dec. subtab
 
-The :kbd:`Normalize->Dist. Dep. Dec.` subtab allows to perform a distance dependent decay normalization by selecting the checkbox:guilabel:`Normalize Primary data`. The distance dependent decay is computed with the mean of the value for all the bins at the same distance from the diagonal for the current contig. The normalization divides each bin by this mean. The mean can be displayed on a plot below by checking the box :guilabel:`Display`. On the plot, each line represents a bin with the beginning being the top left corner and the end being the bottom right corner of the bin. It is important to consider that the further away from the diagonal a bin is in a contig, the less bins it has at the same distance (or none for the corner bin). A slider allows to modify the minimum and maximum number of samples to compute for each diagonal. The top and bottom percentiles of samples can be excluded from the normalization with the :guilabel:`Percentile of samples to keep (%)` slider.
+The :kbd:`Normalize->Dist. Dep. Dec.` subtab allows to perform a distance dependent decay normalization by selecting the checkbox :guilabel:`Normalize Primary data`. The distance dependent decay is computed with the mean of the value for all the bins at the same distance from the diagonal for the current contig. The normalization divides each bin by this mean. The mean can be displayed on a plot below by checking the box :guilabel:`Display`. On the plot, each line represents a bin with the beginning being the top left corner and the end being the bottom right corner of the bin. It is important to consider that the further away from the diagonal a bin is in a contig, the less bins it has at the same distance (or none for the corner bin). A slider allows to modify the minimum and maximum number of samples to compute for each diagonal. The top and bottom percentiles of samples can be excluded from the normalization with the :guilabel:`Percentile of samples to keep (%)` slider.
 
 <figure align=center>
 <img src="./docs_conf/static/ddd.gif" width=50%>

@@ -48,10 +48,12 @@ def generate_index_parameters(out_folder):
         last_heading = ["", ""]
         for p in ps2: # @todo things not under settings are missing... / hardcode area and v4c col and row
             if len(p) >= 2 and p[0] != last_heading[0]:
+                f.write(".. _" + p[0][0].lower() + p[0][1:] + "_group:\n\n")
                 f.write("#### The " + p[0][0].upper() + p[0][1:] + " group \n\n")
                 last_heading[0] = p[0]
                 last_heading[1] = ""
             if len(p) >= 3 and p[1] != last_heading[1]:
+                f.write(".. _" + p[1][0].lower() + p[1][1:] + "_subgroup:\n\n")
                 f.write("##### The " + p[1][0].upper() + p[1][1:] + " subgroup\n\n")
                 last_heading[1] = p[1]
 
@@ -62,17 +64,31 @@ def generate_index_parameters(out_folder):
                 parameter_name = "`" +  parameter_name + ".val_min` and `" + parameter_name + ".val_max`"
             else:
                 parameter_name = "`" + parameter_name + "`"
+                f.write(".. _" + "_".join(p) + "_parameter:\n\n")
             f.write("#####" + ("#" if len(p) >= 3 else "") + " " + p[-1] + "\n")
             f.write("*Full parameter name:* " + parameter_name + "\\\n")
             f.write("*Description:* " + quarry_from_json(descriptions_json, p, "(in description.json)") + "\\\n\n")
             f.write("*Accepted values:* " + values_for_parameter(p, default_json, valid_json) + "\\\n")
             f.write("*Value type:* " + parameter_type(p, default_json, valid_json) + "\\\n")
+            
+            if is_spinner(quarry_from_json(default_json, p)):
+                def_val = "`" + str(quarry_from_json(default_json, p + ["val"])) + "`"
+            elif is_range_spinner(quarry_from_json(default_json, p)):
+                def_val = "`" + str(quarry_from_json(default_json, p + ["val_min"])) + "` and `" + \
+                        str(quarry_from_json(default_json, p + ["val_max"])) + "`"
+            else:
+                def_val = "`" + str(quarry_from_json(default_json, p)) + "`"
+            if not def_val == "`???`":
+                f.write("*Default value:* " + def_val + "\\\n")
             button_tab = quarry_from_json(button_tabs_json, p)
             button_tab_h = ""
             link_text = "`"
             if button_tab != "":
-                link_text = "` :ref:`(see in manual) <" + button_tab.split("->")[-1].lower().replace(" ", "_").replace(".", "") + "_sub_tab>`"
-                button_tab_h = ":kbd:`" + button_tab + "`"
+                if "->" in button_tab:
+                    link_text = "` :ref:`(see in manual) <" + button_tab.split("->")[-1].lower().replace(" ", "_").replace(".", "") + "_sub_tab>`"
+                    button_tab_h = ":kbd:`" + button_tab + "`"
+                else:
+                    link_text = "` :ref:`(see in manual) <" + button_tab + ">`"
             button_name = quarry_from_json(button_names_json, p)
             if button_name != "???":
                 f.write("*Button in GUI:* " + button_tab_h + " :guilabel:`" + button_name + link_text + "\n\n")
