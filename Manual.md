@@ -1005,7 +1005,7 @@ Every presetting can be reset to factory default, using the 'arrow' button (<img
 
 The `Default` presetting contains the parameters that are applied to an index when first loading it.
 Presettings only contain parameters that are independent of the data of the index. 
-For example, :ref:`assigning primnary datasets into pool A or B <datapools_sub_tab>`, depends on the datasets that are loaded in the index and thus cannot be saved as a presetting.
+For example, :ref:`assigning primary datasets into pool A or B <datapools_sub_tab>`, depends on the datasets that are loaded in the index and thus cannot be saved as a presetting.
 The type of normalization that is applied on the other hand is saved as a presetting, since it is independent of the data.
 Specifically, all parameters that are in the :ref:`'Settings' group <settings_group>` are saved in a presetting.
 
@@ -1084,7 +1084,7 @@ It is possible to change the axis in which the normalization is performed using 
 
 #### Iterative correction normalization
 
-`Iterative correction` (IC)\: equalizes the visibility of the heatmap by making its column and row sums equal to a constant value. A bias value is computed for every slice (column and row) and IC normalization of the bins is performed by multiplying each bin by the biases of its column and row. It is possible to filter out slices with more than the given percentage of empty bins using the :guilabel:`filter out slices with too many empty bins [%]` slider. A checkbox allows to :guilabel:`Show bias` as tracks in the secondary data panels. It is possible to use only the visible region to compute the IC by checking the :guilabel:`Local IC` box. The :guilabel:`Mad Max filter` slider allows to filter out bins for which the log marginal sum is lower than the given value (see [the Cooler github]( https://github.com/open2c/cooler/blob/0f4cf6e21cea50c92334b87c5c6d5759859f4de8/src/cooler/balance.py#L397)). One slider bar allows to set the threshold for :guilabel:`Minimal number of non-zero bins per slice`, removing slices with less bins. Another slider can be used to ignore the *n* closest bins to the diagonal for bias computation (:guilabel:`Ignore first n bins next to the diagonal`).
+`Iterative correction` (IC)\: equalizes the visibility of the heatmap by making its column and row sums equal to a constant value. A bias value is computed for every slice (column and row) and IC normalization of the bins is performed by multiplying each bin by the biases of its column and row. It is possible to filter out slices with more than the given percentage of empty bins using the :guilabel:`filter out slices with too many empty bins [%]` slider. A checkbox allows to :guilabel:`Show bias` as tracks in the secondary data panels. It is possible to use only the visible region to compute the IC by checking the :guilabel:`Local IC` box. The :guilabel:`Mad Max filter` slider allows to filter out bins for which the log marginal sum is lower than the given value. One slider bar allows to set the threshold for :guilabel:`Minimal number of non-zero bins per slice`, removing slices with less bins. Another slider can be used to ignore the *n* closest bins to the diagonal for bias computation (:guilabel:`Ignore first n bins next to the diagonal`).
 
 <figure align=center>
 <img src="./docs_conf/static/ice.gif" width=50%>
