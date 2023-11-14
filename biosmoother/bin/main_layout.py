@@ -836,7 +836,7 @@ class MainLayout:
         return d
 
     def make_checkbox(
-        self, title, settings=[], on_change=None, width=SETTINGS_WIDTH
+        self, settings=[], on_change=None, width=SETTINGS_WIDTH
     ):
         self.in_descriptions_json(settings)
         tooltip = "tooltip__" + "__".join(settings)
@@ -2101,7 +2101,6 @@ class MainLayout:
             active_item=["settings", "filters", "cut_off_bin"],
         )
         contig_smaller_than_bin = self.make_checkbox(
-            "Fill contigs that are smaller than one bin",
             settings=["settings", "filters", "show_contig_smaller_than_bin"],
         )
 
@@ -2116,14 +2115,14 @@ class MainLayout:
         if Quarry.has_cooler_icing():
             norm_sele.append((("Cooler Iterative Correction", "cool-ice")))
 
-        normalization_cov = self.dropdown_select(
-            ("Reads per million", "rpm"),
-            ("Reads per thousand", "rpk"),
-            ("Reads per million base pairs", "rpmb"),
-            ("Reads per thousand base pairs", "rpkb"),
-            ("No normalization", "dont"),
-            active_item=["settings", "normalization", "normalize_by_coverage"],
-        )
+        # normalization_cov = self.dropdown_select(
+        #     ("Reads per million", "rpm"),
+        #     ("Reads per thousand", "rpk"),
+        #     ("Reads per million base pairs", "rpmb"),
+        #     ("Reads per thousand base pairs", "rpkb"),
+        #     ("No normalization", "dont"),
+        #     active_item=["settings", "normalization", "normalize_by_coverage"],
+        # )
 
         color_scale = self.dropdown_select(
             ("absolute max [x' = x / max(|v| in V)]", "abs"),
@@ -2137,32 +2136,25 @@ class MainLayout:
         )
 
         incomp_align_layout = self.make_checkbox(
-            "Show multimapping reads with incomplete mapping loci lists",
             settings=["settings", "filters", "incomplete_alignments"],
         )
 
         ddd = self.make_checkbox(
-            "Normalize Primary data",
             settings=["settings", "normalization", "ddd"],
         )
         ploidy_correct = self.make_checkbox(
-            "do correct",
             settings=["settings", "normalization", "ploidy_correct"],
         )
         ploidy_keep_distinct_group = self.make_checkbox(
-            "Keep interactions from contig-pairs that never occur in the same group",
             settings=["settings", "normalization", "ploidy_keep_distinct_group"],
         )
         ploidy_keep_inter_group = self.make_checkbox(
-            "Keep interactions from contig-pairs that are in the same group",
             settings=["settings", "normalization", "ploidy_keep_inter_group"],
         )
         ploidy_remove_others = self.make_checkbox(
-            "Remove interactions that are not explicitly kept by the options above",
             settings=["settings", "normalization", "ploidy_remove_others"],
         )
         ploidy_remove_intra_instance_contig = self.make_checkbox(
-            "Remove inter-contig, intra-instance interactions",
             settings=[
                 "settings",
                 "normalization",
@@ -2176,12 +2168,10 @@ class MainLayout:
             self.trigger_render()
 
         ploidy_coords = self.make_checkbox(
-            "use ploidy corrected contigs",
             settings=["settings", "normalization", "ploidy_coords"],
             on_change=ploidy_coords_event,
         )
         ddd_show = self.make_checkbox(
-            "Display",
             settings=["settings", "normalization", "ddd_show"],
         )
         ddd_ex_l = self.make_slider_spinner(
@@ -2215,11 +2205,9 @@ class MainLayout:
             sizing_mode="stretch_width",
         )
         ice_show_bias = self.make_checkbox(
-            "Show Bias",
             settings=["settings", "normalization", "ice_show_bias"],
         )
         ice_local = self.make_checkbox(
-            "Local Ic",
             settings=["settings", "normalization", "ice_local"],
         )
         ddd_sam_l = self.make_range_slider_spinner(
@@ -2229,11 +2217,9 @@ class MainLayout:
         )
 
         square_bins = self.make_checkbox(
-            "Make Bins Squares",
             settings=["settings", "interface", "squared_bins"],
         )
         do_redraw = self.make_checkbox(
-            "Auto Render",
             settings=["settings", "interface", "do_redraw"],
         )
         render_now = Button(
@@ -2251,7 +2237,6 @@ class MainLayout:
         render_now.on_click(render_now_event)
 
         power_ten_bin = self.make_checkbox(
-            "Snap Bin Size",
             settings=["settings", "interface", "snap_bin_size"],
         )
 
@@ -2484,15 +2469,12 @@ class MainLayout:
             sizing_mode="stretch_width",
         )
         center_tracks_on_bins = self.make_checkbox(
-            "Center Tracks on Bins",
             settings=["settings", "interface", "center_tracks_on_bins"],
         )
         zero_track_at_ends = self.make_checkbox(
-            "Zero Track at Ends",
             settings=["settings", "interface", "zero_track_at_ends"],
         )
         connect_tracks_over_contig_borders = self.make_checkbox(
-            "Connect Tracks over Contig Borders",
             settings=["settings", "interface", "connect_tracks_over_contig_borders"],
         )
 
@@ -2503,7 +2485,6 @@ class MainLayout:
             self.update_visibility()
 
         tracks_log_scale = self.make_checkbox(
-            "Display Tracks on a Log Scale",
             settings=["settings", "interface", "tracks_log_scale"],
             on_change=tracks_log_scale_change,
         )
@@ -2526,27 +2507,21 @@ class MainLayout:
             trigger_render=False,
         )
         grid_seq_display_background = self.make_checkbox(
-            "Display Background as Secondary Data",
             settings=["settings", "normalization", "grid_seq_display_background"],
         )
         radicl_seq_display_coverage = self.make_checkbox(
-            "Display Coverage as Secondary Data",
             settings=["settings", "normalization", "radicl_seq_display_coverage"],
         )
         grid_seq_column = self.make_checkbox(
-            "Compute background for columns",
             settings=["settings", "normalization", "grid_seq_axis_is_column"],
         )
         radicl_seq_column = self.make_checkbox(
-            "Apply binomial test on columns",
             settings=["settings", "normalization", "radicl_seq_axis_is_column"],
         )
         grid_seq_intersection = self.make_checkbox(
-            "Use intersection between datasets",
             settings=["settings", "normalization", "grid_seq_filter_intersection"],
         )
         grid_seq_ignore_cis = self.make_checkbox(
-            "Ignore cis interactions",
             settings=["settings", "normalization", "grid_seq_ignore_cis"],
         )
         grid_seq_anno = self.dropdown_select_session(
@@ -2715,11 +2690,9 @@ class MainLayout:
             event=anno_coords_event,
         )
         coords_x = self.make_checkbox(
-            "Use Annotation Coordinates for the columns",
             settings=["settings", "filters", "anno_coords_col"],
         )
         coords_y = self.make_checkbox(
-            "Use Annotation Coordinates for the rows",
             settings=["settings", "filters", "anno_coords_row"],
         )
 
@@ -2801,12 +2774,10 @@ class MainLayout:
         )
 
         export_full = self.make_checkbox(
-            "Export full matrix instead of visible region",
             settings=["settings", "export", "do_export_full"],
         )
 
         export_to_server = self.make_checkbox(
-            "Export files to server instead of downloading them",
             settings=["settings", "export", "export_to_server"],
         )
 
@@ -3189,12 +3160,10 @@ class MainLayout:
             ]
 
         v4c_norm_viewpoint_size = self.make_checkbox(
-            "Normalize by viewpoint size",
             settings=["settings", "interface", "v4c", "norm_by_viewpoint_size"],
         )
 
         do_v4c_col = self.make_checkbox(
-            "Compute for columns",
             settings=["settings", "interface", "v4c", "do_col"],
         )
 
@@ -3210,7 +3179,6 @@ class MainLayout:
         self.v4c_col.on_change("value", lambda x, y, z: self.parse_v4c())
 
         do_v4c_row = self.make_checkbox(
-            "Compute for rows",
             settings=["settings", "interface", "v4c", "do_row"],
         )
         v4c_row_label = Div(
@@ -3251,7 +3219,6 @@ class MainLayout:
             "",
             [
                 normalization,
-                normalization_cov,
             ],
         )
         self.make_panel(
