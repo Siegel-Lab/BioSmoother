@@ -1558,16 +1558,18 @@ class MainLayout:
             "index_start": [],
             "index_end": [],
             "xs": [],
+            "idx_x": [],
             "ys": [],
+            "idx_y": [],
             "colors": [],
             "anno_desc": [],
             "sample_id": [],
             "anno_idx": [],
         }
-        self.ranked_columns_data = ColumnDataSource(data=d)
+        self.ranked_data = ColumnDataSource(data=d)
         self.ranked_columns = None
-        self.ranked_rows_data = ColumnDataSource(data=d)
         self.ranked_rows = None
+        self.ranked_col_and_rows = None
         d = {"chr": [], "color": [], "xs": [], "ys": []}
         self.dist_dep_dec_plot_data = ColumnDataSource(data=d)
         self.dist_dep_dec_plot = None
@@ -1946,11 +1948,26 @@ class MainLayout:
         )
         tollbars.append(self.ranked_columns.toolbar)
         self.ranked_columns.dot(
-            x="xs", y="ys", color="colors", size=12, source=self.ranked_columns_data
+            x="idx_x", y="xs", color="colors", size=12, source=self.ranked_data
         )
         self.ranked_columns.xaxis.axis_label = "Samples ranked by RNA reads per kbp"
         self.ranked_columns.yaxis.axis_label = "RNA reads per kbp"
         self.ranked_columns.add_tools(ranked_hover)
+
+        self.ranked_col_and_rows = figure(
+            tools="pan,wheel_zoom,box_zoom,crosshair",
+            y_axis_type="log",
+            x_axis_type="log",
+            height=200,
+            width=SETTINGS_WIDTH,
+        )
+        tollbars.append(self.ranked_col_and_rows.toolbar)
+        self.ranked_col_and_rows.dot(
+            x="xs", y="ys", color="colors", size=12, source=self.ranked_data
+        )
+        self.ranked_col_and_rows.xaxis.axis_label = "RNA reads per kbp"
+        self.ranked_col_and_rows.yaxis.axis_label = "Maximal DNA reads in bin"
+        self.ranked_col_and_rows.add_tools(ranked_hover)
 
         self.ranked_rows = figure(
             tools="pan,wheel_zoom,box_zoom,crosshair",
@@ -1960,7 +1977,7 @@ class MainLayout:
         )
         self.ranked_rows.toolbar_location = None
         self.ranked_rows.dot(
-            x="xs", y="ys", color="colors", size=12, source=self.ranked_rows_data
+            x="idx_y", y="ys", color="colors", size=12, source=self.ranked_data
         )
         self.ranked_rows.xaxis.axis_label = "Samples ranked by max. DNA reads in bin"
         self.ranked_rows.yaxis.axis_label = "Maximal DNA reads in bin"
@@ -1979,7 +1996,7 @@ class MainLayout:
             xs="xs", ys="ys", color="color", source=self.dist_dep_dec_plot_data
         )
 
-        for p in [self.ranked_columns, self.ranked_rows, self.dist_dep_dec_plot]:
+        for p in [self.ranked_columns, self.ranked_rows, self.ranked_col_and_rows, self.dist_dep_dec_plot]:
             #p.sizing_mode = "stretch_width"
             p.toolbar_location = None
             tollbars.append(p.toolbar)
@@ -2528,14 +2545,14 @@ class MainLayout:
             ["annotation", "filterable"],
             ["settings", "normalization", "grid_seq_annotation"],
         )
-        grid_seq_rna_filter_l = self.make_range_slider_spinner(
+        grid_seq_rna_filter_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            settings=["settings", "normalization", "grid_seq_rna_filter"],
+            settings=["settings", "normalization", "grid_seq_rna_filter_v2"],
             sizing_mode="stretch_width",
         )
-        grid_seq_dna_filter_l = self.make_range_slider_spinner(
+        grid_seq_dna_filter_l = self.make_slider_spinner(
             width=SETTINGS_WIDTH,
-            settings=["settings", "normalization", "grid_seq_dna_filter"],
+            settings=["settings", "normalization", "grid_seq_dna_filter_v2"],
             sizing_mode="stretch_width",
         )
 
@@ -3259,6 +3276,7 @@ class MainLayout:
                 self.ranked_columns,
                 grid_seq_dna_filter_l,
                 self.ranked_rows,
+                self.ranked_col_and_rows,
             ],
         )
         self.make_panel(
@@ -3595,8 +3613,7 @@ class MainLayout:
 
                 palette = self.session.get_palette(self.print)
 
-                ranked_slice_x = self.session.get_ranked_slices(False, self.print)
-                ranked_slice_y = self.session.get_ranked_slices(True, self.print)
+                ranked_slices = self.session.get_ranked_slices(self.print)
                 if self.session.get_value(["settings", "normalization", "ddd_show"]):
                     dist_dep_dec_plot_data = self.session.get_decay(self.print)
                 else:
@@ -3788,7 +3805,7 @@ class MainLayout:
                     self.tick_formatter_y.args = ticks_y
                     self.tick_formatter_y_2.args = contig_ticks_y
 
-                    self.ranked_columns_data.data = ranked_slice_y
+                    self.ranked_data.data = ranked_slices
 
                     def set_range(plot_range, data):
                         if len(data) > 0:
@@ -3810,12 +3827,14 @@ class MainLayout:
                             plot_range.start = start
                             plot_range.end = end
 
-                    set_range(self.ranked_columns.x_range, ranked_slice_y["xs"])
-                    set_log_range(self.ranked_columns.y_range, ranked_slice_y["ys"])
+                    set_range(self.ranked_columns.x_range, ranked_slices["idx_x"])
+                    set_log_range(self.ranked_columns.y_range, ranked_slices["xs"])
 
-                    self.ranked_rows_data.data = ranked_slice_x
-                    set_range(self.ranked_rows.x_range, ranked_slice_x["xs"])
-                    set_log_range(self.ranked_rows.y_range, ranked_slice_x["ys"])
+                    set_range(self.ranked_rows.x_range, ranked_slices["idx_y"])
+                    set_log_range(self.ranked_rows.y_range, ranked_slices["ys"])
+
+                    set_log_range(self.ranked_col_and_rows.x_range, ranked_slices["xs"]) # @todo this is not working
+                    set_log_range(self.ranked_col_and_rows.y_range, ranked_slices["ys"])
 
                     self.dist_dep_dec_plot_data.data = dist_dep_dec_plot_data
 
@@ -4011,5 +4030,3 @@ class MainLayout:
         self.curdoc.add_timeout_callback(lambda: layout_callback(), 100)
         for time in range(1, 10):
             self.curdoc.add_timeout_callback(lambda: layout_callback(), time * 1000)
-        for time in range(1, 10):
-            self.curdoc.add_timeout_callback(lambda: layout_callback(), time * 10000)
