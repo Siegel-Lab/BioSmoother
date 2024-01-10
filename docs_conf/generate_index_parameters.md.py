@@ -72,10 +72,17 @@ def generate_index_parameters(out_folder):
             f.write("*Value type:* " + parameter_type(p, default_json, valid_json) + "\\\n")
             
             if is_spinner(quarry_from_json(default_json, p)):
-                def_val = "`" + str(quarry_from_json(default_json, p + ["val"])) + "`"
+                def_val = quarry_from_json(default_json, p + ["val"])
+                if parameter_type(p, default_json, valid_json) == "`integer`":
+                    def_val = int(def_val)
+                def_val = "`" + str(def_val) + "`"
             elif is_range_spinner(quarry_from_json(default_json, p)):
-                def_val = "`" + str(quarry_from_json(default_json, p + ["val_min"])) + "` and `" + \
-                        str(quarry_from_json(default_json, p + ["val_max"])) + "`"
+                def_val_min = quarry_from_json(default_json, p + ["val_min"])
+                def_val_max = quarry_from_json(default_json, p + ["val_max"])
+                if parameter_type(p, default_json, valid_json) == "`integer`":
+                    def_val_min = int(def_val_min)
+                    def_val_max = int(def_val_max)
+                def_val = "`" + str(def_val_min) + "` and `" + str(def_val_max) + "`"
             else:
                 def_val = "`" + str(quarry_from_json(default_json, p)) + "`"
             if not def_val == "`???`":
