@@ -2,10 +2,10 @@ from distutils.core import setup
 import os
 from setuptools import find_packages
 import subprocess
-from libbiosmoother import open_descriptions_json
+# from libbiosmoother import open_descriptions_json
 import json
 
-VERSION = "1.3.0"
+VERSION = "1.3.1"
 
 # conf version file
 def conf_version(in_file_name, cmake_version, out_file_name):
@@ -58,7 +58,8 @@ def conf_tooltips(out_file_name):
                 else:
                     out_file.write(f".tooltip{prefix}__{k}::after {{ content: \"{v}\"; }}\n")
 
-        recursion("", json.load(open_descriptions_json()))
+        with open("biosmoother/static/conf/descriptions.json", "r") as in_file:
+            recursion("", json.load(in_file))
 
 conf_tooltips("biosmoother/static/css/tooltips_generated.css")
 
