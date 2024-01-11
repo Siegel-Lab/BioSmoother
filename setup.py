@@ -5,7 +5,7 @@ import subprocess
 # from libbiosmoother import open_descriptions_json
 import json
 
-VERSION = "1.3.1"
+VERSION = "1.3.2"
 
 # conf version file
 def conf_version(in_file_name, cmake_version, out_file_name):
