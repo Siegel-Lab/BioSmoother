@@ -102,6 +102,7 @@ BioSmoother's documentation is available at https://biosmoother.rtfd.io/.
     ],
     install_requires=[
         'libbiosmoother>=1.3.0',
+        'cairoSVG>=2.7.1',
         'bokeh==2.3.2', # specific version is necessary for now -> with newer versions the layout starts glitching
         'psutil',
         'pybase64',
