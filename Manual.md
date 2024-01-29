@@ -1450,7 +1450,9 @@ Thanks to the following libraries that are used in Smoother:
 
 ## Citing Smoother
 
-Smoother is currently unpublished. This page will be updated with a bioRxiv link soon.
+If you use smoother in your research, please cite:
+
+Markus R Schmidt, Anna Barcons-Simon, Claudia Rabuffo, T Nicolai Siegel, Smoother: on-the-fly processing of interactome data using prefix sums, Nucleic Acids Research, 2024; gkae008, https://doi.org/10.1093/nar/gkae008
 
 ## References
 
@@ -1458,7 +1460,7 @@ Smoother is currently unpublished. This page will be updated with a bioRxiv link
 .. [#grid_seq1] Li, X., Zhou, B., Chen, L. et al. GRID-seq reveals the global RNA–chromatin interactome.Nat Biotechnol 35, 940–950 (2017). https://doi.org/10.1038/nbt.3968.
 .. [#grid_seq2] Zhou, B., Li, X., Luo, D. et al. GRID-seq for comprehensive analysis of global RNA–chromatin interactions. Nat Protoc 14, 2036–2068 (2019).
 .. [#IC] Imakaev, M., Fudenberg, G., McCord, R. et al. Iterative correction of Hi-C data reveals hallmarks of chromosome organization. Nat Methods 9, 999–1003 (2012)
-.. [#smoother] Schmidt, M., Barcons-Simon, A., Rabuffo, C., Siegel, N. Smoother: On-the-fly processing of interactome data using prefix sums. Unpublished.
+.. [#smoother] Schmidt, M., Barcons-Simon, A., Rabuffo, C., Siegel, N. Smoother: On-the-fly processing of interactome data using prefix sums. Nucleic Acids Research (2024). https://doi.org/10.1093/nar/gkae008.
 
 .. index:: version
 
