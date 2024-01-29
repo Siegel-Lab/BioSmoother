@@ -25,18 +25,26 @@ Install Smoother (and all requirements) using pip. Smoother runs under Windows, 
  conda install -y nodejs cairo # pip cannot install nodejs and cairo, so we use conda
 ```
 
-Download 2 example Smoother indices.
+Download the example Smoother indices. If you are on Ubuntu or MaxOS, run the following commands:
 ```
- conda install wget
+ conda install -y wget unzip
  wget https://syncandshare.lrz.de/dl/fiTWvK4pxwB2TQkMSrzzDJ/t_brucei_hi_c.smoother_index.zip
  #wget https://syncandshare.lrz.de/dl/fi8NBv2b3VDt4Htkm8Auuv/m_musculus_radicl_seq.smoother_index.zip
  
- conda install unzip
  unzip t_brucei_hi_c.smoother_index.zip
  #unzip m_musculus_radicl_seq.smoother_index.zip
 ```
 
-View one of the indices
+On Windows, run this instead:
+```
+ curl.exe https://syncandshare.lrz.de/dl/fiTWvK4pxwB2TQkMSrzzDJ/t_brucei_hi_c.smoother_index.zip --output t_brucei_hi_c.smoother_index.zip
+ #curl.exe https://syncandshare.lrz.de/dl/fi8NBv2b3VDt4Htkm8Auuv/m_musculus_radicl_seq.smoother_index.zip --output m_musculus_radicl_seq.smoother_index.zip
+ 
+ tar -xf t_brucei_hi_c.smoother_index.zip
+ #tar -xf m_musculus_radicl_seq.smoother_index.zip
+```
+
+View one of the indices (Ubuntu, MacOs & Windows)
 ```
  biosmoother serve t_brucei_hi_c.smoother_index --show
  #biosmoother serve m_musculus_radicl_seq.smoother_index --show
@@ -90,4 +98,5 @@ biosmoother serve my_index --show
 ## Cite
 
 If you use smoother in your research, please cite:
-@todo
+
+Markus R Schmidt, Anna Barcons-Simon, Claudia Rabuffo, T Nicolai Siegel, Smoother: on-the-fly processing of interactome data using prefix sums, Nucleic Acids Research, 2024; gkae008, https://doi.org/10.1093/nar/gkae008
