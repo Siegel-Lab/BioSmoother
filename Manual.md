@@ -1436,13 +1436,19 @@ To reset to the default parameters for a given index, Smoother implements the `r
 
 The full documentation of the `reset` subcommand can be found :ref:`here <reset_command>`.
 
-.. _ref_and_ack_target:
+
+.. _citing_target:
 
 # Citing Smoother
 
 If you use smoother in your research, please cite:
 
 Markus R Schmidt, Anna Barcons-Simon, Claudia Rabuffo, T Nicolai Siegel, Smoother: on-the-fly processing of interactome data using prefix sums, Nucleic Acids Research, 2024; gkae008, https://doi.org/10.1093/nar/gkae008
+
+Smoothers source code is available at [GitHub](https://github.com/Siegel-Lab/BioSmoother "Smoother's GitHub").
+
+
+.. _ref_and_ack_target:
 
 # Appendix
 
