@@ -1438,6 +1438,12 @@ The full documentation of the `reset` subcommand can be found :ref:`here <reset_
 
 .. _ref_and_ack_target:
 
+# Citing Smoother
+
+If you use smoother in your research, please cite:
+
+Markus R Schmidt, Anna Barcons-Simon, Claudia Rabuffo, T Nicolai Siegel, Smoother: on-the-fly processing of interactome data using prefix sums, Nucleic Acids Research, 2024; gkae008, https://doi.org/10.1093/nar/gkae008
+
 # Appendix
 
 ## Thanks
@@ -1448,11 +1454,7 @@ Thanks to the following libraries that are used in Smoother:
 - [Pybind11](https://github.com/pybind/pybind11)
 - [Cibuildwheel](https://cibuildwheel.readthedocs.io)
 
-## Citing Smoother
 
-If you use smoother in your research, please cite:
-
-Markus R Schmidt, Anna Barcons-Simon, Claudia Rabuffo, T Nicolai Siegel, Smoother: on-the-fly processing of interactome data using prefix sums, Nucleic Acids Research, 2024; gkae008, https://doi.org/10.1093/nar/gkae008
 
 ## References
 

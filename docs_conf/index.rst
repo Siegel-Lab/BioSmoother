@@ -11,6 +11,14 @@ Smoother is an interactive analysis and visualization software for nucleic acid 
 
 Smoother is centered around an index including the genome, annotations, and datasets to be analyzed and visualized. Using this index, Smoother allows changing analysis parameters on-the-fly.
 
+Manuscript
+----------
+
+Smoother has been published in Nucleic Acids Research. If you use Smoother in your research, please cite:
+
+Markus R Schmidt, Anna Barcons-Simon, Claudia Rabuffo, T Nicolai Siegel, Smoother: on-the-fly processing of interactome data using prefix sums, Nucleic Acids Research, 2024; gkae008, https://doi.org/10.1093/nar/gkae008
+
+
 Table of Contents
 -----------------
 
