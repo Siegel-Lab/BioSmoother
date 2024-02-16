@@ -18,7 +18,7 @@ Smoother has been published in Nucleic Acids Research. If you use Smoother in yo
 
 Markus R Schmidt, Anna Barcons-Simon, Claudia Rabuffo, T Nicolai Siegel, Smoother: on-the-fly processing of interactome data using prefix sums, Nucleic Acids Research, 2024; gkae008, https://doi.org/10.1093/nar/gkae008
 
-Smoothers source code is available at :ref:`GitHub <https://github.com/Siegel-Lab/BioSmoother>`.
+Smoothers source code is available at `GitHub <https://github.com/Siegel-Lab/BioSmoother>`_.
 
 Table of Contents
 -----------------
