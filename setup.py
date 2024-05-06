@@ -5,7 +5,7 @@ import subprocess
 # from libbiosmoother import open_descriptions_json
 import json
 
-VERSION = "1.3.3"
+VERSION = "1.5.0"
 
 # conf version file
 def conf_version(in_file_name, cmake_version, out_file_name):
@@ -101,7 +101,7 @@ BioSmoother's documentation is available at https://biosmoother.rtfd.io/.
         'Programming Language :: Python :: 3.9',
     ],
     install_requires=[
-        'libbiosmoother>=1.3.1',
+        'libbiosmoother>=1.5.0',
         'bokeh==2.3.2', # specific version is necessary for now -> with newer versions the layout starts glitching
         'psutil',
         'pybase64',
