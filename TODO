@@ -5,6 +5,7 @@
     - display on column or row or both should be a dropdown button
     - the merge datasets and datapools by option should be available, so that one track can be normalized by another
 - remove default.json from smoother_hg
+- multichoice menus are not very responsive (i.e. they should interrupt rendering)
 
 --- cutoff ---
 

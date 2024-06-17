@@ -126,6 +126,19 @@ JS_DOWNLOAD = """
 """
 
 
+if True:
+    UP_ASCI = "^"
+    DOWN_ASCI = "v"
+    UNSELECTED_ASCI = "[ ]"
+    SELECTED_ASCI = "[X]"
+    SOME_SELECTED_ASCI = "[.]"
+else:
+    SELECTED_ASCI = "🞕"
+    UNSELECTED_ASCI = "☐"
+    SOME_SEL_ASCIECTED_ASCI = "·"
+    UP_ASCI = "▲"
+    DOWN_ASCI = "▼"
+
 class MainLayout:
     def dropdown_select_h(self, title, event, tooltip):
         ret = Dropdown(
@@ -351,9 +364,9 @@ class MainLayout:
                 for _, n in checkboxes:
                     bools = [name in active_dict[n] for name in labels]
                     source[n].append(
-                        "🞕"
+                        SELECTED_ASCI
                         if all(bools)
-                        else ("☐" if all(not b for b in bools) else "·")
+                        else (UNSELECTED_ASCI if all(not b for b in bools) else SOME_SELECTED_ASCI)
                     )
             for idx, name in enumerate(labels):
                 if (
@@ -362,11 +375,11 @@ class MainLayout:
                 ):
                     source["idx"].append(str(idx + 1))
                     if orderable:
-                        source["up"].append("▲" if idx > 0 else "")
-                        source["down"].append("▼" if idx < len(labels) - 1 else "")
+                        source["up"].append(UP_ASCI if idx > 0 else "")
+                        source["down"].append(DOWN_ASCI if idx < len(labels) - 1 else "")
                     source["names"].append(name)
                     for _, n in checkboxes:
-                        source[n].append("🞕" if name in active_dict[n] else "☐")
+                        source[n].append(SELECTED_ASCI if name in active_dict[n] else UNSELECTED_ASCI)
 
             data_table.source.data = source
             data_table.frozen_rows = 1 if len(labels) > 1 else 0
@@ -1122,7 +1135,7 @@ class MainLayout:
             self.show_hide["raw"] and y_visible and self.show_hide["axis"] and log_axis
         )
         self.anno_x.visible = (
-            len(self.anno_y_data.data["anno_name"]) > 0 and self.show_hide["annotation"]
+            len(self.anno_x_data.data["anno_name"]) > 0 and self.show_hide["annotation"]
         )
         self.anno_x_axis.visible = self.anno_x.visible and self.show_hide["axis"]
         self.anno_y.visible = (
@@ -2609,7 +2622,7 @@ class MainLayout:
             "value_throttled", lambda x, y, z: min_bin_size_event()
         )
 
-        def callback(a):
+        def callback_bin_size(a):
             self.min_max_bin_size.value = min(
                 max(self.min_max_bin_size.value + a, self.min_max_bin_size.start),
                 self.min_max_bin_size.end,
@@ -2623,7 +2636,7 @@ class MainLayout:
             width=10,
             height=10,
         )
-        button_s_up.on_click(lambda _: callback(1))
+        button_s_up.on_click(lambda _: callback_bin_size(1))
         button_s_down = Button(
             label="",
             css_classes=["other_button", "fa_sort_down_solid"],
@@ -2631,7 +2644,7 @@ class MainLayout:
             width=10,
             height=10,
         )
-        button_s_down.on_click(lambda _: callback(-1))
+        button_s_down.on_click(lambda _: callback_bin_size(-1))
 
         mmbs_l = row(
             [self.min_max_bin_size, column([button_s_up, button_s_down])],
