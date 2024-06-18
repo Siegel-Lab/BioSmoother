@@ -72,6 +72,7 @@ except ImportError:
 from pathlib import Path
 from pybase64 import b64decode
 import io
+import re
 
 SETTINGS_WIDTH = 400
 BUTTON_HEIGHT = 30
@@ -315,7 +316,7 @@ class MainLayout:
             index_position=None,
             width=SETTINGS_WIDTH - 10,
             tags=["blub"],
-            height=150,
+            height=200,
             sortable=False,
             css_classes=[
                 "multichoice_element_id_" + str(self.next_element_id),
@@ -368,11 +369,20 @@ class MainLayout:
                         if all(bools)
                         else (UNSELECTED_ASCI if all(not b for b in bools) else SOME_SELECTED_ASCI)
                     )
+            is_inv_filter = filter_t_in.value.startswith("!")
+            split_filter = filter_t_in.value.lower()[1 if is_inv_filter else 0:].split("*")
+            def matches_filter(fx):
+                if len(filter_t_in.value) == 0:
+                    return True
+                idx = 0
+                for s in split_filter:
+                    idx = fx.find(s, idx)
+                    if idx == -1:
+                        return is_inv_filter
+                    idx += len(s)
+                return not is_inv_filter
             for idx, name in enumerate(labels):
-                if (
-                    filter_t_in.value.lower() in name.lower()
-                    or len(filter_t_in.value) == 0
-                ):
+                if matches_filter(name.lower()):
                     source["idx"].append(str(idx + 1))
                     if orderable:
                         source["up"].append(UP_ASCI if idx > 0 else "")
