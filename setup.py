@@ -101,7 +101,7 @@ BioSmoother's documentation is available at https://biosmoother.rtfd.io/.
         'Programming Language :: Python :: 3.9',
     ],
     install_requires=[
-        'libbiosmoother>=1.6.1',
+        'libbiosmoother>=1.6.2',
         'bokeh==2.3.2', # specific version is necessary for now -> with newer versions the layout starts glitching
         'psutil',
         'pybase64',
