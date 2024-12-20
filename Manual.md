@@ -522,7 +522,7 @@ For installing Smoother via GitHub, run the following commands:
     # install from local folder using pip
     pip install -e .
 
-While the pip installation will install the latest stable release, this type of installation will install the newest, possibly untested version. Note that this approach does still use pip to install the latest stable release of libBioSmoother and libSps, the two backend libraries behind Smoother. To also install these two libraries on your own, you will have to clone the respective repositories and install manually from them using the `pip install -e .` command. Then you can install Smoother using `pip install -e . –no-deps` to install Smoother without adjustments to the dependencies.
+While the pip installation will install the latest stable release, this type of installation will install the newest, possibly untested version. Note that this approach does still use pip to install the latest stable release of libBioSmoother and libSps, the two backend libraries behind Smoother. To also install these two libraries on your own, you will have to clone the respective repositories and install manually from them using the `pip install -e .` command. Then you can install Smoother using `pip install -e . -no-deps` to install Smoother without adjustments to the dependencies.
 
 .. index:: help, subcommands
 .. _command_organization_target:
@@ -609,7 +609,7 @@ The basic usage of the `repl` subcommand is as follows:
 Here, `my_index` is the index the data shall be added to, `replicate_data` is a file containing the actual data, and `replicate_name` is the displayname of that dataset in the user interface.
 There is a way to load gzipped (or similar) datafiles into Smoother using pipes:
 
-    zcat replicate_data.gz | biosmoother repl my_index – replicate_name
+    zcat replicate_data.gz | biosmoother repl my_index - replicate_name
 
 The full documentation of the `repl` subcommand can be found :ref:`here <repl_command>`.
 
@@ -787,7 +787,7 @@ The basic usage of the `track` subcommand is as follows:
 Here, `my_index` is the index the data shall be added to, `track_data` is a file containing the actual data, and `track_name` is the displayname of that dataset in the user interface.
 There is a way to load gzipped (or similar) datafiles into Smoother using pipes:
 
-    zcat track_data.gz | biosmoother repl my_index – track_name
+    zcat track_data.gz | biosmoother repl my_index - track_name
 
 The full documentation of the `track` subcommand can be found :ref:`here <track_command>`.
 
@@ -812,7 +812,7 @@ The input coverage file can be generated from a .bed or .sam file from the secon
 
 Launching the Smoother interface for an existing index is done with the `serve` subcommand. If an index has already been launched before, the session will be restored with the parameters of the last session, as they are saved in the session.json file in the index directory. The Smoothers interface makes use of the [Bokeh library](http://bokeh.org). For example, this is how we would launch an index called `my_index`:
 
-    biosmoother serve my_index –show
+    biosmoother serve my_index -show
 
 The full documentation of the `serve` subcommand can be found :ref:`here <serve_command>`.
 
@@ -1464,10 +1464,10 @@ Thanks to the following libraries that are used in Smoother:
 
 ## References
 
-.. [#radicl_seq] Bonetti, A., Agostini, F., Suzuki, A.M. et al. RADICL-seq identifies general and cell type–specific principles of genome-wide RNA-chromatin interactions. Nat Commun 11, 1018
-.. [#grid_seq1] Li, X., Zhou, B., Chen, L. et al. GRID-seq reveals the global RNA–chromatin interactome.Nat Biotechnol 35, 940–950 (2017). https://doi.org/10.1038/nbt.3968.
-.. [#grid_seq2] Zhou, B., Li, X., Luo, D. et al. GRID-seq for comprehensive analysis of global RNA–chromatin interactions. Nat Protoc 14, 2036–2068 (2019).
-.. [#IC] Imakaev, M., Fudenberg, G., McCord, R. et al. Iterative correction of Hi-C data reveals hallmarks of chromosome organization. Nat Methods 9, 999–1003 (2012)
+.. [#radicl_seq] Bonetti, A., Agostini, F., Suzuki, A.M. et al. RADICL-seq identifies general and cell type-specific principles of genome-wide RNA-chromatin interactions. Nat Commun 11, 1018
+.. [#grid_seq1] Li, X., Zhou, B., Chen, L. et al. GRID-seq reveals the global RNA-chromatin interactome.Nat Biotechnol 35, 940-950 (2017). https://doi.org/10.1038/nbt.3968.
+.. [#grid_seq2] Zhou, B., Li, X., Luo, D. et al. GRID-seq for comprehensive analysis of global RNA-chromatin interactions. Nat Protoc 14, 2036-2068 (2019).
+.. [#IC] Imakaev, M., Fudenberg, G., McCord, R. et al. Iterative correction of Hi-C data reveals hallmarks of chromosome organization. Nat Methods 9, 999-1003 (2012)
 .. [#smoother] Schmidt, M., Barcons-Simon, A., Rabuffo, C., Siegel, N. Smoother: On-the-fly processing of interactome data using prefix sums. Nucleic Acids Research (2024). https://doi.org/10.1093/nar/gkae008.
 
 .. index:: version
