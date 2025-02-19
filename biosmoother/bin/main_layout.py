@@ -2341,8 +2341,8 @@ class MainLayout:
         ms_l = self.dropdown_select(
             (">= 0", "0"),
             *[
-                (">= " + str(i), str(idx + 1))
-                for idx, i in enumerate(self.session.get_value(["map_q_thresholds"]))
+                (">= " + str(i), str(i))
+                for i in range(255)
             ],
             active_item=["settings", "filters", "mapping_q", "val_min"],
             event=lower_bound_event,
@@ -2356,10 +2356,9 @@ class MainLayout:
 
         ms_l_2 = self.dropdown_select(
             *[
-                ("< " + str(i), str(idx + 1))
-                for idx, i in enumerate(self.session.get_value(["map_q_thresholds"]))
+                ("< " + str(i), str(i))
+                for i in range(255)
             ],
-            ("< 255", str(len(self.session.get_value(["map_q_thresholds"])) + 1)),
             active_item=["settings", "filters", "mapping_q", "val_max"],
             event=upper_bound_event,
         )
