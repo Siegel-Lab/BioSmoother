@@ -3661,7 +3661,7 @@ class MainLayout:
                 error_text_status = (
                     "None"
                     if len(error) == 0
-                    else '<font color="#FF0000">' + error.split("\n")[0] + "</font>"
+                    else '<font color="#FF0000">' + error.split("\n")[0][:100] + ("..." if len(error.split("\n")[0]) > 100 else "") + ' (<u onclick="openTab(\'File\', \'main\'); openTab(\'Info\', \'file\')">see error log in File->Info</u>)</font>'
                 )
                 end_time = time.perf_counter()
                 start_render_time = time.perf_counter()
