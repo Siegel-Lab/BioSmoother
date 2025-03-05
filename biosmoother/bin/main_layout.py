@@ -352,6 +352,18 @@ class MainLayout:
         self.reset_options[my_id] = [{}, []]
 
         filter_t_in = TextInput(placeholder="filter...", width=170)
+        def matches_filter(filter_t_in, fx):
+            if len(filter_t_in.value) == 0:
+                return True
+            is_inv_filter = filter_t_in.value.startswith("!")
+            split_filter = filter_t_in.value.lower()[1 if is_inv_filter else 0:].split("*")
+            idx = 0
+            for s in split_filter:
+                idx = fx.find(s, idx)
+                if idx == -1:
+                    return is_inv_filter
+                idx += len(s)
+            return not is_inv_filter
 
         def set_options(labels, active_dict):
             self.reset_options[my_id] = [active_dict, labels]
@@ -363,26 +375,14 @@ class MainLayout:
                     source["down"].append("")
                 source["names"].append("select all")
                 for _, n in checkboxes:
-                    bools = [name in active_dict[n] for name in labels]
+                    bools = [name in active_dict[n] for name in labels if matches_filter(filter_t_in, name.lower())]
                     source[n].append(
                         SELECTED_ASCI
                         if all(bools)
                         else (UNSELECTED_ASCI if all(not b for b in bools) else SOME_SELECTED_ASCI)
                     )
-            is_inv_filter = filter_t_in.value.startswith("!")
-            split_filter = filter_t_in.value.lower()[1 if is_inv_filter else 0:].split("*")
-            def matches_filter(fx):
-                if len(filter_t_in.value) == 0:
-                    return True
-                idx = 0
-                for s in split_filter:
-                    idx = fx.find(s, idx)
-                    if idx == -1:
-                        return is_inv_filter
-                    idx += len(s)
-                return not is_inv_filter
             for idx, name in enumerate(labels):
-                if matches_filter(name.lower()):
+                if matches_filter(filter_t_in, name.lower()):
                     source["idx"].append(str(idx + 1))
                     if orderable:
                         source["up"].append(UP_ASCI if idx > 0 else "")
@@ -457,15 +457,16 @@ class MainLayout:
                         bools = [
                             not name in self.reset_options[my_id][0][n]
                             for name in self.reset_options[my_id][1]
+                            if matches_filter(filter_t_in, name.lower())
                         ]
                         if all(bools):
                             # nothing is activate -> set everything active
-                            self.reset_options[my_id][0][n] = self.reset_options[my_id][
+                            self.reset_options[my_id][0][n].extend([name for name in self.reset_options[my_id][
                                 1
-                            ]
+                            ] if matches_filter(filter_t_in, name.lower())])
                         else:  # none(bools) or some(bools)
                             # some things are active -> set everything inactive
-                            self.reset_options[my_id][0][n] = []
+                            self.reset_options[my_id][0][n] = [name for name in self.reset_options[my_id][0][n] if not matches_filter(filter_t_in, name.lower())]
                     else:
                         local_label = self.reset_options[my_id][1][y]
                         n = checkboxes[x][1]
