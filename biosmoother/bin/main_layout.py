@@ -2077,6 +2077,7 @@ class MainLayout:
             ("Regions", "regs"),
             (RAW_PLOT_NAME, "raw"),
             (ANNOTATION_PLOT_NAME, "annotation"),
+            ("Sequence", "genome_sequence"),
         )
 
         in_group = self.dropdown_select(
