@@ -837,7 +837,7 @@ Now, forward the port from the client node to the master node:
 
 This command will ask you for your password. After entering it, the port forwarding is set up and you can launch Smoother on the client node. The command to launch Smoother is:
 
-    conda activate Smoother # activate the conda environment if necessary
+    conda activate smoother # activate the conda environment if necessary
     biosmoother serve my_index --port 5009
 
 The command will print an url on your terminal.
