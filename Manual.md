@@ -802,6 +802,10 @@ The input coverage file can be generated from a .bed or .sam file from the secon
 
     cat alignments.sam | awk '!/^#|^@/ {print $1, $3, $4, $2 % 16 == 0 ? "+" :"-", $5, $12}' OFS="\t" > coverage
 
+Alternativeley, a bigWig file can be loaded using the `bigWigToBedGraph` tool:
+
+    bigWigToBedGraph input_file.bg | awk ‘{$4=int($4*10000); print $0}’ | biosmoother repl - repl_name -C chr pos . cnt
+
 .. _using_graphical_target:
 
 # Using the graphical interface
@@ -831,21 +835,19 @@ Then, queue into one of the client nodes on the server by:
 
     srun --pty bash
 
-Now, forward the port from the client node to the master node:
+Now, forward the port from the master node to the client node that you just lokgged in to:
 
-    ssh -fNR 5009:localhost:5009 ${SLURM_JOB_USER}@${SLURM_LAUNCH_NODE_IPADDR}
+    sshfwd="ssh -fNR 5009:localhost:5009 ${SLURM_JOB_USER}@${SLURM_LAUNCH_NODE_IPADDR}"; trap 'kill $(ps h -o pid -C "$sshfwd")' EXIT; $sshfwd
 
-This command will ask you for your password. After entering it, the port forwarding is set up and you can launch Smoother on the client node. The command to launch Smoother is:
+This command will ask you for your password. After entering it, the port forwarding is set up and you can launch Smoother on the client node. 
+The command to launch Smoother is:
 
     conda activate smoother # activate the conda environment if necessary
     biosmoother serve my_index --port 5009
 
 The command will print an url on your terminal.
 Follow this url with any web browser to open Smoother on the server.
-To allow multiple users to use Smoother at the same time, you can use a different port for each user.
-
-.. Important::
-    Remember to undo the port forwarding from the client to the master node after you are done using Smoother and before you log out. This can be done by killing the ssh command: `killall ssh`.
+To allow multiple users to use Smoother at the same time, you can use a different port for each user, replacing all 5009 in the above commands with 5010, 5011, and so on.
 
 .. index:: webserver, no_save, keep_alive, allow-websocket-origin
 
