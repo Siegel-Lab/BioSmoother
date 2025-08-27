@@ -16,6 +16,9 @@ ranking_dna.html
 ranking_rna.html
 ranking_rna_dna.html
 preprocess.sh
-smoother.egg-info/
+biosmoother.egg-info/
 build/
 dist/
+docs/*
+generated_docs/*
+tooltips_generated.css
