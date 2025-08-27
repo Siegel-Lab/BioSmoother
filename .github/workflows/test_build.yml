@@ -1,0 +1,72 @@
+# This workflow will upload a Python Package using Twine when a release is created
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Test Python Package Publishing
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish-testpypi:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: 3.9
+  
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install wheel libbiosmoother
+        git config --global --add safe.directory '*'
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Build package
+      run: python setup.py bdist_wheel -vvv
+
+    - name: Publish package
+      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+      with:
+        user: __token__
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        skip_existing: true
+        repository_url: https://test.pypi.org/legacy/
+
+
+  test:
+    needs: [publish-testpypi]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+          python-version: ["3.9", "3.10", "3.11"]
+          os: ["ubuntu-latest", "windows-latest", "macos-latest"]
+
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install package
+      run: |
+        pip install --upgrade pip
+        pip install scipy==1.10 numpy==1.23.5 statsmodels scikit-learn bokeh==2.3.2 psutil setuptools
+        pip install --index-url https://test.pypi.org/simple/ biosmoother
+
+    - name: Import package
+      run: |
+        python -c "import biosmoother"
+        biosmoother -v

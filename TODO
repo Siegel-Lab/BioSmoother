@@ -1,40 +1,15 @@
-
 # smoother todo (ranked)
 
+
+--- cutoff ---
+
+- how about a RPKB (reads per kilobase) normalization?
+- export: font size, stroke widths, whitespace distances should all go in config
+    - some should effect viewer as well
+- multiresolution exports
+- normalization of tracks needs rework:
+    - tracks should have a group a and group b
+    - display on column or row or both should be a dropdown button
+    - the merge datasets and datapools by option should be available, so that one track can be normalized by another
 - remove default.json from smoother_hg
-- hide empty annotation panel & hide empty heatmap
-- with autorender off -> exiting viewer hangs
-- without annotations -> empty picture
-- min bin size slider does not update value
-- directionality filter looks wired
-- generating index without multimapping and categories creates wired result...
-- if no read is loaded there is only a very crypic error once you try to look at the index
-    - this can happen if for example the contig names do not match...
-- opening view->color tab causes rerender
-- sortable multi choice: column labels and checkboxes not aligned
-- sort session .json into static values & parameters
-    -  exclude static values form undo & redo
-- application mode with browsers (i.e. chrome fallback firefox) - integrate from desktop versions
-- virtual 4C functionality
-- extra plots could be auto hidden while empty -> anno cov ddd slice_rankings
-    - also column sum & row sum coverage does not need to exist if zero
-
-# verification
-
-- check if lines coincide with rRNA / ncRNA / snoRNA / tRNA
-
-# presentation
-
-- published data, that's not tryps (cancer, human)
-    - hi-c & radicl-seq
-- structure also for other purposes
-    - in databases (plain computer science)
-    - for a chip seq viewer?
-    - other live sciences?
-    - e.g. google maps / other heatmaps
-- one main figure about the algorithmmics
-- why is this needed (as a figure)
-    - advantages of the tool
-- 
-
-
+- multichoice menus (in fact all menus) are not very responsive (i.e. they should interrupt rendering)

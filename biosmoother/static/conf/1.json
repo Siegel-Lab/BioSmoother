@@ -1,0 +1,22 @@
+{
+    "active_tools": [
+        "Pan",
+        "Wheel Zoom",
+        "Crosshair"
+    ],
+    "display_name": "GRID-seq like",
+    "filters": {
+        "anno_filter_col": true
+    },
+    "interface": {
+        "min_bin_size": {
+            "min": 36,
+            "val": 36
+        }
+    },
+    "normalization": {
+        "grid_seq_display_background": false,
+        "normalize_by": "grid-seq"
+    },
+    "smoother_config_file_version": 0.4
+}

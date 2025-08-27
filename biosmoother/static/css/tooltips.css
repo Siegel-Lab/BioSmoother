@@ -1,0 +1,101 @@
+.tooltip:after {
+    padding: 3px !important;
+    position: relative;
+    max-width: 100px;
+    text-align: center;
+    background-color: #292929;
+    color: rgb(192, 192, 192);
+    z-index: 10;
+
+    opacity: 0;
+    transition-property: opacity;
+    pointer-events: none;
+}
+
+.tooltip_fix_overlap:after{
+    top: 100%;
+}
+
+.tooltip:hover:before {
+    opacity: 1;
+    transition-delay: 1s;
+}
+
+.tooltip:after {
+    opacity: 0;
+    transition-delay: 0s;
+}
+
+.tooltip:hover:after {
+    opacity: 1;
+    transition-delay: 1s;
+}
+
+.tooltip_general:after {
+    content: "general options";
+}
+
+.tooltip_area_range:after {
+    content: "Area that is displayed in the heatmap. Edit the value of this field to jump to a certain locus";
+}
+
+.tooltip_render_now:after {
+    content: "redraw the heatmap now.";
+}
+
+.tooltip_color_layout:after {
+    content: "the color scale of the heatmap";
+}
+
+.tooltip_show_hide:after {
+    content: "toggle the visibility of several GUI elements";
+}
+
+
+.tooltip_replicates:after {
+    content: "pick which replicates to show in the heatmap and which to show as coverage tracks.";
+}
+
+.tooltip_normalization:after {
+    content: "options for the data normalization";
+}
+
+.tooltip_replicates:after {
+    content: "options for combining the individual datasets";
+}
+
+.tooltip_interface:after {
+    content: "options for the graphical user interface";
+}
+
+.tooltip_filters:after {
+    content: "options for filtering the data";
+}
+
+.tooltip_export:after {
+    content: "options for exporting to a file";
+}
+
+.tooltip_quick_config:after {
+    content: "various presettings";
+}
+
+.tooltip_info:after {
+    content: "various information";
+}
+
+.tooltip_download_session::after {
+    content: "download the current session as a .json file";
+}
+
+.tooltip_upload_session::after {
+    content: "upload a previously downloaded session .json file.";
+}
+
+.tooltip_undo::after {
+    content: "undo";
+}
+
+.tooltip_redo::after {
+    content: "redo";
+}

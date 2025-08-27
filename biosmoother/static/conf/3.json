@@ -1,0 +1,21 @@
+{
+    "active_tools": [
+        "Pan",
+        "Wheel Zoom",
+        "Crosshair"
+    ],
+    "display_name": "Hi-C",
+    "interface": {
+        "min_bin_size": {
+            "min": 36,
+            "val": 36
+        }
+    },
+    "normalization": {
+        "normalize_by": "ice"
+    },
+    "filters":{
+        "symmetry": "mirror"
+    },
+    "smoother_config_file_version": 0.4
+}

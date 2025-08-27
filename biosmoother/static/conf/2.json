@@ -1,0 +1,19 @@
+{
+    "active_tools": [
+        "Pan",
+        "Wheel Zoom",
+        "Crosshair"
+    ],
+    "display_name": "RADICL-seq like",
+    "interface": {
+        "min_bin_size": {
+            "min": 36,
+            "val": 36
+        }
+    },
+    "normalization": {
+        "grid_seq_display_background": false,
+        "normalize_by": "radicl-seq"
+    },
+    "smoother_config_file_version": 0.4
+}

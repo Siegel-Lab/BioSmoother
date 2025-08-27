@@ -1,0 +1,32 @@
+version: "2"
+
+build:
+  os: "ubuntu-22.04"
+  tools:
+    python: "miniconda3-4.7"
+  jobs:
+    pre_install:
+      - git checkout -- docs_conf/dev_env_linux.yml # don't ask me why readthedocs changes this file...
+    pre_build:
+      - mkdir -p generated_docs
+      - python3 docs_conf/split_md.py README.md generated_docs
+      - python3 docs_conf/generate_index_parameters.md.py generated_docs
+      - export SMOOTHER_HIDE_SUBCOMMANDS_MANUAL=true
+    post_build:
+      - mkdir -p $READTHEDOCS_OUTPUT/html/docs_conf/static/
+      - cp -r docs_conf/static/* $READTHEDOCS_OUTPUT/html/docs_conf/static/
+      - mkdir -p $READTHEDOCS_OUTPUT/html/biosmoother/static
+      - cp -r biosmoother/static/* $READTHEDOCS_OUTPUT/html/biosmoother/static
+      - sed -i "s/Index/Contents/" $READTHEDOCS_OUTPUT/html/genindex.html
+      - sed -i "s/href=\"genindex.html\">Index/href=\"genindex.html\">Contents/" $READTHEDOCS_OUTPUT/html/*.html
+
+conda:
+  environment: docs_conf/dev_env_linux.yml
+
+python:
+  install:
+    - method: pip
+      path: .
+
+sphinx:
+  configuration: docs_conf/conf.py

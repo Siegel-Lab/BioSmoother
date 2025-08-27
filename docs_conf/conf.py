@@ -15,15 +15,33 @@ import sys
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 
+try:
+    import importlib.resources as pkg_resources
+except ImportError:
+    # Try backported to PY<37 `importlib_resources`.
+    import importlib_resources as pkg_resources
+
+import libbiosmoother
+
 # -- Project information -----------------------------------------------------
 
-project = 'smoother'
-copyright = '2022, Markus Schmidt'
-author = 'Markus Schmidt'
+project = 'biosmoother'
+copyright = '2023, Markus R. Schmidt, Anna Barcons-Simon, Claudia Rabuffo, and T. Nicolai Siegel'
+author = 'Markus R. Schmidt, Anna Barcons-Simon, Claudia Rabuffo, and T. Nicolai Siegel'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+b_version = (pkg_resources.files("biosmoother") / "VERSION").read_text()
+release = b_version.split("-")[1 if b_version.startswith("D-") else 0]
 
+rst_epilog = """
+.. |BioSmootherVersion| replace:: {versionnum}
+""".format(
+versionnum = b_version,
+) + """
+.. |libBioSmootherVersion| replace:: {versionnum}
+""".format(
+versionnum = libbiosmoother.LIB_BIO_SMOOTHER_CPP_VERSION,
+)
 
 # -- General configuration ---------------------------------------------------
 
@@ -37,7 +55,13 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx_mdinclude",
     "sphinxarg.ext",
+    'sphinxemoji.sphinxemoji',
 ]
+
+html_theme_options = {
+    'navigation_depth': 8,
+    'collapse_navigation': False,
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -58,9 +82,9 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['../static']
+html_static_path = []
 
 master_doc = "index"
 
 
-html_favicon="../static/favicon.ico"
+html_favicon="../biosmoother/static/favicon.ico"

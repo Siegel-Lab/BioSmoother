@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+{% extends base %}
+<html lang="en">
+{% block head %}
+
+<head>
+    {% block inner_head %}
+    <meta charset="utf-8">
+    <title>{% block title %}{{ title | e if title else "Bokeh Plot" }}{% endblock %}</title>
+    {% block preamble -%}{%- endblock %}
+    {% block resources -%}
+    {% block css_resources -%}
+    {{- bokeh_css if bokeh_css }}
+    <link rel="stylesheet" href="biosmoother/static/css/styles.css" />
+    <link rel="stylesheet" href="biosmoother/static/css/tooltips.css" />
+    <link rel="stylesheet" href="biosmoother/static/css/tooltips_generated.css" />
+    <link rel="icon" type="image/x-icon" href="biosmoother/static/favicon.ico">
+    {%- endblock css_resources %}
+    {% block js_resources -%}
+    {{ bokeh_js if bokeh_js }}
+    <script>
+        window.onbeforeunload = function ()
+        {
+            Bokeh.documents[0].get_model_by_name('quit_ti').value = "shutdown";
+        };
+        let layout_needed = true;
+
+        function openTab(tabName, className)
+        {
+            var i;
+            var x = document.getElementsByClassName(className + "Tab");
+            for (i = 0; i < x.length; i++)
+            {
+                x[i].style.display = "none";
+            }
+            document.getElementById(tabName + "Tab").style.display = "block";
+
+            
+            var x = document.getElementsByClassName(className + "Button");
+            for (i = 0; i < x.length; i++)
+            {
+                x[i].classList.remove("tab-button-active");
+            }
+            document.getElementById(tabName + "Button").classList.add("tab-button-active");
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function(){
+                if(layout_needed){
+                    window.dispatchEvent(new Event('resize'));
+                    layout_needed=false;
+                }
+            }, 1);
+        }, false);
+
+        function lostServerConnection(){
+            console.log("Server connection lost.");
+            document.getElementById("spinner").src = "biosmoother/static/error.png";
+            document.getElementById("status_bar").innerHTML = "<font color='red' class='top_border bk' style='width: 100%; padding: 5px'>Server connection lost. Please restart the server and open a new tab.</font>";
+        }
+        (function(){
+            var oldLog = Bokeh.logger.info;
+            Bokeh.logger.info = function (message) {
+                if(message.startsWith("Websocket connection") && 
+                   message.endsWith("disconnected, will not attempt to reconnect")){
+                    lostServerConnection();
+                }
+                oldLog.apply(console, arguments);
+            };
+        })();
+    </script>
+    {%- endblock js_resources %}
+    {% endblock resources %}
+    {% block postamble %}{% endblock %}
+    {% endblock inner_head %}
+</head>
+{% endblock head%}
+{% block body %}
+
+<body class="body">
+    {% block inner_body %}
+    {% block contents %}
+    {% for doc in docs %}
+    {{ embed(doc) if doc.elementid }}
+    <div style="position:absolute; height: 40px; left: 0; top: 0; right: 0; justify-content: center; display: flex; z-index: 100">
+        {{ embed(doc.roots.tools_bar) }}
+    </div>
+    <div
+        style="position:absolute; top: 40px; bottom: 26px; right: 425px; left: 0; justify-content: center; display: flex">
+        <div style="height: 100%; aspect-ratio: 1">
+            <div class="grid-container">
+                <div class="grid-item" style="grid-column: 1; grid-row: 1;"> {{ embed(doc.roots.heatmap_y_axis_2) }}
+                </div>
+                <div class="grid-item" style="grid-column: 2; grid-row: 1;"> {{ embed(doc.roots.heatmap_y_axis_3) }}
+                </div>
+                <div class="grid-item" style="grid-column: 3; grid-row: 1;"> {{ embed(doc.roots.heatmap_y_axis) }}
+                </div>
+                <div class="grid-item" style="grid-column: 4; grid-row: 1;"> {{ embed(doc.roots.anno_x) }} </div>
+                <div class="grid-item" style="grid-column: 5; grid-row: 1;"> {{ embed(doc.roots.raw_x) }} </div>
+                <div class="grid-item" style="grid-column: 7; grid-row: 1;"> 
+                    {{ embed(doc.roots.heatmap) }} 
+                </div>
+
+                <div class="grid-item" style="grid-column: 4; grid-row: 2;"> {{ embed(doc.roots.anno_x_axis) }} </div>
+                <div class="grid-item" style="grid-column: 5; grid-row: 2;"> {{ embed(doc.roots.raw_x_axis) }} </div>
+
+                <div class="grid-item" style="grid-column: 6; grid-row: 3;"> {{ embed(doc.roots.raw_y_axis) }} </div>
+                <div class="grid-item" style="grid-column: 7; grid-row: 3;"> {{ embed(doc.roots.raw_y) }}</div>
+
+                <div class="grid-item" style="grid-column: 6; grid-row: 4;"> {{ embed(doc.roots.anno_y_axis) }} </div>
+                <div class="grid-item" style="grid-column: 7; grid-row: 4;"> {{ embed(doc.roots.anno_y) }} </div>
+
+                <div class="grid-item" style="grid-column: 7; grid-row: 5;"> {{ embed(doc.roots.heatmap_x_axis) }}
+                </div>
+
+                <div class="grid-item" style="grid-column: 7; grid-row: 6;"> {{ embed(doc.roots.heatmap_x_axis_3) }}
+                </div>
+
+                <div class="grid-item" style="grid-column: 1; grid-row: 7;"> {{ embed(doc.roots.communication) }} </div>
+                <div class="grid-item" style="grid-column: 7; grid-row: 7;"> {{ embed(doc.roots.heatmap_x_axis_2) }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="position:absolute; width: 425px; top: 40px; bottom: 26px; right: 0; 
+    background-color: white;" class="options_panel">
+        <div style="position:absolute; width: 425px; top: 80px; bottom: 26px; right: 0;
+        justify-content: center; display: flex;">
+            <img src="biosmoother/static/favicon.png" style="object-fit: contain; width: 80%; filter: grayscale(100%); opacity: 0.025">
+        </div>
+        <div class="tab-header tab-header-1">
+            <div class="tab-button tab-button-spacer tab-level-1">
+            </div>
+            <button class="tab-button mainButton tab-button-active tab-level-1" id="FileButton" onclick="openTab('File', 'main')">
+                File
+            </button>
+            <div class="tab-button tab-button-spacer tab-level-1">
+            </div>
+            <button class="tab-button mainButton tab-level-1" id="NormalizeButton" onclick="openTab('Normalize', 'main')">
+                Normalize
+            </button>
+            <div class="tab-button tab-button-spacer tab-level-1">
+            </div>
+            <button class="tab-button mainButton tab-level-1" id="FilterButton" onclick="openTab('Filter', 'main')">
+                Filter
+            </button>
+            <div class="tab-button tab-button-spacer tab-level-1">
+            </div>
+            <button class="tab-button mainButton tab-level-1" id="ViewButton" onclick="openTab('View', 'main')">
+                View
+            </button>
+            <div class="tab-button tab-button-fill tab-level-1">
+            </div>
+        </div>
+
+        <div id="FileTab" class="mainTab" style="display:block">
+            <div class="tab-header tab-header-2">
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button fileButton tab-button-active tab-level-2" id="PresettingButton" onclick="openTab('Presetting', 'file')">
+                    Presetting
+                </button>
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button fileButton tab-level-2" id="ExportButton" onclick="openTab('Export', 'file')">
+                    Export
+                </button>
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button fileButton tab-level-2" id="InfoButton" onclick="openTab('Info', 'file')">
+                    Info
+                </button>
+                <div class="tab-button tab-button-fill tab-level-2">
+                </div>
+            </div>
+            
+            <div id="PresettingTab" class="fileTab scroll_y" style="display:block">
+                {{ embed(doc.roots.presetting) }}
+            </div>
+            <div id="ExportTab" class="fileTab scroll_y" style="display:none">
+                {{ embed(doc.roots.export) }}
+            </div>
+            <div id="InfoTab" class="fileTab scroll_y" style="display:none">
+                {{ embed(doc.roots.info) }}
+            </div>
+        </div>
+
+        <div id="NormalizeTab" class="mainTab" style="display:none">
+            <div class="tab-header tab-header-2">
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button normButton tab-button-active tab-level-2" id="mainNormButton" onclick="openTab('mainNorm', 'norm')">
+                    Primary
+                </button>
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button normButton tab-level-2" id="dddButton" onclick="openTab('ddd', 'norm')">
+                    Dist. Dep. Dec.
+                </button>
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button normButton tab-level-2" id="ploidyButton" onclick="openTab('ploidy', 'norm')">
+                    Ploidy
+                </button>
+                <div class="tab-button tab-button-fill tab-level-2">
+                </div>
+            </div>
+
+            <div id="mainNormTab" class="normTab scroll_y" style="display:block">
+                <div style="z-index:100;position:relative">
+                    {{ embed(doc.roots.mainNorm) }}
+                </div>
+
+                <div class="tab-header tab-header-3">
+                    <div class="tab-button tab-button-spacer tab-level-3">
+                    </div>
+                    <button class="tab-button mainNormButton tab-button-active tab-level-3" id="BinomButton" 
+                            onclick="openTab('Binom', 'mainNorm')">
+                        Binom. test
+                    </button>
+                    <div class="tab-button tab-button-spacer tab-level-3">
+                    </div>
+                    <button class="tab-button mainNormButton tab-level-3" id="IcButton" onclick="openTab('Ic', 'mainNorm', 'ic')">
+                        IC
+                    </button>
+                    <div class="tab-button tab-button-spacer tab-level-3">
+                    </div>
+                    <button class="tab-button mainNormButton tab-level-3" id="AssocButton" onclick="openTab('Assoc', 'mainNorm')">
+                        Assoc. Slices
+                    </button>
+                    <div class="tab-button tab-button-fill tab-level-3">
+                    </div>
+                </div>
+
+                <div id="BinomTab" class="mainNormTab" style="display:block">
+                    {{ embed(doc.roots.binom) }}
+                </div>
+                <div id="IcTab" class="mainNormTab" style="display:none">
+                    {{ embed(doc.roots.ic) }}
+                </div>
+                <div id="AssocTab" class="mainNormTab" style="display:none">
+                    {{ embed(doc.roots.assoc) }}
+                </div>
+
+            </div>
+            <div id="dddTab" class="normTab scroll_y" style="display:none">
+                {{ embed(doc.roots.ddd) }}
+            </div>
+            <div id="ploidyTab" class="normTab scroll_y" style="display:none">
+                {{ embed(doc.roots.ploidy) }}
+            </div>
+        </div>
+
+        <div id="FilterTab" class="mainTab" style="display:none">
+            <div class="tab-header tab-header-2">
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button filterButton tab-button-active tab-level-2" id="DatapoolsButton" onclick="openTab('Datapools', 'filter')">
+                    Datapools
+                </button>
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button filterButton tab-level-2" id="MappingButton" onclick="openTab('Mapping', 'filter')">
+                    Mapping
+                </button>
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button filterButton tab-level-2" id="CoordinatesButton" onclick="openTab('Coordinates', 'filter')">
+                    Coordinates
+                </button>
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button filterButton tab-level-2" id="AnnotationsButton" onclick="openTab('Annotations', 'filter')">
+                    Annotations
+                </button>
+                <div class="tab-button tab-button-fill tab-level-2">
+                </div>
+            </div>
+
+            <div id="DatapoolsTab" class="filterTab scroll_y" style="display:block">
+                {{ embed(doc.roots.datapools) }}
+            </div>
+            <div id="MappingTab" class="filterTab scroll_y" style="display:none">
+                {{ embed(doc.roots.mapping) }}
+            </div>
+            <div id="CoordinatesTab" class="filterTab scroll_y" style="display:none">
+                {{ embed(doc.roots.coordinates) }}
+            </div>
+            <div id="AnnotationsTab" class="filterTab scroll_y" style="display:none">
+                {{ embed(doc.roots.annotation) }}
+            </div>
+        </div>
+
+        <div id="ViewTab" class="mainTab" style="display:none">
+            <div class="tab-header tab-header-2">
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button viewButton tab-button-active tab-level-2" id="ColorButton" onclick="openTab('Color', 'view')">
+                    Color
+                </button>
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button viewButton tab-level-2" id="PanelsButton" onclick="openTab('Panels', 'view')">
+                    Panels
+                </button>
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button viewButton tab-level-2" id="BinsButton" onclick="openTab('Bins', 'view')">
+                    Bins
+                </button>
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button viewButton tab-level-2" id="Virtual4CButton" onclick="openTab('Virtual4C', 'view')">
+                    Virtual4C
+                </button>
+                <div class="tab-button tab-button-spacer tab-level-2">
+                </div>
+                <button class="tab-button viewButton tab-level-2" id="RenderingButton" onclick="openTab('Rendering', 'view')">
+                    Rendering
+                </button>
+                <div class="tab-button tab-button-fill tab-level-2">
+                </div>
+            </div>
+
+            <div id="ColorTab" class="viewTab scroll_y" style="display:block">
+                {{ embed(doc.roots.color) }}
+            </div>
+            <div id="PanelsTab" class="viewTab scroll_y" style="display:none">
+                {{ embed(doc.roots.panels) }}
+            </div>
+            <div id="BinsTab" class="viewTab scroll_y" style="display:none">
+                {{ embed(doc.roots.bins) }}
+            </div>
+            <div id="Virtual4CTab" class="viewTab scroll_y" style="display:none">
+                {{ embed(doc.roots.virtual4c) }}
+            </div>
+            <div id="RenderingTab" class="viewTab scroll_y" style="display:none">
+                {{ embed(doc.roots.rendering) }}
+            </div>
+        </div>
+
+    </div>
+    <div style="position:absolute; height: 26px; left: 0; bottom: 0; right: 0; justify-content: center; display: flex; background-color: white" id="status_bar">
+        {{ embed(doc.roots.status_bar) }}
+    </div>
+
+    {% endfor %}
+    {% endblock contents %}
+    {{ plot_script | indent(4) }}
+    {% endblock inner_body %}
+</body>
+{% endblock body%}
+
+</html>

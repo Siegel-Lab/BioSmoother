@@ -1,5 +1,9 @@
-.. mdinclude:: ./ImportingData.md
-.. mdinclude:: ./ButtonList.md
-.. mdinclude:: ./Installation.md
-.. mdinclude:: ./Algorithmics.md
-.. mdinclude:: ./Epilogue.md
+.. _quickstart_target:
+
+.. mdinclude:: ../generated_docs/Quick_Start.md
+
+.. _overview_target:
+
+.. mdinclude:: ../generated_docs/Overview.md
+
+.. mdinclude:: ../Manual.md

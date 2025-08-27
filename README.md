@@ -1,67 +1,102 @@
-<img src="https://raw.githubusercontent.com/Siegel-Lab/Smoother/master/smoother/static/favicon.png" align="center" width="90">
+<p align="center">
+    <img src="./biosmoother/static/favicon.png" width="180">
+</p>
 
 # Smoother
 
-@todo
+Smoother is an interactive analysis and visualization software for contact mapping data. 
 
-## Abstract-like hook
 
 ## Quick Start
 
-Here we show how to install smoother on linux systems. Installing smoother on Windows/Mac is possible; however, for now, you will have to install the appropriate compilers on your own (msvc for windows and clang for mac).
+:exclamation: If you want an in-detail explanation of installing Smoother and doing a handful of first steps, [how about taking a tour](https://biosmoother.readthedocs.io/en/latest/Manual.html#taking-a-tour "take a tour") :bus:? 
 
+Otherwise, here is a brief set of instructions to get Smoother running: First, install [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html "conda install page") on your machine if you don't have it already.
 
-prerequisites:
-- conda should be installed
-- build-essential should be installed
-
-\
-create & activate a new environment (optional)
+Then, create & activate a new environment (optional)
 ```
-conda create -y -n smoother python=3.9
-conda activate smoother
+ conda create -y -n smoother python=3.9
+ conda activate smoother
 ```
 
-Install conda-specific requirements
+Install Smoother (and all requirements) using pip. Smoother runs under Windows, Linux, and MacOS using the Google Chrome, Safari, or Firefox browsers.
 ```
-# make sure the proper compiler is installed
-conda install -y gcc=9.4.0 gxx=9.4.0 -c conda-forge
-# install requirements of smoother serve
-conda install -y nodejs==18.12.1 tornado git -c conda-forge
+ pip install biosmoother
+ conda install -y nodejs cairo # pip cannot install nodejs and cairo, so we use conda
 ```
 
-Install smoother (and all requirements) from GitHub.
+Download the example Smoother indices. If you are on Ubuntu or MaxOS, run the following commands:
 ```
-pip install git+https://github.com/Siegel-Lab/Smoother.git@stable-latest --no-binary libsps,libsmoother
-```
-
-Download 2 example smoother indices.
-```
-wget https://syncandshare.lrz.de/dl/fiFPBw32Rc3cJs1qfsYkKa/radicl.smoother_index.zip
-wget https://syncandshare.lrz.de/dl/fi8q6iroKx49azsZLHxeYB/micro-c.smoother_index.zip
-
-conda install unzip
-unzip radicl.smoother_index.zip
-unzip micro-c.smoother_index.zip
+ conda install -y wget unzip
+ wget https://syncandshare.lrz.de/dl/fiTWvK4pxwB2TQkMSrzzDJ/t_brucei_hi_c.smoother_index.zip
+ #wget https://syncandshare.lrz.de/dl/fi8NBv2b3VDt4Htkm8Auuv/m_musculus_radicl_seq.smoother_index.zip
+ 
+ unzip t_brucei_hi_c.smoother_index.zip
+ #unzip m_musculus_radicl_seq.smoother_index.zip
 ```
 
-View one of the indices
+On Windows, run this instead:
 ```
-smoother serve micro-c --show
-#smoother serve radicl --show
+ curl.exe https://syncandshare.lrz.de/dl/fiTWvK4pxwB2TQkMSrzzDJ/t_brucei_hi_c.smoother_index.zip --output t_brucei_hi_c.smoother_index.zip
+ #curl.exe https://syncandshare.lrz.de/dl/fi8NBv2b3VDt4Htkm8Auuv/m_musculus_radicl_seq.smoother_index.zip --output m_musculus_radicl_seq.smoother_index.zip
+ 
+ tar -xf t_brucei_hi_c.smoother_index.zip
+ #tar -xf m_musculus_radicl_seq.smoother_index.zip
 ```
 
-## Web-version
+View one of the indices (Ubuntu, MacOs & Windows)
+```
+ biosmoother serve t_brucei_hi_c.smoother_index --show
+ #biosmoother serve m_musculus_radicl_seq.smoother_index --show
+```
+
+From now on, to run smoother you will merely have to activate the environment and run the serve command.
+```
+ conda activate smoother
+ biosmoother serve t_brucei_hi_c.smoother_index --show
+```
 
 
-## Usage
+## Full Documentation
 
+For more information and in-depth instructions, check out the [manual](https://biosmoother.readthedocs.io/ "Smoother's Manual").
 
-## Quick config Buttons
+## Overview
 
-## Manual
+In Smoother, parameters can be changed on-the-fly.
+This means, a user can click a button or move a slider and will immediately see the effect of that parameter change on screen.
+Parameters that can be changed include:
 
-## Citing Smoother
+<img src="./docs_conf/static/all_features.gif">
 
-## References
+Here is a screenshot of Smoother in action:
 
+<img src="./docs_conf/static/interface.png">
+
+## Loading your own data
+
+All data needs to be converted into a Smoother index first.
+For this, first create an empty index:
+```
+biosmoother init my_index -a my_annotation.gff
+```
+Here, `my_annotation.gff` is a GFF file that contains the genomes annotations.
+
+Then, add your data to the index:
+```
+biosmoother repl my_index my_replicate_1.tsv name_of_replicate_1
+biosmoother repl my_index my_replicate_2.tsv name_of_replicate_2
+...
+```
+Here `my_replicate_x.tsv` needs to be a tab-separated file with 10 columns: `read_id, chr1, pos1, chr2, pos2, strand1, strand2, pair_type, mapq1, and mapq2`.
+
+Finally, the index can be opened with:
+```
+biosmoother serve my_index --show
+```
+
+## Cite
+
+If you use smoother in your research, please cite:
+
+Markus R Schmidt, Anna Barcons-Simon, Claudia Rabuffo, T Nicolai Siegel, Smoother: on-the-fly processing of interactome data using prefix sums, Nucleic Acids Research, 2024; gkae008, https://doi.org/10.1093/nar/gkae008
