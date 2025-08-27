@@ -3,7 +3,7 @@ version: "2"
 build:
   os: "ubuntu-24.04"
   tools:
-    python: "miniconda3-3.12-24.9"
+    python: "mambaforge-23.11"
   jobs:
     pre_install:
       - git checkout -- docs_conf/dev_env_linux.yml # don't ask me why readthedocs changes this file...
