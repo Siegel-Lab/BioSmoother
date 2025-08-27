@@ -1248,7 +1248,10 @@ class MainLayout:
 
     def config_show_hide(self, settings):
         for key in self.show_hide.keys():
-            self.show_hide[key] = settings[key]
+            if key in settings:
+                self.show_hide[key] = settings[key]
+            else:
+                self.show_hide[key] = True
         self.show_hide_dropdown.menu = self.make_show_hide_menu()
         self.update_visibility()
 
@@ -2397,7 +2400,7 @@ class MainLayout:
             self.session.set_value(["settings", "normalization", "ploidy_last_uploaded_filename"], n)
 
         def ploidy_file_upload(a, o, n):
-            self.session.set_ploidy_itr(b64decode(n).decode("utf-8").split("\n"))
+            self.session.set_ploidy_itr(b64decode(n).decode("utf-8").split("\n"), report_error=self.print)
             self.update_visibility()
             self.trigger_render()
 
