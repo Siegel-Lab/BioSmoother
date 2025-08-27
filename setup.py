@@ -105,7 +105,7 @@ BioSmoother's documentation is available at https://biosmoother.rtfd.io/.
         'bokeh==2.3.2', # specific version is necessary for now -> with newer versions the layout starts glitching
         'psutil',
         'pybase64',
-        'numpy==1.24',
+        'numpy==1.23.5',
         'scipy==1.10',
     ],
     entry_points={
